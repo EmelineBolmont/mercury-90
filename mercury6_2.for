@@ -7850,7 +7850,7 @@ c                    ORBEL_FGET.F
 *     PURPOSE:  Solves Kepler's eqn. for hyperbola using hybrid approach.  
 *
 *             Input:
-*                           e ==> eccentricity anomaly. (real scalar)
+*                           e ==> eccentricity. (real scalar)
 *                        capn ==> hyperbola mean anomaly. (real scalar)
 *             Returns:
 *                  orbel_fget ==>  eccentric anomaly. (real scalar)
@@ -7923,7 +7923,7 @@ c                    ORBEL_FHYBRID.F
 *     PURPOSE:  Solves Kepler's eqn. for hyperbola using hybrid approach.  
 *
 *             Input:
-*                           e ==> eccentricity anomaly. (real scalar)
+*                           e ==> eccentricity. (real scalar)
 *                           n ==> hyperbola mean anomaly. (real scalar)
 *             Returns:
 *               orbel_fhybrid ==>  eccentric anomaly. (real scalar)
@@ -7970,7 +7970,7 @@ c                    ORBEL_FLON.F
 *     PURPOSE:  Solves Kepler's eqn. for hyperbola using hybrid approach.  
 *
 *             Input:
-*                           e ==> eccentricity anomaly. (real scalar)
+*                           e ==> eccentricity (real scalar)
 *                        capn ==> hyperbola mean anomaly. (real scalar)
 *             Returns:
 *                  orbel_flon ==>  eccentric anomaly. (real scalar)
