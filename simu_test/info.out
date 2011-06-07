@@ -1,0 +1,47 @@
+
+           Integration parameters
+           ----------------------
+
+   Algorithm: Hybrid symplectic integrator (mixed coordinates)
+
+   Integration start epoch:         2451179.5000000 days 
+   Integration stop  epoch:         2462502.5000000
+   Output interval:                     365.250
+   Output precision:                 medium
+
+   Initial timestep:                8.000 days 
+   Accuracy parameter:              1.0000E-12
+   Central mass:                    1.0000E+00 solar masses
+   J_2:                              0.0000E+00
+   J_4:                              0.0000E+00
+   J_6:                              0.0000E+00
+   Ejection distance:               1.0000E+02 AU
+   Radius of central body:          5.0000E-03 AU
+
+   Includes collisions:                 no 
+   Includes fragmentation:              no 
+   Includes relativity:                 no 
+   Includes user-defined force routine: no 
+
+   Number of Big bodies:        9
+   Number of Small bodies:      6
+
+
+           Integration details
+           -------------------
+
+   Initial energy:           -3.32259E-08 solar masses AU^2 day^-2 
+   Initial angular momentum:  6.08218E-05 solar masses AU^2 day^-1 
+
+   Integrating massive bodies and particles up to the same epoch.
+
+   Beginning the main integration.
+
+
+   Integration complete.
+
+   Fractional energy change due to integrator:   1.32176E-08
+   Fractional angular momentum change:           3.67679E-16
+
+   Fractional energy change due to collisions/ejections:  0.00000E+00
+   Fractional angular momentum change:                    0.00000E+00
