@@ -1730,7 +1730,7 @@ subroutine m_format (string,timestyle,nel,iel,fout,header,lenhead)
   !
   data elcode/ 'a','e','i','g','n','l','p','q','b','x','y','z','u','v','w','r','f','m','o','s','d','c'/
   data elhead/ '  a ','  e ','  i ','peri','node','  M ','long','  q ','  Q ','  x ','  y ','  z ',' vx ',&
-    ' vy ',' vz ','  r ','  f ','mass','oblq','spin','dens','comp'/
+       ' vy ',' vz ','  r ','  f ','mass','oblq','spin','dens','comp'/
   !
   ! Initialize header to a blank string
   do i = 1, 250

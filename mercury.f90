@@ -129,7 +129,7 @@
   !
   ! Get initial conditions and integration parameters
   call mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,id,&
-  epoch,ngf,opt,opflag,ngflag,outfile,dumpfile,lmem,mem)
+       epoch,ngf,opt,opflag,ngflag,outfile,dumpfile,lmem,mem)
   !
   ! If this is a new integration, integrate all the objects to a common epoch.
   if (opflag.eq.-2) then
@@ -250,7 +250,7 @@ end subroutine mfo_user
 !------------------------------------------------------------------------------
 !
 subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-    id,ngf,opt,opflag,ngflag,outfile,dumpfile,mem,lmem,onestep)
+     id,ngf,opt,opflag,ngflag,outfile,dumpfile,mem,lmem,onestep)
   !
   implicit none
   include 'mercury.inc'
@@ -319,7 +319,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      ! Output data for all bodies
      call mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opflag,algor,outfile(1))
      call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-        nstored,0)
+          nstored,0)
      tmp0 = tstop - tout
      tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
      !
@@ -328,7 +328,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         epoch(j) = time
      end do
      call mio_dump (time,tstart,tstop,dtout,algor,h,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-        id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
+          id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
      tdump = time
   end if
   !
@@ -351,7 +351,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   ! Check if close encounters or collisions occurred
   nclo = 0
   call mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,xh,vh,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
-        thit,thit1,nowflag,stat,outfile(3),mem,lmem)
+       thit,thit1,nowflag,stat,outfile(3),mem,lmem)
   !
   !------------------------------------------------------------------------------
   !
@@ -362,7 +362,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      itmp = 1
      if (nhit.ne.0) itmp = 0
      call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,&
-        mem,lmem,outfile,nstored,itmp)
+          mem,lmem,outfile,nstored,itmp)
      if (stopflag.eq.1) return
   end if
   !
@@ -419,9 +419,9 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         epoch(j) = time
      end do
      call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-        nstored,0)
+          nstored,0)
      call mio_dump (time,tstart,tstop,dtout,algor,h,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-        id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
+          id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
      tdump = time
   end if
   !
@@ -483,7 +483,7 @@ end subroutine mal_hvar
 !------------------------------------------------------------------------------
 !
 subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-    id,ngf,opt,opflag,ngflag,outfile,dumpfile,mem,lmem,onestep,coord,bcoord)
+     id,ngf,opt,opflag,ngflag,outfile,dumpfile,mem,lmem,onestep,coord,bcoord)
   !
   implicit none
   include 'mercury.inc'
@@ -551,7 +551,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
      call mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opflag,algor,outfile(1))
      call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-        nstored,0)
+          nstored,0)
      tmp0 = tstop - tout
      tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
      !
@@ -560,7 +560,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         epoch(j) = time
      end do
      call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-        id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
+          id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
      tdump = time
   end if
   !
@@ -583,7 +583,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
   end if
   call onestep (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,& 
-    opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
+       opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
   time = time + h0
   !
   !------------------------------------------------------------------------------
@@ -595,7 +595,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      itmp = 1
      if (colflag.ne.0) itmp = 0
      call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-        nstored,itmp)
+          nstored,itmp)
      if (stopflag.eq.1) return
   end if
   !
@@ -669,9 +669,9 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         epoch(j) = time
      end do
      call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-        nstored,0)
+          nstored,0)
      call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-        id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
+          id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
      tdump = time
   end if
   !
@@ -1485,7 +1485,7 @@ end subroutine mce_snif
 !------------------------------------------------------------------------------
 !
 subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
-    thit,thit1,nowflag,stat,outfile,mem,lmem)
+     thit,thit1,nowflag,stat,outfile,mem,lmem)
   !
   implicit none
   include 'mercury.inc'
@@ -1529,7 +1529,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   do i = 2, nbig
      do j = i + 1, nbod
         if (   xmax(i).ge.xmin(j).and.xmax(j).ge.xmin(i).and.ymax(i).ge.ymin(j).and.ymax(j).ge.ymin(i).and.&
-            stat(i).ge.0.and.stat(j).ge.0) then
+             stat(i).ge.0.and.stat(j).ge.0) then
            !
            ! If the X-Y boxes for this pair overlap, check circumstances more closely
            dx0 = x0(1,i) - x0(1,j)
@@ -3254,7 +3254,7 @@ end subroutine mdt_bs2
 !------------------------------------------------------------------------------
 !
 subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,&
-    opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
+     opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
   !
   implicit none
   include 'mercury.inc'
@@ -3352,7 +3352,7 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
         end if
      end do
      call mdt_hkce (time,tstart,h0,hrec,tol,rmax,en(3),jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,ngflag,&
-        colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem,mfo_hkce)
+          colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem,mfo_hkce)
   end if
   !
   ! Advance solar Hamiltonian for H/2
@@ -3405,7 +3405,7 @@ end subroutine mdt_hy
 !------------------------------------------------------------------------------
 !
 subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcrit,rce,stat,id,ngf,algor,opt,ngflag,&
-    colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem,force)
+     colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem,force)
   !
   implicit none
   include 'mercury.inc'
@@ -3486,14 +3486,14 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
   ! Save old coordinates and integrate
   call mco_iden (time,jcen,nbs,0,h0,mbs,xbs,vbs,x0,v0,ngf,ngflag,opt)
   call mdt_bs2 (time,hlocal,hdid,tol,jcen,nbs,nbsbig,mbs,xbs,vbs,sbs,rphybs,rcritbs,ngfbs,statbs,dtflag,ngflag,opt,nce,ibs,jbs,&
-    force)
+       force)
   tlocal = tlocal + hdid
   !
   ! Check for close-encounter minima
   nclo_old = nclo
   temp = time + tlocal
   call mce_stat (temp,hdid,rcen,nbs,nbsbig,mbs,x0,v0,xbs,vbs,rcebs,rphybs,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,&
-  chit,dhit,thit,thit1,nowflag,statbs,outfile(3),mem,lmem)
+       chit,dhit,thit,thit1,nowflag,statbs,outfile(3),mem,lmem)
   !
   ! If collisions occurred, resolve the collision and return a flag
   if (nhit.gt.0.and.opt(2).ne.0) then
@@ -3556,7 +3556,7 @@ end subroutine mdt_hkce
 !------------------------------------------------------------------------------
 !
 subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,&
-    opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
+     opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
   !
   implicit none
   include 'mercury.inc'
@@ -3632,7 +3632,7 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   ! Check for close-encounter minima during drift step
   temp = time + h0
   call mce_stat (temp,h0,rcen,nbod,nbig,m,x0,v0,x,v,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,thit,&
-    thit1,nowflag,stat,outfile(3),mem,lmem)
+       thit1,nowflag,stat,outfile(3),mem,lmem)
   !
   ! Advance interaction Hamiltonian for H/2
   call mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
@@ -3707,13 +3707,13 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   ! integrator. The sum of the H values should be 3.733333333333333
   !
   data h/ 0.d0,.0562625605369221d0,.1802406917368924d0,.3526247171131696d0,.5471536263305554d0,.7342101772154105d0,&
-    .8853209468390958d0,.9775206135612875d0/
+       .8853209468390958d0,.9775206135612875d0/
   !
   ! Constant coefficients used in series expansions for X and V
   !  XC: 1/2,  1/6,  1/12, 1/20, 1/30, 1/42, 1/56, 1/72
   !  VC: 1/2,  1/3,  1/4,  1/5,  1/6,  1/7,  1/8
   data xc/.5d0,.1666666666666667d0,.08333333333333333d0,.05d0,.03333333333333333d0,.02380952380952381d0,&
-    .01785714285714286d0,.01388888888888889d0/
+       .01785714285714286d0,.01388888888888889d0/
   data vc/.5d0,.3333333333333333d0,.25d0,.2d0,.1666666666666667d0,.1428571428571429d0,.125d0/
   !
   ! If this is first call to the subroutine, set values of the constant arrays
@@ -3802,7 +3802,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
         !
         do k = 4, nv
            x(k) = s(9)*b(7,k) + s(8)*b(6,k) + s(7)*b(5,k) + s(6)*b(4,k) + s(5)*b(3,k) + s(4)*b(2,k) &
-         + s(3)*b(1,k) + s(2)*a1(k)  + s(1)*v1(k) + x1(k)
+                + s(3)*b(1,k) + s(2)*a1(k)  + s(1)*v1(k) + x1(k)
         end do
         !
         ! If necessary, calculate velocity predictors too, from Eqn. 10 of Everhart
@@ -3818,7 +3818,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
            !
            do k = 4, nv
               v(k) = s(8)*b(7,k) + s(7)*b(6,k) + s(6)*b(5,k) + s(5)*b(4,k) + s(4)*b(3,k)&
-             + s(3)*b(2,k) + s(2)*b(1,k) + s(1)*a1(k)  + v1(k)
+                   + s(3)*b(2,k) + s(2)*b(1,k) + s(1)*a1(k)  + v1(k)
            end do
         end if
         !
@@ -3904,7 +3904,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
               temp = g(7,k)
               gk = a(k) - a1(k)
               g(7,k) = ((((((gk*r(22) - g(1,k))*r(23) - g(2,k))*r(24) - g(3,k))*r(25) &
-                 - g(4,k))*r(26) - g(5,k))*r(27) - g(6,k))*r(28)
+                   - g(4,k))*r(26) - g(5,k))*r(27) - g(6,k))*r(28)
               temp = g(7,k) - temp
               b(1,k) = b(1,k)  +  temp * c(16)
               b(2,k) = b(2,k)  +  temp * c(17)
@@ -3950,10 +3950,10 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   temp = tdid * tdid
   do k = 4 , nv
      x1(k) = (xc(8)*b(7,k) + xc(7)*b(6,k) + xc(6)*b(5,k) + xc(5)*b(4,k) + xc(4)*b(3,k) + xc(3)*b(2,k)&
-     + xc(2)*b(1,k) + xc(1)*a1(k))*temp + v1(k)*tdid + x1(k)
+          + xc(2)*b(1,k) + xc(1)*a1(k))*temp + v1(k)*tdid + x1(k)
      !
      v1(k) = (vc(7)*b(7,k) + vc(6)*b(6,k) + vc(5)*b(5,k) + vc(4)*b(4,k) + vc(3)*b(3,k) + vc(2)*b(2,k)&
-     + vc(1)*b(1,k) + a1(k))*tdid + v1(k)
+          + vc(1)*b(1,k) + a1(k))*tdid + v1(k)
   end do
   !
   ! Predict new B values to use at the start of the next sequence. The predicted
@@ -4689,7 +4689,7 @@ subroutine mfo_obl (jcen,nbod,m,x,a,acen)
      !
      tmp1 = m(1) * r_3
      tmp2 = jr2*(7.5d0*u2 - 1.5d0) + jr4*(39.375d0*u4 - 26.25d0*u2 + 1.875d0) + &
-            jr6*(187.6875d0*u6 -216.5625d0*u4 +59.0625d0*u2 -2.1875d0)
+          jr6*(187.6875d0*u6 -216.5625d0*u4 +59.0625d0*u2 -2.1875d0)
      tmp3 = jr2*3.d0 + jr4*(17.5d0*u2 - 7.5d0) + jr6*(86.625d0*u4 - 78.75d0*u2 + 13.125d0)
      !
      a(1,i) = x(1,i) * tmp1 * tmp2
@@ -4910,7 +4910,7 @@ end function mio_c2re
 !------------------------------------------------------------------------------
 !
 subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,&
-    outfile,nstored,ceflush)
+     outfile,nstored,ceflush)
   !
   implicit none
   include 'mercury.inc'
@@ -4947,7 +4947,7 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,
      c(nstored)(15:22) = mio_fl2c(dclo(k))
      !
      call mco_x2ov (rcen,rmax,m(1),0.d0,ixvclo(1,k),ixvclo(2,k),ixvclo(3,k),ixvclo(4,k),ixvclo(5,k),ixvclo(6,k),fr,theta,phi,fv,&
-        vtheta,vphi)
+          vtheta,vphi)
      c(nstored)(23:30) = mio_re2c (fr    , 0.d0, rfac)
      c(nstored)(27:34) = mio_re2c (theta , 0.d0, PI)
      c(nstored)(31:38) = mio_re2c (phi   , 0.d0, TWOPI)
@@ -4956,7 +4956,7 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,
      c(nstored)(43:50) = mio_re2c (vphi  , 0.d0, TWOPI)
      !
      call mco_x2ov (rcen,rmax,m(1),0.d0,jxvclo(1,k),jxvclo(2,k),jxvclo(3,k),jxvclo(4,k),jxvclo(5,k),jxvclo(6,k),fr,theta,phi,fv,&
-        vtheta,vphi)
+          vtheta,vphi)
      c(nstored)(47:54) = mio_re2c (fr    , 0.d0, rfac)
      c(nstored)(51:58) = mio_re2c (theta , 0.d0, PI)
      c(nstored)(55:62) = mio_re2c (phi   , 0.d0, TWOPI)
@@ -5023,7 +5023,7 @@ end subroutine mio_ce
 !------------------------------------------------------------------------------
 !
 subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,&
-    ngf,epoch,opt,opflag,dumpfile,mem,lmem)
+     ngf,epoch,opt,opflag,dumpfile,mem,lmem)
   !
   implicit none
   include 'mercury.inc'
@@ -5351,7 +5351,7 @@ end function mio_fl2c
 !------------------------------------------------------------------------------
 !
 subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,&
-    id,epoch,ngf,opt,opflag,ngflag,outfile,dumpfile,lmem,mem)
+     id,epoch,ngf,opt,opflag,ngflag,outfile,dumpfile,lmem,mem)
   !
   implicit none
   include 'mercury.inc'
@@ -5378,9 +5378,9 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   !------------------------------------------------------------------------------
   !
   data alg/'MVS','Mvs','mvs','mvs','mvs','BS ','Bs ','bs ','Bul', 'bul','BS2','Bs2','bs2','Bu2','bu2',&
-            'RAD','Rad','rad','RA ', 'ra ','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx', 'xxx',&
-            'xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx', 'xxx','TES','Tes','tes','Tst','tst',&
-            'HYB','Hyb','hyb','HY ', 'hy ','CLO','Clo','clo','CB ','cb ','WID','Wid','wid','WB ', 'wb '/
+       'RAD','Rad','rad','RA ', 'ra ','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx', 'xxx',&
+       'xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx', 'xxx','TES','Tes','tes','Tst','tst',&
+       'HYB','Hyb','hyb','HY ', 'hy ','CLO','Clo','clo','CB ','cb ','WID','Wid','wid','WB ', 'wb '/
   !
   rhocgs = AU * AU * AU * K2 / MSUN
   do j = 1, 80
@@ -5491,7 +5491,7 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
            if (c80(1:3).eq.alg(k)) algor = (k + 4) / 5
         end do
         if (algor.eq.0) call mio_err (23,mem(81),lmem(81),mem(98),lmem(98),c80(lim(1,nsub):lim(2,nsub)),lim(2,nsub)-lim(1,nsub)+1,&
-            mem(85),lmem(85))
+             mem(85),lmem(85))
      end if
      if (j.eq.2) read (c80,*,err=661) tstart
      if (j.eq.3) read (c80,*,err=661) tstop
@@ -5825,7 +5825,7 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   !
   ! Check if non-grav forces are being used with an incompatible algorithm
   if (ngflag.ne.0.and.(algor.eq.3.or.algor.eq.11.or.algor.eq.12)) then
-    call mio_err (23,mem(81),lmem(81),mem(92),lmem(92),' ',1,mem(85),lmem(85))
+     call mio_err (23,mem(81),lmem(81),mem(92),lmem(92),' ',1,mem(85),lmem(85))
   endif
   !
   ! Check if user-defined force routine is being used with wrong algorithm
@@ -5846,7 +5846,7 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   !
   ! Check if central oblateness is being used with close-binary algorithm
   if (algor.eq.11.and.(jcen(1).ne.0.or.jcen(2).ne.0.or.jcen(3).ne.0)) then
-    call mio_err (23,mem(81),lmem(81),mem(102),lmem(102),' ',1,mem(85),lmem(85))
+     call mio_err (23,mem(81),lmem(81),mem(102),lmem(102),' ',1,mem(85),lmem(85))
   endif
   !
   ! Check whether RCEN > RMAX or RMAX/RCEN is very large
@@ -6565,7 +6565,7 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
         u4 = u2 * u2
         u6 = u4 * u2
         pe = pe + m(1) * m(j) * r_1 * (jcen(1) * r_2 * (1.5d0*u2 - 0.5d0) +  jcen(2) * r_4 * (4.375d0*u4 - 3.75d0*u2 + .375d0)&
-     +  jcen(3) * r_6 *(14.4375d0*u6 - 19.6875d0*u4 + 6.5625d0*u2 - .3125d0))
+             +  jcen(3) * r_6 *(14.4375d0*u6 - 19.6875d0*u4 + 6.5625d0*u2 - .3125d0))
      end do
   end if
   !
@@ -7499,10 +7499,10 @@ subroutine drift_kepu_stumpff(x,c0,c1,c2,c3)
   x6 = x3 * x3
   !
   c2 = 1.147074559772972d-11*x6 - 2.087675698786810d-9*x5 + 2.755731922398589d-7*x4  - 2.480158730158730d-5*x3&
- + 1.388888888888889d-3*x2  - 4.166666666666667d-2*x + .5d0
+       + 1.388888888888889d-3*x2  - 4.166666666666667d-2*x + .5d0
   !
   c3 = 7.647163731819816d-13*x6 - 1.605904383682161d-10*x5 + 2.505210838544172d-8*x4  - 2.755731922398589d-6*x3&
- + 1.984126984126984d-4*x2  - 8.333333333333333d-3*x + 1.666666666666667d-1
+       + 1.984126984126984d-4*x2  - 8.333333333333333d-3*x + 1.666666666666667d-1
   !
   c1 = 1. - x*c3
   c0 = 1. - x*c2
