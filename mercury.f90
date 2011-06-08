@@ -1,3 +1,4 @@
+program mercury
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
   !      MERCURY6_1.FOR    (ErikSoft   3 May 2002)
@@ -109,8 +110,9 @@
   !
   !------------------------------------------------------------------------------
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   integer j,algor,nbod,nbig,opt(8),stat(NMAX),lmem(NMESS)
   integer opflag,ngflag,ndump,nfun
@@ -186,7 +188,7 @@
 231 format (/,a,1p1e12.5)
 232 format (a,1p1e12.5)
   stop
-end program
+end program mercury
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
@@ -209,8 +211,9 @@ end program
 !
 subroutine mfo_user (time,jcen,nbod,nbig,m,x,v,a)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod, nbig
@@ -252,8 +255,9 @@ end subroutine mfo_user
 subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
      id,ngf,opt,opflag,ngflag,outfile,dumpfile,mem,lmem,onestep)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer algor,nbod,nbig,stat(nbod),opt(8),opflag,ngflag,ndump,nfun
@@ -485,8 +489,9 @@ end subroutine mal_hvar
 subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
      id,ngf,opt,opflag,ngflag,outfile,dumpfile,mem,lmem,onestep,coord,bcoord)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer algor,nbod,nbig,stat(nbod),opt(8),opflag,ngflag
@@ -746,8 +751,9 @@ end subroutine mal_hcon
 !
 subroutine mce_box (nbod,h,x0,v0,x1,v1,xmin,xmax,ymin,ymax)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod
@@ -804,8 +810,9 @@ end subroutine mce_box
 !
 subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,dhit,algor,ngf,ngflag)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer i0, nbod, nbig, nhit, jhit(CMAX), algor, ngflag
@@ -916,8 +923,9 @@ end subroutine mce_cent
 !
 subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,opt,mem,lmem,outfile)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer i,j,nbod,nbig,stat(nbod),opt(8),lmem(NMESS)
@@ -1010,8 +1018,9 @@ end subroutine mce_coll
 !
 subroutine mce_hill (nbod,m,x,v,hill,a)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   real*8 THIRD
   parameter (THIRD = .3333333333333333d0)
   !
@@ -1063,8 +1072,9 @@ end subroutine mce_hill
 !
 subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile,rcritflag)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   real*8 N2,THIRD
   parameter (N2=.4d0,THIRD=.3333333333333333d0)
@@ -1164,8 +1174,9 @@ end subroutine mce_init
 !
 subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer i, j, nbod, nbig, stat(nbod)
@@ -1372,8 +1383,9 @@ end subroutine mce_min
 !
 subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer i0,nbod,nbig,ce(nbod),nce,ice(NMAX),jce(NMAX)
@@ -1487,8 +1499,9 @@ end subroutine mce_snif
 subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
      thit,thit1,nowflag,stat,outfile,mem,lmem)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,stat(nbod),nowflag
@@ -1816,8 +1829,9 @@ end subroutine mco_iden
 !
 subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,ngflag,opt(8)
@@ -1953,8 +1967,9 @@ end subroutine mco_mvs2h
 !
 subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   real*8 gm,q,e,i,p,n,l,x,y,z,u,v,w
@@ -2116,8 +2131,9 @@ end subroutine mco_h2b
 !
 subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,ngflag,opt(8)
@@ -2730,8 +2746,9 @@ end subroutine mco_x2a
 !
 subroutine mco_x2ov (rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   real*8 rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
@@ -2783,8 +2800,9 @@ end subroutine mco_x2ov
 !
 subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   real*8 gm,q,e,i,p,n,l,x,y,z,u,v,w
@@ -2895,8 +2913,9 @@ end subroutine mco_x2el
 !
 subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,force)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   real*8 SHRINK,GROW
   parameter (SHRINK=.55d0,GROW=1.3d0)
@@ -3081,8 +3100,9 @@ end subroutine mdt_bs1
 !
 subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,force)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   real*8 SHRINK,GROW
   parameter (SHRINK=.55d0,GROW=1.3d0)
@@ -3256,8 +3276,9 @@ end subroutine mdt_bs2
 subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,&
      opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,stat(nbod),algor,opt(8),dtflag,ngflag,opflag
@@ -3407,8 +3428,9 @@ end subroutine mdt_hy
 subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcrit,rce,stat,id,ngf,algor,opt,ngflag,&
      colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem,force)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,nce,ice(nce),jce(nce),stat(nbod),ngflag,ce(nbod)
@@ -3558,8 +3580,9 @@ end subroutine mdt_hkce
 subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,&
      opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,stat(nbod),algor,opt(8),dtflag,ngflag,opflag
@@ -3681,8 +3704,9 @@ end subroutine mdt_mvs
 !
 subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,force)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,dtflag,ngflag,opt(8),stat(nbod)
@@ -4020,8 +4044,9 @@ end subroutine mdt_ra15
 !
 subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,ngflag,stat(nbod),opt(8),nce,ice(nce),jce(nce)
@@ -4114,8 +4139,9 @@ end subroutine mfo_all
 !
 subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod, nbig, stat(nbod)
@@ -4198,8 +4224,9 @@ end subroutine mfo_grav
 !
 subroutine mfo_drct (i0,nbod,nbig,m,x,rcrit,a,stat)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer i0, nbod, nbig, stat(nbod)
@@ -4271,8 +4298,9 @@ end subroutine mfo_drct
 !
 subroutine mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod, nbig, stat(nbod)
@@ -4326,8 +4354,9 @@ end subroutine mfo_hy
 !
 subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,stat(nbod),ngflag,opt(8),nce,ice(nce),jce(nce)
@@ -4418,8 +4447,9 @@ end subroutine mfo_hkce
 !
 subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod, nbig, stat(nbod)
@@ -4581,8 +4611,9 @@ end subroutine mfo_mvs
 !
 subroutine mfo_ngf (nbod,x,v,a,ngf)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod
@@ -4656,8 +4687,9 @@ end subroutine mfo_ngf
 !
 subroutine mfo_obl (jcen,nbod,m,x,a,acen)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod
@@ -4730,8 +4762,9 @@ end subroutine mfo_obl
 !
 subroutine mfo_pn (nbod,nbig,m,x,v,a)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod, nbig
@@ -4775,8 +4808,9 @@ end subroutine mfo_pn
 !
 subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod, nbig
@@ -4912,8 +4946,9 @@ end function mio_c2re
 subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,&
      outfile,nstored,ceflush)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,opt(8),stat(nbod),lmem(NMESS),stopflag
@@ -5025,8 +5060,9 @@ end subroutine mio_ce
 subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,&
      ngf,epoch,opt,opflag,dumpfile,mem,lmem)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer algor,nbod,nbig,stat(nbod),opt(8),opflag,ndump,nfun
@@ -5353,8 +5389,9 @@ end function mio_fl2c
 subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,&
      id,epoch,ngf,opt,opflag,ngflag,outfile,dumpfile,lmem,mem)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer algor,nbod,nbig,stat(NMAX),opt(8),opflag,ngflag
@@ -5987,8 +6024,9 @@ end subroutine mio_jd2y
 !
 subroutine mio_log (time,tstart,en,am,opt,mem,lmem)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer lmem(NMESS), opt(8)
@@ -6064,8 +6102,9 @@ end subroutine mio_log
 !
 subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opflag,algor,outfile)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod, nbig, stat(nbod), opt(8), opflag, algor
@@ -6320,8 +6359,9 @@ end subroutine mio_spl
 !
 subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,opt,ejflag,outfile,mem,lmem)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer i0, nbod, nbig, stat(nbod), opt(8), ejflag, lmem(NMESS)
@@ -6406,8 +6446,9 @@ end subroutine mxx_ejec
 !
 subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile,nelim)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod, nbig, nelim, stat(nbod), lmem(NMESS)
@@ -6493,8 +6534,9 @@ end subroutine mxx_elim
 !
 subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig
@@ -6596,8 +6638,9 @@ end subroutine mxx_en
 !
 subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig
@@ -6719,8 +6762,9 @@ end subroutine mxx_sort
 !
 subroutine mxx_sync (time,tstart,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,ngf,opt,ngflag)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer nbod,nbig,ngflag,opt(8),stat(nbod)

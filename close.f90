@@ -13,8 +13,9 @@
   !
   !------------------------------------------------------------------------------
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   integer itmp,i,j,k,l,iclo,jclo,precision,lenin
   integer nmaster,nopen,nwait,nbig,nsml,nsub,lim(2,100)
@@ -388,8 +389,9 @@ end subroutine m_formce
 !
 subroutine mco_ov2x (rcen,rmax,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   real*8 rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
@@ -443,8 +445,9 @@ end subroutine mco_ov2x
 !
 subroutine mco_el2x (mu,q,e,i,p,n,l,x,y,z,u,v,w)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   real*8 mu,q,e,i,p,n,l,x,y,z,u,v,w
@@ -759,8 +762,9 @@ end subroutine mco_sinh
 !
 subroutine mio_aei (id,extn,unitnum,header,lenhead,mem,lmem)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   integer unitnum,lenhead,lmem(NMESS)
@@ -1203,8 +1207,9 @@ end subroutine mco_iden
 !
 subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   !
+  use physical_constant
+  use mercury_constant
   implicit none
-  include 'mercury.inc'
   !
   ! Input/Output
   real*8 gm,q,e,i,p,n,l,x,y,z,u,v,w
