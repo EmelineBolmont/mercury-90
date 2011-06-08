@@ -1,114 +1,114 @@
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  !
-  !      MERCURY6_1.FOR    (ErikSoft   3 May 2002)
-  !
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  !
-  ! Author: John E. Chambers
-  !
-  ! Mercury is a general-purpose N-body integration package for problems in
-  ! celestial mechanics.
-  !
-  !------------------------------------------------------------------------------
-  ! This package contains some subroutines taken from the Swift integration 
-  ! package by H.F.Levison and M.J.Duncan (1994) Icarus, vol 108, pp18.
-  ! Routines taken from Swift have names beginning with `drift' or `orbel'.
-  !
-  ! The standard symplectic (MVS) algorithm is described in J.Widsom and
-  ! M.Holman (1991) Astronomical Journal, vol 102, pp1528.
-  !
-  ! The hybrid symplectic algorithm is described in J.E.Chambers (1999)
-  ! Monthly Notices of the RAS, vol 304, pp793.
-  !
-  ! RADAU is described in E.Everhart (1985) in ``The Dynamics of Comets:
-  ! Their Origin and Evolution'' p185-202, eds. A.Carusi & G.B.Valsecchi,
-  ! pub. Reidel.
-  !
-  ! The Bulirsch-Stoer algorithms are described in W.H.Press et al. (1992)
-  ! ``Numerical Recipes in Fortran'', pub. Cambridge.
-  !------------------------------------------------------------------------------
-  !
-  ! Variables:
-  ! ---------
-  !  M      = mass (in solar masses)
-  !  XH     = coordinates (x,y,z) with respect to the central body (AU)
-  !  VH     = velocities (vx,vy,vz) with respect to the central body (AU/day)
-  !  S      = spin angular momentum (solar masses AU^2/day)
-  !  RHO    = physical density (g/cm^3)
-  !  RCEH   = close-encounter limit (Hill radii)
-  !  STAT   = status (0 => alive, <>0 => to be removed)
-  !  ID     = name of the object (8 characters)
-  !  CE     = close encounter status
-  !  NGF    = (1-3) cometary non-gravitational (jet) force parameters
-  !   "     =  (4)  beta parameter for radiation pressure and P-R drag
-  !  EPOCH  = epoch of orbit (days)
-  !  NBOD  = current number of bodies (INCLUDING the central object)
-  !  NBIG  =    "       "    " big bodies (ones that perturb everything else)
-  !  TIME  = current epoch (days)
-  !  TOUT  = time of next output evaluation
-  !  TDUMP = time of next data dump
-  !  TFUN  = time of next periodic effect (e.g. next check for ejections)
-  !  H     = current integration timestep (days)
-  !  EN(1) = initial energy of the system
-  !  " (2) = current    "    "  "    "
-  !  " (3) = energy change due to collisions, ejections etc.
-  !  AM(1,2,3) = as above but for angular momentum
-  !
-  ! Integration Parameters :
-  ! ----------------------
-  !  ALGOR = 1  ->  Mixed-variable symplectic
-  !          2  ->  Bulirsch-Stoer integrator
-  !          3  ->         "           "      (conservative systems only)
-  !          4  ->  RA15 `radau' integrator
-  !          10 ->  Hybrid MVS/BS (democratic-heliocentric coords)
-  !          11 ->  Close-binary hybrid (close-binary coords)
-  !          12 ->  Wide-binary hybrid (wide-binary coords)
-  !
-  ! TSTART = epoch of first required output (days)
-  ! TSTOP  =   "      final required output ( "  )
-  ! DTOUT  = data output interval           ( "  )
-  ! DTDUMP = data-dump interval             ( "  )
-  ! DTFUN  = interval for other periodic effects (e.g. check for ejections)
-  !  H0    = initial integration timestep (days)
-  !  TOL   = Integrator tolerance parameter (approx. error per timestep)
-  !  RMAX  = heliocentric distance at which objects are considered ejected (AU)
-  !  RCEN  = radius of central body (AU)
-  !  JCEN(1,2,3) = J2,J4,J6 for central body (units of RCEN^i for Ji)
-  !
-  ! Options:
-  !  OPT(1) = close-encounter option (0=stop after an encounter, 1=continue)
-  !  OPT(2) = collision option (0=no collisions, 1=merge, 2=merge+fragment)
-  !  OPT(3) = time style (0=days 1=Greg.date 2/3=days/years w/respect to start)
-  !  OPT(4) = o/p precision (1,2,3 = 4,9,15 significant figures)
-  !  OPT(5) = < Not used at present >
-  !  OPT(6) = < Not used at present >
-  !  OPT(7) = apply post-Newtonian correction? (0=no, 1=yes)
-  !  OPT(8) = apply user-defined force routine mfo_user? (0=no, 1=yes)
-  !
-  ! File variables :
-  ! --------------
-  !  OUTFILE  (1) = osculating coordinates/velocities and masses
-  !     "     (2) = close encounter details
-  !     "     (3) = information file
-  !  DUMPFILE (1) = Big-body data
-  !     "     (2) = Small-body data
-  !     "     (3) = integration parameters
-  !     "     (4) = restart file
-  !
-  ! Flags :
-  ! -----
-  !  NGFLAG = do any bodies experience non-grav. forces?
-  !                            ( 0 = no non-grav forces)
-  !                              1 = cometary jets only
-  !                              2 = radiation pressure/P-R drag only
-  !                              3 = both
-  !  OPFLAG = integration mode (-2 = synchronising epochs)
-  !                             -1 = integrating towards start epoch
-  !                              0 = main integration, normal output
-  !                              1 = main integration, full output
-  !
-  !------------------------------------------------------------------------------
-  !
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      MERCURY6_1.FOR    (ErikSoft   3 May 2002)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Mercury is a general-purpose N-body integration package for problems in
+! celestial mechanics.
+!
+!------------------------------------------------------------------------------
+! This package contains some subroutines taken from the Swift integration 
+! package by H.F.Levison and M.J.Duncan (1994) Icarus, vol 108, pp18.
+! Routines taken from Swift have names beginning with `drift' or `orbel'.
+!
+! The standard symplectic (MVS) algorithm is described in J.Widsom and
+! M.Holman (1991) Astronomical Journal, vol 102, pp1528.
+!
+! The hybrid symplectic algorithm is described in J.E.Chambers (1999)
+! Monthly Notices of the RAS, vol 304, pp793.
+!
+! RADAU is described in E.Everhart (1985) in ``The Dynamics of Comets:
+! Their Origin and Evolution'' p185-202, eds. A.Carusi & G.B.Valsecchi,
+! pub. Reidel.
+!
+! The Bulirsch-Stoer algorithms are described in W.H.Press et al. (1992)
+! ``Numerical Recipes in Fortran'', pub. Cambridge.
+!------------------------------------------------------------------------------
+!
+! Variables:
+! ---------
+!  M      = mass (in solar masses)
+!  XH     = coordinates (x,y,z) with respect to the central body (AU)
+!  VH     = velocities (vx,vy,vz) with respect to the central body (AU/day)
+!  S      = spin angular momentum (solar masses AU^2/day)
+!  RHO    = physical density (g/cm^3)
+!  RCEH   = close-encounter limit (Hill radii)
+!  STAT   = status (0 => alive, <>0 => to be removed)
+!  ID     = name of the object (8 characters)
+!  CE     = close encounter status
+!  NGF    = (1-3) cometary non-gravitational (jet) force parameters
+!   "     =  (4)  beta parameter for radiation pressure and P-R drag
+!  EPOCH  = epoch of orbit (days)
+!  NBOD  = current number of bodies (INCLUDING the central object)
+!  NBIG  =    "       "    " big bodies (ones that perturb everything else)
+!  TIME  = current epoch (days)
+!  TOUT  = time of next output evaluation
+!  TDUMP = time of next data dump
+!  TFUN  = time of next periodic effect (e.g. next check for ejections)
+!  H     = current integration timestep (days)
+!  EN(1) = initial energy of the system
+!  " (2) = current    "    "  "    "
+!  " (3) = energy change due to collisions, ejections etc.
+!  AM(1,2,3) = as above but for angular momentum
+!
+! Integration Parameters :
+! ----------------------
+!  ALGOR = 1  ->  Mixed-variable symplectic
+!          2  ->  Bulirsch-Stoer integrator
+!          3  ->         "           "      (conservative systems only)
+!          4  ->  RA15 `radau' integrator
+!          10 ->  Hybrid MVS/BS (democratic-heliocentric coords)
+!          11 ->  Close-binary hybrid (close-binary coords)
+!          12 ->  Wide-binary hybrid (wide-binary coords)
+!
+! TSTART = epoch of first required output (days)
+! TSTOP  =   "      final required output ( "  )
+! DTOUT  = data output interval           ( "  )
+! DTDUMP = data-dump interval             ( "  )
+! DTFUN  = interval for other periodic effects (e.g. check for ejections)
+!  H0    = initial integration timestep (days)
+!  TOL   = Integrator tolerance parameter (approx. error per timestep)
+!  RMAX  = heliocentric distance at which objects are considered ejected (AU)
+!  RCEN  = radius of central body (AU)
+!  JCEN(1,2,3) = J2,J4,J6 for central body (units of RCEN^i for Ji)
+!
+! Options:
+!  OPT(1) = close-encounter option (0=stop after an encounter, 1=continue)
+!  OPT(2) = collision option (0=no collisions, 1=merge, 2=merge+fragment)
+!  OPT(3) = time style (0=days 1=Greg.date 2/3=days/years w/respect to start)
+!  OPT(4) = o/p precision (1,2,3 = 4,9,15 significant figures)
+!  OPT(5) = < Not used at present >
+!  OPT(6) = < Not used at present >
+!  OPT(7) = apply post-Newtonian correction? (0=no, 1=yes)
+!  OPT(8) = apply user-defined force routine mfo_user? (0=no, 1=yes)
+!
+! File variables :
+! --------------
+!  OUTFILE  (1) = osculating coordinates/velocities and masses
+!     "     (2) = close encounter details
+!     "     (3) = information file
+!  DUMPFILE (1) = Big-body data
+!     "     (2) = Small-body data
+!     "     (3) = integration parameters
+!     "     (4) = restart file
+!
+! Flags :
+! -----
+!  NGFLAG = do any bodies experience non-grav. forces?
+!                            ( 0 = no non-grav forces)
+!                              1 = cometary jets only
+!                              2 = radiation pressure/P-R drag only
+!                              3 = both
+!  OPFLAG = integration mode (-2 = synchronising epochs)
+!                             -1 = integrating towards start epoch
+!                              0 = main integration, normal output
+!                              1 = main integration, full output
+!
+!------------------------------------------------------------------------------
+!
 
 program mercury
 
@@ -119,6 +119,7 @@ program mercury
   !
   integer j,algor,nbod,nbig,opt(8),stat(NMAX),lmem(NMESS)
   integer opflag,ngflag,ndump,nfun
+  integer error
   real*8 m(NMAX),xh(3,NMAX),vh(3,NMAX),s(3,NMAX),rho(NMAX)
   real*8 rceh(NMAX),epoch(NMAX),ngf(4,NMAX),rmax,rcen,jcen(3)
   real*8 cefac,time,tstart,tstop,dtout,h0,tol,en(3),am(3)
@@ -138,7 +139,11 @@ program mercury
   !
   ! If this is a new integration, integrate all the objects to a common epoch.
   if (opflag.eq.-2) then
-20   open (23,file=outfile(3),status='old',access='append',err=20)
+    open (23,file=outfile(3),status='old',access='append',iostat=error)
+    if (error /= 0) then
+      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
+      stop
+    end if
      write (23,'(/,a)') mem(55)(1:lmem(55))
      write (*,'(a)') mem(55)(1:lmem(55))
      call mxx_sync (time,tstart,h0,tol,jcen,nbod,nbig,m,xh,vh,s,rho,rceh,stat,id,epoch,ngf,opt,ngflag)
@@ -175,7 +180,11 @@ program mercury
        id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
   !
   ! Calculate and record the overall change in energy and ang. momentum
-50 open  (23, file=outfile(3), status='old', access='append',err=50)
+    open  (23, file=outfile(3), status='old', access='append',iostat=error)
+    if (error /= 0) then
+      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
+      stop
+    end if
   write (23,'(/,a)') mem(57)(1:lmem(57))
   call mxx_en (jcen,nbod,nbig,m,xh,vh,s,en(2),am(2))
   !
@@ -938,7 +947,7 @@ subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,i
   character*8 id(nbod)
   !
   ! Local
-  integer year,month,itmp
+  integer year,month,itmp, error
   real*8 t1
   character*38 flost,fcol
   character*6 tstring
@@ -956,7 +965,11 @@ subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,i
   end if
   !
   ! Write message to info file (I=0 implies collision with the central body)
-10 open (23, file=outfile, status='old', access='append', err=10)
+    open (23, file=outfile, status='old', access='append', iostat=error)
+    if (error /= 0) then
+      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
+      stop
+    end if
   !
   if (opt(3).eq.1) then
      call mio_jd2y (time,year,month,t1)
@@ -1091,7 +1104,7 @@ subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,r
   character*80 outfile
   !
   ! Local
-  integer j
+  integer j, error
   real*8 a(NMAX),hill(NMAX),temp,amin,vmax,k_2,rhocgs,rcen_2
   character*80 header,c(NMAX)
   character*8 mio_re2c, mio_fl2c
@@ -1145,7 +1158,11 @@ subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,r
   end do
   !
   ! Write compressed output to file
-50 open (22, file=outfile, status='old', access='append', err=50)
+  open (22, file=outfile, status='old', access='append', iostat=error)
+  if (error /= 0) then
+    write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
+    stop
+  end if
   write (22,'(a1,a2,i2,a62,i1)') char(12),'6a',algor,header(1:62),opt(4)
   do j = 2, nbod
      write (22,'(a51)') c(j)(1:51)
@@ -1517,7 +1534,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   character*80 outfile,mem(NMESS)
   !
   ! Local
-  integer i,j
+  integer i,j, error
   real*8 d0,d1,d0t,d1t,hm1,tmp0,tmp1
   real*8 dx0,dy0,dz0,du0,dv0,dw0,dx1,dy1,dz1,du1,dv1,dw1
   real*8 xmin(NMAX),xmax(NMAX),ymin(NMAX),ymax(NMAX)
@@ -1579,7 +1596,11 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
            if ((d2min.le.d2ce.and.d0t*h.le.0.and.d1t*h.ge.0).or.(d2min.le.d2hit)) then
               nclo = nclo + 1
               if (nclo.gt.CMAX) then
-230              open (23,file=outfile,status='old',access='append',err=230)
+                open (23,file=outfile,status='old',access='append',iostat=error)
+                if (error /= 0) then
+                  write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
+                  stop
+                end if
                  write (23,'(/,2a,/,a)') mem(121)(1:lmem(121)),mem(132)(1:lmem(132)),mem(82)(1:lmem(82))
                  close (23)
               else
@@ -4968,6 +4989,7 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,
   character*38 fstop
   character*8 mio_fl2c, mio_re2c
   character*6 tstring
+  integer error
   !
   !------------------------------------------------------------------------------
   !
@@ -5005,7 +5027,11 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,
   !
   ! If required, output the stored close encounter details
   if (nstored.ge.100.or.ceflush.eq.0) then
-10   open (22, file=outfile(2), status='old', access='append',err=10)
+    open (22, file=outfile(2), status='old', access='append',iostat=error)
+    if (error /= 0) then
+      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(2))
+      stop
+    end if
      do k = 1, nstored
         write (22,'(a1,a2,a70)') char(12),'6b',c(k)(1:70)
      end do
@@ -5016,7 +5042,11 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,
   ! If new encounter minima have occurred, decide whether to stop integration
   stopflag = 0
   if (opt(1).eq.1.and.nclo.gt.0) then
-20   open (23, file=outfile(3), status='old', access='append',err=20)
+    open (23, file=outfile(3), status='old', access='append',iostat=error)
+    if (error /= 0) then
+      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
+      stop
+    end if
      ! If time style is Gregorian date then...
      tmp0 = tclo(1)
      if (opt(3).eq.1) then
@@ -5080,6 +5110,7 @@ subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   integer idp,i,j,k,len,j1,j2
   real*8 rhocgs,k_2,rcen_2,rcen_4,rcen_6,x0(3,NMAX),v0(3,NMAX)
   character*150 c
+  integer error
   !
   !------------------------------------------------------------------------------
   !
@@ -5101,9 +5132,17 @@ subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         if (idp.eq.1) then
            if (i.eq.1) c(1:12) = 'big.tmp     '
            if (i.eq.2) c(1:12) = 'small.tmp   '
-20         open (31, file=c(1:12), status='unknown', err=20)
+          open (31, file=c(1:12), status='unknown', iostat=error)
+          if (error /= 0) then
+            write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(c(1:12))
+            stop
+          end if
         else
-25         open (31, file=dumpfile(i), status='old', err=25)
+          open (31, file=dumpfile(i), status='old', iostat=error)
+          if (error /= 0) then
+            write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(dumpfile(i))
+            stop
+          end if
         end if
         !
         ! Write header lines, data style (and epoch for Big bodies)
@@ -5414,6 +5453,7 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   character*3 c3,alg(60)
   character*80 infile(3),filename,c80
   character*150 string
+  integer error
   !
   !------------------------------------------------------------------------------
   !
@@ -5496,13 +5536,21 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   if (oldflag) then
      inquire (file=outfile(3), exist=test)
      if (.not.test) call mio_err (6,mem(81),lmem(81),mem(88),lmem(88),' ',1,outfile(3),80)
-320  open(23,file=outfile(3),status='old',access='append',err=320)
+    open(23,file=outfile(3),status='old',access='append',iostat=error)
+    if (error /= 0) then
+      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
+      stop
+    end if
   else
      !
      ! If new integration, check information file doesn't exist, and then create it
      inquire (file=outfile(3), exist=test)
      if (test) call mio_err (6,mem(81),lmem(81),mem(87),lmem(87),' ',1,outfile(3),80)
-410  open(23, file = outfile(3), status = 'new', err=410)
+    open(23, file = outfile(3), status = 'new', iostat=error)
+    if (error /= 0) then
+      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
+      stop
+    end if
   end if
   !
   !------------------------------------------------------------------------------
@@ -5514,7 +5562,11 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   if (oldflag) filename = dumpfile(3)
   inquire (file=filename, exist=test)
   if (.not.test) call mio_err (23,mem(81),lmem(81),mem(88),lmem(88),' ',1,filename,80)
-30 open  (13, file=filename, status='old', err=30)
+  open(13, file=filename, status='old', iostat=error)
+  if (error /= 0) then
+    write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(filename)
+    stop
+  end if
   !
   ! Read integration parameters
   lineno = 0
@@ -5603,7 +5655,11 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
      if (oldflag) filename = dumpfile(j)
      inquire (file=filename, exist=test)
      if (.not.test) call mio_err (23,mem(81),lmem(81),mem(88),lmem(88),' ',1,filename,80)
-110  open (11, file=filename, status='old', err=110)
+    open (11, file=filename, status='old', iostat=error)
+    if (error /= 0) then
+      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(filename)
+      stop
+    end if
      !
      ! Read data style
 120  read (11,'(a150)') string
@@ -5748,7 +5804,11 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
      end if
      !
      ! Read in energy and angular momentum variables, and convert to internal units
-330  open (35, file=dumpfile(4), status='old', err=330)
+    open (35, file=dumpfile(4), status='old', iostat=error)
+    if (error /= 0) then
+      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(dumpfile(4))
+      stop
+    end if
      read (35,*) opflag
      read (35,*) en(1),am(1),en(3),am(3)
      en(1) = en(1) * K2
@@ -5815,7 +5875,11 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
      do j = 1, 2
         inquire (file=outfile(j), exist=test)
         if (test) call mio_err (23,mem(81),lmem(81),mem(87),lmem(87),' ',1,outfile(j),80)
-430     open  (20+j, file=outfile(j), status='new', err=430)
+        open  (20+j, file=outfile(j), status='new', iostat=error)
+        if (error /= 0) then
+          write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(j))
+          stop
+        end if
         close (20+j)
      end do
      !
@@ -5823,7 +5887,11 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
      do j = 1, 4
         inquire (file=dumpfile(j), exist=test)
         if (test) call mio_err (23,mem(81),lmem(81),mem(87),lmem(87),' ',1,dumpfile(j),80)
-450     open  (30+j, file=dumpfile(j), status='new', err=450)
+        open  (30+j, file=dumpfile(j), status='new', iostat=error)
+        if (error /= 0) then
+          write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(dumpfile(j))
+          stop
+        end if
         close (30+j)
      end do
      !
@@ -6122,6 +6190,7 @@ subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opfl
   character*80 header,c(NMAX)
   character*8 mio_fl2c,mio_re2c
   character*5 fout
+  integer error
   !
   !------------------------------------------------------------------------------
   !
@@ -6142,7 +6211,11 @@ subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opfl
   if (len.ge.10) write (fout(3:4),'(i2)') len
   !
   ! Open the orbital-elements output file
-10 open (21, file=outfile, status='old', access='append', err=10)
+  open (21, file=outfile, status='old', access='append', iostat=error)
+  if (error /= 0) then
+    write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
+    stop
+  end if
   !
   !------------------------------------------------------------------------------
   !
@@ -6378,6 +6451,7 @@ subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,op
   real*8 r2,rmax2,t1,e,l
   character*38 flost
   character*6 tstring
+  integer error
   !
   !------------------------------------------------------------------------------
   !
@@ -6400,7 +6474,11 @@ subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,op
         s(3,j) = 0.d0
         !
         ! Write message to information file
-20      open  (23,file=outfile,status='old',access='append',err=20)
+        open  (23,file=outfile,status='old',access='append',iostat=error)
+        if (error /= 0) then
+          write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
+          stop
+        end if
         if (opt(3).eq.1) then
            call mio_jd2y (time,year,month,t1)
            flost = '(1x,a8,a,i10,1x,i2,1x,f8.5)'
@@ -6462,6 +6540,7 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfi
   !
   ! Local
   integer j, k, l, nbigelim, elim(NMAX+1)
+  integer error
   !
   !------------------------------------------------------------------------------
   !
@@ -6508,7 +6587,11 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfi
   !
   ! If no massive bodies remain, stop the integration
   if (nbig.lt.1) then
-10   open (23,file=outfile,status='old',access='append',err=10)
+    open (23,file=outfile,status='old',access='append',iostat=error)
+    if (error /= 0) then
+      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
+      stop
+    end if
      write (23,'(2a)') mem(81)(1:lmem(81)),mem(124)(1:lmem(124))
      close (23)
      stop

@@ -1,18 +1,18 @@
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  !
-  !      CLOSE6.FOR    (ErikSoft   5 June 2001)
-  !
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  !
-  ! Author: John E. Chambers
-  !
-  ! Makes output files containing details of close encounters that occurred
-  ! during an integration using Mercury6 or higher.
-  !
-  ! The user specifies the names of the required objects in the file close.in
-  !
-  !------------------------------------------------------------------------------
-  !
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      CLOSE6.FOR    (ErikSoft   5 June 2001)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Makes output files containing details of close encounters that occurred
+! during an integration using Mercury6 or higher.
+!
+! The user specifies the names of the required objects in the file close.in
+!
+!------------------------------------------------------------------------------
+!
 
 program close
   use physical_constant
