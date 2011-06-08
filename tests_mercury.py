@@ -53,7 +53,6 @@ FOLDER = "simu_test"
 
 os.chdir(FOLDER)
 
-
 (process_stdout, process_stderr) = run("../mercury")
 
 (process_stdout, process_stderr) = run("../close")

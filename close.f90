@@ -13,6 +13,8 @@
   !
   !------------------------------------------------------------------------------
   !
+
+program close
   use physical_constant
   use mercury_constant
   implicit none
@@ -250,8 +252,8 @@
         gm = mcen + m(jclo)
         call mco_x2el (gm,x2(1),x2(2),x2(3),v2(1),v2(2),v2(3),q2,e2,i2,p2,n2,l2)
         a2 = q2 / (1.d0 - e2)
-        i1 = i1 / DR
-        i2 = i2 / DR
+        i1 = i1 * RAD2DEG
+        i2 = i2 * RAD2DEG
         !
         ! Convert time to desired format
         if (timestyle.eq.0) t1 = time
@@ -316,7 +318,8 @@
      goto 90
   end if
   !
-end program
+end program close
+
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
@@ -1490,7 +1493,8 @@ end subroutine mio_spl
 
 real*8 function orbel_fhybrid(e,n)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 e,n
@@ -1537,7 +1541,8 @@ end function orbel_fhybrid  ! orbel_fhybrid
 
 real*8 function orbel_fget(e,capn)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 e,capn
@@ -1608,7 +1613,8 @@ end function orbel_fget   ! orbel_fget
 
 real*8 function orbel_flon(e,capn)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 e,capn
@@ -1718,7 +1724,8 @@ end function orbel_flon     ! orbel_flon
 
 real*8 function orbel_zget(q)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 q

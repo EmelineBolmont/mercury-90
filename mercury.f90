@@ -1,4 +1,3 @@
-program mercury
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
   !      MERCURY6_1.FOR    (ErikSoft   3 May 2002)
@@ -110,8 +109,12 @@ program mercury
   !
   !------------------------------------------------------------------------------
   !
+
+program mercury
+
   use physical_constant
   use mercury_constant
+
   implicit none
   !
   integer j,algor,nbod,nbig,opt(8),stat(NMAX),lmem(NMESS)
@@ -5689,9 +5692,9 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
         read (11,*,err=666) x(1,nbod),x(2,nbod),x(3,nbod),v(1,nbod),v(2,nbod),v(3,nbod),s(1,nbod),s(2,nbod),s(3,nbod)
      else
         read (11,*,err=666) a,e,i,p,n,l,s(1,nbod),s(2,nbod),s(3,nbod)
-        i = i * DR
-        p = (p + n) * DR
-        n = n * DR
+        i = i * DEG2RAD
+        p = (p + n) * DEG2RAD
+        n = n * DEG2RAD
         temp = m(nbod)  +  m(1)
         !
         ! Alternatively, read Cometary or asteroidal elements
@@ -5701,7 +5704,7 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
            l = mod (sqrt(temp/(abs(a*a*a))) * (epoch(nbod) - l), TWOPI)
         else
            q = a * (1.d0 - e)
-           l = l * DR
+           l = l * DEG2RAD
         end if
         if (algor.eq.11.and.nbod.ne.2) temp = temp + m(2)
         call mco_el2x (temp,q,e,i,p,n,l,x(1,nbod),x(2,nbod),x(3,nbod),v(1,nbod),v(2,nbod),v(3,nbod))
@@ -6904,7 +6907,9 @@ end subroutine mxx_sync
 
 subroutine drift_dan(mu,x0,y0,z0,vx0,vy0,vz0,dt0,iflg)
 
-  include 'swift.inc'
+  use mercury_constant
+  use physical_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 mu,dt0
@@ -7104,7 +7109,8 @@ end subroutine drift_kepmd
 
 subroutine drift_kepu(dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs: 
   real*8 dt,r0,mu,alpha,u
@@ -7208,7 +7214,8 @@ end subroutine drift_kepu_fchk     !   drift_kepu_fchk
 
 subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs: 
   real*8 dt,r0,mu,alpha,u
@@ -7286,7 +7293,8 @@ end subroutine drift_kepu_guess     !   drift_kepu_guess
 
 subroutine drift_kepu_lag(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs: 
   real*8 s,dt,r0,mu,alpha,u
@@ -7374,7 +7382,8 @@ end subroutine drift_kepu_lag    !    drift_kepu_leg
 
 subroutine drift_kepu_new(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflgn)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs: 
   real*8 s,dt,r0,mu,alpha,u
@@ -7514,7 +7523,8 @@ end subroutine drift_kepu_p3solve     !   drift_kepu_p3solve
 !
 subroutine drift_kepu_stumpff(x,c0,c1,c2,c3)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs: 
   real*8 x
@@ -7594,7 +7604,8 @@ end subroutine drift_kepu_stumpff     !   drift_kepu_stumpff
 
 subroutine drift_one(mu,x,y,z,vx,vy,vz,dt,iflg)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 mu,dt
@@ -7651,7 +7662,8 @@ end subroutine drift_one    ! drift_one
 
 real*8 function orbel_fget(e,capn)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 e,capn
@@ -7724,7 +7736,8 @@ end function orbel_fget   ! orbel_fget
 
 real*8 function orbel_fhybrid(e,n)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 e,n
@@ -7769,7 +7782,8 @@ end function orbel_fhybrid  ! orbel_fhybrid
 
 real*8 function orbel_flon(e,capn)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 e,capn
@@ -7878,7 +7892,8 @@ end function orbel_flon     ! orbel_flon
 
 real*8 function orbel_zget(q)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 q

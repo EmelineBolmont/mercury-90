@@ -15,8 +15,11 @@
   !
   !------------------------------------------------------------------------------
   !
+program element
+
   use physical_constant
   use mercury_constant
+  
   implicit none
   !
   integer itmp,i,j,k,l,iback(NMAX),precision,lenin
@@ -334,10 +337,10 @@
            !
            ! Convert angular elements from radians to degrees
            do l = 3, 7
-              el(l,k) = mod(el(l,k) / DR, 360.d0)
+              el(l,k) = mod(el(l,k) * RAD2DEG, 360.d0)
            end do
-           el(17,k) = el(17,k) / DR
-           el(19,k) = el(19,k) / DR
+           el(17,k) = el(17,k) * RAD2DEG
+           el(19,k) = el(19,k) * RAD2DEG
         end do
         !
         ! Convert time to desired format
@@ -445,7 +448,7 @@
   ! Format statements
 213 format (1x,a8,1x,f8.4,1x,f7.5,1x,f7.3,1p,e11.4,0p,1x,f6.3,1x,f6.2)
   !
-end program
+end program element
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
@@ -1830,7 +1833,8 @@ end subroutine m_format
 
 real*8 function orbel_fhybrid(e,n)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 e,n
@@ -1877,7 +1881,8 @@ end function orbel_fhybrid  ! orbel_fhybrid
 
 real*8 function orbel_fget(e,capn)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 e,capn
@@ -1948,7 +1953,8 @@ end function orbel_fget   ! orbel_fget
 
 real*8 function orbel_flon(e,capn)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 e,capn
@@ -2058,7 +2064,8 @@ end function orbel_flon     ! orbel_flon
 
 real*8 function orbel_zget(q)
 
-  include 'swift.inc'
+  use mercury_constant
+  implicit none
 
   !...  Inputs Only: 
   real*8 q
