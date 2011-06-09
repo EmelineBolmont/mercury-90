@@ -567,192 +567,192 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   !
   !  MAIN  LOOP  STARTS  HERE
   !
-100 continue
-  !
-  ! Is it time for output ?
-  if (abs(tout-time).le.hby2.and.opflag.ge.-1) then
-     !
-     ! Beware: the integration may change direction at this point!!!!
-     if (opflag.eq.-1.and.dtflag.ne.0) dtflag = 1
-     !
-     ! Convert to heliocentric coordinates and output data for all bodies
-     call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-     call mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opflag,algor,outfile(1))
-     call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-          nstored,0)
-     tmp0 = tstop - tout
-     tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
-     !
-     ! Update the data dump files
-     do j = 2, nbod
-        epoch(j) = time
-     end do
-     call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-          id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
-     tdump = time
-  end if
-  !
-  ! If integration has finished, convert to heliocentric coords and return
-  if (abs(tstop-time).le.hby2.and.opflag.ge.0) then
-     call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-     return
-  end if
-  !
-  ! Make sure the integration is heading in the right direction
-  ! The timestep will be redo if there are collisions with central body. Else, we exit the loop in the last 'if' statement.
   do
-    tmp0 = tstop - time
-    if (opflag.eq.-1) tmp0 = tstart - time
-    h0 = sign (h0, tmp0)
     !
-    ! Save the current heliocentric coordinates and velocities
-    if (algor.eq.1) then
-       call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
-    else
-       call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
-    end if
-    call onestep (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,& 
-         opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
-    time = time + h0
-    !
-    !------------------------------------------------------------------------------
-    !
-    !  CLOSE  ENCOUNTERS
-    !
-    ! If encounter minima occurred, output details and decide whether to stop
-    if ((nclo.gt.0).and.(opflag.ge.-1)) then
-       itmp = 1
-       if (colflag.ne.0) itmp = 0
-       call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-            nstored,itmp)
-       if (stopflag.eq.1) return
-    end if
-    !
-    !------------------------------------------------------------------------------
-    !
-    !  COLLISIONS
-    !
-    ! If collisions occurred, output details and remove lost objects
-    if (colflag.ne.0) then
+    ! Is it time for output ?
+    if (abs(tout-time).le.hby2.and.opflag.ge.-1) then
        !
-       ! Reindex the surviving objects
+       ! Beware: the integration may change direction at this point!!!!
+       if (opflag.eq.-1.and.dtflag.ne.0) dtflag = 1
+       !
+       ! Convert to heliocentric coordinates and output data for all bodies
        call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-       call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+       call mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opflag,algor,outfile(1))
+       call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
+            nstored,0)
+       tmp0 = tstop - tout
+       tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
        !
-       ! Reset flags, and calculate new Hill radii and physical radii
-       dtflag = 1
-       if (opflag.ge.0) opflag = 1
-       call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),1)
-       call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
-    end if
-    !
-    !------------------------------------------------------------------------------
-    !
-    !  COLLISIONS  WITH  CENTRAL  BODY
-    !
-    ! Check for collisions with the central body
-    if (algor.eq.1) then
-       call mco_iden(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-    else
-       call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-    end if
-    itmp = 2
-    if ((algor.eq.11).or.(algor.eq.12)) itmp = 3
-    call mce_cent (time,h0,rcen,jcen,itmp,nbod,nbig,m,xh0,vh0,xh,vh,nhit,jhit,thit,dhit,algor,ngf,ngflag)
-    !
-    ! If something hit the central body, restore the coords prior to this step
-    if (nhit.eq.0) then
-      exit
-    else 
-       ! Redo that integration time step
-       call mco_iden (time,jcen,nbod,nbig,h0,m,xh0,vh0,xh,vh,ngf,ngflag,opt)
-       time = time - h0
-       !
-       ! Merge the object(s) with the central body
-       do k = 1, nhit
-          i = 1
-          j = jhit(k)
-          call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,opt,mem,lmem,outfile(3))
+       ! Update the data dump files
+       do j = 2, nbod
+          epoch(j) = time
        end do
-       !
-       ! Remove lost objects, reset flags and recompute Hill and physical radii
-       call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
-       if (opflag.ge.0) opflag = 1
-       dtflag = 1
-       call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
+       call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
+            id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
+       tdump = time
+    end if
+    !
+    ! If integration has finished, convert to heliocentric coords and return
+    if (abs(tstop-time).le.hby2.and.opflag.ge.0) then
+       call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+       return
+    end if
+    !
+    ! Make sure the integration is heading in the right direction
+    ! The timestep will be redo if there are collisions with central body. Else, we exit the loop in the last 'if' statement.
+    do
+      tmp0 = tstop - time
+      if (opflag.eq.-1) tmp0 = tstart - time
+      h0 = sign (h0, tmp0)
+      !
+      ! Save the current heliocentric coordinates and velocities
+      if (algor.eq.1) then
+         call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
+      else
+         call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
+      end if
+      call onestep (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,& 
+           opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
+      time = time + h0
+      !
+      !------------------------------------------------------------------------------
+      !
+      !  CLOSE  ENCOUNTERS
+      !
+      ! If encounter minima occurred, output details and decide whether to stop
+      if ((nclo.gt.0).and.(opflag.ge.-1)) then
+         itmp = 1
+         if (colflag.ne.0) itmp = 0
+         call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,&
+              outfile,nstored,itmp)
+         if (stopflag.eq.1) return
+      end if
+      !
+      !------------------------------------------------------------------------------
+      !
+      !  COLLISIONS
+      !
+      ! If collisions occurred, output details and remove lost objects
+      if (colflag.ne.0) then
+         !
+         ! Reindex the surviving objects
+         call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+         call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+         !
+         ! Reset flags, and calculate new Hill radii and physical radii
+         dtflag = 1
+         if (opflag.ge.0) opflag = 1
+         call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),1)
+         call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+      end if
+      !
+      !------------------------------------------------------------------------------
+      !
+      !  COLLISIONS  WITH  CENTRAL  BODY
+      !
+      ! Check for collisions with the central body
+      if (algor.eq.1) then
+         call mco_iden(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+      else
+         call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+      end if
+      itmp = 2
+      if ((algor.eq.11).or.(algor.eq.12)) itmp = 3
+      call mce_cent (time,h0,rcen,jcen,itmp,nbod,nbig,m,xh0,vh0,xh,vh,nhit,jhit,thit,dhit,algor,ngf,ngflag)
+      !
+      ! If something hit the central body, restore the coords prior to this step
+      if (nhit.eq.0) then
+        exit
+      else 
+         ! Redo that integration time step
+         call mco_iden (time,jcen,nbod,nbig,h0,m,xh0,vh0,xh,vh,ngf,ngflag,opt)
+         time = time - h0
+         !
+         ! Merge the object(s) with the central body
+         do k = 1, nhit
+            i = 1
+            j = jhit(k)
+            call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,opt,mem,lmem,outfile(3))
+         end do
+         !
+         ! Remove lost objects, reset flags and recompute Hill and physical radii
+         call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+         if (opflag.ge.0) opflag = 1
+         dtflag = 1
+         call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
+         if (algor.eq.1) then
+            call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+         else
+            call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+         end if
+         !
+      end if
+    end do
+    !
+    !------------------------------------------------------------------------------
+    !
+    !  DATA  DUMP  AND  PROGRESS  REPORT
+    !
+    ! Convert to heliocentric coords and do the data dump
+    if (abs(time-tdump).ge.abs(dtdump).and.opflag.ge.-1) then
+       call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+       do j = 2, nbod
+          epoch(j) = time
+       end do
+       call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
+            nstored,0)
+       call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
+            id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
+       tdump = time
+    end if
+    !
+    ! Convert to heliocentric coords and write a progress report to the log file
+    if (abs(time-tlog).ge.abs(dtdump).and.opflag.ge.0) then
+       call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+       call mxx_en (jcen,nbod,nbig,m,xh,vh,s,en(2),am(2))
+       call mio_log (time,tstart,en,am,opt,mem,lmem)
+       tlog = time
+    end if
+    !
+    !------------------------------------------------------------------------------
+    !
+    !  CHECK  FOR  EJECTIONS  AND  DO  OTHER  PERIODIC  EFFECTS
+    !
+    if (abs(time-tfun).ge.abs(dtfun).and.opflag.ge.-1) then
        if (algor.eq.1) then
-          call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+          call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
        else
-          call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+          call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
        end if
        !
+       ! Recompute close encounter limits, to allow for changes in Hill radii
+       call mce_hill (nbod,m,xh,vh,rce,a)
+       do j = 2, nbod
+          rce(j) = rce(j) * rceh(j)
+       end do
+       !
+       ! Check for ejections
+       itmp = 2
+       if ((algor.eq.11).or.(algor.eq.12)) itmp = 3
+       call mxx_ejec (time,tstart,rmax,en,am,jcen,itmp,nbod,nbig,m,xh,vh,s,stat,id,opt,ejflag,outfile(3),mem,lmem)
+       !
+       ! Remove ejected objects, reset flags, calculate new Hill and physical radii
+       if (ejflag.ne.0) then
+          call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+          if (opflag.ge.0) opflag = 1
+          dtflag = 1
+          call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
+          if (algor.eq.1) then
+             call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+          else
+             call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+          end if
+       end if
+       tfun = time
     end if
+    !
+    ! Go on to the next time step
   end do
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  DATA  DUMP  AND  PROGRESS  REPORT
-  !
-  ! Convert to heliocentric coords and do the data dump
-  if (abs(time-tdump).ge.abs(dtdump).and.opflag.ge.-1) then
-     call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-     do j = 2, nbod
-        epoch(j) = time
-     end do
-     call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-          nstored,0)
-     call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-          id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
-     tdump = time
-  end if
-  !
-  ! Convert to heliocentric coords and write a progress report to the log file
-  if (abs(time-tlog).ge.abs(dtdump).and.opflag.ge.0) then
-     call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-     call mxx_en (jcen,nbod,nbig,m,xh,vh,s,en(2),am(2))
-     call mio_log (time,tstart,en,am,opt,mem,lmem)
-     tlog = time
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  CHECK  FOR  EJECTIONS  AND  DO  OTHER  PERIODIC  EFFECTS
-  !
-  if (abs(time-tfun).ge.abs(dtfun).and.opflag.ge.-1) then
-     if (algor.eq.1) then
-        call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-     else
-        call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-     end if
-     !
-     ! Recompute close encounter limits, to allow for changes in Hill radii
-     call mce_hill (nbod,m,xh,vh,rce,a)
-     do j = 2, nbod
-        rce(j) = rce(j) * rceh(j)
-     end do
-     !
-     ! Check for ejections
-     itmp = 2
-     if (algor.eq.11.or.algor.eq.12) itmp = 3
-     call mxx_ejec (time,tstart,rmax,en,am,jcen,itmp,nbod,nbig,m,xh,vh,s,stat,id,opt,ejflag,outfile(3),mem,lmem)
-     !
-     ! Remove ejected objects, reset flags, calculate new Hill and physical radii
-     if (ejflag.ne.0) then
-        call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
-        if (opflag.ge.0) opflag = 1
-        dtflag = 1
-        call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
-        if (algor.eq.1) then
-           call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
-        else
-           call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
-        end if
-     end if
-     tfun = time
-  end if
-  !
-  ! Go on to the next time step
-  goto 100
   !
   !------------------------------------------------------------------------------
   !
@@ -3068,128 +3068,128 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   ! Calculate accelerations at the start of the step
   call force (time,jcen,nbod,nbig,mass,x0,v0,s,rcrit,a0,stat,ngf,ngflag,opt,nce,ice,jce)
   !
-100 continue
-  !
-  ! For each value of N, do a modified-midpoint integration with 2N substeps
-  do n = 1, 8
-     h = h0 / (2.d0 * float(n))
-     h2(n) = .25d0 / (n*n)
-     hx2 = h * 2.d0
-     !
-     do k = 2, nbod
-        x(1,k) = x0(1,k) + h*v0(1,k)
-        x(2,k) = x0(2,k) + h*v0(2,k)
-        x(3,k) = x0(3,k) + h*v0(3,k)
-        v(1,k) = v0(1,k) + h*a0(1,k)
-        v(2,k) = v0(2,k) + h*a0(2,k)
-        v(3,k) = v0(3,k) + h*a0(3,k)
-     end do
-     call force (time,jcen,nbod,nbig,mass,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
-     do k = 2, nbod
-        xend(1,k) = x0(1,k) + hx2*v(1,k)
-        xend(2,k) = x0(2,k) + hx2*v(2,k)
-        xend(3,k) = x0(3,k) + hx2*v(3,k)
-        vend(1,k) = v0(1,k) + hx2*a(1,k)
-        vend(2,k) = v0(2,k) + hx2*a(2,k)
-        vend(3,k) = v0(3,k) + hx2*a(3,k)
-     end do
-     !
-     do j = 2, n
-        call force (time,jcen,nbod,nbig,mass,xend,vend,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
-        do k = 2, nbod
-           x(1,k) = x(1,k) + hx2*vend(1,k)
-           x(2,k) = x(2,k) + hx2*vend(2,k)
-           x(3,k) = x(3,k) + hx2*vend(3,k)
-           v(1,k) = v(1,k) + hx2*a(1,k)
-           v(2,k) = v(2,k) + hx2*a(2,k)
-           v(3,k) = v(3,k) + hx2*a(3,k)
-        end do
-        call force (time,jcen,nbod,nbig,mass,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
-        do k = 2, nbod
-           xend(1,k) = xend(1,k) + hx2*v(1,k)
-           xend(2,k) = xend(2,k) + hx2*v(2,k)
-           xend(3,k) = xend(3,k) + hx2*v(3,k)
-           vend(1,k) = vend(1,k) + hx2*a(1,k)
-           vend(2,k) = vend(2,k) + hx2*a(2,k)
-           vend(3,k) = vend(3,k) + hx2*a(3,k)
-        end do
-     end do
-     !
-     call force (time,jcen,nbod,nbig,mass,xend,vend,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
-     !
-     do k = 2, nbod
-        d(1,k,n) = .5d0*(xend(1,k) + x(1,k) + h*vend(1,k))
-        d(2,k,n) = .5d0*(xend(2,k) + x(2,k) + h*vend(2,k))
-        d(3,k,n) = .5d0*(xend(3,k) + x(3,k) + h*vend(3,k))
-        d(4,k,n) = .5d0*(vend(1,k) + v(1,k) + h*a(1,k))
-        d(5,k,n) = .5d0*(vend(2,k) + v(2,k) + h*a(2,k))
-        d(6,k,n) = .5d0*(vend(3,k) + v(3,k) + h*a(3,k))
-     end do
-     !
-     ! Update the D array, used for polynomial extrapolation
-     do j = n - 1, 1, -1
-        j1 = j + 1
-        tmp0 = 1.d0 / (h2(j) - h2(n))
-        tmp1 = tmp0 * h2(j1)
-        tmp2 = tmp0 * h2(n)
-        do k = 2, nbod
-           d(1,k,j) = tmp1 * d(1,k,j1)  -  tmp2 * d(1,k,j)
-           d(2,k,j) = tmp1 * d(2,k,j1)  -  tmp2 * d(2,k,j)
-           d(3,k,j) = tmp1 * d(3,k,j1)  -  tmp2 * d(3,k,j)
-           d(4,k,j) = tmp1 * d(4,k,j1)  -  tmp2 * d(4,k,j)
-           d(5,k,j) = tmp1 * d(5,k,j1)  -  tmp2 * d(5,k,j)
-           d(6,k,j) = tmp1 * d(6,k,j1)  -  tmp2 * d(6,k,j)
-        end do
-     end do
-     !
-     ! After several integrations, test the relative error on extrapolated values
-     if (n.gt.3) then
-        errmax = 0.d0
-        !
-        ! Maximum relative position and velocity errors (last D term added)
-        do k = 2, nbod
-           tmp1 = max( d(1,k,1)*d(1,k,1), d(2,k,1)*d(2,k,1),        d(3,k,1)*d(3,k,1) )
-           tmp2 = max( d(4,k,1)*d(4,k,1), d(5,k,1)*d(5,k,1),        d(6,k,1)*d(6,k,1) )
-           errmax = max(errmax, tmp1*xscal(k), tmp2*vscal(k))
-        end do
-        !
-        ! If error is smaller than TOL, update position and velocity arrays, and exit
-        if (errmax.le.tol2) then
-           do k = 2, nbod
-              x0(1,k) = d(1,k,1)
-              x0(2,k) = d(2,k,1)
-              x0(3,k) = d(3,k,1)
-              v0(1,k) = d(4,k,1)
-              v0(2,k) = d(5,k,1)
-              v0(3,k) = d(6,k,1)
-           end do
-           !
-           do j = 2, n
-              do k = 2, nbod
-                 x0(1,k) = x0(1,k) + d(1,k,j)
-                 x0(2,k) = x0(2,k) + d(2,k,j)
-                 x0(3,k) = x0(3,k) + d(3,k,j)
-                 v0(1,k) = v0(1,k) + d(4,k,j)
-                 v0(2,k) = v0(2,k) + d(5,k,j)
-                 v0(3,k) = v0(3,k) + d(6,k,j)
-              end do
-           end do
-           !
-           ! Save the actual stepsize used
-           hdid = h0
-           !
-           ! Recommend a new stepsize for the next call to this subroutine
-           if (n.eq.8) h0 = h0 * SHRINK
-           if (n.lt.7) h0 = h0 * GROW
-           return
-        end if
-     end if
-     !
+  do
+    !
+    ! For each value of N, do a modified-midpoint integration with 2N substeps
+    do n = 1, 8
+       h = h0 / (2.d0 * float(n))
+       h2(n) = .25d0 / (n*n)
+       hx2 = h * 2.d0
+       !
+       do k = 2, nbod
+          x(1,k) = x0(1,k) + h*v0(1,k)
+          x(2,k) = x0(2,k) + h*v0(2,k)
+          x(3,k) = x0(3,k) + h*v0(3,k)
+          v(1,k) = v0(1,k) + h*a0(1,k)
+          v(2,k) = v0(2,k) + h*a0(2,k)
+          v(3,k) = v0(3,k) + h*a0(3,k)
+       end do
+       call force (time,jcen,nbod,nbig,mass,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+       do k = 2, nbod
+          xend(1,k) = x0(1,k) + hx2*v(1,k)
+          xend(2,k) = x0(2,k) + hx2*v(2,k)
+          xend(3,k) = x0(3,k) + hx2*v(3,k)
+          vend(1,k) = v0(1,k) + hx2*a(1,k)
+          vend(2,k) = v0(2,k) + hx2*a(2,k)
+          vend(3,k) = v0(3,k) + hx2*a(3,k)
+       end do
+       !
+       do j = 2, n
+          call force (time,jcen,nbod,nbig,mass,xend,vend,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+          do k = 2, nbod
+             x(1,k) = x(1,k) + hx2*vend(1,k)
+             x(2,k) = x(2,k) + hx2*vend(2,k)
+             x(3,k) = x(3,k) + hx2*vend(3,k)
+             v(1,k) = v(1,k) + hx2*a(1,k)
+             v(2,k) = v(2,k) + hx2*a(2,k)
+             v(3,k) = v(3,k) + hx2*a(3,k)
+          end do
+          call force (time,jcen,nbod,nbig,mass,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+          do k = 2, nbod
+             xend(1,k) = xend(1,k) + hx2*v(1,k)
+             xend(2,k) = xend(2,k) + hx2*v(2,k)
+             xend(3,k) = xend(3,k) + hx2*v(3,k)
+             vend(1,k) = vend(1,k) + hx2*a(1,k)
+             vend(2,k) = vend(2,k) + hx2*a(2,k)
+             vend(3,k) = vend(3,k) + hx2*a(3,k)
+          end do
+       end do
+       !
+       call force (time,jcen,nbod,nbig,mass,xend,vend,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+       !
+       do k = 2, nbod
+          d(1,k,n) = .5d0*(xend(1,k) + x(1,k) + h*vend(1,k))
+          d(2,k,n) = .5d0*(xend(2,k) + x(2,k) + h*vend(2,k))
+          d(3,k,n) = .5d0*(xend(3,k) + x(3,k) + h*vend(3,k))
+          d(4,k,n) = .5d0*(vend(1,k) + v(1,k) + h*a(1,k))
+          d(5,k,n) = .5d0*(vend(2,k) + v(2,k) + h*a(2,k))
+          d(6,k,n) = .5d0*(vend(3,k) + v(3,k) + h*a(3,k))
+       end do
+       !
+       ! Update the D array, used for polynomial extrapolation
+       do j = n - 1, 1, -1
+          j1 = j + 1
+          tmp0 = 1.d0 / (h2(j) - h2(n))
+          tmp1 = tmp0 * h2(j1)
+          tmp2 = tmp0 * h2(n)
+          do k = 2, nbod
+             d(1,k,j) = tmp1 * d(1,k,j1)  -  tmp2 * d(1,k,j)
+             d(2,k,j) = tmp1 * d(2,k,j1)  -  tmp2 * d(2,k,j)
+             d(3,k,j) = tmp1 * d(3,k,j1)  -  tmp2 * d(3,k,j)
+             d(4,k,j) = tmp1 * d(4,k,j1)  -  tmp2 * d(4,k,j)
+             d(5,k,j) = tmp1 * d(5,k,j1)  -  tmp2 * d(5,k,j)
+             d(6,k,j) = tmp1 * d(6,k,j1)  -  tmp2 * d(6,k,j)
+          end do
+       end do
+       !
+       ! After several integrations, test the relative error on extrapolated values
+       if (n.gt.3) then
+          errmax = 0.d0
+          !
+          ! Maximum relative position and velocity errors (last D term added)
+          do k = 2, nbod
+             tmp1 = max( d(1,k,1)*d(1,k,1), d(2,k,1)*d(2,k,1),        d(3,k,1)*d(3,k,1) )
+             tmp2 = max( d(4,k,1)*d(4,k,1), d(5,k,1)*d(5,k,1),        d(6,k,1)*d(6,k,1) )
+             errmax = max(errmax, tmp1*xscal(k), tmp2*vscal(k))
+          end do
+          !
+          ! If error is smaller than TOL, update position and velocity arrays, and exit
+          if (errmax.le.tol2) then
+             do k = 2, nbod
+                x0(1,k) = d(1,k,1)
+                x0(2,k) = d(2,k,1)
+                x0(3,k) = d(3,k,1)
+                v0(1,k) = d(4,k,1)
+                v0(2,k) = d(5,k,1)
+                v0(3,k) = d(6,k,1)
+             end do
+             !
+             do j = 2, n
+                do k = 2, nbod
+                   x0(1,k) = x0(1,k) + d(1,k,j)
+                   x0(2,k) = x0(2,k) + d(2,k,j)
+                   x0(3,k) = x0(3,k) + d(3,k,j)
+                   v0(1,k) = v0(1,k) + d(4,k,j)
+                   v0(2,k) = v0(2,k) + d(5,k,j)
+                   v0(3,k) = v0(3,k) + d(6,k,j)
+                end do
+             end do
+             !
+             ! Save the actual stepsize used
+             hdid = h0
+             !
+             ! Recommend a new stepsize for the next call to this subroutine
+             if (n.eq.8) h0 = h0 * SHRINK
+             if (n.lt.7) h0 = h0 * GROW
+             return
+          end if
+       end if
+       !
+    end do
+    !
+    ! If errors were too large, redo the step with half the previous step size.
+    h0 = h0 * .5d0
   end do
-  !
-  ! If errors were too large, redo the step with half the previous step size.
-  h0 = h0 * .5d0
-  goto 100
   !
   !------------------------------------------------------------------------------
   !
@@ -3258,118 +3258,118 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   ! Calculate accelerations at the start of the step
   call force (time,jcen,nbod,nbig,mass,x0,v0,s,rcrit,a0,stat,ngf,ngflag,opt,nce,ice,jce)
   !
-100 continue
-  !
-  ! For each value of N, do a modified-midpoint integration with N substeps
-  do n = 1, 12
-     h = h0 / (dble(n))
-     hby2  = .5d0 * h
-     h2(n) = h * h
-     h2by2 = .5d0 * h2(n)
-     !
-     do k = 2, nbod
-        b(1,k) = .5d0*a0(1,k)
-        b(2,k) = .5d0*a0(2,k)
-        b(3,k) = .5d0*a0(3,k)
-        c(1,k) = 0.d0
-        c(2,k) = 0.d0
-        c(3,k) = 0.d0
-        xend(1,k) = h2by2 * a0(1,k)  +  h * v0(1,k)  +  x0(1,k)
-        xend(2,k) = h2by2 * a0(2,k)  +  h * v0(2,k)  +  x0(2,k)
-        xend(3,k) = h2by2 * a0(3,k)  +  h * v0(3,k)  +  x0(3,k)
-     end do
-     !
-     do j = 2, n
-        call force (time,jcen,nbod,nbig,mass,xend,v0,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
-        tmp0 = h * dble(j)
-        do k = 2, nbod
-           b(1,k) = b(1,k) + a(1,k)
-           b(2,k) = b(2,k) + a(2,k)
-           b(3,k) = b(3,k) + a(3,k)
-           c(1,k) = c(1,k) + b(1,k)
-           c(2,k) = c(2,k) + b(2,k)
-           c(3,k) = c(3,k) + b(3,k)
-           xend(1,k) = h2(n)*c(1,k) + h2by2*a0(1,k) + tmp0*v0(1,k)      + x0(1,k)
-           xend(2,k) = h2(n)*c(2,k) + h2by2*a0(2,k) + tmp0*v0(2,k)      + x0(2,k)
-           xend(3,k) = h2(n)*c(3,k) + h2by2*a0(3,k) + tmp0*v0(3,k)      + x0(3,k)
-        end do
-     end do
-     !
-     call force (time,jcen,nbod,nbig,mass,xend,v0,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
-     !
-     do k = 2, nbod
-        d(1,k,n) = xend(1,k)
-        d(2,k,n) = xend(2,k)
-        d(3,k,n) = xend(3,k)
-        d(4,k,n) = h*b(1,k) + hby2*a(1,k) + v0(1,k)
-        d(5,k,n) = h*b(2,k) + hby2*a(2,k) + v0(2,k)
-        d(6,k,n) = h*b(3,k) + hby2*a(3,k) + v0(3,k)
-     end do
-     !
-     ! Update the D array, used for polynomial extrapolation
-     do j = n - 1, 1, -1
-        j1 = j + 1
-        tmp0 = 1.d0 / (h2(j) - h2(n))
-        tmp1 = tmp0 * h2(j1)
-        tmp2 = tmp0 * h2(n)
-        do k = 2, nbod
-           d(1,k,j) = tmp1 * d(1,k,j1)  -  tmp2 * d(1,k,j)
-           d(2,k,j) = tmp1 * d(2,k,j1)  -  tmp2 * d(2,k,j)
-           d(3,k,j) = tmp1 * d(3,k,j1)  -  tmp2 * d(3,k,j)
-           d(4,k,j) = tmp1 * d(4,k,j1)  -  tmp2 * d(4,k,j)
-           d(5,k,j) = tmp1 * d(5,k,j1)  -  tmp2 * d(5,k,j)
-           d(6,k,j) = tmp1 * d(6,k,j1)  -  tmp2 * d(6,k,j)
-        end do
-     end do
-     !
-     ! After several integrations, test the relative error on extrapolated values
-     if (n.gt.3) then
-        errmax = 0.d0
-        !
-        ! Maximum relative position and velocity errors (last D term added)
-        do k = 2, nbod
-           tmp1 = max( d(1,k,1)*d(1,k,1), d(2,k,1)*d(2,k,1),        d(3,k,1)*d(3,k,1) )
-           tmp2 = max( d(4,k,1)*d(4,k,1), d(5,k,1)*d(2,k,1),        d(6,k,1)*d(6,k,1) )
-           errmax = max( errmax, tmp1*xscal(k), tmp2*vscal(k) )
-        end do
-        !
-        ! If error is smaller than TOL, update position and velocity arrays and exit
-        if (errmax.le.tol2) then
-           do k = 2, nbod
-              x0(1,k) = d(1,k,1)
-              x0(2,k) = d(2,k,1)
-              x0(3,k) = d(3,k,1)
-              v0(1,k) = d(4,k,1)
-              v0(2,k) = d(5,k,1)
-              v0(3,k) = d(6,k,1)
-           end do
-           !
-           do j = 2, n
-              do k = 2, nbod
-                 x0(1,k) = x0(1,k) + d(1,k,j)
-                 x0(2,k) = x0(2,k) + d(2,k,j)
-                 x0(3,k) = x0(3,k) + d(3,k,j)
-                 v0(1,k) = v0(1,k) + d(4,k,j)
-                 v0(2,k) = v0(2,k) + d(5,k,j)
-                 v0(3,k) = v0(3,k) + d(6,k,j)
-              end do
-           end do
-           !
-           ! Save the actual stepsize used
-           hdid = h0
-           !
-           ! Recommend a new stepsize for the next call to this subroutine
-           if (n.ge.8) h0 = h0 * SHRINK
-           if (n.lt.7) h0 = h0 * GROW
-           return
-        end if
-     end if
-     !
+  do
+    !
+    ! For each value of N, do a modified-midpoint integration with N substeps
+    do n = 1, 12
+       h = h0 / (dble(n))
+       hby2  = .5d0 * h
+       h2(n) = h * h
+       h2by2 = .5d0 * h2(n)
+       !
+       do k = 2, nbod
+          b(1,k) = .5d0*a0(1,k)
+          b(2,k) = .5d0*a0(2,k)
+          b(3,k) = .5d0*a0(3,k)
+          c(1,k) = 0.d0
+          c(2,k) = 0.d0
+          c(3,k) = 0.d0
+          xend(1,k) = h2by2 * a0(1,k)  +  h * v0(1,k)  +  x0(1,k)
+          xend(2,k) = h2by2 * a0(2,k)  +  h * v0(2,k)  +  x0(2,k)
+          xend(3,k) = h2by2 * a0(3,k)  +  h * v0(3,k)  +  x0(3,k)
+       end do
+       !
+       do j = 2, n
+          call force (time,jcen,nbod,nbig,mass,xend,v0,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+          tmp0 = h * dble(j)
+          do k = 2, nbod
+             b(1,k) = b(1,k) + a(1,k)
+             b(2,k) = b(2,k) + a(2,k)
+             b(3,k) = b(3,k) + a(3,k)
+             c(1,k) = c(1,k) + b(1,k)
+             c(2,k) = c(2,k) + b(2,k)
+             c(3,k) = c(3,k) + b(3,k)
+             xend(1,k) = h2(n)*c(1,k) + h2by2*a0(1,k) + tmp0*v0(1,k)      + x0(1,k)
+             xend(2,k) = h2(n)*c(2,k) + h2by2*a0(2,k) + tmp0*v0(2,k)      + x0(2,k)
+             xend(3,k) = h2(n)*c(3,k) + h2by2*a0(3,k) + tmp0*v0(3,k)      + x0(3,k)
+          end do
+       end do
+       !
+       call force (time,jcen,nbod,nbig,mass,xend,v0,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+       !
+       do k = 2, nbod
+          d(1,k,n) = xend(1,k)
+          d(2,k,n) = xend(2,k)
+          d(3,k,n) = xend(3,k)
+          d(4,k,n) = h*b(1,k) + hby2*a(1,k) + v0(1,k)
+          d(5,k,n) = h*b(2,k) + hby2*a(2,k) + v0(2,k)
+          d(6,k,n) = h*b(3,k) + hby2*a(3,k) + v0(3,k)
+       end do
+       !
+       ! Update the D array, used for polynomial extrapolation
+       do j = n - 1, 1, -1
+          j1 = j + 1
+          tmp0 = 1.d0 / (h2(j) - h2(n))
+          tmp1 = tmp0 * h2(j1)
+          tmp2 = tmp0 * h2(n)
+          do k = 2, nbod
+             d(1,k,j) = tmp1 * d(1,k,j1)  -  tmp2 * d(1,k,j)
+             d(2,k,j) = tmp1 * d(2,k,j1)  -  tmp2 * d(2,k,j)
+             d(3,k,j) = tmp1 * d(3,k,j1)  -  tmp2 * d(3,k,j)
+             d(4,k,j) = tmp1 * d(4,k,j1)  -  tmp2 * d(4,k,j)
+             d(5,k,j) = tmp1 * d(5,k,j1)  -  tmp2 * d(5,k,j)
+             d(6,k,j) = tmp1 * d(6,k,j1)  -  tmp2 * d(6,k,j)
+          end do
+       end do
+       !
+       ! After several integrations, test the relative error on extrapolated values
+       if (n.gt.3) then
+          errmax = 0.d0
+          !
+          ! Maximum relative position and velocity errors (last D term added)
+          do k = 2, nbod
+             tmp1 = max( d(1,k,1)*d(1,k,1), d(2,k,1)*d(2,k,1),        d(3,k,1)*d(3,k,1) )
+             tmp2 = max( d(4,k,1)*d(4,k,1), d(5,k,1)*d(2,k,1),        d(6,k,1)*d(6,k,1) )
+             errmax = max( errmax, tmp1*xscal(k), tmp2*vscal(k) )
+          end do
+          !
+          ! If error is smaller than TOL, update position and velocity arrays and exit
+          if (errmax.le.tol2) then
+             do k = 2, nbod
+                x0(1,k) = d(1,k,1)
+                x0(2,k) = d(2,k,1)
+                x0(3,k) = d(3,k,1)
+                v0(1,k) = d(4,k,1)
+                v0(2,k) = d(5,k,1)
+                v0(3,k) = d(6,k,1)
+             end do
+             !
+             do j = 2, n
+                do k = 2, nbod
+                   x0(1,k) = x0(1,k) + d(1,k,j)
+                   x0(2,k) = x0(2,k) + d(2,k,j)
+                   x0(3,k) = x0(3,k) + d(3,k,j)
+                   v0(1,k) = v0(1,k) + d(4,k,j)
+                   v0(2,k) = v0(2,k) + d(5,k,j)
+                   v0(3,k) = v0(3,k) + d(6,k,j)
+                end do
+             end do
+             !
+             ! Save the actual stepsize used
+             hdid = h0
+             !
+             ! Recommend a new stepsize for the next call to this subroutine
+             if (n.ge.8) h0 = h0 * SHRINK
+             if (n.lt.7) h0 = h0 * GROW
+             return
+          end if
+       end if
+       !
+    end do
+    !
+    ! If errors were too large, redo the step with half the previous step size.
+    h0 = h0 * .5d0
   end do
-  !
-  ! If errors were too large, redo the step with half the previous step size.
-  h0 = h0 * .5d0
-  goto 100
   !
   !------------------------------------------------------------------------------
   !
@@ -3646,7 +3646,7 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
        chit,dhit,thit,thit1,nowflag,statbs,outfile(3),mem,lmem)
   !
   ! If collisions occurred, resolve the collision and return a flag
-  if (nhit.gt.0.and.opt(2).ne.0) then
+  if ((nhit.gt.0).and.(opt(2).ne.0)) then
      do k = 1, nhit
         if (chit(k).eq.1) then
            i = ihit(k)
@@ -6093,12 +6093,12 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   end if
   !
   ! Check if non-grav forces are being used with an incompatible algorithm
-  if (ngflag.ne.0.and.(algor.eq.3.or.algor.eq.11.or.algor.eq.12)) then
+  if ((ngflag.ne.0).and.((algor.eq.3).or.(algor.eq.11).or.(algor.eq.12))) then
      call mio_err (23,mem(81),lmem(81),mem(92),lmem(92),' ',1,mem(85),lmem(85))
   endif
   !
   ! Check if user-defined force routine is being used with wrong algorithm
-  if (opt(8).eq.1.and.(algor.eq.11.or.algor.eq.12)) call mio_err(23,mem(81),lmem(81),mem(93),lmem(93),' ',1,mem(85),lmem(85))
+  if ((opt(8).eq.1).and.((algor.eq.11).or.(algor.eq.12))) call mio_err(23,mem(81),lmem(81),mem(93),lmem(93),' ',1,mem(85),lmem(85))
   !
   ! Check whether MVS is being used to integrate massive Small bodies,
   ! or whether massive Small bodies have different epochs than Big bodies.
