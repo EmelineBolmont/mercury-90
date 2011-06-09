@@ -332,157 +332,157 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   !
   !  MAIN  LOOP  STARTS  HERE
   !
-100 continue
-  !
-  ! Is it time for output ?
-  if (abs(tout-time).lt.abs(tsmall).and.opflag.ge.-1) then
-     !
-     ! Beware: the integration may change direction at this point!!!!
-     if (opflag.eq.-1) dtflag = 0
-     !
-     ! Output data for all bodies
-     call mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opflag,algor,outfile(1))
-     call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-          nstored,0)
-     tmp0 = tstop - tout
-     tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
-     !
-     ! Update the data dump files
-     do j = 2, nbod
-        epoch(j) = time
-     end do
-     call mio_dump (time,tstart,tstop,dtout,algor,h,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-          id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
-     tdump = time
-  end if
-  !
-  ! If integration has finished return to the main part of programme
-  if (abs(tstop-time).le.abs(tsmall).and.opflag.ne.-1) return
-  !
-  ! Set the timestep
-  if (opflag.eq.-1) tmp0 = tstart - time
-  if (opflag.eq.-2) tmp0 = tstop  - time
-  if (opflag.ge.0)  tmp0 = tout   - time
-  h = sign ( max( min( abs(tmp0), abs(h) ), tsmall), tmp0 )
-  !
-  ! Save the current coordinates and velocities
-  call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x0,v0,ngf,ngflag,opt)
-  !
-  ! Advance one timestep
-  call onestep (time,h,hdid,tol,jcen,nbod,nbig,m,xh,vh,s,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,mfo_all)
-  time = time + hdid
-  !
-  ! Check if close encounters or collisions occurred
-  nclo = 0
-  call mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,xh,vh,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
-       thit,thit1,nowflag,stat,outfile(3),mem,lmem)
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  CLOSE  ENCOUNTERS
-  !
-  ! If encounter minima occurred, output details and decide whether to stop
-  if (nclo.gt.0.and.opflag.ge.-1) then
-     itmp = 1
-     if (nhit.ne.0) itmp = 0
-     call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,&
-          mem,lmem,outfile,nstored,itmp)
-     if (stopflag.eq.1) return
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  COLLISIONS
-  !
-  ! If a collision occurred, output details and resolve the collision
-  if (nhit.gt.0.and.opt(2).ne.0) then
-     do k = 1, nhit
-        if (chit(k).eq.1) then
-           i = ihit(k)
-           j = jhit(k)
-           call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,opt,mem,lmem,outfile(3))
-        end if
-     end do
-     !
-     ! Remove lost objects, reset flags and recompute Hill and physical radii
-     call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
-     dtflag = 1
-     if (opflag.ge.0) opflag = 1
-     call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),1)
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  COLLISIONS  WITH  CENTRAL  BODY
-  !
-  ! Check for collisions
-  call mce_cent (time,hdid,rcen,jcen,2,nbod,nbig,m,x0,v0,xh,vh,nhit,jhit,thit,dhit,algor,ngf,ngflag)
-  !
-  ! Resolve the collisions
-  if (nhit.gt.0) then
-     do k = 1, nhit
-        i = 1
-        j = jhit(k)
-        call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,opt,mem,lmem,outfile(3))
-     end do
-     !
-     ! Remove lost objects, reset flags and recompute Hill and physical radii
-     call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
-     dtflag = 1
-     if (opflag.ge.0) opflag = 1
-     call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  DATA  DUMP  AND  PROGRESS  REPORT
-  !
-  ! Do the data dump
-  if (abs(time-tdump).ge.abs(dtdump).and.opflag.ge.-1) then
-     do j = 2, nbod
-        epoch(j) = time
-     end do
-     call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-          nstored,0)
-     call mio_dump (time,tstart,tstop,dtout,algor,h,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-          id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
-     tdump = time
-  end if
-  !
-  ! Write a progress report to the log file
-  if (abs(time-tlog).ge.abs(dtdump).and.opflag.ge.0) then
-     call mxx_en (jcen,nbod,nbig,m,xh,vh,s,en(2),am(2))
-     call mio_log (time,tstart,en,am,opt,mem,lmem)
-     tlog = time
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  CHECK  FOR  EJECTIONS  AND  DO  OTHER  PERIODIC  EFFECTS
-  !
-  if (abs(time-tfun).ge.abs(dtfun).and.opflag.ge.-1) then
-     !
-     ! Recompute close encounter limits, to allow for changes in Hill radii
-     call mce_hill (nbod,m,xh,vh,rce,a)
-     do j = 2, nbod
-        rce(j) = rce(j) * rceh(j)
-     end do
-     !
-     ! Check for ejections
-     call mxx_ejec (time,tstart,rmax,en,am,jcen,2,nbod,nbig,m,xh,vh,s,stat,id,opt,ejflag,outfile(3),mem,lmem)
-     !
-     ! Remove lost objects, reset flags and recompute Hill and physical radii
-     if (ejflag.ne.0) then
-        call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
-        dtflag = 1
-        if (opflag.ge.0) opflag = 1
-        call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
-     end if
-     tfun = time
-  end if
-  !
-  ! Go on to the next time step
-  goto 100
+  do
+    !
+    ! Is it time for output ?
+    if (abs(tout-time).lt.abs(tsmall).and.opflag.ge.-1) then
+       !
+       ! Beware: the integration may change direction at this point!!!!
+       if (opflag.eq.-1) dtflag = 0
+       !
+       ! Output data for all bodies
+       call mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opflag,algor,outfile(1))
+       call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
+            nstored,0)
+       tmp0 = tstop - tout
+       tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
+       !
+       ! Update the data dump files
+       do j = 2, nbod
+          epoch(j) = time
+       end do
+       call mio_dump (time,tstart,tstop,dtout,algor,h,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
+            id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
+       tdump = time
+    end if
+    !
+    ! If integration has finished return to the main part of programme
+    if (abs(tstop-time).le.abs(tsmall).and.opflag.ne.-1) return
+    !
+    ! Set the timestep
+    if (opflag.eq.-1) tmp0 = tstart - time
+    if (opflag.eq.-2) tmp0 = tstop  - time
+    if (opflag.ge.0)  tmp0 = tout   - time
+    h = sign ( max( min( abs(tmp0), abs(h) ), tsmall), tmp0 )
+    !
+    ! Save the current coordinates and velocities
+    call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x0,v0,ngf,ngflag,opt)
+    !
+    ! Advance one timestep
+    call onestep (time,h,hdid,tol,jcen,nbod,nbig,m,xh,vh,s,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,mfo_all)
+    time = time + hdid
+    !
+    ! Check if close encounters or collisions occurred
+    nclo = 0
+    call mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,xh,vh,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
+         thit,thit1,nowflag,stat,outfile(3),mem,lmem)
+    !
+    !------------------------------------------------------------------------------
+    !
+    !  CLOSE  ENCOUNTERS
+    !
+    ! If encounter minima occurred, output details and decide whether to stop
+    if (nclo.gt.0.and.opflag.ge.-1) then
+       itmp = 1
+       if (nhit.ne.0) itmp = 0
+       call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,&
+            mem,lmem,outfile,nstored,itmp)
+       if (stopflag.eq.1) return
+    end if
+    !
+    !------------------------------------------------------------------------------
+    !
+    !  COLLISIONS
+    !
+    ! If a collision occurred, output details and resolve the collision
+    if (nhit.gt.0.and.opt(2).ne.0) then
+       do k = 1, nhit
+          if (chit(k).eq.1) then
+             i = ihit(k)
+             j = jhit(k)
+             call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,opt,mem,lmem,outfile(3))
+          end if
+       end do
+       !
+       ! Remove lost objects, reset flags and recompute Hill and physical radii
+       call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+       dtflag = 1
+       if (opflag.ge.0) opflag = 1
+       call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),1)
+    end if
+    !
+    !------------------------------------------------------------------------------
+    !
+    !  COLLISIONS  WITH  CENTRAL  BODY
+    !
+    ! Check for collisions
+    call mce_cent (time,hdid,rcen,jcen,2,nbod,nbig,m,x0,v0,xh,vh,nhit,jhit,thit,dhit,algor,ngf,ngflag)
+    !
+    ! Resolve the collisions
+    if (nhit.gt.0) then
+       do k = 1, nhit
+          i = 1
+          j = jhit(k)
+          call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,opt,mem,lmem,outfile(3))
+       end do
+       !
+       ! Remove lost objects, reset flags and recompute Hill and physical radii
+       call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+       dtflag = 1
+       if (opflag.ge.0) opflag = 1
+       call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
+    end if
+    !
+    !------------------------------------------------------------------------------
+    !
+    !  DATA  DUMP  AND  PROGRESS  REPORT
+    !
+    ! Do the data dump
+    if (abs(time-tdump).ge.abs(dtdump).and.opflag.ge.-1) then
+       do j = 2, nbod
+          epoch(j) = time
+       end do
+       call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
+            nstored,0)
+       call mio_dump (time,tstart,tstop,dtout,algor,h,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
+            id,ngf,epoch,opt,opflag,dumpfile,mem,lmem)
+       tdump = time
+    end if
+    !
+    ! Write a progress report to the log file
+    if (abs(time-tlog).ge.abs(dtdump).and.opflag.ge.0) then
+       call mxx_en (jcen,nbod,nbig,m,xh,vh,s,en(2),am(2))
+       call mio_log (time,tstart,en,am,opt,mem,lmem)
+       tlog = time
+    end if
+    !
+    !------------------------------------------------------------------------------
+    !
+    !  CHECK  FOR  EJECTIONS  AND  DO  OTHER  PERIODIC  EFFECTS
+    !
+    if (abs(time-tfun).ge.abs(dtfun).and.opflag.ge.-1) then
+       !
+       ! Recompute close encounter limits, to allow for changes in Hill radii
+       call mce_hill (nbod,m,xh,vh,rce,a)
+       do j = 2, nbod
+          rce(j) = rce(j) * rceh(j)
+       end do
+       !
+       ! Check for ejections
+       call mxx_ejec (time,tstart,rmax,en,am,jcen,2,nbod,nbig,m,xh,vh,s,stat,id,opt,ejflag,outfile(3),mem,lmem)
+       !
+       ! Remove lost objects, reset flags and recompute Hill and physical radii
+       if (ejflag.ne.0) then
+          call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+          dtflag = 1
+          if (opflag.ge.0) opflag = 1
+          call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
+       end if
+       tfun = time
+    end if
+    !
+    ! Go on to the next time step
+  end do
   !
   !------------------------------------------------------------------------------
   !
@@ -599,92 +599,95 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   end if
   !
   ! Make sure the integration is heading in the right direction
-150 continue
-  tmp0 = tstop - time
-  if (opflag.eq.-1) tmp0 = tstart - time
-  h0 = sign (h0, tmp0)
-  !
-  ! Save the current heliocentric coordinates and velocities
-  if (algor.eq.1) then
-     call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
-  else
-     call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
-  end if
-  call onestep (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,& 
-       opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
-  time = time + h0
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  CLOSE  ENCOUNTERS
-  !
-  ! If encounter minima occurred, output details and decide whether to stop
-  if (nclo.gt.0.and.opflag.ge.-1) then
-     itmp = 1
-     if (colflag.ne.0) itmp = 0
-     call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
-          nstored,itmp)
-     if (stopflag.eq.1) return
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  COLLISIONS
-  !
-  ! If collisions occurred, output details and remove lost objects
-  if (colflag.ne.0) then
-     !
-     ! Reindex the surviving objects
-     call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-     call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
-     !
-     ! Reset flags, and calculate new Hill radii and physical radii
-     dtflag = 1
-     if (opflag.ge.0) opflag = 1
-     call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),1)
-     call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  COLLISIONS  WITH  CENTRAL  BODY
-  !
-  ! Check for collisions with the central body
-  if (algor.eq.1) then
-     call mco_iden(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-  else
-     call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
-  end if
-  itmp = 2
-  if (algor.eq.11.or.algor.eq.12) itmp = 3
-  call mce_cent (time,h0,rcen,jcen,itmp,nbod,nbig,m,xh0,vh0,xh,vh,nhit,jhit,thit,dhit,algor,ngf,ngflag)
-  !
-  ! If something hit the central body, restore the coords prior to this step
-  if (nhit.gt.0) then
-     call mco_iden (time,jcen,nbod,nbig,h0,m,xh0,vh0,xh,vh,ngf,ngflag,opt)
-     time = time - h0
-     !
-     ! Merge the object(s) with the central body
-     do k = 1, nhit
-        i = 1
-        j = jhit(k)
-        call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,opt,mem,lmem,outfile(3))
-     end do
-     !
-     ! Remove lost objects, reset flags and recompute Hill and physical radii
-     call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
-     if (opflag.ge.0) opflag = 1
-     dtflag = 1
-     call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
-     if (algor.eq.1) then
-        call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
-     else
-        call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
-     end if
-     !
-     ! Redo that integration time step
-     goto 150
-  end if
+  ! The timestep will be redo if there are collisions with central body. Else, we exit the loop in the last 'if' statement.
+  do
+    tmp0 = tstop - time
+    if (opflag.eq.-1) tmp0 = tstart - time
+    h0 = sign (h0, tmp0)
+    !
+    ! Save the current heliocentric coordinates and velocities
+    if (algor.eq.1) then
+       call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
+    else
+       call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
+    end if
+    call onestep (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,& 
+         opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
+    time = time + h0
+    !
+    !------------------------------------------------------------------------------
+    !
+    !  CLOSE  ENCOUNTERS
+    !
+    ! If encounter minima occurred, output details and decide whether to stop
+    if ((nclo.gt.0).and.(opflag.ge.-1)) then
+       itmp = 1
+       if (colflag.ne.0) itmp = 0
+       call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
+            nstored,itmp)
+       if (stopflag.eq.1) return
+    end if
+    !
+    !------------------------------------------------------------------------------
+    !
+    !  COLLISIONS
+    !
+    ! If collisions occurred, output details and remove lost objects
+    if (colflag.ne.0) then
+       !
+       ! Reindex the surviving objects
+       call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+       call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+       !
+       ! Reset flags, and calculate new Hill radii and physical radii
+       dtflag = 1
+       if (opflag.ge.0) opflag = 1
+       call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),1)
+       call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+    end if
+    !
+    !------------------------------------------------------------------------------
+    !
+    !  COLLISIONS  WITH  CENTRAL  BODY
+    !
+    ! Check for collisions with the central body
+    if (algor.eq.1) then
+       call mco_iden(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+    else
+       call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+    end if
+    itmp = 2
+    if ((algor.eq.11).or.(algor.eq.12)) itmp = 3
+    call mce_cent (time,h0,rcen,jcen,itmp,nbod,nbig,m,xh0,vh0,xh,vh,nhit,jhit,thit,dhit,algor,ngf,ngflag)
+    !
+    ! If something hit the central body, restore the coords prior to this step
+    if (nhit.eq.0) then
+      exit
+    else 
+       ! Redo that integration time step
+       call mco_iden (time,jcen,nbod,nbig,h0,m,xh0,vh0,xh,vh,ngf,ngflag,opt)
+       time = time - h0
+       !
+       ! Merge the object(s) with the central body
+       do k = 1, nhit
+          i = 1
+          j = jhit(k)
+          call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,opt,mem,lmem,outfile(3))
+       end do
+       !
+       ! Remove lost objects, reset flags and recompute Hill and physical radii
+       call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+       if (opflag.ge.0) opflag = 1
+       dtflag = 1
+       call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
+       if (algor.eq.1) then
+          call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+       else
+          call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+       end if
+       !
+    end if
+  end do
   !
   !------------------------------------------------------------------------------
   !
