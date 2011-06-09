@@ -114,15 +114,17 @@ program mercury
 
   use physical_constant
   use mercury_constant
+  use types_numeriques
 
   implicit none
+
   !
-  integer j,algor,nbod,nbig,opt(8),stat(NMAX),lmem(NMESS)
-  integer opflag,ngflag,ndump,nfun
-  integer error
-  real*8 m(NMAX),xh(3,NMAX),vh(3,NMAX),s(3,NMAX),rho(NMAX)
-  real*8 rceh(NMAX),epoch(NMAX),ngf(4,NMAX),rmax,rcen,jcen(3)
-  real*8 cefac,time,tstart,tstop,dtout,h0,tol,en(3),am(3)
+  integer :: j,algor,nbod,nbig,opt(8),stat(NMAX),lmem(NMESS)
+  integer :: opflag,ngflag,ndump,nfun
+  integer :: error
+  real(double_precision) :: m(NMAX),xh(3,NMAX),vh(3,NMAX),s(3,NMAX),rho(NMAX)
+  real(double_precision) :: rceh(NMAX),epoch(NMAX),ngf(4,NMAX),rmax,rcen,jcen(3)
+  real(double_precision) :: cefac,time,tstart,tstop,dtout,h0,tol,en(3),am(3)
   character*8 id(NMAX)
   character*80 outfile(3), dumpfile(4), mem(NMESS)
   external mdt_mvs, mdt_bs1, mdt_bs2, mdt_ra15, mdt_hy
@@ -224,15 +226,18 @@ end program mercury
 subroutine mfo_user (time,jcen,nbod,nbig,m,x,v,a)
   !
   use physical_constant
-  use mercury_constant
+  use mercury_constant  
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod, nbig
-  real*8 time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),a(3,nbod)
+  integer :: nbod, nbig
+  real(double_precision) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),a(3,nbod)
   !
   ! Local
-  integer j
+  integer :: j
   !
   !------------------------------------------------------------------------------
   !
@@ -269,26 +274,29 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer algor,nbod,nbig,stat(nbod),opt(8),opflag,ngflag,ndump,nfun
-  integer lmem(NMESS)
-  real*8 time,tstart,tstop,dtout,h0,tol,jcen(3),rcen,rmax
-  real*8 en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
-  real*8 s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
+  integer :: algor,nbod,nbig,stat(nbod),opt(8),opflag,ngflag,ndump,nfun
+  integer :: lmem(NMESS)
+  real(double_precision) :: time,tstart,tstop,dtout,h0,tol,jcen(3),rcen,rmax
+  real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
+  real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
   character*8 id(nbod)
   character*80 outfile(3),dumpfile(4),mem(NMESS)
   !
   ! Local
-  integer i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
-  integer dtflag,ejflag,nowflag,stopflag,nstored,ce(NMAX)
-  integer nclo,iclo(CMAX),jclo(CMAX),nce,ice(NMAX),jce(NMAX)
-  real*8 tmp0,h,hdid,tout,tdump,tfun,tlog,tsmall,dtdump,dtfun
-  real*8 thit(CMAX),dhit(CMAX),thit1,x0(3,NMAX),v0(3,NMAX)
-  real*8 rce(NMAX),rphys(NMAX),rcrit(NMAX),a(NMAX)
-  real*8 dclo(CMAX),tclo(CMAX),epoch(NMAX)
-  real*8 ixvclo(6,CMAX),jxvclo(6,CMAX)
+  integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
+  integer :: dtflag,ejflag,nowflag,stopflag,nstored,ce(NMAX)
+  integer :: nclo,iclo(CMAX),jclo(CMAX),nce,ice(NMAX),jce(NMAX)
+  real(double_precision) :: tmp0,h,hdid,tout,tdump,tfun,tlog,tsmall,dtdump,dtfun
+  real(double_precision) :: thit(CMAX),dhit(CMAX),thit1,x0(3,NMAX),v0(3,NMAX)
+  real(double_precision) :: rce(NMAX),rphys(NMAX),rcrit(NMAX),a(NMAX)
+  real(double_precision) :: dclo(CMAX),tclo(CMAX),epoch(NMAX)
+  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
   external mfo_all,onestep
   !
   !------------------------------------------------------------------------------
@@ -503,25 +511,28 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer algor,nbod,nbig,stat(nbod),opt(8),opflag,ngflag
-  integer lmem(NMESS),ndump,nfun
-  real*8 time,tstart,tstop,dtout,h0,tol,jcen(3),rcen,rmax
-  real*8 en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
-  real*8 s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
+  integer :: algor,nbod,nbig,stat(nbod),opt(8),opflag,ngflag
+  integer :: lmem(NMESS),ndump,nfun
+  real(double_precision) :: time,tstart,tstop,dtout,h0,tol,jcen(3),rcen,rmax
+  real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
+  real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
   character*8 id(nbod)
   character*80 outfile(3),dumpfile(4),mem(NMESS)
   !
   ! Local
-  integer i,j,k,n,itmp,nclo,nhit,jhit(CMAX),iclo(CMAX),jclo(CMAX)
-  integer dtflag,ejflag,stopflag,colflag,nstored
-  real*8 x(3,NMAX),v(3,NMAX),xh0(3,NMAX),vh0(3,NMAX)
-  real*8 rce(NMAX),rphys(NMAX),rcrit(NMAX),epoch(NMAX)
-  real*8 hby2,tout,tmp0,tdump,tfun,tlog,dtdump,dtfun
-  real*8 dclo(CMAX),tclo(CMAX),dhit(CMAX),thit(CMAX)
-  real*8 ixvclo(6,CMAX),jxvclo(6,CMAX),a(NMAX)
+  integer :: i,j,k,n,itmp,nclo,nhit,jhit(CMAX),iclo(CMAX),jclo(CMAX)
+  integer :: dtflag,ejflag,stopflag,colflag,nstored
+  real(double_precision) :: x(3,NMAX),v(3,NMAX),xh0(3,NMAX),vh0(3,NMAX)
+  real(double_precision) :: rce(NMAX),rphys(NMAX),rcrit(NMAX),epoch(NMAX)
+  real(double_precision) :: hby2,tout,tmp0,tdump,tfun,tlog,dtdump,dtfun
+  real(double_precision) :: dclo(CMAX),tclo(CMAX),dhit(CMAX),thit(CMAX)
+  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX),a(NMAX)
   external onestep,coord,bcoord
   !
   !------------------------------------------------------------------------------
@@ -765,16 +776,19 @@ subroutine mce_box (nbod,h,x0,v0,x1,v1,xmin,xmax,ymin,ymax)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod
-  real*8 h,x0(3,nbod), x1(3,nbod), v0(3,nbod),v1(3,nbod)
-  real*8   xmin(nbod), xmax(nbod), ymin(nbod),ymax(nbod)
+  integer :: nbod
+  real(double_precision) :: h,x0(3,nbod), x1(3,nbod), v0(3,nbod),v1(3,nbod)
+  real(double_precision) ::   xmin(nbod), xmax(nbod), ymin(nbod),ymax(nbod)
   !
   ! Local
-  integer j
-  real*8 temp
+  integer :: j
+  real(double_precision) :: temp
   !
   !------------------------------------------------------------------------------
   !
@@ -824,18 +838,21 @@ subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer i0, nbod, nbig, nhit, jhit(CMAX), algor, ngflag
-  real*8 time,h,rcen,jcen(3),m(nbod),x0(3,nbod),v0(3,nbod)
-  real*8 x1(3,nbod),v1(3,nbod),thit(CMAX),dhit(CMAX),ngf(4,nbod)
+  integer :: i0, nbod, nbig, nhit, jhit(CMAX), algor, ngflag
+  real(double_precision) :: time,h,rcen,jcen(3),m(nbod),x0(3,nbod),v0(3,nbod)
+  real(double_precision) :: x1(3,nbod),v1(3,nbod),thit(CMAX),dhit(CMAX),ngf(4,nbod)
   !
   ! Local
-  integer j
-  real*8 rcen2,mco_acsh,a,q,u0,uhit,m0,mhit,mm,r0,mcen
-  real*8 hx,hy,hz,h2,p,rr0,rr1,rv0,rv1,temp,e,v2
-  real*8 xu0(3,NMAX),xu1(3,NMAX),vu0(3,NMAX),vu1(3,NMAX)
+  integer :: j
+  real(double_precision) :: rcen2,mco_acsh,a,q,u0,uhit,m0,mhit,mm,r0,mcen
+  real(double_precision) :: hx,hy,hz,h2,p,rr0,rr1,rv0,rv1,temp,e,v2
+  real(double_precision) :: xu0(3,NMAX),xu1(3,NMAX),vu0(3,NMAX),vu1(3,NMAX)
   !
   !------------------------------------------------------------------------------
   !
@@ -937,18 +954,21 @@ subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,i
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer i,j,nbod,nbig,stat(nbod),opt(8),lmem(NMESS)
-  real*8 time,tstart,elost,jcen(3)
-  real*8 m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),rphys(nbod)
+  integer :: i,j,nbod,nbig,stat(nbod),opt(8),lmem(NMESS)
+  real(double_precision) :: time,tstart,elost,jcen(3)
+  real(double_precision) :: m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),rphys(nbod)
   character*80 outfile,mem(NMESS)
   character*8 id(nbod)
   !
   ! Local
-  integer year,month,itmp, error
-  real*8 t1
+  integer :: year,month,itmp, error
+  real(double_precision) :: t1
   character*38 flost,fcol
   character*6 tstring
   !
@@ -1036,17 +1056,20 @@ subroutine mce_hill (nbod,m,x,v,hill,a)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
-  real*8 THIRD
+
+  real(double_precision) :: THIRD
   parameter (THIRD = .3333333333333333d0)
   !
   ! Input/Output
-  integer nbod
-  real*8 m(nbod),x(3,nbod),v(3,nbod),hill(nbod),a(nbod)
+  integer :: nbod
+  real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),hill(nbod),a(nbod)
   !
   ! Local
-  integer j
-  real*8 r, v2, gm
+  integer :: j
+  real(double_precision) :: r, v2, gm
   !
   !------------------------------------------------------------------------------
   !
@@ -1090,22 +1113,25 @@ subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,r
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
-  real*8 N2,THIRD
+  real(double_precision) :: N2,THIRD
   parameter (N2=.4d0,THIRD=.3333333333333333d0)
   !
   ! Input/Output
-  integer nbod,nbig,algor,opt(8),rcritflag
-  real*8 tstart,h,jcen(3),rcen,rmax,cefac,m(nbod),x(3,nbod)
-  real*8 v(3,nbod),s(3,nbod),rho(nbod),rceh(nbod),rphys(nbod)
-  real*8 rce(nbod),rcrit(nbod)
+  integer :: nbod,nbig,algor,opt(8),rcritflag
+  real(double_precision) :: tstart,h,jcen(3),rcen,rmax,cefac,m(nbod),x(3,nbod)
+  real(double_precision) :: v(3,nbod),s(3,nbod),rho(nbod),rceh(nbod),rphys(nbod)
+  real(double_precision) :: rce(nbod),rcrit(nbod)
   character*8 id(nbod)
   character*80 outfile
   !
   ! Local
-  integer j, error
-  real*8 a(NMAX),hill(NMAX),temp,amin,vmax,k_2,rhocgs,rcen_2
+  integer :: j, error
+  real(double_precision) :: a(NMAX),hill(NMAX),temp,amin,vmax,k_2,rhocgs,rcen_2
   character*80 header,c(NMAX)
   character*8 mio_re2c, mio_fl2c
   !
@@ -1196,16 +1222,19 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer i, j, nbod, nbig, stat(nbod)
-  real*8 jcen(3),m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),elost
+  integer :: i, j, nbod, nbig, stat(nbod)
+  real(double_precision) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),elost
   !
   ! Local
-  integer k
-  real*8 tmp1, tmp2, dx, dy, dz, du, dv, dw, msum, mredu, msum_1
-  real*8 e0, e1, l2
+  integer :: k
+  real(double_precision) :: tmp1, tmp2, dx, dy, dz, du, dv, dw, msum, mredu, msum_1
+  real(double_precision) :: e0, e1, l2
   !
   !------------------------------------------------------------------------------
   !
@@ -1328,13 +1357,16 @@ end subroutine mce_merg
 !
 subroutine mce_min (d0,d1,d0t,d1t,h,d2min,tmin)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 d0,d1,d0t,d1t,h,d2min,tmin
+  real(double_precision) :: d0,d1,d0t,d1t,h,d2min,tmin
   !
   ! Local
-  real*8 a,b,c,temp,tau
+  real(double_precision) :: a,b,c,temp,tau
   !
   !------------------------------------------------------------------------------
   !
@@ -1405,17 +1437,20 @@ subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer i0,nbod,nbig,ce(nbod),nce,ice(NMAX),jce(NMAX)
-  real*8 x0(3,nbod),v0(3,nbod),x1(3,nbod),v1(3,nbod),h,rcrit(nbod)
+  integer :: i0,nbod,nbig,ce(nbod),nce,ice(NMAX),jce(NMAX)
+  real(double_precision) :: x0(3,nbod),v0(3,nbod),x1(3,nbod),v1(3,nbod),h,rcrit(nbod)
   !
   ! Local
-  integer i,j
-  real*8 d0,d1,d0t,d1t,d2min,temp,tmin,rc,rc2
-  real*8 dx0,dy0,dz0,du0,dv0,dw0,dx1,dy1,dz1,du1,dv1,dw1
-  real*8 xmin(NMAX),xmax(NMAX),ymin(NMAX),ymax(NMAX)
+  integer :: i,j
+  real(double_precision) :: d0,d1,d0t,d1t,d2min,temp,tmin,rc,rc2
+  real(double_precision) :: dx0,dy0,dz0,du0,dv0,dw0,dx1,dy1,dz1,du1,dv1,dw1
+  real(double_precision) :: xmin(NMAX),xmax(NMAX),ymin(NMAX),ymax(NMAX)
   !
   !------------------------------------------------------------------------------
   !
@@ -1521,24 +1556,27 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,stat(nbod),nowflag
-  integer nclo,iclo(CMAX),jclo(CMAX)
-  integer nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),lmem(NMESS)
-  real*8 time,h,rcen,m(nbod),x0(3,nbod),v0(3,nbod)
-  real*8 x1(3,nbod),v1(3,nbod),rce(nbod),rphys(nbod)
-  real*8 dclo(CMAX),tclo(CMAX),thit(CMAX),dhit(CMAX),thit1
-  real*8 ixvclo(6,CMAX),jxvclo(6,CMAX)
+  integer :: nbod,nbig,stat(nbod),nowflag
+  integer :: nclo,iclo(CMAX),jclo(CMAX)
+  integer :: nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),lmem(NMESS)
+  real(double_precision) :: time,h,rcen,m(nbod),x0(3,nbod),v0(3,nbod)
+  real(double_precision) :: x1(3,nbod),v1(3,nbod),rce(nbod),rphys(nbod)
+  real(double_precision) :: dclo(CMAX),tclo(CMAX),thit(CMAX),dhit(CMAX),thit1
+  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
   character*80 outfile,mem(NMESS)
   !
   ! Local
-  integer i,j, error
-  real*8 d0,d1,d0t,d1t,hm1,tmp0,tmp1
-  real*8 dx0,dy0,dz0,du0,dv0,dw0,dx1,dy1,dz1,du1,dv1,dw1
-  real*8 xmin(NMAX),xmax(NMAX),ymin(NMAX),ymax(NMAX)
-  real*8 d2min,d2ce,d2near,d2hit,temp,tmin
+  integer :: i,j, error
+  real(double_precision) :: d0,d1,d0t,d1t,hm1,tmp0,tmp1
+  real(double_precision) :: dx0,dy0,dz0,du0,dv0,dw0,dx1,dy1,dz1,du1,dv1,dw1
+  real(double_precision) :: xmin(NMAX),xmax(NMAX),ymin(NMAX),ymax(NMAX)
+  real(double_precision) :: d2min,d2ce,d2near,d2hit,temp,tmin
   !
   !------------------------------------------------------------------------------
   !
@@ -1681,10 +1719,13 @@ end subroutine mce_stat
 !
 function mco_acsh (x)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 x,mco_acsh
+  real(double_precision) :: x,mco_acsh
   !
   !------------------------------------------------------------------------------
   !
@@ -1714,15 +1755,18 @@ end function mco_acsh
 !
 subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,opt(8)
-  real*8 time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real*8 vh(3,nbod),ngf(4,nbod)
+  integer :: nbod,nbig,ngflag,opt(8)
+  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
+  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
   !
   ! Local
-  integer j
+  integer :: j
   !
   !------------------------------------------------------------------------------
   !
@@ -1755,16 +1799,19 @@ end subroutine mco_b2h
 !
 subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,opt(8)
-  real*8 time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real*8 vh(3,nbod),ngf(4,nbod)
+  integer :: nbod,nbig,ngflag,opt(8)
+  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
+  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
   !
   ! Local
-  integer j
-  real*8 mvsum(3),temp
+  integer :: j
+  real(double_precision) :: mvsum(3),temp
   !
   !------------------------------------------------------------------------------
   !
@@ -1811,15 +1858,18 @@ end subroutine mco_dh2h
 !
 subroutine mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,opt(8)
-  real*8 time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real*8 vh(3,nbod),ngf(4,nbod)
+  integer :: nbod,nbig,ngflag,opt(8)
+  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
+  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
   !
   ! Local
-  integer j
+  integer :: j
   !
   !------------------------------------------------------------------------------
   !
@@ -1855,17 +1905,20 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,opt(8)
-  real*8 time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real*8 vh(3,nbod),ngf(4,nbod)
+  integer :: nbod,nbig,ngflag,opt(8)
+  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
+  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
   !
   ! Local
-  integer j,k,iflag,stat(NMAX)
-  real*8 minside,msofar,gm(NMAX),a(3,NMAX),xj(3,NMAX),vj(3,NMAX)
-  real*8 ha(2),hb(2),rt10,angf(3,NMAX),ausr(3,NMAX)
+  integer :: j,k,iflag,stat(NMAX)
+  real(double_precision) :: minside,msofar,gm(NMAX),a(3,NMAX),xj(3,NMAX),vj(3,NMAX)
+  real(double_precision) :: ha(2),hb(2),rt10,angf(3,NMAX),ausr(3,NMAX)
   !
   !------------------------------------------------------------------------------
   !
@@ -1993,15 +2046,18 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 gm,q,e,i,p,n,l,x,y,z,u,v,w
+  real(double_precision) :: gm,q,e,i,p,n,l,x,y,z,u,v,w
   !
   ! Local
-  real*8 g,a,ci,si,cn,sn,cg,sg,ce,se,romes,temp
-  real*8 z1,z2,z3,z4,d11,d12,d13,d21,d22,d23
-  real*8 mco_kep, orbel_fhybrid, orbel_zget
+  real(double_precision) :: g,a,ci,si,cn,sn,cg,sg,ce,se,romes,temp
+  real(double_precision) :: z1,z2,z3,z4,d11,d12,d13,d21,d22,d23
+  real(double_precision) :: mco_kep, orbel_fhybrid, orbel_zget
   !
   !------------------------------------------------------------------------------
   !
@@ -2084,16 +2140,19 @@ end subroutine mco_el2x
 !
 subroutine mco_h2b (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,opt(8)
-  real*8 time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
-  real*8 v(3,nbod),ngf(4,nbod)
+  integer :: nbod,nbig,ngflag,opt(8)
+  real(double_precision) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
+  real(double_precision) :: v(3,nbod),ngf(4,nbod)
   !
   ! Local
-  integer j
-  real*8 mtot,temp
+  integer :: j
+  real(double_precision) :: mtot,temp
   !
   !------------------------------------------------------------------------------
   !
@@ -2157,17 +2216,20 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,opt(8)
-  real*8 time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
-  real*8 v(3,nbod),ngf(4,nbod)
+  integer :: nbod,nbig,ngflag,opt(8)
+  real(double_precision) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
+  real(double_precision) :: v(3,nbod),ngf(4,nbod)
   !
   ! Local
-  integer j,k,iflag,stat(NMAX)
-  real*8 minside,msofar,gm(NMAX),a(3,NMAX),xj(3,NMAX),vj(3,NMAX)
-  real*8 ha(2),hb(2),rt10,angf(3,NMAX),ausr(3,NMAX)
+  integer :: j,k,iflag,stat(NMAX)
+  real(double_precision) :: minside,msofar,gm(NMAX),a(3,NMAX),xj(3,NMAX),vj(3,NMAX)
+  real(double_precision) :: ha(2),hb(2),rt10,angf(3,NMAX),ausr(3,NMAX)
   !
   !------------------------------------------------------------------------------
   !
@@ -2279,16 +2341,19 @@ end subroutine mco_h2mvs
 !
 subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,opt(8)
-  real*8 time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
-  real*8 v(3,nbod),ngf(4,nbod)
+  integer :: nbod,nbig,ngflag,opt(8)
+  real(double_precision) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
+  real(double_precision) :: v(3,nbod),ngf(4,nbod)
   !
   ! Local
-  integer j
-  real*8 mtot,temp,mvsum(3)
+  integer :: j
+  real(double_precision) :: mtot,temp,mvsum(3)
   !
   !------------------------------------------------------------------------------
   !
@@ -2341,16 +2406,19 @@ end subroutine mco_h2dh
 !
 subroutine mco_h2j (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,opt(8)
-  real*8 time,jcen(3),h,m(nbig),xh(3,nbig),vh(3,nbig),x(3,nbig)
-  real*8 v(3,nbig),ngf(4,nbod)
+  integer :: nbod,nbig,ngflag,opt(8)
+  real(double_precision) :: time,jcen(3),h,m(nbig),xh(3,nbig),vh(3,nbig),x(3,nbig)
+  real(double_precision) :: v(3,nbig),ngf(4,nbod)
   !
   ! Local
-  integer j
-  real*8 mtot, mx, my, mz, mu, mv, mw, temp
+  integer :: j
+  real(double_precision) :: mtot, mx, my, mz, mu, mv, mw, temp
   !
   !------------------------------------------------------------------------------c
   mtot = m(2)
@@ -2426,16 +2494,19 @@ end subroutine mco_h2j
 !
 subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,opt(8)
-  real*8 time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real*8 vh(3,nbod),ngf(4,nbod)
+  integer :: nbod,nbig,ngflag,opt(8)
+  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
+  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
   !
   ! Local
-  integer j
-  real*8 mtot, mx, my, mz, mu, mv, mw, temp
+  integer :: j
+  real(double_precision) :: mtot, mx, my, mz, mu, mv, mw, temp
   !
   !------------------------------------------------------------------------------
   !
@@ -2512,15 +2583,18 @@ end subroutine mco_j2h
 !------------------------------------------------------------------------------
 !
 function mco_kep (e,oldl)
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Outout
-  real*8 oldl,e,mco_kep
+  real(double_precision) :: oldl,e,mco_kep
   !
   ! Local
-  real*8 l,pi,twopi,piby2,u1,u2,ome,sign
-  real*8 x,x2,sn,dsn,z1,z2,z3,f0,f1,f2,f3
-  real*8 p,q,p2,ss,cc
+  real(double_precision) :: l,pi,twopi,piby2,u1,u2,ome,sign
+  real(double_precision) :: x,x2,sn,dsn,z1,z2,z3,f0,f1,f2,f3
+  real(double_precision) :: p,q,p2,ss,cc
   logical flag,big,bigg
   !
   !------------------------------------------------------------------------------
@@ -2659,13 +2733,16 @@ end function mco_kep
 !
 subroutine mco_sine (x,sx,cx)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 x,sx,cx
+  real(double_precision) :: x,sx,cx
   !
   ! Local
-  real*8 pi,twopi
+  real(double_precision) :: pi,twopi
   !
   !------------------------------------------------------------------------------
   !
@@ -2703,10 +2780,13 @@ end subroutine mco_sine
 !
 subroutine mco_sinh (x,sx,cx)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 x,sx,cx
+  real(double_precision) :: x,sx,cx
   !
   !------------------------------------------------------------------------------
   !
@@ -2732,10 +2812,13 @@ end subroutine mco_sinh
 !
 subroutine mco_x2a (gm,x,y,z,u,v,w,a,r,v2)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 gm,x,y,z,u,v,w,a,r,v2
+  real(double_precision) :: gm,x,y,z,u,v,w,a,r,v2
   !
   !------------------------------------------------------------------------------
   !
@@ -2772,13 +2855,16 @@ subroutine mco_x2ov (rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
+  real(double_precision) :: rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
   !
   ! Local
-  real*8 r,v2,v1,be,ke,temp
+  real(double_precision) :: r,v2,v1,be,ke,temp
   !
   !------------------------------------------------------------------------------
   !
@@ -2826,14 +2912,17 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 gm,q,e,i,p,n,l,x,y,z,u,v,w
+  real(double_precision) :: gm,q,e,i,p,n,l,x,y,z,u,v,w
   !
   ! Local
-  real*8 hx,hy,hz,h2,h,v2,r,rv,s,true
-  real*8 ci,to,temp,tmp2,bige,f,cf,ce
+  real(double_precision) :: hx,hy,hz,h2,h,v2,r,rv,s,true
+  real(double_precision) :: ci,to,temp,tmp2,bige,f,cf,ce
   !
   !------------------------------------------------------------------------------
   !
@@ -2939,23 +3028,26 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
-  real*8 SHRINK,GROW
+  real(double_precision) :: SHRINK,GROW
   parameter (SHRINK=.55d0,GROW=1.3d0)
   !
   ! Input/Output
-  integer nbod, nbig, opt(8), stat(nbod), dtflag, ngflag
-  integer nce, ice(nce), jce(nce)
-  real*8 time,h0,hdid,tol,jcen(3),mass(nbod),x0(3,nbod),v0(3,nbod)
-  real*8 s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
+  integer :: nbod, nbig, opt(8), stat(nbod), dtflag, ngflag
+  integer :: nce, ice(nce), jce(nce)
+  real(double_precision) :: time,h0,hdid,tol,jcen(3),mass(nbod),x0(3,nbod),v0(3,nbod)
+  real(double_precision) :: s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
   external force
   !
   ! Local
-  integer j, j1, k, n
-  real*8 tmp0,tmp1,tmp2,errmax,tol2,h,hx2,h2(8)
-  real*8 x(3,NMAX),v(3,NMAX),xend(3,NMAX),vend(3,NMAX)
-  real*8 a(3,NMAX),a0(3,NMAX),d(6,NMAX,8),xscal(NMAX),vscal(NMAX)
+  integer :: j, j1, k, n
+  real(double_precision) :: tmp0,tmp1,tmp2,errmax,tol2,h,hx2,h2(8)
+  real(double_precision) :: x(3,NMAX),v(3,NMAX),xend(3,NMAX),vend(3,NMAX)
+  real(double_precision) :: a(3,NMAX),a0(3,NMAX),d(6,NMAX,8),xscal(NMAX),vscal(NMAX)
   !
   !------------------------------------------------------------------------------
   !
@@ -3126,23 +3218,26 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
-  real*8 SHRINK,GROW
+  real(double_precision) :: SHRINK,GROW
   parameter (SHRINK=.55d0,GROW=1.3d0)
   !
   ! Input/Output
-  integer nbod, nbig, opt(8), stat(nbod), dtflag, ngflag
-  real*8 time,h0,hdid,tol,jcen(3),mass(nbod),x0(3,nbod),v0(3,nbod)
-  real*8 s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
-  integer nce,ice(nce),jce(nce)
+  integer :: nbod, nbig, opt(8), stat(nbod), dtflag, ngflag
+  real(double_precision) :: time,h0,hdid,tol,jcen(3),mass(nbod),x0(3,nbod),v0(3,nbod)
+  real(double_precision) :: s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
+  integer :: nce,ice(nce),jce(nce)
   external force
   !
   ! Local
-  integer j,j1,k,n
-  real*8 tmp0,tmp1,tmp2,errmax,tol2,h,h2(12),hby2,h2by2
-  real*8 xend(3,NMAX),b(3,NMAX),c(3,NMAX)
-  real*8 a(3,NMAX),a0(3,NMAX),d(6,NMAX,12),xscal(NMAX),vscal(NMAX)
+  integer :: j,j1,k,n
+  real(double_precision) :: tmp0,tmp1,tmp2,errmax,tol2,h,h2(12),hby2,h2by2
+  real(double_precision) :: xend(3,NMAX),b(3,NMAX),c(3,NMAX)
+  real(double_precision) :: a(3,NMAX),a0(3,NMAX),d(6,NMAX,12),xscal(NMAX),vscal(NMAX)
   !
   !------------------------------------------------------------------------------
   !
@@ -3302,22 +3397,25 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,stat(nbod),algor,opt(8),dtflag,ngflag,opflag
-  integer colflag,lmem(NMESS),nclo,iclo(CMAX),jclo(CMAX)
-  real*8 time,tstart,h0,tol,rmax,en(3),am(3),jcen(3),rcen
-  real*8 m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
-  real*8 rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
-  real*8 ixvclo(6,CMAX),jxvclo(6,CMAX)
+  integer :: nbod,nbig,stat(nbod),algor,opt(8),dtflag,ngflag,opflag
+  integer :: colflag,lmem(NMESS),nclo,iclo(CMAX),jclo(CMAX)
+  real(double_precision) :: time,tstart,h0,tol,rmax,en(3),am(3),jcen(3),rcen
+  real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
+  real(double_precision) :: rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
+  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
   character*80 outfile(3),mem(NMESS)
   character*8 id(nbod)
   !
   ! Local
-  integer j,nce,ice(NMAX),jce(NMAX),ce(NMAX),iflag
-  real*8 a(3,NMAX),hby2,hrec,x0(3,NMAX),v0(3,NMAX),mvsum(3),temp
-  real*8 angf(3,NMAX),ausr(3,NMAX)
+  integer :: j,nce,ice(NMAX),jce(NMAX),ce(NMAX),iflag
+  real(double_precision) :: a(3,NMAX),hby2,hrec,x0(3,NMAX),v0(3,NMAX),mvsum(3),temp
+  real(double_precision) :: angf(3,NMAX),ausr(3,NMAX)
   external mfo_hkce
   !
   !------------------------------------------------------------------------------
@@ -3454,29 +3552,32 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,nce,ice(nce),jce(nce),stat(nbod),ngflag,ce(nbod)
-  integer algor,opt(8),colflag,lmem(NMESS),nclo,iclo(CMAX)
-  integer jclo(CMAX)
-  real*8 time,tstart,h0,hrec,tol,rmax,elost,jcen(3),rcen
-  real*8 m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
-  real*8 rce(nbod),rphy(nbod),rcrit(nbod),ngf(4,nbod)
-  real*8 tclo(CMAX),dclo(CMAX),ixvclo(6,CMAX),jxvclo(6,CMAX)
+  integer :: nbod,nbig,nce,ice(nce),jce(nce),stat(nbod),ngflag,ce(nbod)
+  integer :: algor,opt(8),colflag,lmem(NMESS),nclo,iclo(CMAX)
+  integer :: jclo(CMAX)
+  real(double_precision) :: time,tstart,h0,hrec,tol,rmax,elost,jcen(3),rcen
+  real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
+  real(double_precision) :: rce(nbod),rphy(nbod),rcrit(nbod),ngf(4,nbod)
+  real(double_precision) :: tclo(CMAX),dclo(CMAX),ixvclo(6,CMAX),jxvclo(6,CMAX)
   character*80 outfile(3),mem(NMESS)
   character*8 id(nbod)
   external force
   !
   ! Local
-  integer iback(NMAX),index(NMAX),ibs(NMAX),jbs(NMAX),nclo_old
-  integer i,j,k,nbs,nbsbig,statbs(NMAX)
-  integer nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),nowflag,dtflag
-  real*8 tlocal,hlocal,hdid,tmp0
-  real*8 mbs(NMAX),xbs(3,NMAX),vbs(3,NMAX),sbs(3,NMAX)
-  real*8 rcritbs(NMAX),rcebs(NMAX),rphybs(NMAX)
-  real*8 ngfbs(4,NMAX),x0(3,NMAX),v0(3,NMAX)
-  real*8 thit(CMAX),dhit(CMAX),thit1,temp
+  integer :: iback(NMAX),index(NMAX),ibs(NMAX),jbs(NMAX),nclo_old
+  integer :: i,j,k,nbs,nbsbig,statbs(NMAX)
+  integer :: nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),nowflag,dtflag
+  real(double_precision) :: tlocal,hlocal,hdid,tmp0
+  real(double_precision) :: mbs(NMAX),xbs(3,NMAX),vbs(3,NMAX),sbs(3,NMAX)
+  real(double_precision) :: rcritbs(NMAX),rcebs(NMAX),rphybs(NMAX)
+  real(double_precision) :: ngfbs(4,NMAX),x0(3,NMAX),v0(3,NMAX)
+  real(double_precision) :: thit(CMAX),dhit(CMAX),thit1,temp
   character*8 idbs(NMAX)
   !
   !------------------------------------------------------------------------------
@@ -3606,23 +3707,26 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,stat(nbod),algor,opt(8),dtflag,ngflag,opflag
-  integer colflag,lmem(NMESS),nclo,iclo(CMAX),jclo(CMAX)
-  real*8 time,tstart,h0,tol,rmax,en(3),am(3),jcen(3),rcen
-  real*8 m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
-  real*8 rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
-  real*8 ixvclo(6,CMAX),jxvclo(6,CMAX)
+  integer :: nbod,nbig,stat(nbod),algor,opt(8),dtflag,ngflag,opflag
+  integer :: colflag,lmem(NMESS),nclo,iclo(CMAX),jclo(CMAX)
+  real(double_precision) :: time,tstart,h0,tol,rmax,en(3),am(3),jcen(3),rcen
+  real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
+  real(double_precision) :: rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
+  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
   character*80 outfile(3),mem(NMESS)
   character*8 id(nbod)
   !
   ! Local
-  integer j,iflag,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),nowflag
-  real*8 xj(3,NMAX),vj(3,NMAX),a(3,NMAX),gm(NMAX),hby2,thit1,temp
-  real*8 msofar,minside,x0(3,NMAX),v0(3,NMAX),dhit(CMAX),thit(CMAX)
-  real*8 angf(3,NMAX),ausr(3,NMAX)
+  integer :: j,iflag,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),nowflag
+  real(double_precision) :: xj(3,NMAX),vj(3,NMAX),a(3,NMAX),gm(NMAX),hby2,thit1,temp
+  real(double_precision) :: msofar,minside,x0(3,NMAX),v0(3,NMAX),dhit(CMAX),thit(CMAX)
+  real(double_precision) :: angf(3,NMAX),ausr(3,NMAX)
   !
   !------------------------------------------------------------------------------
   !
@@ -3730,22 +3834,25 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,dtflag,ngflag,opt(8),stat(nbod)
-  integer nce,ice(nce),jce(nce)
-  real*8 time,t,tdid,tol,jcen(3),mass(nbod)
-  real*8 x1(3*nbod),v1(3*nbod),spin(3*nbod)
-  real*8 ngf(4,nbod),rphys(nbod),rcrit(nbod)
+  integer :: nbod,nbig,dtflag,ngflag,opt(8),stat(nbod)
+  integer :: nce,ice(nce),jce(nce)
+  real(double_precision) :: time,t,tdid,tol,jcen(3),mass(nbod)
+  real(double_precision) :: x1(3*nbod),v1(3*nbod),spin(3*nbod)
+  real(double_precision) :: ngf(4,nbod),rphys(nbod),rcrit(nbod)
   external force
   !
   ! Local
-  integer nv,niter,j,k,n
-  real*8 x(3*NMAX),v(3*NMAX),a(3*NMAX),a1(3*NMAX)
-  real*8 g(7,3*NMAX),b(7,3*NMAX),e(7,3*NMAX)
-  real*8 h(8),xc(8),vc(7),c(21),d(21),r(28),s(9)
-  real*8 q,q2,q3,q4,q5,q6,q7,temp,gk
+  integer :: nv,niter,j,k,n
+  real(double_precision) :: x(3*NMAX),v(3*NMAX),a(3*NMAX),a1(3*NMAX)
+  real(double_precision) :: g(7,3*NMAX),b(7,3*NMAX),e(7,3*NMAX)
+  real(double_precision) :: h(8),xc(8),vc(7),c(21),d(21),r(28),s(9)
+  real(double_precision) :: q,q2,q3,q4,q5,q6,q7,temp,gk
   !
   !------------------------------------------------------------------------------
   !
@@ -4070,16 +4177,19 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,stat(nbod),opt(8),nce,ice(nce),jce(nce)
-  real*8 time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
-  real*8 a(3,nbod),ngf(4,nbod),rcrit(nbod)
+  integer :: nbod,nbig,ngflag,stat(nbod),opt(8),nce,ice(nce),jce(nce)
+  real(double_precision) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
+  real(double_precision) :: a(3,nbod),ngf(4,nbod),rcrit(nbod)
   !
   ! Local
-  integer j
-  real*8 acor(3,NMAX),acen(3)
+  integer :: j
+  real(double_precision) :: acor(3,NMAX),acen(3)
   !
   !------------------------------------------------------------------------------
   !
@@ -4165,15 +4275,18 @@ subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod, nbig, stat(nbod)
-  real*8 m(nbod), x(3,nbod), v(3,nbod), a(3,nbod)
+  integer :: nbod, nbig, stat(nbod)
+  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), a(3,nbod)
   !
   ! Local
-  integer i, j
-  real*8 sx, sy, sz, dx, dy, dz, tmp1, tmp2, s_1, s2, s_3, r3(NMAX)
+  integer :: i, j
+  real(double_precision) :: sx, sy, sz, dx, dy, dz, tmp1, tmp2, s_1, s2, s_3, r3(NMAX)
   !
   !------------------------------------------------------------------------------
   !
@@ -4250,15 +4363,18 @@ subroutine mfo_drct (i0,nbod,nbig,m,x,rcrit,a,stat)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer i0, nbod, nbig, stat(nbod)
-  real*8 m(nbod), x(3,nbod), a(3,nbod), rcrit(nbod)
+  integer :: i0, nbod, nbig, stat(nbod)
+  real(double_precision) :: m(nbod), x(3,nbod), a(3,nbod), rcrit(nbod)
   !
   ! Local
-  integer i,j
-  real*8 dx,dy,dz,s,s_1,s2,s_3,rc,rc2,q,q2,q3,q4,q5,tmp2,faci,facj
+  integer :: i,j
+  real(double_precision) :: dx,dy,dz,s,s_1,s2,s_3,rc,rc2,q,q2,q3,q4,q5,tmp2,faci,facj
   !
   !------------------------------------------------------------------------------
   !
@@ -4324,15 +4440,18 @@ subroutine mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod, nbig, stat(nbod)
-  real*8 jcen(3), m(nbod), x(3,nbod), a(3,nbod), rcrit(nbod)
+  integer :: nbod, nbig, stat(nbod)
+  real(double_precision) :: jcen(3), m(nbod), x(3,nbod), a(3,nbod), rcrit(nbod)
   !
   ! Local
-  integer k
-  real*8 aobl(3,NMAX),acen(3)
+  integer :: k
+  real(double_precision) :: aobl(3,NMAX),acen(3)
   !
   !------------------------------------------------------------------------------
   !
@@ -4380,16 +4499,19 @@ subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,opt,
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,stat(nbod),ngflag,opt(8),nce,ice(nce),jce(nce)
-  real*8 time,jcen(3),rcrit(nbod),ngf(4,nbod),m(nbod)
-  real*8 x(3,nbod),v(3,nbod),a(3,nbod),spin(3,nbod)
+  integer :: nbod,nbig,stat(nbod),ngflag,opt(8),nce,ice(nce),jce(nce)
+  real(double_precision) :: time,jcen(3),rcrit(nbod),ngf(4,nbod),m(nbod)
+  real(double_precision) :: x(3,nbod),v(3,nbod),a(3,nbod),spin(3,nbod)
   !
   ! Local
-  integer i, j, k
-  real*8 tmp2,dx,dy,dz,s,s_1,s2,s_3,faci,facj,rc,rc2,q,q2,q3,q4,q5
+  integer :: i, j, k
+  real(double_precision) :: tmp2,dx,dy,dz,s,s_1,s2,s_3,faci,facj,rc,rc2,q,q2,q3,q4,q5
   !
   !------------------------------------------------------------------------------
   !
@@ -4473,17 +4595,20 @@ subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod, nbig, stat(nbod)
-  real*8 jcen(3), m(nbod), x(3,nbod), xj(3,nbod), a(3,nbod)
+  integer :: nbod, nbig, stat(nbod)
+  real(double_precision) :: jcen(3), m(nbod), x(3,nbod), xj(3,nbod), a(3,nbod)
   !
   ! Local
-  integer i,j,k,k1
-  real*8 fac0,fac1,fac12,fac2,minside,dx,dy,dz,s_1,s2,s_3,faci,facj
-  real*8 a0(3),a0tp(3),a1(3,NMAX),a2(3,NMAX),a3(3,NMAX),aobl(3,NMAX)
-  real*8 r,r2,r3,rj,rj2,rj3,q,q2,q3,q4,q5,q6,q7,acen(3)
+  integer :: i,j,k,k1
+  real(double_precision) :: fac0,fac1,fac12,fac2,minside,dx,dy,dz,s_1,s2,s_3,faci,facj
+  real(double_precision) :: a0(3),a0tp(3),a1(3,NMAX),a2(3,NMAX),a3(3,NMAX),aobl(3,NMAX)
+  real(double_precision) :: r,r2,r3,rj,rj2,rj3,q,q2,q3,q4,q5,q6,q7,acen(3)
   !
   !------------------------------------------------------------------------------
   !
@@ -4637,15 +4762,18 @@ subroutine mfo_ngf (nbod,x,v,a,ngf)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod
-  real*8 x(3,nbod), v(3,nbod), a(3,nbod), ngf(4,nbod)
+  integer :: nbod
+  real(double_precision) :: x(3,nbod), v(3,nbod), a(3,nbod), ngf(4,nbod)
   !
   ! Local
-  integer j
-  real*8 r2,r,rv,q,g,tx,ty,tz,nx,ny,nz,a1,a2,a3
+  integer :: j
+  real(double_precision) :: r2,r,rv,q,g,tx,ty,tz,nx,ny,nz,a1,a2,a3
   !
   !------------------------------------------------------------------------------
   !
@@ -4713,15 +4841,18 @@ subroutine mfo_obl (jcen,nbod,m,x,a,acen)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod
-  real*8 jcen(3), m(nbod), x(3,nbod), a(3,nbod), acen(3)
+  integer :: nbod
+  real(double_precision) :: jcen(3), m(nbod), x(3,nbod), a(3,nbod), acen(3)
   !
   ! Local
-  integer i
-  real*8 jr2,jr4,jr6,r2,r_1,r_2,r_3,u2,u4,u6,tmp1,tmp2,tmp3,tmp4
+  integer :: i
+  real(double_precision) :: jr2,jr4,jr6,r2,r_1,r_2,r_3,u2,u4,u6,tmp1,tmp2,tmp3,tmp4
   !
   !------------------------------------------------------------------------------
   !
@@ -4788,14 +4919,17 @@ subroutine mfo_pn (nbod,nbig,m,x,v,a)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod, nbig
-  real*8 m(nbod), x(3,nbod), v(3,nbod), a(3,nbod)
+  integer :: nbod, nbig
+  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), a(3,nbod)
   !
   ! Local
-  integer j
+  integer :: j
   !
   !------------------------------------------------------------------------------
   !
@@ -4834,14 +4968,17 @@ subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod, nbig
-  real*8 m(nbod), x(3,nbod), v(3,nbod), a(3,nbod), ngf(4,nbod)
+  integer :: nbod, nbig
+  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), a(3,nbod), ngf(4,nbod)
   !
   ! Local
-  integer j
+  integer :: j
   !
   !------------------------------------------------------------------------------
   !
@@ -4871,15 +5008,18 @@ end subroutine mfo_pr
 !
 function mio_c2fl (c)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 mio_c2fl
+  real(double_precision) :: mio_c2fl
   character*8 c
   !
   ! Local
-  integer ex
-  real*8 x,mio_c2re
+  integer :: ex
+  real(double_precision) :: x,mio_c2re
   !
   !------------------------------------------------------------------------------
   !
@@ -4914,16 +5054,19 @@ end function mio_c2fl
 !
 function mio_c2re (c,xmin,xmax,nchar)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/output
-  integer nchar
-  real*8 xmin,xmax,mio_c2re
+  integer :: nchar
+  real(double_precision) :: xmin,xmax,mio_c2re
   character*8 c
   !
   ! Local
-  integer j
-  real*8 y
+  integer :: j
+  real(double_precision) :: y
   !
   !------------------------------------------------------------------------------
   !
@@ -4972,24 +5115,27 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,opt(8),stat(nbod),lmem(NMESS),stopflag
-  integer nclo,iclo(nclo),jclo(nclo),nstored,ceflush
-  real*8 time,tstart,rcen,rmax,m(nbod),tclo(nclo),dclo(nclo)
-  real*8 ixvclo(6,nclo),jxvclo(6,nclo)
+  integer :: nbod,nbig,opt(8),stat(nbod),lmem(NMESS),stopflag
+  integer :: nclo,iclo(nclo),jclo(nclo),nstored,ceflush
+  real(double_precision) :: time,tstart,rcen,rmax,m(nbod),tclo(nclo),dclo(nclo)
+  real(double_precision) :: ixvclo(6,nclo),jxvclo(6,nclo)
   character*80 outfile(3),mem(NMESS)
   character*8 id(nbod)
   !
   ! Local
-  integer k,year,month
-  real*8 tmp0,t1,rfac,fr,fv,theta,phi,vtheta,vphi
+  integer :: k,year,month
+  real(double_precision) :: tmp0,t1,rfac,fr,fv,theta,phi,vtheta,vphi
   character*80 c(200)
   character*38 fstop
   character*8 mio_fl2c, mio_re2c
   character*6 tstring
-  integer error
+  integer :: error
   !
   !------------------------------------------------------------------------------
   !
@@ -5095,22 +5241,25 @@ subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer algor,nbod,nbig,stat(nbod),opt(8),opflag,ndump,nfun
-  integer lmem(NMESS)
-  real*8 time,tstart,tstop,dtout,h0,tol,rmax,en(3),am(3)
-  real*8 jcen(3),rcen,cefac,m(nbod),x(3,nbod),v(3,nbod)
-  real*8 s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod),epoch(nbod)
+  integer :: algor,nbod,nbig,stat(nbod),opt(8),opflag,ndump,nfun
+  integer :: lmem(NMESS)
+  real(double_precision) :: time,tstart,tstop,dtout,h0,tol,rmax,en(3),am(3)
+  real(double_precision) :: jcen(3),rcen,cefac,m(nbod),x(3,nbod),v(3,nbod)
+  real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod),epoch(nbod)
   character*80 dumpfile(4),mem(NMESS)
   character*8 id(nbod)
   !
   ! Local
-  integer idp,i,j,k,len,j1,j2
-  real*8 rhocgs,k_2,rcen_2,rcen_4,rcen_6,x0(3,NMAX),v0(3,NMAX)
+  integer :: idp,i,j,k,len,j1,j2
+  real(double_precision) :: rhocgs,k_2,rcen_2,rcen_4,rcen_6,x0(3,NMAX),v0(3,NMAX)
   character*150 c
-  integer error
+  integer :: error
   !
   !------------------------------------------------------------------------------
   !
@@ -5327,10 +5476,13 @@ end subroutine mio_dump
 !
 subroutine mio_err (unit,s1,ls1,s2,ls2,s3,ls3,s4,ls4)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer unit,ls1,ls2,ls3,ls4
+  integer :: unit,ls1,ls2,ls3,ls4
   character*80 s1,s2,s3,s4
   !
   !------------------------------------------------------------------------------
@@ -5371,15 +5523,18 @@ end subroutine mio_err
 !
 function mio_fl2c (x)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 x
+  real(double_precision) :: x
   character*8 mio_fl2c
   !
   ! Local
-  integer ex
-  real*8 ax,y
+  integer :: ex
+  real(double_precision) :: ax,y
   character*8 mio_re2c
   !
   !------------------------------------------------------------------------------
@@ -5433,27 +5588,30 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer algor,nbod,nbig,stat(NMAX),opt(8),opflag,ngflag
-  integer lmem(NMESS),ndump,nfun
-  real*8 time,tstart,tstop,dtout,h0,tol,rmax,rcen,jcen(3)
-  real*8 en(3),am(3),m(NMAX),x(3,NMAX),v(3,NMAX),s(3,NMAX)
-  real*8 rho(NMAX),rceh(NMAX),epoch(NMAX),ngf(4,NMAX),cefac
+  integer :: algor,nbod,nbig,stat(NMAX),opt(8),opflag,ngflag
+  integer :: lmem(NMESS),ndump,nfun
+  real(double_precision) :: time,tstart,tstop,dtout,h0,tol,rmax,rcen,jcen(3)
+  real(double_precision) :: en(3),am(3),m(NMAX),x(3,NMAX),v(3,NMAX),s(3,NMAX)
+  real(double_precision) :: rho(NMAX),rceh(NMAX),epoch(NMAX),ngf(4,NMAX),cefac
   character*80 outfile(3),dumpfile(4), mem(NMESS)
   character*8 id(NMAX)
   !
   ! Local
-  integer j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
-  real*8 q,a,e,i,p,n,l,temp,tmp2,tmp3,rhocgs,t1,tmp4,tmp5,tmp6
-  !      real*8 v0(3,NMAX),x0(3,NMAX)
+  integer :: j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
+  real(double_precision) :: q,a,e,i,p,n,l,temp,tmp2,tmp3,rhocgs,t1,tmp4,tmp5,tmp6
+  !      real(double_precision) :: v0(3,NMAX),x0(3,NMAX)
   logical test,oldflag,flag1,flag2
   character*1 c1
   character*3 c3,alg(60)
   character*80 infile(3),filename,c80
   character*150 string
-  integer error
+  integer :: error
   !
   !------------------------------------------------------------------------------
   !
@@ -6003,15 +6161,18 @@ end subroutine mio_in
 !
 subroutine mio_jd2y (jd0,year,month,day)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer year,month
-  real*8 jd0,day
+  integer :: year,month
+  real(double_precision) :: jd0,day
   !
   ! Local
-  integer i,a,b,c,d,e,g
-  real*8 jd,f,temp,x,y,z
+  integer :: i,a,b,c,d,e,g
+  real(double_precision) :: jd,f,temp,x,y,z
   !
   !------------------------------------------------------------------------------
   !
@@ -6097,16 +6258,19 @@ subroutine mio_log (time,tstart,en,am,opt,mem,lmem)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer lmem(NMESS), opt(8)
-  real*8 time, tstart, en(3), am(3)
+  integer :: lmem(NMESS), opt(8)
+  real(double_precision) :: time, tstart, en(3), am(3)
   character*80 mem(NMESS)
   !
   ! Local
-  integer year, month
-  real*8 tmp0, tmp1, t1
+  integer :: year, month
+  real(double_precision) :: tmp0, tmp1, t1
   character*38 flog
   character*6 tstring
   !
@@ -6175,22 +6339,25 @@ subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opfl
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod, nbig, stat(nbod), opt(8), opflag, algor
-  real*8 time,jcen(3),rcen,rmax,m(nbod),xh(3,nbod),vh(3,nbod)
-  real*8 s(3,nbod),rho(nbod)
+  integer :: nbod, nbig, stat(nbod), opt(8), opflag, algor
+  real(double_precision) :: time,jcen(3),rcen,rmax,m(nbod),xh(3,nbod),vh(3,nbod)
+  real(double_precision) :: s(3,nbod),rho(nbod)
   character*80 outfile
   character*8 id(nbod)
   !
   ! Local
-  integer k, len, nchar
-  real*8 rhocgs,k_2,rfac,rcen_2,fr,fv,theta,phi,vtheta,vphi
+  integer :: k, len, nchar
+  real(double_precision) :: rhocgs,k_2,rfac,rcen_2,fr,fv,theta,phi,vtheta,vphi
   character*80 header,c(NMAX)
   character*8 mio_fl2c,mio_re2c
   character*5 fout
-  integer error
+  integer :: error
   !
   !------------------------------------------------------------------------------
   !
@@ -6314,15 +6481,18 @@ end subroutine mio_out
 !
 function mio_re2c (x,xmin,xmax)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/output
-  real*8 x,xmin,xmax
+  real(double_precision) :: x,xmin,xmax
   character*8 mio_re2c
   !
   ! Local
-  integer j
-  real*8 y,z
+  integer :: j
+  real(double_precision) :: y,z
   !
   !------------------------------------------------------------------------------
   !
@@ -6364,14 +6534,17 @@ end function mio_re2c
 !
 subroutine mio_spl (len,string,nsub,delimit)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer len,nsub,delimit(2,100)
+  integer :: len,nsub,delimit(2,100)
   character*1 string(len)
   !
   ! Local
-  integer j,k
+  integer :: j,k
   character*1 c
   !
   !------------------------------------------------------------------------------
@@ -6437,21 +6610,24 @@ subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,op
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer i0, nbod, nbig, stat(nbod), opt(8), ejflag, lmem(NMESS)
-  real*8 time, tstart, rmax, en(3), am(3), jcen(3)
-  real*8 m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
+  integer :: i0, nbod, nbig, stat(nbod), opt(8), ejflag, lmem(NMESS)
+  real(double_precision) :: time, tstart, rmax, en(3), am(3), jcen(3)
+  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
   character*80 outfile, mem(NMESS)
   character*8 id(nbod)
   !
   ! Local
-  integer j, year, month
-  real*8 r2,rmax2,t1,e,l
+  integer :: j, year, month
+  real(double_precision) :: r2,rmax2,t1,e,l
   character*38 flost
   character*6 tstring
-  integer error
+  integer :: error
   !
   !------------------------------------------------------------------------------
   !
@@ -6529,18 +6705,21 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfi
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod, nbig, nelim, stat(nbod), lmem(NMESS)
-  real*8 m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
-  real*8 rho(nbod), rceh(nbod), rcrit(nbod), ngf(4,nbod)
+  integer :: nbod, nbig, nelim, stat(nbod), lmem(NMESS)
+  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
+  real(double_precision) :: rho(nbod), rceh(nbod), rcrit(nbod), ngf(4,nbod)
   character*8 id(nbod)
   character*80 outfile, mem(NMESS)
   !
   ! Local
-  integer j, k, l, nbigelim, elim(NMAX+1)
-  integer error
+  integer :: j, k, l, nbigelim, elim(NMAX+1)
+  integer :: error
   !
   !------------------------------------------------------------------------------
   !
@@ -6622,16 +6801,19 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig
-  real*8 jcen(3),m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),e,l2
+  integer :: nbod,nbig
+  real(double_precision) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),e,l2
   !
   ! Local
-  integer j,k,iflag,itmp(8)
-  real*8 x(3,NMAX),v(3,NMAX),temp,dx,dy,dz,r2,tmp,ke,pe,l(3)
-  real*8 r_1,r_2,r_4,r_6,u2,u4,u6,tmp2(4,NMAX)
+  integer :: j,k,iflag,itmp(8)
+  real(double_precision) :: x(3,NMAX),v(3,NMAX),temp,dx,dy,dz,r2,tmp,ke,pe,l(3)
+  real(double_precision) :: r_1,r_2,r_4,r_6,u2,u4,u6,tmp2(4,NMAX)
   !
   !------------------------------------------------------------------------------
   !
@@ -6726,16 +6908,19 @@ subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig
-  real*8 jcen(3),m(nbod),xh(3,nbod),vh(3,nbod)
+  integer :: nbod,nbig
+  real(double_precision) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod)
   !
   ! Local
-  integer j,itmp(8),iflag
-  real*8 x(3,NMAX),v(3,NMAX),temp,dx,dy,dz,r,d,a2,n,jac(NMAX)
-  real*8 tmp2(4,NMAX)
+  integer :: j,itmp(8),iflag
+  real(double_precision) :: x(3,NMAX),v(3,NMAX),temp,dx,dy,dz,r,d,a2,n,jac(NMAX)
+  real(double_precision) :: tmp2(4,NMAX)
   !
   !------------------------------------------------------------------------------
   !
@@ -6782,15 +6967,18 @@ end subroutine mxx_jac
 !
 subroutine mxx_sort (n,x,index)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer n,index(n)
-  real*8 x(n)
+  integer :: n,index(n)
+  real(double_precision) :: x(n)
   !
   ! Local
-  integer i,j,k,l,m,inc,incarr(9),iy
-  real*8 y
+  integer :: i,j,k,l,m,inc,incarr(9),iy
+  real(double_precision) :: y
   data incarr/1,4,13,40,121,364,1093,3280,9841/
   !
   !------------------------------------------------------------------------------
@@ -6850,19 +7038,22 @@ subroutine mxx_sync (time,tstart,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig,ngflag,opt(8),stat(nbod)
-  real*8 time,tstart,h0,tol,jcen(3),m(nbod),x(3,nbod),v(3,nbod)
-  real*8 s(3,nbod),rceh(nbod),rho(nbod),epoch(nbod),ngf(4,nbod)
+  integer :: nbod,nbig,ngflag,opt(8),stat(nbod)
+  real(double_precision) :: time,tstart,h0,tol,jcen(3),m(nbod),x(3,nbod),v(3,nbod)
+  real(double_precision) :: s(3,nbod),rceh(nbod),rho(nbod),epoch(nbod),ngf(4,nbod)
   character*8 id(nbod)
   !
   ! Local
-  integer j,k,l,nsml,nsofar,indx(NMAX),itemp,jtemp(NMAX)
-  integer raflag,nce,ice(NMAX),jce(NMAX)
-  real*8 temp,epsml(NMAX),rtemp(NMAX)
-  real*8 h,hdid,tsmall,rphys(NMAX),rcrit(NMAX)
+  integer :: j,k,l,nsml,nsofar,indx(NMAX),itemp,jtemp(NMAX)
+  integer :: raflag,nce,ice(NMAX),jce(NMAX)
+  real(double_precision) :: temp,epsml(NMAX),rtemp(NMAX)
+  real(double_precision) :: h,hdid,tsmall,rphys(NMAX),rcrit(NMAX)
   character*8 ctemp(NMAX)
   external mfo_all
   !
@@ -6981,7 +7172,7 @@ end subroutine mxx_sync
 !                                       (real scalars)
 !                 vx0,vy0,vz0      ==>  final position in jacobi coord 
 !                                       (real scalars)
-!                 iflg             ==>  integer flag (zero if satisfactory)
+!                 iflg             ==>  integer :: flag (zero if satisfactory)
 !					      (non-zero if nonconvergence)
 !
 ! Authors:  Hal Levison & Martin Duncan  
@@ -6992,26 +7183,29 @@ subroutine drift_dan(mu,x0,y0,z0,vx0,vy0,vz0,dt0,iflg)
 
   use mercury_constant
   use physical_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs Only: 
-  real*8 mu,dt0
+  real(double_precision) :: mu,dt0
 
   !...  Inputs and Outputs:
-  real*8 x0,y0,z0
-  real*8 vx0,vy0,vz0
+  real(double_precision) :: x0,y0,z0
+  real(double_precision) :: vx0,vy0,vz0
 
   !...  Output
-  integer iflg
+  integer :: iflg
 
   !...  Internals:
-  real*8 x,y,z,vx,vy,vz,dt
-  real*8 f,g,fdot,c1,c2
-  real*8 c3,gdot
-  real*8 u,alpha,fp,r0,v0s
-  real*8 a,asq,en
-  real*8 dm,ec,es,esq,xkep
-  real*8 fchk,s,c
+  real(double_precision) :: x,y,z,vx,vy,vz,dt
+  real(double_precision) :: f,g,fdot,c1,c2
+  real(double_precision) :: c3,gdot
+  real(double_precision) :: u,alpha,fp,r0,v0s
+  real(double_precision) :: a,asq,en
+  real(double_precision) :: dm,ec,es,esq,xkep
+  real(double_precision) :: fchk,s,c
 
   !----
   !...  Executable code 
@@ -7120,21 +7314,24 @@ end subroutine drift_dan   ! drift_dan
 
 subroutine drift_kepmd(dm,es,ec,x,s,c)
 
+  use types_numeriques
+
   implicit none
 
+
   !...    Inputs
-  real*8 dm,es,ec
+  real(double_precision) :: dm,es,ec
 
   !...	Outputs
-  real*8 x,s,c
+  real(double_precision) :: x,s,c
 
   !...    Internals
-  real*8 A0, A1, A2, A3, A4
+  real(double_precision) :: A0, A1, A2, A3, A4
   parameter(A0 = 39916800.d0, A1 = 6652800.d0, A2 = 332640.d0)
   parameter(A3 = 7920.d0, A4 = 110.d0)
-  real*8 dx
-  real*8 fac1,fac2,q,y
-  real*8 f,fp,fpp,fppp
+  real(double_precision) :: dx
+  real(double_precision) :: fac1,fac2,q,y
+  real(double_precision) :: f,fp,fpp,fppp
 
 
   !...    calc initial guess for root
@@ -7193,17 +7390,20 @@ end subroutine drift_kepmd
 subroutine drift_kepu(dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs: 
-  real*8 dt,r0,mu,alpha,u
+  real(double_precision) :: dt,r0,mu,alpha,u
 
   !...  Outputs:
-  real*8 fp,c1,c2,c3
-  integer iflg
+  real(double_precision) :: fp,c1,c2,c3
+  integer :: iflg
 
   !...  Internals:
-  real*8 s,st,fo,fn
+  real(double_precision) :: s,st,fo,fn
 
   !----
   !...  Executable code 
@@ -7251,14 +7451,18 @@ end subroutine drift_kepu    ! drift_kepu
 
 subroutine drift_kepu_fchk(dt,r0,mu,alpha,u,s,f)
 
+  use types_numeriques
+
+  implicit none
+
   !...  Inputs: 
-  real*8 dt,r0,mu,alpha,u,s
+  real(double_precision) :: dt,r0,mu,alpha,u,s
 
   !...  Outputs:
-  real*8 f
+  real(double_precision) :: f
 
   !...  Internals:
-  real*8  x,c0,c1,c2,c3
+  real(double_precision) ::  x,c0,c1,c2,c3
 
   !----
   !...  Executable code 
@@ -7298,19 +7502,22 @@ end subroutine drift_kepu_fchk     !   drift_kepu_fchk
 subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs: 
-  real*8 dt,r0,mu,alpha,u
+  real(double_precision) :: dt,r0,mu,alpha,u
 
   !...  Inputs and Outputs:
-  real*8 s
+  real(double_precision) :: s
 
   !...  Internals:
-  integer iflg
-  real*8 y,sy,cy,sigma,es
-  real*8 x,a
-  real*8 en,ec,e
+  integer :: iflg
+  real(double_precision) :: y,sy,cy,sigma,es
+  real(double_precision) :: x,a
+  real(double_precision) :: en,ec,e
 
   !----
   !...  Executable code 
@@ -7377,22 +7584,25 @@ end subroutine drift_kepu_guess     !   drift_kepu_guess
 subroutine drift_kepu_lag(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs: 
-  real*8 s,dt,r0,mu,alpha,u
+  real(double_precision) :: s,dt,r0,mu,alpha,u
 
   !...  Outputs:
-  real*8 fp,c1,c2,c3
-  integer iflg
+  real(double_precision) :: fp,c1,c2,c3
+  integer :: iflg
 
   !...  Internals:
-  integer nc,ncmax
-  real*8 ln
-  real*8 x,fpp,ds,c0,f
-  real*8 fdt
+  integer :: nc,ncmax
+  real(double_precision) :: ln
+  real(double_precision) :: x,fpp,ds,c0,f
+  real(double_precision) :: fdt
 
-  integer NTMP
+  integer :: NTMP
   parameter(NTMP=NLAG2+1)
 
   !----
@@ -7466,19 +7676,22 @@ end subroutine drift_kepu_lag    !    drift_kepu_leg
 subroutine drift_kepu_new(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflgn)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs: 
-  real*8 s,dt,r0,mu,alpha,u
+  real(double_precision) :: s,dt,r0,mu,alpha,u
 
   !...  Outputs:
-  real*8 fp,c1,c2,c3
-  integer iflgn
+  real(double_precision) :: fp,c1,c2,c3
+  integer :: iflgn
 
   !...  Internals:
-  integer nc
-  real*8 x,c0,ds,s2
-  real*8 f,fpp,fppp,fdt
+  integer :: nc
+  real(double_precision) :: x,c0,ds,s2
+  real(double_precision) :: f,fpp,fppp,fdt
 
   !----
   !...  Executable code 
@@ -7539,16 +7752,19 @@ end subroutine drift_kepu_new  ! drift_kepu_new
 ! Last revision: March 12/93
 
 subroutine drift_kepu_p3solve(dt,r0,mu,alpha,u,s,iflg)
+  use types_numeriques
 
+  implicit none
+  
   !...  Inputs: 
-  real*8 dt,r0,mu,alpha,u
+  real(double_precision) :: dt,r0,mu,alpha,u
 
   !...  Outputs:
-  integer iflg
-  real*8 s
+  integer :: iflg
+  real(double_precision) :: s
 
   !...  Internals:
-  real*8 denom,a0,a1,a2,q,r,sq2,sq,p1,p2
+  real(double_precision) :: denom,a0,a1,a2,q,r,sq2,sq,p1,p2
 
   !----
   !...  Executable code 
@@ -7607,17 +7823,20 @@ end subroutine drift_kepu_p3solve     !   drift_kepu_p3solve
 subroutine drift_kepu_stumpff(x,c0,c1,c2,c3)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs: 
-  real*8 x
+  real(double_precision) :: x
 
   !...  Outputs:
-  real*8 c0,c1,c2,c3
+  real(double_precision) :: c0,c1,c2,c3
 
   !...  Internals:
-  integer n,i
-  real*8 xm,x2,x3,x4,x5,x6
+  integer :: n,i
+  real(double_precision) :: xm,x2,x3,x4,x5,x6
 
   !----
   !...  Executable code 
@@ -7678,7 +7897,7 @@ end subroutine drift_kepu_stumpff     !   drift_kepu_stumpff
 !                                       (real scalars)
 !                 vx,vy,vz      ==>  final position in jacobi coord 
 !                                       (real scalars)
-!                 iflg          ==>  integer (zero for successful step)
+!                 iflg          ==>  integer :: (zero for successful step)
 !
 ! Authors:  Hal Levison & Martin Duncan 
 ! Date:    2/10/93
@@ -7688,21 +7907,24 @@ end subroutine drift_kepu_stumpff     !   drift_kepu_stumpff
 subroutine drift_one(mu,x,y,z,vx,vy,vz,dt,iflg)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs Only: 
-  real*8 mu,dt
+  real(double_precision) :: mu,dt
 
   !...  Inputs and Outputs:
-  real*8 x,y,z
-  real*8 vx,vy,vz
+  real(double_precision) :: x,y,z
+  real(double_precision) :: vx,vy,vz
 
   !...  Output
-  integer iflg
+  integer :: iflg
 
   !...  Internals:
-  integer i
-  real*8 dttmp
+  integer :: i
+  real(double_precision) :: dttmp
 
   !----
   !...  Executable code 
@@ -7746,15 +7968,18 @@ end subroutine drift_one    ! drift_one
 real*8 function orbel_fget(e,capn)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs Only: 
-  real*8 e,capn
+  real(double_precision) :: e,capn
 
   !...  Internals:
-  integer i,IMAX
-  real*8 tmp,x,shx,chx
-  real*8 esh,ech,f,fp,fpp,fppp,dx
+  integer :: i,IMAX
+  real(double_precision) :: tmp,x,shx,chx
+  real(double_precision) :: esh,ech,f,fp,fpp,fppp,dx
   PARAMETER (IMAX = 10)
 
   !----
@@ -7820,14 +8045,17 @@ end function orbel_fget   ! orbel_fget
 real*8 function orbel_fhybrid(e,n)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs Only: 
-  real*8 e,n
+  real(double_precision) :: e,n
 
   !...  Internals:
-  real*8 abn
-  real*8 orbel_flon,orbel_fget
+  real(double_precision) :: abn
+  real(double_precision) :: orbel_flon,orbel_fget
 
   !----
   !...  Executable code 
@@ -7866,19 +8094,22 @@ end function orbel_fhybrid  ! orbel_fhybrid
 real*8 function orbel_flon(e,capn)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs Only: 
-  real*8 e,capn
+  real(double_precision) :: e,capn
 
   !...  Internals:
-  integer iflag,i,IMAX
-  real*8 a,b,sq,biga,bigb
-  real*8 x,x2
-  real*8 f,fp,dx
-  real*8 diff
-  real*8 a0,a1,a3,a5,a7,a9,a11
-  real*8 b1,b3,b5,b7,b9,b11
+  integer :: iflag,i,IMAX
+  real(double_precision) :: a,b,sq,biga,bigb
+  real(double_precision) :: x,x2
+  real(double_precision) :: f,fp,dx
+  real(double_precision) :: diff
+  real(double_precision) :: a0,a1,a3,a5,a7,a9,a11
+  real(double_precision) :: b1,b3,b5,b7,b9,b11
   PARAMETER (IMAX = 10)
   PARAMETER (a11 = 156.d0,a9 = 17160.d0,a7 = 1235520.d0)
   PARAMETER (a5 = 51891840.d0,a3 = 1037836800.d0)
@@ -7976,14 +8207,17 @@ end function orbel_flon     ! orbel_flon
 real*8 function orbel_zget(q)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs Only: 
-  real*8 q
+  real(double_precision) :: q
 
   !...  Internals:
-  integer iflag
-  real*8 x,tmp
+  integer :: iflag
+  real(double_precision) :: x,tmp
 
   !----
   !...  Executable code 

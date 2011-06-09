@@ -17,17 +17,20 @@
 program close
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
-  integer itmp,i,j,k,l,iclo,jclo,precision,lenin
-  integer nmaster,nopen,nwait,nbig,nsml,nsub,lim(2,100)
-  integer year,month,timestyle,line_num,lenhead,lmem(NMESS)
-  integer nchar,algor,allflag,firstflag,ninfile
-  integer unit(NMAX),master_unit(NMAX)
-  real*8 time,t0,t1,rmax,rcen,rfac,dclo,mcen,jcen(3)
-  real*8 mio_c2re, mio_c2fl,fr,theta,phi,fv,vtheta,vphi,gm
-  real*8 x1(3),x2(3),v1(3),v2(3),m(NMAX)
-  real*8 a1,a2,e1,e2,i1,i2,p1,p2,n1,n2,l1,l2,q1,q2
+  integer :: itmp,i,j,k,l,iclo,jclo,precision,lenin
+  integer :: nmaster,nopen,nwait,nbig,nsml,nsub,lim(2,100)
+  integer :: year,month,timestyle,line_num,lenhead,lmem(NMESS)
+  integer :: nchar,algor,allflag,firstflag,ninfile
+  integer :: unit(NMAX),master_unit(NMAX)
+  real(double_precision) :: time,t0,t1,rmax,rcen,rfac,dclo,mcen,jcen(3)
+  real(double_precision) :: mio_c2re, mio_c2fl,fr,theta,phi,fv,vtheta,vphi,gm
+  real(double_precision) :: x1(3),x2(3),v1(3),v2(3),m(NMAX)
+  real(double_precision) :: a1,a2,e1,e2,i1,i2,p1,p2,n1,n2,l1,l2,q1,q2
   logical test
   character*250 string,fout,header,infile(50)
   character*80 mem(NMESS),cc,c(NMAX)
@@ -334,10 +337,13 @@ end program close
 !
 subroutine m_formce (timestyle,fout,header,lenhead)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer timestyle,lenhead
+  integer :: timestyle,lenhead
   character*250 fout,header
   !
   !------------------------------------------------------------------------------
@@ -394,13 +400,16 @@ subroutine mco_ov2x (rcen,rmax,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
+  real(double_precision) :: rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
   !
   ! Local
-  real*8 r,v1,temp
+  real(double_precision) :: r,v1,temp
   !
   !------------------------------------------------------------------------------
   !
@@ -450,15 +459,18 @@ subroutine mco_el2x (mu,q,e,i,p,n,l,x,y,z,u,v,w)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 mu,q,e,i,p,n,l,x,y,z,u,v,w
+  real(double_precision) :: mu,q,e,i,p,n,l,x,y,z,u,v,w
   !
   ! Local
-  real*8 g,a,ci,si,cn,sn,cg,sg,ce,se,romes,temp
-  real*8 z1,z2,z3,z4,d11,d12,d13,d21,d22,d23
-  real*8 mco_kep, orbel_fhybrid, orbel_zget
+  real(double_precision) :: g,a,ci,si,cn,sn,cg,sg,ce,se,romes,temp
+  real(double_precision) :: z1,z2,z3,z4,d11,d12,d13,d21,d22,d23
+  real(double_precision) :: mco_kep, orbel_fhybrid, orbel_zget
   !
   !------------------------------------------------------------------------------
   !
@@ -544,15 +556,18 @@ end subroutine mco_el2x
 !------------------------------------------------------------------------------
 !
 function mco_kep (e,oldl)
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Outout
-  real*8 oldl,e,mco_kep
+  real(double_precision) :: oldl,e,mco_kep
   !
   ! Local
-  real*8 l,pi,twopi,piby2,u1,u2,ome,sign
-  real*8 x,x2,sn,dsn,z1,z2,z3,f0,f1,f2,f3
-  real*8 p,q,p2,ss,cc
+  real(double_precision) :: l,pi,twopi,piby2,u1,u2,ome,sign
+  real(double_precision) :: x,x2,sn,dsn,z1,z2,z3,f0,f1,f2,f3
+  real(double_precision) :: p,q,p2,ss,cc
   logical flag,big,bigg
   !
   !------------------------------------------------------------------------------
@@ -691,13 +706,16 @@ end function mco_kep
 !
 subroutine mco_sine (x,sx,cx)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 x,sx,cx
+  real(double_precision) :: x,sx,cx
   !
   ! Local
-  real*8 pi,twopi
+  real(double_precision) :: pi,twopi
   !
   !------------------------------------------------------------------------------
   !
@@ -735,10 +753,13 @@ end subroutine mco_sine
 !
 subroutine mco_sinh (x,sx,cx)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 x,sx,cx
+  real(double_precision) :: x,sx,cx
   !
   !------------------------------------------------------------------------------
   !
@@ -767,17 +788,20 @@ subroutine mio_aei (id,extn,unitnum,header,lenhead,mem,lmem)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer unitnum,lenhead,lmem(NMESS)
+  integer :: unitnum,lenhead,lmem(NMESS)
   character*4 extn
   character*8 id
   character*250 header
   character*80 mem(NMESS)
   !
   ! Local
-  integer j,k,itmp,nsub,lim(2,4)
+  integer :: j,k,itmp,nsub,lim(2,4)
   logical test
   character*1 bad(5)
   character*250 filename
@@ -832,15 +856,18 @@ end subroutine mio_aei
 !
 function mio_c2fl (c)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 mio_c2fl
+  real(double_precision) :: mio_c2fl
   character*8 c
   !
   ! Local
-  real*8 x,mio_c2re
-  integer ex
+  real(double_precision) :: x,mio_c2re
+  integer :: ex
   !
   !------------------------------------------------------------------------------
   !
@@ -875,16 +902,19 @@ end function mio_c2fl
 !
 function mio_c2re (c,xmin,xmax,nchar)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/output
-  integer nchar
-  real*8 xmin,xmax,mio_c2re
+  integer :: nchar
+  real(double_precision) :: xmin,xmax,mio_c2re
   character*8 c
   !
   ! Local
-  integer j
-  real*8 y
+  integer :: j
+  real(double_precision) :: y
   !
   !------------------------------------------------------------------------------
   !
@@ -914,10 +944,13 @@ end function mio_c2re
 !
 subroutine mio_err (unit,s1,ls1,s2,ls2,s3,ls3,s4,ls4)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer unit,ls1,ls2,ls3,ls4
+  integer :: unit,ls1,ls2,ls3,ls4
   character*80 s1,s2,s3,s4
   !
   !------------------------------------------------------------------------------
@@ -945,15 +978,18 @@ end subroutine mio_err
 !
 subroutine mco_h2b (jcen,nbod,nbig,h,m,xh,vh,x,v)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig
-  real*8 jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod),v(3,nbod)
+  integer :: nbod,nbig
+  real(double_precision) :: jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod),v(3,nbod)
   !
   ! Local
-  integer j
-  real*8 mtot,temp
+  integer :: j
+  real(double_precision) :: mtot,temp
   !
   !------------------------------------------------------------------------------
   !
@@ -1014,15 +1050,18 @@ end subroutine mco_h2b
 !
 subroutine mco_h2cb (jcen,nbod,nbig,h,m,xh,vh,x,v)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig
-  real*8 jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod),v(3,nbod)
+  integer :: nbod,nbig
+  real(double_precision) :: jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod),v(3,nbod)
   !
   ! Local
-  integer j
-  real*8 msum,mvsum(3),temp,mbin,mbin_1,mtot_1
+  integer :: j
+  real(double_precision) :: msum,mvsum(3),temp,mbin,mbin_1,mtot_1
   !
   !------------------------------------------------------------------------------
   !
@@ -1083,15 +1122,18 @@ end subroutine mco_h2cb
 !
 subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig
-  real*8 jcen(3),h,m(nbig),xh(3,nbig),vh(3,nbig),x(3,nbig),v(3,nbig)
+  integer :: nbod,nbig
+  real(double_precision) :: jcen(3),h,m(nbig),xh(3,nbig),vh(3,nbig),x(3,nbig),v(3,nbig)
   !
   ! Local
-  integer j
-  real*8 mtot, mx, my, mz, mu, mv, mw, temp
+  integer :: j
+  real(double_precision) :: mtot, mx, my, mz, mu, mv, mw, temp
   !
   !------------------------------------------------------------------------------c
   mtot = m(2)
@@ -1163,14 +1205,17 @@ end subroutine mco_h2j
 !
 subroutine mco_iden (jcen,nbod,nbig,h,m,xh,vh,x,v)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer nbod,nbig
-  real*8 jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod),vh(3,nbod)
+  integer :: nbod,nbig
+  real(double_precision) :: jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod),vh(3,nbod)
   !
   ! Local
-  integer j
+  integer :: j
   !
   !------------------------------------------------------------------------------
   !
@@ -1212,14 +1257,17 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   !
   use physical_constant
   use mercury_constant
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 gm,q,e,i,p,n,l,x,y,z,u,v,w
+  real(double_precision) :: gm,q,e,i,p,n,l,x,y,z,u,v,w
   !
   ! Local
-  real*8 hx,hy,hz,h2,h,v2,r,rv,s,true
-  real*8 ci,to,temp,tmp2,bige,f,cf,ce
+  real(double_precision) :: hx,hy,hz,h2,h,v2,r,rv,s,true
+  real(double_precision) :: ci,to,temp,tmp2,bige,f,cf,ce
   !
   !------------------------------------------------------------------------------
   !
@@ -1329,15 +1377,18 @@ end subroutine mco_x2el
 !
 subroutine mio_jd_y (jd0,year,month,day)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  real*8 jd0,day
-  integer year,month
+  real(double_precision) :: jd0,day
+  integer :: year,month
   !
   ! Local
-  integer i,a,b,c,d,e,g
-  real*8 jd,f,temp,x,y,z
+  integer :: i,a,b,c,d,e,g
+  real(double_precision) :: jd,f,temp,x,y,z
   !
   !------------------------------------------------------------------------------
   !
@@ -1424,14 +1475,17 @@ end subroutine mio_jd_y
 !
 subroutine mio_spl (len,string,nsub,delimit)
   !
+  use types_numeriques
+
   implicit none
+
   !
   ! Input/Output
-  integer len,nsub,delimit(2,100)
+  integer :: len,nsub,delimit(2,100)
   character*1 string(len)
   !
   ! Local
-  integer j,k
+  integer :: j,k
   character*1 c
   !
   !------------------------------------------------------------------------------
@@ -1494,14 +1548,17 @@ end subroutine mio_spl
 real*8 function orbel_fhybrid(e,n)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs Only: 
-  real*8 e,n
+  real(double_precision) :: e,n
 
   !...  Internals:
-  real*8 abn
-  real*8 orbel_flon,orbel_fget
+  real(double_precision) :: abn
+  real(double_precision) :: orbel_flon,orbel_fget
 
   !----
   !...  Executable code 
@@ -1542,15 +1599,18 @@ end function orbel_fhybrid  ! orbel_fhybrid
 real*8 function orbel_fget(e,capn)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs Only: 
-  real*8 e,capn
+  real(double_precision) :: e,capn
 
   !...  Internals:
-  integer i,IMAX
-  real*8 tmp,x,shx,chx
-  real*8 esh,ech,f,fp,fpp,fppp,dx
+  integer :: i,IMAX
+  real(double_precision) :: tmp,x,shx,chx
+  real(double_precision) :: esh,ech,f,fp,fpp,fppp,dx
   PARAMETER (IMAX = 10)
 
   !----
@@ -1614,19 +1674,22 @@ end function orbel_fget   ! orbel_fget
 real*8 function orbel_flon(e,capn)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs Only: 
-  real*8 e,capn
+  real(double_precision) :: e,capn
 
   !...  Internals:
-  integer iflag,i,IMAX
-  real*8 a,b,sq,biga,bigb
-  real*8 x,x2
-  real*8 f,fp,dx
-  real*8 diff
-  real*8 a0,a1,a3,a5,a7,a9,a11
-  real*8 b1,b3,b5,b7,b9,b11
+  integer :: iflag,i,IMAX
+  real(double_precision) :: a,b,sq,biga,bigb
+  real(double_precision) :: x,x2
+  real(double_precision) :: f,fp,dx
+  real(double_precision) :: diff
+  real(double_precision) :: a0,a1,a3,a5,a7,a9,a11
+  real(double_precision) :: b1,b3,b5,b7,b9,b11
   PARAMETER (IMAX = 10)
   PARAMETER (a11 = 156.d0,a9 = 17160.d0,a7 = 1235520.d0)
   PARAMETER (a5 = 51891840.d0,a3 = 1037836800.d0)
@@ -1725,14 +1788,17 @@ end function orbel_flon     ! orbel_flon
 real*8 function orbel_zget(q)
 
   use mercury_constant
+  use types_numeriques
+
   implicit none
 
+
   !...  Inputs Only: 
-  real*8 q
+  real(double_precision) :: q
 
   !...  Internals:
-  integer iflag
-  real*8 x,tmp
+  integer :: iflag
+  real(double_precision) :: x,tmp
 
   !----
   !...  Executable code 

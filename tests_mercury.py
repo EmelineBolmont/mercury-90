@@ -5,7 +5,7 @@
 
 __author__ = "Christophe Cossou <cossou@obs.u-bordeaux1.fr>"
 __date__ = "09 juin 2011"
-__version__ = "$Revision: 2.1 $"
+__version__ = "$Revision: 2.12 $"
 __credits__ = """We run a test simulation and erase all the files created after the tests. The simulations files are thought to be 
 in a "simu_test" subdirectory of the directory were are the sources (and binaries) of mercury (and this script)"""
 
@@ -127,8 +127,12 @@ print("""###################
 
 (process_stdout, process_stderr) = run("../mercury")
 
-print("for the Output of mercury")
-compare(MERCURY_OUTPUT_ORIGINAL, process_stdout)
+print("For the Output of mercury")
+diff = compare(MERCURY_OUTPUT_ORIGINAL, process_stdout)
+if (diff != None):
+  print diff
+else:
+  print("OK : No differences\n")
 
 compare2file(MERCURY_FILES, MERCURY_NAMES)
   
