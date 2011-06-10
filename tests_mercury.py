@@ -51,7 +51,7 @@ def run(command):
     f.write(process_stdout)
     f.close()
     
-    return 0
+    return (process_stdout, process_stderr)
 
 def compare(original, new):
   """function that compare and print differences between to strings that are compared line by line."""

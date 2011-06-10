@@ -1,10 +1,10 @@
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-!      MERCURY6_1.FOR    (ErikSoft   3 May 2002)
+!      MERCURY.F90    (ErikSoft   3 May 2002)
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-! Author: John E. Chambers
+! Author: John E. Chambers (and Christophe Cossou)
 !
 ! Mercury is a general-purpose N-body integration package for problems in
 ! celestial mechanics.
@@ -5816,8 +5816,11 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
      end if
      !
      ! Read data style
-120  read (11,'(a150)') string
-     if (string(1:1).eq.')') goto 120
+     
+     do
+      read (11,'(a150)') string
+      if (string(1:1).ne.')') exit
+    end do
      call mio_spl (150,string,nsub,lim)
      c3 = string(lim(1,nsub):(lim(1,nsub)+2))
      if (c3.eq.'Car'.or.c3.eq.'car'.or.c3.eq.'CAR') then
@@ -5831,18 +5834,25 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
      end if
      !
      ! Read epoch of Big bodies
-     if (j.eq.1) then 
-125     read (11,'(a150)') string
-        if (string(1:1).eq.')') goto 125
+     if (j.eq.1) then
+      do
+        read (11,'(a150)') string
+        if (string(1:1).ne.')') exit
+      end do
         call mio_spl (150,string,nsub,lim)
         read (string(lim(1,nsub):lim(2,nsub)),*,err=667) time
      end if
      !
      ! Read information for each object
-130  read (11,'(a)',end=140) string
-     if (string(1:1).eq.')') goto 130
+     do
+      read (11,'(a)',iostat=error) string
+      if (error /= 0) exit
+      
+      if (string(1:1).eq.')') cycle
+    
      call mio_spl (150,string,nsub,lim)
-     if (lim(1,1).eq.-1) goto 140
+     
+     if (lim(1,1).eq.-1) exit
      !
      ! Determine the name of the object
      nbod = nbod + 1
@@ -5895,8 +5905,10 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
      !
      ! If required, read Cartesian coordinates, velocities and spins of the bodies
      jtmp = 100
-135  read (11,'(a150)',end=666) string
-     if (string(1:1).eq.')') goto 135
+     do
+       read (11,'(a150)',end=666) string
+       if (string(1:1).ne.')') exit
+     end do 
      backspace 11
      if (informat.eq.1) then
         read (11,*,err=666) x(1,nbod),x(2,nbod),x(3,nbod),v(1,nbod),v(2,nbod),v(3,nbod),s(1,nbod),s(2,nbod),s(3,nbod)
@@ -5916,7 +5928,7 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
            q = a * (1.d0 - e)
            l = l * DEG2RAD
         end if
-        if (algor.eq.11.and.nbod.ne.2) temp = temp + m(2)
+        if ((algor.eq.11).and.(nbod.ne.2)) temp = temp + m(2)
         call mco_el2x (temp,q,e,i,p,n,l,x(1,nbod),x(2,nbod),x(3,nbod),v(1,nbod),v(2,nbod),v(3,nbod))
      end if
      !
@@ -5924,8 +5936,9 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
      s(2,nbod) = s(2,nbod) * K2
      s(3,nbod) = s(3,nbod) * K2
      !
-     goto 130
-140  close (11)
+     
+     end do
+      close (11)
   end do
   !
   ! Set non-gravitational-forces flag, NGFLAG
@@ -6528,7 +6541,7 @@ end function mio_re2c
 !
 !------------------------------------------------------------------------------
 !
-subroutine mio_spl (len,string,nsub,delimit)
+subroutine mio_spl (length,string,nsub,delimit)
   !
   use types_numeriques
 
@@ -6536,8 +6549,10 @@ subroutine mio_spl (len,string,nsub,delimit)
 
   !
   ! Input/Output
-  integer :: len,nsub,delimit(2,100)
-  character*1 string(len)
+  integer, intent(in) :: length
+  integer, intent(out) :: nsub,delimit(2,100)
+  character*1 string(length)
+  ! TODO character(len=length) :: string make en error on the outputs
   !
   ! Local
   integer :: j,k
@@ -6552,14 +6567,14 @@ subroutine mio_spl (len,string,nsub,delimit)
   !
   ! Find the start of string
 10 j = j + 1
-  if (j.gt.len) goto 99
+  if (j.gt.length) goto 99
   c = string(j)
   if (c.eq.' '.or.c.eq.'=') goto 10
   !
   ! Find the end of string
   k = j
 20 k = k + 1
-  if (k.gt.len) goto 30
+  if (k.gt.length) goto 30
   c = string(k)
   if (c.ne.' '.and.c.ne.'=') goto 20
   !
@@ -6568,7 +6583,7 @@ subroutine mio_spl (len,string,nsub,delimit)
   delimit(1,nsub) = j
   delimit(2,nsub) = k - 1
   !
-  if (k.lt.len) then
+  if (k.lt.length) then
      j = k
      goto 10
   end if
