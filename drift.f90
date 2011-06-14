@@ -2,13 +2,13 @@ module drift
 
 !*************************************************************
 !** Modules that group all the subroutine linked to drift  ***
-!** (don't know exactly what it is
+!** (don't know exactly what it is)
 !** Version 1.0 - june 2011
 !*************************************************************
 
   private
   
-  public :: drift_one
+  public :: drift_one ! Only drift_one can be used externaly.
   
   contains
 
