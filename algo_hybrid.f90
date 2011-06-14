@@ -198,6 +198,7 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
   use mercury_constant
   use types_numeriques
   use dynamic
+  use algo_bs2
 
   implicit none
 

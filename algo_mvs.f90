@@ -1,7 +1,7 @@
 module algo_mvs
 
 !*************************************************************
-!** Modules that gather various functions about the hybrid
+!** Modules that gather various functions about the mvs
 !** algorithm.
 !**
 !** Version 1.0 - june 2011
