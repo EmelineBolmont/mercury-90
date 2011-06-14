@@ -115,6 +115,7 @@ program mercury
   use physical_constant
   use mercury_constant
   use types_numeriques
+  use system_properties
 
   implicit none
 
@@ -202,56 +203,599 @@ program mercury
 231 format (/,a,1p1e12.5)
 232 format (a,1p1e12.5)
   stop
-end program mercury
-!
+  
+  contains
+  
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-!      MFO_USER.FOR    (ErikSoft   2 March 2001)
+!      MIO_IN.FOR    (ErikSoft   4 May 2001)
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
 ! Author: John E. Chambers
 !
-! Applies an arbitrary force, defined by the user.
+! Reads names, masses, coordinates and velocities of all the bodies,
+! and integration parameters for the MERCURY integrator package. 
+! If DUMPFILE(4) exists, the routine assumes this is a continuation of
+! an old integration, and reads all the data from the dump files instead
+! of the input files.
 !
-! If using with the symplectic algorithm MAL_MVS, the force should be
-! small compared with the force from the central object.
-! If using with the conservative Bulirsch-Stoer algorithm MAL_BS2, the
-! force should not be a function of the velocities.
-!
-! N.B. All coordinates and velocities must be with respect to central body
+! N.B. All coordinates are with respect to the central body!!
 ! ===
+!
 !------------------------------------------------------------------------------
 !
-subroutine mfo_user (time,jcen,nbod,nbig,m,x,v,a)
+subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,&
+     id,epoch,ngf,opt,opflag,ngflag,outfile,dumpfile,lmem,mem)
   !
   use physical_constant
-  use mercury_constant  
+  use mercury_constant
   use types_numeriques
+  use orbital_elements
 
   implicit none
 
   !
   ! Input/Output
-  integer :: nbod, nbig
-  real(double_precision) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),a(3,nbod)
+  integer :: algor,nbod,nbig,stat(NMAX),opt(8),opflag,ngflag
+  integer :: lmem(NMESS),ndump,nfun
+  real(double_precision) :: time,tstart,tstop,dtout,h0,tol,rmax,rcen,jcen(3)
+  real(double_precision) :: en(3),am(3),m(NMAX),x(3,NMAX),v(3,NMAX),s(3,NMAX)
+  real(double_precision) :: rho(NMAX),rceh(NMAX),epoch(NMAX),ngf(4,NMAX),cefac
+  character*80 outfile(3),dumpfile(4), mem(NMESS)
+  character*8 id(NMAX)
   !
   ! Local
-  integer :: j
+  integer :: j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
+  real(double_precision) :: q,a,e,i,p,n,l,temp,tmp2,tmp3,rhocgs,t1,tmp4,tmp5,tmp6
+  !      real(double_precision) :: v0(3,NMAX),x0(3,NMAX)
+  logical test,oldflag,flag1,flag2
+  character*1 c1
+  character*3 c3,alg(60)
+  character*80 infile(3),filename,c80
+  character*150 string
+  integer :: error
   !
   !------------------------------------------------------------------------------
   !
-  do j = 1, nbod
-     a(1,j) = 0.d0
-     a(2,j) = 0.d0
-     a(3,j) = 0.d0
+  data alg/'MVS','Mvs','mvs','mvs','mvs','BS ','Bs ','bs ','Bul', 'bul','BS2','Bs2','bs2','Bu2','bu2',&
+       'RAD','Rad','rad','RA ', 'ra ','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx', 'xxx',&
+       'xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx', 'xxx','TES','Tes','tes','Tst','tst',&
+       'HYB','Hyb','hyb','HY ', 'hy ','CLO','Clo','clo','CB ','cb ','WID','Wid','wid','WB ', 'wb '/
+  !
+  rhocgs = AU * AU * AU * K2 / MSUN
+  do j = 1, 80
+     filename(j:j) = ' '
+  end do
+  do j = 1, 3
+     infile(j)   = filename
+     outfile(j)  = filename
+     dumpfile(j) = filename
+  end do
+  dumpfile(4) = filename
+  !
+  ! Read in output messages
+  inquire (file='message.in', exist=test)
+  if (.not.test) then
+     write (*,'(/,2a)') ' ERROR: This file is needed to start',' the integration:  message.in'
+     stop
+  end if
+  open (16, file='message.in', status='old')
+  do
+     read (16,'(i3,1x,i2,1x,a80)', iostat=error) j,lmem(j),mem(j)
+     if (error /= 0) exit
+  end do
+  close (16)
+  !
+  ! Read in filenames and check for duplicate filenames
+  inquire (file='files.in', exist=test)
+  if (.not.test) call mio_err (6,mem(81),lmem(81),mem(88),lmem(88),' ',1,'files.in',8)
+  open (15, file='files.in', status='old')
+  !
+  ! Input files
+  do j = 1, 3
+     read (15,'(a150)') string
+     call mio_spl (150,string,nsub,lim)
+     infile(j)(1:(lim(2,1)-lim(1,1)+1)) = string(lim(1,1):lim(2,1))
+     do k = 1, j - 1
+        if (infile(j).eq.infile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),infile(j),80,mem(86),lmem(86))
+     end do
+  end do
+  !
+  ! Output files
+  do j = 1, 3
+     read (15,'(a150)') string
+     call mio_spl (150,string,nsub,lim)
+     outfile(j)(1:(lim(2,1)-lim(1,1)+1)) = string(lim(1,1):lim(2,1))
+     do k = 1, j - 1
+        if (outfile(j).eq.outfile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),outfile(j),80,mem(86),lmem(86))
+     end do
+     do k = 1, 3
+        if (outfile(j).eq.infile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),outfile(j),80,mem(86),lmem(86))
+     end do
+  end do
+  !
+  ! Dump files
+  do j = 1, 4
+     read (15,'(a150)') string
+     call mio_spl (150,string,nsub,lim)
+     dumpfile(j)(1:(lim(2,1)-lim(1,1)+1)) = string(lim(1,1):lim(2,1))
+     do k = 1, j - 1
+        if (dumpfile(j).eq.dumpfile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),dumpfile(j),80,mem(86),lmem(86))
+     end do
+     do k = 1, 3
+        if (dumpfile(j).eq.infile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),dumpfile(j),80,mem(86),lmem(86))
+     end do
+     do k = 1, 3
+        if (dumpfile(j).eq.outfile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),dumpfile(j),80,mem(86),lmem(86))
+     end do
+  end do
+  close (15)
+  !
+  ! Find out if this is an old integration (i.e. does the restart file exist)
+  inquire (file=dumpfile(4), exist=oldflag)
+  !
+  ! Check if information file exists, and append a continuation message
+  if (oldflag) then
+     inquire (file=outfile(3), exist=test)
+     if (.not.test) call mio_err (6,mem(81),lmem(81),mem(88),lmem(88),' ',1,outfile(3),80)
+     open(23,file=outfile(3),status='old',access='append',iostat=error)
+     if (error /= 0) then
+        write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
+        stop
+     end if
+  else
+     !
+     ! If new integration, check information file doesn't exist, and then create it
+     inquire (file=outfile(3), exist=test)
+     if (test) call mio_err (6,mem(81),lmem(81),mem(87),lmem(87),' ',1,outfile(3),80)
+     open(23, file = outfile(3), status = 'new', iostat=error)
+     if (error /= 0) then
+        write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
+        stop
+     end if
+  end if
+  !
+  !------------------------------------------------------------------------------
+  !
+  !  READ  IN  INTEGRATION  PARAMETERS
+  !
+  ! Check if the file containing integration parameters exists, and open it
+  filename = infile(3)
+  if (oldflag) filename = dumpfile(3)
+  inquire (file=filename, exist=test)
+  if (.not.test) call mio_err (23,mem(81),lmem(81),mem(88),lmem(88),' ',1,filename,80)
+  open(13, file=filename, status='old', iostat=error)
+  if (error /= 0) then
+     write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(filename)
+     stop
+  end if
+  !
+  ! Read integration parameters
+  lineno = 0
+  do j = 1, 26
+     do
+        lineno = lineno + 1
+        read (13,'(a150)') string
+        if (string(1:1).ne.')') exit
+     end do
+
+     call mio_spl (150,string,nsub,lim)
+     c80(1:3) = '   '
+     c80 = string(lim(1,nsub):lim(2,nsub))
+     if (j.eq.1) then
+        algor = 0
+        do k = 1, 60
+           if (c80(1:3).eq.alg(k)) algor = (k + 4) / 5
+        end do
+        if (algor.eq.0) call mio_err (23,mem(81),lmem(81),mem(98),lmem(98),c80(lim(1,nsub):lim(2,nsub)),lim(2,nsub)-lim(1,nsub)+1,&
+             mem(85),lmem(85))
+     end if
+     if (j.eq.2) read (c80,*,err=661) tstart
+     if (j.eq.3) read (c80,*,err=661) tstop
+     if (j.eq.4) read (c80,*,err=661) dtout
+     if (j.eq.5) read (c80,*,err=661) h0
+     if (j.eq.6) read (c80,*,err=661) tol
+     c1 = c80(1:1)
+     if ((j.eq.7).and.((c1.eq.'y').or.(c1.eq.'Y'))) opt(1) = 1
+     if ((j.eq.8).and.((c1.eq.'n').or.(c1.eq.'N'))) opt(2) = 0
+     if ((j.eq.9).and.((c1.eq.'y').or.(c1.eq.'Y'))) opt(2) = 2
+     if ((j.eq.10).and.((c1.eq.'d').or.(c1.eq.'D'))) opt(3) = 0
+     if ((j.eq.11).and.((c1.eq.'y').or.(c1.eq.'Y'))) opt(3) = opt(3) + 2
+     if (j.eq.12) then
+        if((c1.eq.'l').or.(c1.eq.'L')) then
+           opt(4) = 1
+        else if (j.eq.12.and.(c1.eq.'m'.or.c1.eq.'M')) then
+           opt(4) = 2
+        else if (j.eq.12.and.(c1.eq.'h'.or.c1.eq.'H')) then
+           opt(4) = 3
+        else
+           goto 661
+        end if
+     end if
+     if (j.eq.15.and.(c1.eq.'y'.or.c1.eq.'Y')) opt(8) = 1
+     if (j.eq.16) read (c80,*,err=661) rmax
+     if (j.eq.17) read (c80,*,err=661) rcen
+     if (j.eq.18) read (c80,*,err=661) m(1)
+     if (j.eq.19) read (c80,*,err=661) jcen(1)
+     if (j.eq.20) read (c80,*,err=661) jcen(2)
+     if (j.eq.21) read (c80,*,err=661) jcen(3)
+     if (j.eq.24) read (c80,*,err=661) cefac
+     if (j.eq.25) read (c80,*,err=661) ndump
+     if (j.eq.26) read (c80,*,err=661) nfun
+  end do
+  h0 = abs(h0)
+  tol = abs(tol)
+  rmax = abs(rmax)
+  rcen = abs(rcen)
+  cefac = abs(cefac)
+  close (13)
+  !
+  ! Change quantities for central object to suitable units
+  m(1) = abs(m(1)) * K2
+  jcen(1) = jcen(1) * rcen * rcen
+  jcen(2) = jcen(2) * rcen * rcen * rcen * rcen
+  jcen(3) = jcen(3) * rcen * rcen * rcen * rcen * rcen * rcen
+  s(1,1) = 0.d0
+  s(2,1) = 0.d0
+  s(3,1) = 0.d0
+  !
+  ! Make sure that RCEN isn't too small, since it is used to scale the output
+  ! (Minimum value corresponds to a central body with density 100g/cm^3).
+  temp = 1.1235d-3 * m(1) ** .333333333333333d0
+  if (rcen.lt.temp) then
+     rcen = temp
+     write (13,'(/,2a)') mem(121)(1:lmem(121)),mem(131)(1:lmem(131))
+  end if
+  !
+  !------------------------------------------------------------------------------
+  !
+  !  READ  IN  DATA  FOR  BIG  AND  SMALL  BODIES
+  !
+  nbod = 1
+  do j = 1, 2
+     if (j.eq.2) nbig = nbod
+     !
+     ! Check if the file containing data for Big bodies exists, and open it
+     filename = infile(j)
+     if (oldflag) filename = dumpfile(j)
+     inquire (file=filename, exist=test)
+     if (.not.test) call mio_err (23,mem(81),lmem(81),mem(88),lmem(88),' ',1,filename,80)
+     open (11, file=filename, status='old', iostat=error)
+     if (error /= 0) then
+        write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(filename)
+        stop
+     end if
+     !
+     ! Read data style
+     
+     do
+      read (11,'(a150)') string
+      if (string(1:1).ne.')') exit
+    end do
+     call mio_spl (150,string,nsub,lim)
+     c3 = string(lim(1,nsub):(lim(1,nsub)+2))
+     if (c3.eq.'Car'.or.c3.eq.'car'.or.c3.eq.'CAR') then
+        informat = 1
+     else if (c3.eq.'Ast'.or.c3.eq.'ast'.or.c3.eq.'AST') then
+        informat = 2
+     else if (c3.eq.'Com'.or.c3.eq.'com'.or.c3.eq.'COM') then
+        informat = 3
+     else
+        call mio_err (23,mem(81),lmem(81),mem(91),lmem(91),' ',1,mem(82+j),lmem(82+j))
+     end if
+     !
+     ! Read epoch of Big bodies
+     if (j.eq.1) then
+      do
+        read (11,'(a150)') string
+        if (string(1:1).ne.')') exit
+      end do
+        call mio_spl (150,string,nsub,lim)
+        read (string(lim(1,nsub):lim(2,nsub)),*,err=667) time
+     end if
+     !
+     ! Read information for each object
+     do
+      read (11,'(a)',iostat=error) string
+      if (error /= 0) exit
+      
+      if (string(1:1).eq.')') cycle
+    
+     call mio_spl (150,string,nsub,lim)
+     
+     if (lim(1,1).eq.-1) exit
+     !
+     ! Determine the name of the object
+     nbod = nbod + 1
+     if (nbod.gt.NMAX) call mio_err (23,mem(81),lmem(81),mem(90),lmem(90),' ',1,mem(82),lmem(82))
+     !
+     if ((lim(2,1)-lim(1,1)).gt.7) then
+        write (23,'(/,3a)') mem(121)(1:lmem(121)),mem(122)(1:lmem(122)),string( lim(1,1):lim(2,1) )
+     end if
+     id(nbod) = string( lim(1,1):min(7+lim(1,1),lim(2,1)) )
+     ! Check if another object has the same name
+     do k = 1, nbod - 1
+        if (id(k).eq.id(nbod)) call mio_err (23,mem(81),lmem(81),mem(103),lmem(103),id(nbod),8,' ',1)
+     end do
+     !
+     ! Default values of mass, close-encounter limit, density etc.
+     m(nbod) = 0.d0
+     rceh(nbod) = 1.d0
+     rho(nbod) = rhocgs
+     epoch(nbod) = time
+     do k = 1, 4
+        ngf(k,nbod) = 0.d0
+     end do
+     !
+     ! Read values of mass, close-encounter limit, density etc.
+     do k = 3, nsub, 2
+        c80 = string(lim(1,k-1):lim(2,k-1))
+        read (string(lim(1,k):lim(2,k)),*,err=666) temp
+        if (c80(1:1).eq.'m'.or.c80(1:1).eq.'M') then
+           m(nbod) = temp * K2
+        else if (c80(1:1).eq.'r'.or.c80(1:1).eq.'R') then
+           rceh(nbod) = temp
+        else if (c80(1:1).eq.'d'.or.c80(1:1).eq.'D') then
+           rho(nbod) = temp * rhocgs
+        else if (m(nbod).lt.0.or.rceh(nbod).lt.0.or.rho(nbod).lt.0) then
+           call mio_err (23,mem(81),lmem(81),mem(97),lmem(97),id(nbod),8,mem(82+j),lmem(82+j))
+        else if (c80(1:2).eq.'ep'.or.c80(1:2).eq.'EP'.or.c80(1:2).eq.'Ep') then
+           epoch (nbod) = temp
+        else if (c80(1:2).eq.'a1'.or.c80(1:2).eq.'A1') then
+           ngf (1,nbod) = temp
+        else if (c80(1:2).eq.'a2'.or.c80(1:2).eq.'A2') then
+           ngf (2,nbod) = temp
+        else if (c80(1:2).eq.'a3'.or.c80(1:2).eq.'A3') then
+           ngf (3,nbod) = temp
+        else if (c80(1:1).eq.'b'.or.c80(1:1).eq.'B') then
+           ngf (4,nbod) = temp
+        else
+           goto 666
+        end if
+     end do
+     !
+     ! If required, read Cartesian coordinates, velocities and spins of the bodies
+     jtmp = 100
+     do
+       read (11,'(a150)',end=666) string
+       if (string(1:1).ne.')') exit
+     end do 
+     backspace 11
+     if (informat.eq.1) then
+        read (11,*,err=666) x(1,nbod),x(2,nbod),x(3,nbod),v(1,nbod),v(2,nbod),v(3,nbod),s(1,nbod),s(2,nbod),s(3,nbod)
+     else
+        read (11,*,err=666) a,e,i,p,n,l,s(1,nbod),s(2,nbod),s(3,nbod)
+        i = i * DEG2RAD
+        p = (p + n) * DEG2RAD
+        n = n * DEG2RAD
+        temp = m(nbod)  +  m(1)
+        !
+        ! Alternatively, read Cometary or asteroidal elements
+        if (informat.eq.3) then
+           q = a
+           a = q / (1.d0 - e)
+           l = mod (sqrt(temp/(abs(a*a*a))) * (epoch(nbod) - l), TWOPI)
+        else
+           q = a * (1.d0 - e)
+           l = l * DEG2RAD
+        end if
+        if ((algor.eq.11).and.(nbod.ne.2)) temp = temp + m(2)
+        call mco_el2x (temp,q,e,i,p,n,l,x(1,nbod),x(2,nbod),x(3,nbod),v(1,nbod),v(2,nbod),v(3,nbod))
+     end if
+     !
+     s(1,nbod) = s(1,nbod) * K2
+     s(2,nbod) = s(2,nbod) * K2
+     s(3,nbod) = s(3,nbod) * K2
+     !
+     
+     end do
+      close (11)
+  end do
+  !
+  ! Set non-gravitational-forces flag, NGFLAG
+  ngflag = 0
+  do j = 2, nbod
+     if (ngf(1,j).ne.0.or.ngf(2,j).ne.0.or.ngf(3,j).ne.0) then
+        if (ngflag.eq.0) ngflag = 1
+        if (ngflag.eq.2) ngflag = 3
+     else if (ngf(4,j).ne.0) then
+        if (ngflag.eq.0) ngflag = 2
+        if (ngflag.eq.1) ngflag = 3
+     end if
   end do
   !
   !------------------------------------------------------------------------------
   !
+  !  IF  CONTINUING  AN  OLD  INTEGRATION
+  !
+  if (oldflag) then
+     if (opt(3).eq.1) then
+        call mio_jd2y (time,year,month,t1)
+        write (23,'(/,a,i10,i2,f8.5,/)') mem(62)(1:lmem(62)),year,month,t1
+     else if (opt(3).eq.3) then
+        t1 = (time - tstart) / 365.25d0
+        write (23,'(/,a,f18.7,a,/)') mem(62)(1:lmem(62)),t1,mem(2)(1:lmem(2))
+     else
+        if (opt(3).eq.0) t1 = time
+        if (opt(3).eq.2) t1 = time - tstart
+        write (23,'(/,a,f18.5,a,/)') mem(62)(1:lmem(62)),t1,mem(1)(1:lmem(1))
+     end if
+     !
+     ! Read in energy and angular momentum variables, and convert to internal units
+     open (35, file=dumpfile(4), status='old', iostat=error)
+     if (error /= 0) then
+        write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(dumpfile(4))
+        stop
+     end if
+     read (35,*) opflag
+     read (35,*) en(1),am(1),en(3),am(3)
+     en(1) = en(1) * K2
+     en(3) = en(3) * K2
+     am(1) = am(1) * K2
+     am(3) = am(3) * K2
+     read (35,*) s(1,1),s(2,1),s(3,1)
+     s(1,1) = s(1,1) * K2
+     s(2,1) = s(2,1) * K2
+     s(3,1) = s(3,1) * K2
+     close (35)
+     if (opflag.eq.0) opflag = 1
+     !
+     !------------------------------------------------------------------------------
+     !
+     !  IF  STARTING  A  NEW  INTEGRATION
+     !
+  else
+     opflag = -2
+     !
+     ! Write integration parameters to information file
+     write (23,'(/,a)') mem(11)(1:lmem(11))
+     write (23,'(a)') mem(12)(1:lmem(12))
+     j = algor + 13
+     write (23,'(/,2a)') mem(13)(1:lmem(13)),mem(j)(1:lmem(j))
+     if (tstart.ge.1.d11.or.tstart.le.-1.d10) then
+        write (23,'(/,a,1p,e19.13,a)') mem(26)(1:lmem(26)),tstart,mem(1)(1:lmem(1))
+     else
+        write (23,'(/,a,f19.7,a)') mem(26)(1:lmem(26)),tstart,mem(1)(1:lmem(1))
+     end if
+     if (tstop.ge.1.d11.or.tstop.le.-1.d10) then
+        write (23,'(a,1p,e19.13)') mem(27)(1:lmem(27)),tstop
+     else
+        write (23,'(a,f19.7)') mem(27)(1:lmem(27)),tstop
+     end if
+     write (23,'(a,f15.3)') mem(28)(1:lmem(28)),dtout
+     if (opt(4).eq.1) write (23,'(2a)') mem(40)(1:lmem(40)),mem(7)(1:lmem(7))
+     if (opt(4).eq.2) write (23,'(2a)') mem(40)(1:lmem(40)),mem(8)(1:lmem(8))
+     if (opt(4).eq.3) write (23,'(2a)') mem(40)(1:lmem(40)),mem(9)(1:lmem(9))
+     !
+     write (23,'(/,a,f10.3,a)') mem(30)(1:lmem(30)),h0,mem(1)(1:lmem(1))
+     write (23,'(a,1p1e10.4)') mem(31)(1:lmem(31)),tol
+     write (23,'(a,1p1e10.4,a)') mem(32)(1:lmem(32)),m(1)/K2,mem(3)(1:lmem(3))
+     write (23,'(a,1p1e11.4)') mem(33)(1:lmem(33)),jcen(1)/rcen**2
+     write (23,'(a,1p1e11.4)') mem(34)(1:lmem(34)),jcen(2)/rcen**4
+     write (23,'(a,1p1e11.4)') mem(35)(1:lmem(35)),jcen(3)/rcen**6
+     write (23,'(a,1p1e10.4,a)') mem(36)(1:lmem(36)),rmax,mem (4)(1:lmem(4))
+     write (23,'(a,1p1e10.4,a)') mem(37)(1:lmem(37)),rcen,mem (4)(1:lmem(4))
+     !
+     itmp = 5
+     if (opt(2).eq.1.or.opt(2).eq.2) itmp = 6
+     write (23,'(/,2a)') mem(41)(1:lmem(41)),mem(itmp)(1:lmem(itmp))
+     itmp = 5
+     if (opt(2).eq.2) itmp = 6
+     write (23,'(2a)') mem(42)(1:lmem(42)),mem(itmp)(1:lmem(itmp))
+     itmp = 5
+     if (opt(7).eq.1) itmp = 6
+     write (23,'(2a)') mem(45)(1:lmem(45)),mem(itmp)(1:lmem(itmp))
+     itmp = 5
+     if (opt(8).eq.1) itmp = 6
+     write (23,'(2a)') mem(46)(1:lmem(46)),mem(itmp)(1:lmem(itmp))
+     !
+     ! Check that element and close-encounter files don't exist, and create them
+     do j = 1, 2
+        inquire (file=outfile(j), exist=test)
+        if (test) call mio_err (23,mem(81),lmem(81),mem(87),lmem(87),' ',1,outfile(j),80)
+        open  (20+j, file=outfile(j), status='new', iostat=error)
+        if (error /= 0) then
+           write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(j))
+           stop
+        end if
+        close (20+j)
+     end do
+     !
+     ! Check that dump files don't exist, and then create them
+     do j = 1, 4
+        inquire (file=dumpfile(j), exist=test)
+        if (test) call mio_err (23,mem(81),lmem(81),mem(87),lmem(87),' ',1,dumpfile(j),80)
+        open  (30+j, file=dumpfile(j), status='new', iostat=error)
+        if (error /= 0) then
+           write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(dumpfile(j))
+           stop
+        end if
+        close (30+j)
+     end do
+     !
+     ! Write number of Big bodies and Small bodies to information file
+     write (23,'(/,a,i4)') mem(38)(1:lmem(38)), nbig - 1
+     write (23,'(a,i4)') mem(39)(1:lmem(39)), nbod - nbig
+     !
+     ! Calculate initial energy and angular momentum and write to information file
+     s(1,1) = 0.d0
+     s(2,1) = 0.d0
+     s(3,1) = 0.d0
+     call mxx_en (jcen,nbod,nbig,m,x,v,s,en(1),am(1))
+     write (23,'(//,a)') mem(51)(1:lmem(51))
+     write (23,'(a)')    mem(52)(1:lmem(52))
+     write (23,'(/,a,1p1e12.5,a)') mem(53)(1:lmem(53)),en(1)/K2,mem(72)(1:lmem(72))
+     write (23,'(a,1p1e12.5,a)')   mem(54)(1:lmem(54)),am(1)/K2,mem(73)(1:lmem(73))
+     !
+     ! Initialize lost energy and angular momentum
+     en(3) = 0.d0
+     am(3) = 0.d0
+     !
+     ! Write warning messages if necessary
+     if (tstop.lt.tstart) write (23,'(/,2a)') mem(121)(1:lmem(121)),mem(123)(1:lmem(123))
+     if (nbig.le.0) write (23,'(/,2a)') mem(121)(1:lmem(121)),mem(124)(1:lmem(124))
+     if (nbig.eq.nbod) write (23,'(/,2a)') mem(121)(1:lmem(121)),mem(125)(1:lmem(125))
+  end if
+  !
+  !------------------------------------------------------------------------------
+  !
+  !  CHECK  FOR  ATTEMPTS  TO  DO  INCOMPATIBLE  THINGS
+  !
+  ! If using close-binary algorithm, set radius of central body to be no less
+  ! than the periastron of binary star.
+  if (algor.eq.11) then
+     temp = m(1) + m(2)
+     call mco_x2el (temp,x(1,2),x(2,2),x(3,2),v(1,2),v(2,2),v(3,2),a,tmp2,tmp3,tmp4,tmp5,tmp6)
+     rcen = max (rcen, a)
+  end if
+  !
+  ! Check if non-grav forces are being used with an incompatible algorithm
+  if ((ngflag.ne.0).and.((algor.eq.3).or.(algor.eq.11).or.(algor.eq.12))) then
+     call mio_err (23,mem(81),lmem(81),mem(92),lmem(92),' ',1,mem(85),lmem(85))
+  endif
+  !
+  ! Check if user-defined force routine is being used with wrong algorithm
+  if ((opt(8).eq.1).and.((algor.eq.11).or.(algor.eq.12))) call mio_err(23,mem(81),lmem(81),mem(93),lmem(93),' ',1,mem(85),lmem(85))
+  !
+  ! Check whether MVS is being used to integrate massive Small bodies,
+  ! or whether massive Small bodies have different epochs than Big bodies.
+  flag1 = .false.
+  flag2 = .false.
+  do j = nbig + 1, nbod
+     if (m(j).ne.0) then
+        if (algor.eq.1) call mio_err (23,mem(81),lmem(81),mem(94),lmem(94),' ',1,mem(85),lmem(85))
+        flag1 = .true.
+     end if
+     if (epoch(j).ne.time) flag2 = .true.
+  end do
+  if (flag1.and.flag2) call mio_err (23,mem(81),lmem(81),mem(95),  lmem(95),' ',1,mem(84),lmem(84))
+  !
+  ! Check if central oblateness is being used with close-binary algorithm
+  if (algor.eq.11.and.(jcen(1).ne.0.or.jcen(2).ne.0.or.jcen(3).ne.0)) then
+     call mio_err (23,mem(81),lmem(81),mem(102),lmem(102),' ',1,mem(85),lmem(85))
+  endif
+  !
+  ! Check whether RCEN > RMAX or RMAX/RCEN is very large
+  if (rcen.gt.rmax) call mio_err (23,mem(81),lmem(81),mem(105),lmem(105),' ',1,mem(85),lmem(85))
+  if (rmax/rcen.ge.1.d12) write (23,'(/,2a,/a)') mem(121)(1:lmem(121)),mem(106)(1:lmem(106)),mem(85)(1:lmem(85))
+  close (23)
   return
-end subroutine mfo_user
-!
+  !
+  ! Error reading from the input file containing integration parameters
+661 write (c3,'(i3)') lineno
+  call mio_err (23,mem(81),lmem(81),mem(99),lmem(99),c3,3,mem(85),lmem(85))
+  !
+  ! Error reading from the input file for Big or Small bodies
+666 call mio_err (23,mem(81),lmem(81),mem(100),lmem(100),id(nbod),8,mem(82+j),lmem(82+j))
+  !
+  ! Error reading epoch of Big bodies
+667 call mio_err (23,mem(81),lmem(81),mem(101),lmem(101),' ',1,mem(83),lmem(83))
+  !
+  !------------------------------------------------------------------------------
+  !
+end subroutine mio_in
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
 !      MAL_HVAR.FOR    (ErikSoft   4 March 2001)
@@ -757,6 +1301,198 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   !------------------------------------------------------------------------------
   !
 end subroutine mal_hcon
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      MXX_SYNC.FOR    (ErikSoft   2 March 2001)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Synchronizes the epochs of NBIG Big bodies (having a common epoch) and
+! NBOD-NBIG Small bodies (possibly having differing epochs), for an 
+! integration using MERCURY.
+! The Small bodies are picked up in order starting with the one with epoch
+! furthest from the time, TSTART, at which the main integration will begin
+! producing output.
+!
+! N.B. The synchronization integrations use Everhart's RA15 routine.
+! ---
+!
+!------------------------------------------------------------------------------
+!
+subroutine mxx_sync (time,tstart,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,ngf,opt,ngflag)
+  !
+  use physical_constant
+  use mercury_constant
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  integer :: nbod,nbig,ngflag,opt(8),stat(nbod)
+  real(double_precision) :: time,tstart,h0,tol,jcen(3),m(nbod),x(3,nbod),v(3,nbod)
+  real(double_precision) :: s(3,nbod),rceh(nbod),rho(nbod),epoch(nbod),ngf(4,nbod)
+  character*8 id(nbod)
+  !
+  ! Local
+  integer :: j,k,l,nsml,nsofar,indx(NMAX),itemp,jtemp(NMAX)
+  integer :: raflag,nce,ice(NMAX),jce(NMAX)
+  real(double_precision) :: temp,epsml(NMAX),rtemp(NMAX)
+  real(double_precision) :: h,hdid,tsmall,rphys(NMAX),rcrit(NMAX)
+  character*8 ctemp(NMAX)
+  external mfo_all
+  !
+  !------------------------------------------------------------------------------
+  !
+  ! Reorder Small bodies by epoch so that ep(1) is furthest from TSTART
+  nsml = nbod - nbig
+  do j = nbig + 1, nbod
+     epsml(j-nbig) = epoch(j)
+  end do
+  call mxx_sort (nsml,epsml,indx)
+  !
+  if (abs(epsml(1)-tstart).lt.abs(epsml(nsml)-tstart)) then
+     k = nsml + 1
+     do j = 1, nsml / 2
+        l = k - j
+        temp = epsml(j)
+        epsml(j) = epsml (l)
+        epsml(l) = temp
+        itemp = indx(j)
+        indx(j) = indx (l)
+        indx(l) = itemp
+     end do
+  end if
+  !
+  do j = nbig + 1, nbod
+     epoch(j) = epsml(j-nbig)
+  end do
+  !
+  ! Reorder the other arrays associated with each Small body
+  do k = 1, 3
+     do j = 1, nsml
+        rtemp(j) = x(k,j+nbig)
+     end do
+     do j = 1, nsml
+        x(k,j+nbig) = rtemp(indx(j))
+     end do
+     do j = 1, nsml
+        rtemp(j) = v(k,j+nbig)
+     end do
+     do j = 1, nsml
+        v(k,j+nbig) = rtemp(indx(j))
+     end do
+     do j = 1, nsml
+        rtemp(j) = s(k,j+nbig)
+     end do
+     do j = 1, nsml
+        s(k,j+nbig) = rtemp(indx(j))
+     end do
+  end do
+  !
+  do j = 1, nsml
+     rtemp(j) = m(j+nbig)
+  end do
+  do j = 1, nsml
+     m(j+nbig) = rtemp(indx(j))
+  end do
+  do j = 1, nsml
+     rtemp(j) = rceh(j+nbig)
+  end do
+  do j = 1, nsml
+     rceh(j+nbig) = rtemp(indx(j))
+  end do
+  do j = 1, nsml
+     rtemp(j) = rho(j+nbig)
+  end do
+  do j = 1, nsml
+     rho(j+nbig) = rtemp(indx(j))
+  end do
+  !
+  do j = 1, nsml
+     ctemp(j) = id(j+nbig)
+     jtemp(j) = stat(j+nbig)
+  end do
+  do j = 1, nsml
+     id(j+nbig) = ctemp(indx(j))
+     stat(j+nbig) = jtemp(indx(j))
+  end do
+  !
+  ! Integrate Small bodies up to the same epoch
+  h = h0
+  tsmall = h0 * 1.d-12
+  raflag = 0
+  !
+  do j = nbig + 1, nbod
+     nsofar = j - 1
+     do while (abs(time-epoch(j)).gt.tsmall)
+        temp = epoch(j) - time
+        h = sign(max(min(abs(temp),abs(h)),tsmall),temp)
+        call mdt_ra15 (time,h,hdid,tol,jcen,nsofar,nbig,m,x,v,s,rphys,rcrit,ngf,stat,raflag,ngflag,opt,nce,ice,jce,mfo_all)
+        time = time + hdid
+     end do
+     raflag = 1
+  end do
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mxx_sync
+
+end program mercury
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      MFO_USER.FOR    (ErikSoft   2 March 2001)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Applies an arbitrary force, defined by the user.
+!
+! If using with the symplectic algorithm MAL_MVS, the force should be
+! small compared with the force from the central object.
+! If using with the conservative Bulirsch-Stoer algorithm MAL_BS2, the
+! force should not be a function of the velocities.
+!
+! N.B. All coordinates and velocities must be with respect to central body
+! ===
+!------------------------------------------------------------------------------
+!
+subroutine mfo_user (time,jcen,nbod,nbig,m,x,v,a)
+  !
+  use physical_constant
+  use mercury_constant  
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  integer :: nbod, nbig
+  real(double_precision) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),a(3,nbod)
+  !
+  ! Local
+  integer :: j
+  !
+  !------------------------------------------------------------------------------
+  !
+  do j = 1, nbod
+     a(1,j) = 0.d0
+     a(2,j) = 0.d0
+     a(3,j) = 0.d0
+  end do
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mfo_user
+!
+
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
@@ -1032,177 +1768,7 @@ subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,i
   return
 end subroutine mce_coll
 !
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MCE_HILL.FOR    (ErikSoft   4 October 2000)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Calculates the Hill radii for all objects given their masses, M,
-! coordinates, X, and velocities, V; plus the mass of the central body, M(1)
-! Where HILL = a * (m/3*m(1))^(1/3)
-!
-! If the orbit is hyperbolic or parabolic, the Hill radius is calculated using:
-!       HILL = r * (m/3*m(1))^(1/3)
-! where R is the current distance from the central body.
-!
-! The routine also gives the semi-major axis, A, of each object's orbit.
-!
-! N.B. Designed to use heliocentric coordinates, but should be adequate using
-! ===  barycentric coordinates.
-!
-!------------------------------------------------------------------------------
-!
-subroutine mce_hill (nbod,m,x,v,hill,a)
-  !
-  use physical_constant
-  use mercury_constant
-  use types_numeriques
-  use orbital_elements
 
-  implicit none
-
-  real(double_precision) :: THIRD
-  parameter (THIRD = .3333333333333333d0)
-  !
-  ! Input/Output
-  integer :: nbod
-  real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),hill(nbod),a(nbod)
-  !
-  ! Local
-  integer :: j
-  real(double_precision) :: r, v2, gm
-  !
-  !------------------------------------------------------------------------------
-  !
-  do j = 2, nbod
-     gm = m(1) + m(j)
-     call mco_x2a (gm,x(1,j),x(2,j),x(3,j),v(1,j),v(2,j),v(3,j),a(j),r,v2)
-     ! If orbit is hyperbolic, use the distance rather than the semi-major axis
-     if (a(j).le.0) a(j) = r
-     hill(j) = a(j) * (THIRD * m(j) / m(1))**THIRD
-  end do
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine mce_hill
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MCE_INIT.FOR    (ErikSoft   28 February 2001)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Calculates close-approach limits RCE (in AU) and physical radii RPHYS
-! (in AU) for all objects, given their masses M, coordinates X, velocities
-! V, densities RHO, and close-approach limits RCEH (in Hill radii).
-!
-! Also calculates the changeover distance RCRIT, used by the hybrid
-! symplectic integrator. RCRIT is defined to be the larger of N1*HILL and
-! N2*H*VMAX, where HILL is the Hill radius, H is the timestep, VMAX is the
-! largest expected velocity of any body, and N1, N2 are parameters (see
-! section 4.2 of Chambers 1999, Monthly Notices, vol 304, p793-799).
-!
-! N.B. Designed to use heliocentric coordinates, but should be adequate using
-! ===  barycentric coordinates.
-!
-!------------------------------------------------------------------------------
-!
-subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile,rcritflag)
-  !
-  use physical_constant
-  use mercury_constant
-  use types_numeriques
-  use ascii_conversion
-
-  implicit none
-
-  !
-  real(double_precision) :: N2,THIRD
-  parameter (N2=.4d0,THIRD=.3333333333333333d0)
-  !
-  ! Input/Output
-  integer :: nbod,nbig,algor,opt(8),rcritflag
-  real(double_precision) :: tstart,h,jcen(3),rcen,rmax,cefac,m(nbod),x(3,nbod)
-  real(double_precision) :: v(3,nbod),s(3,nbod),rho(nbod),rceh(nbod),rphys(nbod)
-  real(double_precision) :: rce(nbod),rcrit(nbod)
-  character*8 id(nbod)
-  character*80 outfile
-  !
-  ! Local
-  integer :: j, error
-  real(double_precision) :: a(NMAX),hill(NMAX),temp,amin,vmax,k_2,rhocgs,rcen_2
-  character*80 header,c(NMAX)
-  !
-  !------------------------------------------------------------------------------
-  !
-  rhocgs = AU * AU * AU * K2 / MSUN
-  k_2 = 1.d0 / K2
-  rcen_2 = 1.d0 / (rcen * rcen)
-  amin = HUGE
-  !
-  ! Calculate the Hill radii
-  call mce_hill (nbod,m,x,v,hill,a)
-  !
-  ! Determine the maximum close-encounter distances, and the physical radii
-  temp = 2.25d0 * m(1) / PI
-  do j = 2, nbod
-     rce(j)   = hill(j) * rceh(j)
-     rphys(j) = hill(j) / a(j) * (temp/rho(j))**THIRD
-     amin = min (a(j), amin)
-  end do
-  !
-  ! If required, calculate the changeover distance used by hybrid algorithm
-  if (rcritflag.eq.1) then
-     vmax = sqrt (m(1) / amin)
-     temp = N2 * h * vmax
-     do j = 2, nbod
-        rcrit(j) = max(hill(j) * cefac, temp)
-     end do
-  end if
-  !
-  ! Write list of object's identities to close-encounter output file
-  header(1:8)   = mio_fl2c (tstart)
-  header(9:16)  = mio_re2c (dble(nbig - 1),   0.d0, 11239423.99d0)
-  header(12:19) = mio_re2c (dble(nbod - nbig),0.d0, 11239423.99d0)
-  header(15:22) = mio_fl2c (m(1) * k_2)
-  header(23:30) = mio_fl2c (jcen(1) * rcen_2)
-  header(31:38) = mio_fl2c (jcen(2) * rcen_2 * rcen_2)
-  header(39:46) = mio_fl2c (jcen(3) * rcen_2 * rcen_2 * rcen_2)
-  header(47:54) = mio_fl2c (rcen)
-  header(55:62) = mio_fl2c (rmax)
-  !
-  do j = 2, nbod
-     c(j)(1:8) = mio_re2c (dble(j - 1), 0.d0, 11239423.99d0)
-     c(j)(4:11) = id(j)
-     c(j)(12:19) = mio_fl2c (m(j) * k_2)
-     c(j)(20:27) = mio_fl2c (s(1,j) * k_2)
-     c(j)(28:35) = mio_fl2c (s(2,j) * k_2)
-     c(j)(36:43) = mio_fl2c (s(3,j) * k_2)
-     c(j)(44:51) = mio_fl2c (rho(j) / rhocgs)
-  end do
-  !
-  ! Write compressed output to file
-  open (22, file=outfile, status='old', access='append', iostat=error)
-  if (error /= 0) then
-     write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
-     stop
-  end if
-  write (22,'(a1,a2,i2,a62,i1)') char(12),'6a',algor,header(1:62),opt(4)
-  do j = 2, nbod
-     write (22,'(a51)') c(j)(1:51)
-  end do
-  close (22)
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine mce_init
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
@@ -1227,6 +1793,7 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   use physical_constant
   use mercury_constant
   use types_numeriques
+  use system_properties
 
   implicit none
 
@@ -4941,595 +5508,7 @@ subroutine mio_err (unit,s1,ls1,s2,ls2,s3,ls3,s4,ls4)
 end subroutine mio_err
 !
 !
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MIO_IN.FOR    (ErikSoft   4 May 2001)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Reads names, masses, coordinates and velocities of all the bodies,
-! and integration parameters for the MERCURY integrator package. 
-! If DUMPFILE(4) exists, the routine assumes this is a continuation of
-! an old integration, and reads all the data from the dump files instead
-! of the input files.
-!
-! N.B. All coordinates are with respect to the central body!!
-! ===
-!
-!------------------------------------------------------------------------------
-!
-subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,&
-     id,epoch,ngf,opt,opflag,ngflag,outfile,dumpfile,lmem,mem)
-  !
-  use physical_constant
-  use mercury_constant
-  use types_numeriques
-  use orbital_elements
 
-  implicit none
-
-  !
-  ! Input/Output
-  integer :: algor,nbod,nbig,stat(NMAX),opt(8),opflag,ngflag
-  integer :: lmem(NMESS),ndump,nfun
-  real(double_precision) :: time,tstart,tstop,dtout,h0,tol,rmax,rcen,jcen(3)
-  real(double_precision) :: en(3),am(3),m(NMAX),x(3,NMAX),v(3,NMAX),s(3,NMAX)
-  real(double_precision) :: rho(NMAX),rceh(NMAX),epoch(NMAX),ngf(4,NMAX),cefac
-  character*80 outfile(3),dumpfile(4), mem(NMESS)
-  character*8 id(NMAX)
-  !
-  ! Local
-  integer :: j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
-  real(double_precision) :: q,a,e,i,p,n,l,temp,tmp2,tmp3,rhocgs,t1,tmp4,tmp5,tmp6
-  !      real(double_precision) :: v0(3,NMAX),x0(3,NMAX)
-  logical test,oldflag,flag1,flag2
-  character*1 c1
-  character*3 c3,alg(60)
-  character*80 infile(3),filename,c80
-  character*150 string
-  integer :: error
-  !
-  !------------------------------------------------------------------------------
-  !
-  data alg/'MVS','Mvs','mvs','mvs','mvs','BS ','Bs ','bs ','Bul', 'bul','BS2','Bs2','bs2','Bu2','bu2',&
-       'RAD','Rad','rad','RA ', 'ra ','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx', 'xxx',&
-       'xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx', 'xxx','TES','Tes','tes','Tst','tst',&
-       'HYB','Hyb','hyb','HY ', 'hy ','CLO','Clo','clo','CB ','cb ','WID','Wid','wid','WB ', 'wb '/
-  !
-  rhocgs = AU * AU * AU * K2 / MSUN
-  do j = 1, 80
-     filename(j:j) = ' '
-  end do
-  do j = 1, 3
-     infile(j)   = filename
-     outfile(j)  = filename
-     dumpfile(j) = filename
-  end do
-  dumpfile(4) = filename
-  !
-  ! Read in output messages
-  inquire (file='message.in', exist=test)
-  if (.not.test) then
-     write (*,'(/,2a)') ' ERROR: This file is needed to start',' the integration:  message.in'
-     stop
-  end if
-  open (16, file='message.in', status='old')
-  do
-     read (16,'(i3,1x,i2,1x,a80)', iostat=error) j,lmem(j),mem(j)
-     if (error /= 0) exit
-  end do
-  close (16)
-  !
-  ! Read in filenames and check for duplicate filenames
-  inquire (file='files.in', exist=test)
-  if (.not.test) call mio_err (6,mem(81),lmem(81),mem(88),lmem(88),' ',1,'files.in',8)
-  open (15, file='files.in', status='old')
-  !
-  ! Input files
-  do j = 1, 3
-     read (15,'(a150)') string
-     call mio_spl (150,string,nsub,lim)
-     infile(j)(1:(lim(2,1)-lim(1,1)+1)) = string(lim(1,1):lim(2,1))
-     do k = 1, j - 1
-        if (infile(j).eq.infile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),infile(j),80,mem(86),lmem(86))
-     end do
-  end do
-  !
-  ! Output files
-  do j = 1, 3
-     read (15,'(a150)') string
-     call mio_spl (150,string,nsub,lim)
-     outfile(j)(1:(lim(2,1)-lim(1,1)+1)) = string(lim(1,1):lim(2,1))
-     do k = 1, j - 1
-        if (outfile(j).eq.outfile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),outfile(j),80,mem(86),lmem(86))
-     end do
-     do k = 1, 3
-        if (outfile(j).eq.infile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),outfile(j),80,mem(86),lmem(86))
-     end do
-  end do
-  !
-  ! Dump files
-  do j = 1, 4
-     read (15,'(a150)') string
-     call mio_spl (150,string,nsub,lim)
-     dumpfile(j)(1:(lim(2,1)-lim(1,1)+1)) = string(lim(1,1):lim(2,1))
-     do k = 1, j - 1
-        if (dumpfile(j).eq.dumpfile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),dumpfile(j),80,mem(86),lmem(86))
-     end do
-     do k = 1, 3
-        if (dumpfile(j).eq.infile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),dumpfile(j),80,mem(86),lmem(86))
-     end do
-     do k = 1, 3
-        if (dumpfile(j).eq.outfile(k)) call mio_err (6,mem(81),lmem(81),mem(89),lmem(89),dumpfile(j),80,mem(86),lmem(86))
-     end do
-  end do
-  close (15)
-  !
-  ! Find out if this is an old integration (i.e. does the restart file exist)
-  inquire (file=dumpfile(4), exist=oldflag)
-  !
-  ! Check if information file exists, and append a continuation message
-  if (oldflag) then
-     inquire (file=outfile(3), exist=test)
-     if (.not.test) call mio_err (6,mem(81),lmem(81),mem(88),lmem(88),' ',1,outfile(3),80)
-     open(23,file=outfile(3),status='old',access='append',iostat=error)
-     if (error /= 0) then
-        write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
-        stop
-     end if
-  else
-     !
-     ! If new integration, check information file doesn't exist, and then create it
-     inquire (file=outfile(3), exist=test)
-     if (test) call mio_err (6,mem(81),lmem(81),mem(87),lmem(87),' ',1,outfile(3),80)
-     open(23, file = outfile(3), status = 'new', iostat=error)
-     if (error /= 0) then
-        write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
-        stop
-     end if
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  READ  IN  INTEGRATION  PARAMETERS
-  !
-  ! Check if the file containing integration parameters exists, and open it
-  filename = infile(3)
-  if (oldflag) filename = dumpfile(3)
-  inquire (file=filename, exist=test)
-  if (.not.test) call mio_err (23,mem(81),lmem(81),mem(88),lmem(88),' ',1,filename,80)
-  open(13, file=filename, status='old', iostat=error)
-  if (error /= 0) then
-     write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(filename)
-     stop
-  end if
-  !
-  ! Read integration parameters
-  lineno = 0
-  do j = 1, 26
-     do
-        lineno = lineno + 1
-        read (13,'(a150)') string
-        if (string(1:1).ne.')') exit
-     end do
-
-     call mio_spl (150,string,nsub,lim)
-     c80(1:3) = '   '
-     c80 = string(lim(1,nsub):lim(2,nsub))
-     if (j.eq.1) then
-        algor = 0
-        do k = 1, 60
-           if (c80(1:3).eq.alg(k)) algor = (k + 4) / 5
-        end do
-        if (algor.eq.0) call mio_err (23,mem(81),lmem(81),mem(98),lmem(98),c80(lim(1,nsub):lim(2,nsub)),lim(2,nsub)-lim(1,nsub)+1,&
-             mem(85),lmem(85))
-     end if
-     if (j.eq.2) read (c80,*,err=661) tstart
-     if (j.eq.3) read (c80,*,err=661) tstop
-     if (j.eq.4) read (c80,*,err=661) dtout
-     if (j.eq.5) read (c80,*,err=661) h0
-     if (j.eq.6) read (c80,*,err=661) tol
-     c1 = c80(1:1)
-     if ((j.eq.7).and.((c1.eq.'y').or.(c1.eq.'Y'))) opt(1) = 1
-     if ((j.eq.8).and.((c1.eq.'n').or.(c1.eq.'N'))) opt(2) = 0
-     if ((j.eq.9).and.((c1.eq.'y').or.(c1.eq.'Y'))) opt(2) = 2
-     if ((j.eq.10).and.((c1.eq.'d').or.(c1.eq.'D'))) opt(3) = 0
-     if ((j.eq.11).and.((c1.eq.'y').or.(c1.eq.'Y'))) opt(3) = opt(3) + 2
-     if (j.eq.12) then
-        if((c1.eq.'l').or.(c1.eq.'L')) then
-           opt(4) = 1
-        else if (j.eq.12.and.(c1.eq.'m'.or.c1.eq.'M')) then
-           opt(4) = 2
-        else if (j.eq.12.and.(c1.eq.'h'.or.c1.eq.'H')) then
-           opt(4) = 3
-        else
-           goto 661
-        end if
-     end if
-     if (j.eq.15.and.(c1.eq.'y'.or.c1.eq.'Y')) opt(8) = 1
-     if (j.eq.16) read (c80,*,err=661) rmax
-     if (j.eq.17) read (c80,*,err=661) rcen
-     if (j.eq.18) read (c80,*,err=661) m(1)
-     if (j.eq.19) read (c80,*,err=661) jcen(1)
-     if (j.eq.20) read (c80,*,err=661) jcen(2)
-     if (j.eq.21) read (c80,*,err=661) jcen(3)
-     if (j.eq.24) read (c80,*,err=661) cefac
-     if (j.eq.25) read (c80,*,err=661) ndump
-     if (j.eq.26) read (c80,*,err=661) nfun
-  end do
-  h0 = abs(h0)
-  tol = abs(tol)
-  rmax = abs(rmax)
-  rcen = abs(rcen)
-  cefac = abs(cefac)
-  close (13)
-  !
-  ! Change quantities for central object to suitable units
-  m(1) = abs(m(1)) * K2
-  jcen(1) = jcen(1) * rcen * rcen
-  jcen(2) = jcen(2) * rcen * rcen * rcen * rcen
-  jcen(3) = jcen(3) * rcen * rcen * rcen * rcen * rcen * rcen
-  s(1,1) = 0.d0
-  s(2,1) = 0.d0
-  s(3,1) = 0.d0
-  !
-  ! Make sure that RCEN isn't too small, since it is used to scale the output
-  ! (Minimum value corresponds to a central body with density 100g/cm^3).
-  temp = 1.1235d-3 * m(1) ** .333333333333333d0
-  if (rcen.lt.temp) then
-     rcen = temp
-     write (13,'(/,2a)') mem(121)(1:lmem(121)),mem(131)(1:lmem(131))
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  READ  IN  DATA  FOR  BIG  AND  SMALL  BODIES
-  !
-  nbod = 1
-  do j = 1, 2
-     if (j.eq.2) nbig = nbod
-     !
-     ! Check if the file containing data for Big bodies exists, and open it
-     filename = infile(j)
-     if (oldflag) filename = dumpfile(j)
-     inquire (file=filename, exist=test)
-     if (.not.test) call mio_err (23,mem(81),lmem(81),mem(88),lmem(88),' ',1,filename,80)
-     open (11, file=filename, status='old', iostat=error)
-     if (error /= 0) then
-        write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(filename)
-        stop
-     end if
-     !
-     ! Read data style
-     
-     do
-      read (11,'(a150)') string
-      if (string(1:1).ne.')') exit
-    end do
-     call mio_spl (150,string,nsub,lim)
-     c3 = string(lim(1,nsub):(lim(1,nsub)+2))
-     if (c3.eq.'Car'.or.c3.eq.'car'.or.c3.eq.'CAR') then
-        informat = 1
-     else if (c3.eq.'Ast'.or.c3.eq.'ast'.or.c3.eq.'AST') then
-        informat = 2
-     else if (c3.eq.'Com'.or.c3.eq.'com'.or.c3.eq.'COM') then
-        informat = 3
-     else
-        call mio_err (23,mem(81),lmem(81),mem(91),lmem(91),' ',1,mem(82+j),lmem(82+j))
-     end if
-     !
-     ! Read epoch of Big bodies
-     if (j.eq.1) then
-      do
-        read (11,'(a150)') string
-        if (string(1:1).ne.')') exit
-      end do
-        call mio_spl (150,string,nsub,lim)
-        read (string(lim(1,nsub):lim(2,nsub)),*,err=667) time
-     end if
-     !
-     ! Read information for each object
-     do
-      read (11,'(a)',iostat=error) string
-      if (error /= 0) exit
-      
-      if (string(1:1).eq.')') cycle
-    
-     call mio_spl (150,string,nsub,lim)
-     
-     if (lim(1,1).eq.-1) exit
-     !
-     ! Determine the name of the object
-     nbod = nbod + 1
-     if (nbod.gt.NMAX) call mio_err (23,mem(81),lmem(81),mem(90),lmem(90),' ',1,mem(82),lmem(82))
-     !
-     if ((lim(2,1)-lim(1,1)).gt.7) then
-        write (23,'(/,3a)') mem(121)(1:lmem(121)),mem(122)(1:lmem(122)),string( lim(1,1):lim(2,1) )
-     end if
-     id(nbod) = string( lim(1,1):min(7+lim(1,1),lim(2,1)) )
-     ! Check if another object has the same name
-     do k = 1, nbod - 1
-        if (id(k).eq.id(nbod)) call mio_err (23,mem(81),lmem(81),mem(103),lmem(103),id(nbod),8,' ',1)
-     end do
-     !
-     ! Default values of mass, close-encounter limit, density etc.
-     m(nbod) = 0.d0
-     rceh(nbod) = 1.d0
-     rho(nbod) = rhocgs
-     epoch(nbod) = time
-     do k = 1, 4
-        ngf(k,nbod) = 0.d0
-     end do
-     !
-     ! Read values of mass, close-encounter limit, density etc.
-     do k = 3, nsub, 2
-        c80 = string(lim(1,k-1):lim(2,k-1))
-        read (string(lim(1,k):lim(2,k)),*,err=666) temp
-        if (c80(1:1).eq.'m'.or.c80(1:1).eq.'M') then
-           m(nbod) = temp * K2
-        else if (c80(1:1).eq.'r'.or.c80(1:1).eq.'R') then
-           rceh(nbod) = temp
-        else if (c80(1:1).eq.'d'.or.c80(1:1).eq.'D') then
-           rho(nbod) = temp * rhocgs
-        else if (m(nbod).lt.0.or.rceh(nbod).lt.0.or.rho(nbod).lt.0) then
-           call mio_err (23,mem(81),lmem(81),mem(97),lmem(97),id(nbod),8,mem(82+j),lmem(82+j))
-        else if (c80(1:2).eq.'ep'.or.c80(1:2).eq.'EP'.or.c80(1:2).eq.'Ep') then
-           epoch (nbod) = temp
-        else if (c80(1:2).eq.'a1'.or.c80(1:2).eq.'A1') then
-           ngf (1,nbod) = temp
-        else if (c80(1:2).eq.'a2'.or.c80(1:2).eq.'A2') then
-           ngf (2,nbod) = temp
-        else if (c80(1:2).eq.'a3'.or.c80(1:2).eq.'A3') then
-           ngf (3,nbod) = temp
-        else if (c80(1:1).eq.'b'.or.c80(1:1).eq.'B') then
-           ngf (4,nbod) = temp
-        else
-           goto 666
-        end if
-     end do
-     !
-     ! If required, read Cartesian coordinates, velocities and spins of the bodies
-     jtmp = 100
-     do
-       read (11,'(a150)',end=666) string
-       if (string(1:1).ne.')') exit
-     end do 
-     backspace 11
-     if (informat.eq.1) then
-        read (11,*,err=666) x(1,nbod),x(2,nbod),x(3,nbod),v(1,nbod),v(2,nbod),v(3,nbod),s(1,nbod),s(2,nbod),s(3,nbod)
-     else
-        read (11,*,err=666) a,e,i,p,n,l,s(1,nbod),s(2,nbod),s(3,nbod)
-        i = i * DEG2RAD
-        p = (p + n) * DEG2RAD
-        n = n * DEG2RAD
-        temp = m(nbod)  +  m(1)
-        !
-        ! Alternatively, read Cometary or asteroidal elements
-        if (informat.eq.3) then
-           q = a
-           a = q / (1.d0 - e)
-           l = mod (sqrt(temp/(abs(a*a*a))) * (epoch(nbod) - l), TWOPI)
-        else
-           q = a * (1.d0 - e)
-           l = l * DEG2RAD
-        end if
-        if ((algor.eq.11).and.(nbod.ne.2)) temp = temp + m(2)
-        call mco_el2x (temp,q,e,i,p,n,l,x(1,nbod),x(2,nbod),x(3,nbod),v(1,nbod),v(2,nbod),v(3,nbod))
-     end if
-     !
-     s(1,nbod) = s(1,nbod) * K2
-     s(2,nbod) = s(2,nbod) * K2
-     s(3,nbod) = s(3,nbod) * K2
-     !
-     
-     end do
-      close (11)
-  end do
-  !
-  ! Set non-gravitational-forces flag, NGFLAG
-  ngflag = 0
-  do j = 2, nbod
-     if (ngf(1,j).ne.0.or.ngf(2,j).ne.0.or.ngf(3,j).ne.0) then
-        if (ngflag.eq.0) ngflag = 1
-        if (ngflag.eq.2) ngflag = 3
-     else if (ngf(4,j).ne.0) then
-        if (ngflag.eq.0) ngflag = 2
-        if (ngflag.eq.1) ngflag = 3
-     end if
-  end do
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  IF  CONTINUING  AN  OLD  INTEGRATION
-  !
-  if (oldflag) then
-     if (opt(3).eq.1) then
-        call mio_jd2y (time,year,month,t1)
-        write (23,'(/,a,i10,i2,f8.5,/)') mem(62)(1:lmem(62)),year,month,t1
-     else if (opt(3).eq.3) then
-        t1 = (time - tstart) / 365.25d0
-        write (23,'(/,a,f18.7,a,/)') mem(62)(1:lmem(62)),t1,mem(2)(1:lmem(2))
-     else
-        if (opt(3).eq.0) t1 = time
-        if (opt(3).eq.2) t1 = time - tstart
-        write (23,'(/,a,f18.5,a,/)') mem(62)(1:lmem(62)),t1,mem(1)(1:lmem(1))
-     end if
-     !
-     ! Read in energy and angular momentum variables, and convert to internal units
-     open (35, file=dumpfile(4), status='old', iostat=error)
-     if (error /= 0) then
-        write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(dumpfile(4))
-        stop
-     end if
-     read (35,*) opflag
-     read (35,*) en(1),am(1),en(3),am(3)
-     en(1) = en(1) * K2
-     en(3) = en(3) * K2
-     am(1) = am(1) * K2
-     am(3) = am(3) * K2
-     read (35,*) s(1,1),s(2,1),s(3,1)
-     s(1,1) = s(1,1) * K2
-     s(2,1) = s(2,1) * K2
-     s(3,1) = s(3,1) * K2
-     close (35)
-     if (opflag.eq.0) opflag = 1
-     !
-     !------------------------------------------------------------------------------
-     !
-     !  IF  STARTING  A  NEW  INTEGRATION
-     !
-  else
-     opflag = -2
-     !
-     ! Write integration parameters to information file
-     write (23,'(/,a)') mem(11)(1:lmem(11))
-     write (23,'(a)') mem(12)(1:lmem(12))
-     j = algor + 13
-     write (23,'(/,2a)') mem(13)(1:lmem(13)),mem(j)(1:lmem(j))
-     if (tstart.ge.1.d11.or.tstart.le.-1.d10) then
-        write (23,'(/,a,1p,e19.13,a)') mem(26)(1:lmem(26)),tstart,mem(1)(1:lmem(1))
-     else
-        write (23,'(/,a,f19.7,a)') mem(26)(1:lmem(26)),tstart,mem(1)(1:lmem(1))
-     end if
-     if (tstop.ge.1.d11.or.tstop.le.-1.d10) then
-        write (23,'(a,1p,e19.13)') mem(27)(1:lmem(27)),tstop
-     else
-        write (23,'(a,f19.7)') mem(27)(1:lmem(27)),tstop
-     end if
-     write (23,'(a,f15.3)') mem(28)(1:lmem(28)),dtout
-     if (opt(4).eq.1) write (23,'(2a)') mem(40)(1:lmem(40)),mem(7)(1:lmem(7))
-     if (opt(4).eq.2) write (23,'(2a)') mem(40)(1:lmem(40)),mem(8)(1:lmem(8))
-     if (opt(4).eq.3) write (23,'(2a)') mem(40)(1:lmem(40)),mem(9)(1:lmem(9))
-     !
-     write (23,'(/,a,f10.3,a)') mem(30)(1:lmem(30)),h0,mem(1)(1:lmem(1))
-     write (23,'(a,1p1e10.4)') mem(31)(1:lmem(31)),tol
-     write (23,'(a,1p1e10.4,a)') mem(32)(1:lmem(32)),m(1)/K2,mem(3)(1:lmem(3))
-     write (23,'(a,1p1e11.4)') mem(33)(1:lmem(33)),jcen(1)/rcen**2
-     write (23,'(a,1p1e11.4)') mem(34)(1:lmem(34)),jcen(2)/rcen**4
-     write (23,'(a,1p1e11.4)') mem(35)(1:lmem(35)),jcen(3)/rcen**6
-     write (23,'(a,1p1e10.4,a)') mem(36)(1:lmem(36)),rmax,mem (4)(1:lmem(4))
-     write (23,'(a,1p1e10.4,a)') mem(37)(1:lmem(37)),rcen,mem (4)(1:lmem(4))
-     !
-     itmp = 5
-     if (opt(2).eq.1.or.opt(2).eq.2) itmp = 6
-     write (23,'(/,2a)') mem(41)(1:lmem(41)),mem(itmp)(1:lmem(itmp))
-     itmp = 5
-     if (opt(2).eq.2) itmp = 6
-     write (23,'(2a)') mem(42)(1:lmem(42)),mem(itmp)(1:lmem(itmp))
-     itmp = 5
-     if (opt(7).eq.1) itmp = 6
-     write (23,'(2a)') mem(45)(1:lmem(45)),mem(itmp)(1:lmem(itmp))
-     itmp = 5
-     if (opt(8).eq.1) itmp = 6
-     write (23,'(2a)') mem(46)(1:lmem(46)),mem(itmp)(1:lmem(itmp))
-     !
-     ! Check that element and close-encounter files don't exist, and create them
-     do j = 1, 2
-        inquire (file=outfile(j), exist=test)
-        if (test) call mio_err (23,mem(81),lmem(81),mem(87),lmem(87),' ',1,outfile(j),80)
-        open  (20+j, file=outfile(j), status='new', iostat=error)
-        if (error /= 0) then
-           write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(j))
-           stop
-        end if
-        close (20+j)
-     end do
-     !
-     ! Check that dump files don't exist, and then create them
-     do j = 1, 4
-        inquire (file=dumpfile(j), exist=test)
-        if (test) call mio_err (23,mem(81),lmem(81),mem(87),lmem(87),' ',1,dumpfile(j),80)
-        open  (30+j, file=dumpfile(j), status='new', iostat=error)
-        if (error /= 0) then
-           write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(dumpfile(j))
-           stop
-        end if
-        close (30+j)
-     end do
-     !
-     ! Write number of Big bodies and Small bodies to information file
-     write (23,'(/,a,i4)') mem(38)(1:lmem(38)), nbig - 1
-     write (23,'(a,i4)') mem(39)(1:lmem(39)), nbod - nbig
-     !
-     ! Calculate initial energy and angular momentum and write to information file
-     s(1,1) = 0.d0
-     s(2,1) = 0.d0
-     s(3,1) = 0.d0
-     call mxx_en (jcen,nbod,nbig,m,x,v,s,en(1),am(1))
-     write (23,'(//,a)') mem(51)(1:lmem(51))
-     write (23,'(a)')    mem(52)(1:lmem(52))
-     write (23,'(/,a,1p1e12.5,a)') mem(53)(1:lmem(53)),en(1)/K2,mem(72)(1:lmem(72))
-     write (23,'(a,1p1e12.5,a)')   mem(54)(1:lmem(54)),am(1)/K2,mem(73)(1:lmem(73))
-     !
-     ! Initialize lost energy and angular momentum
-     en(3) = 0.d0
-     am(3) = 0.d0
-     !
-     ! Write warning messages if necessary
-     if (tstop.lt.tstart) write (23,'(/,2a)') mem(121)(1:lmem(121)),mem(123)(1:lmem(123))
-     if (nbig.le.0) write (23,'(/,2a)') mem(121)(1:lmem(121)),mem(124)(1:lmem(124))
-     if (nbig.eq.nbod) write (23,'(/,2a)') mem(121)(1:lmem(121)),mem(125)(1:lmem(125))
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  !  CHECK  FOR  ATTEMPTS  TO  DO  INCOMPATIBLE  THINGS
-  !
-  ! If using close-binary algorithm, set radius of central body to be no less
-  ! than the periastron of binary star.
-  if (algor.eq.11) then
-     temp = m(1) + m(2)
-     call mco_x2el (temp,x(1,2),x(2,2),x(3,2),v(1,2),v(2,2),v(3,2),a,tmp2,tmp3,tmp4,tmp5,tmp6)
-     rcen = max (rcen, a)
-  end if
-  !
-  ! Check if non-grav forces are being used with an incompatible algorithm
-  if ((ngflag.ne.0).and.((algor.eq.3).or.(algor.eq.11).or.(algor.eq.12))) then
-     call mio_err (23,mem(81),lmem(81),mem(92),lmem(92),' ',1,mem(85),lmem(85))
-  endif
-  !
-  ! Check if user-defined force routine is being used with wrong algorithm
-  if ((opt(8).eq.1).and.((algor.eq.11).or.(algor.eq.12))) call mio_err(23,mem(81),lmem(81),mem(93),lmem(93),' ',1,mem(85),lmem(85))
-  !
-  ! Check whether MVS is being used to integrate massive Small bodies,
-  ! or whether massive Small bodies have different epochs than Big bodies.
-  flag1 = .false.
-  flag2 = .false.
-  do j = nbig + 1, nbod
-     if (m(j).ne.0) then
-        if (algor.eq.1) call mio_err (23,mem(81),lmem(81),mem(94),lmem(94),' ',1,mem(85),lmem(85))
-        flag1 = .true.
-     end if
-     if (epoch(j).ne.time) flag2 = .true.
-  end do
-  if (flag1.and.flag2) call mio_err (23,mem(81),lmem(81),mem(95),  lmem(95),' ',1,mem(84),lmem(84))
-  !
-  ! Check if central oblateness is being used with close-binary algorithm
-  if (algor.eq.11.and.(jcen(1).ne.0.or.jcen(2).ne.0.or.jcen(3).ne.0)) then
-     call mio_err (23,mem(81),lmem(81),mem(102),lmem(102),' ',1,mem(85),lmem(85))
-  endif
-  !
-  ! Check whether RCEN > RMAX or RMAX/RCEN is very large
-  if (rcen.gt.rmax) call mio_err (23,mem(81),lmem(81),mem(105),lmem(105),' ',1,mem(85),lmem(85))
-  if (rmax/rcen.ge.1.d12) write (23,'(/,2a,/a)') mem(121)(1:lmem(121)),mem(106)(1:lmem(106)),mem(85)(1:lmem(85))
-  close (23)
-  return
-  !
-  ! Error reading from the input file containing integration parameters
-661 write (c3,'(i3)') lineno
-  call mio_err (23,mem(81),lmem(81),mem(99),lmem(99),c3,3,mem(85),lmem(85))
-  !
-  ! Error reading from the input file for Big or Small bodies
-666 call mio_err (23,mem(81),lmem(81),mem(100),lmem(100),id(nbod),8,mem(82+j),lmem(82+j))
-  !
-  ! Error reading epoch of Big bodies
-667 call mio_err (23,mem(81),lmem(81),mem(101),lmem(101),' ',1,mem(83),lmem(83))
-  !
-  !------------------------------------------------------------------------------
-  !
-end subroutine mio_in
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
@@ -5927,109 +5906,6 @@ subroutine mio_spl (length,string,nsub,delimit)
   return
 end subroutine mio_spl
 !
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MXX_EJEC.FOR    (ErikSoft   2 November 2000)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Calculates the distance from the central body of each object with index
-! I >= I0. If this distance exceeds RMAX, the object is flagged for ejection 
-! (STAT set to -3). If any object is to be ejected, EJFLAG = 1 on exit,
-! otherwise EJFLAG = 0.
-!
-! Also updates the values of EN(3) and AM(3)---the change in energy and
-! angular momentum due to collisions and ejections.
-!
-!
-! N.B. All coordinates must be with respect to the central body!!
-! ===
-!
-!------------------------------------------------------------------------------
-!
-subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,opt,ejflag,outfile,mem,lmem)
-  !
-  use physical_constant
-  use mercury_constant
-  use types_numeriques
-
-  implicit none
-
-  !
-  ! Input/Output
-  integer :: i0, nbod, nbig, stat(nbod), opt(8), ejflag, lmem(NMESS)
-  real(double_precision) :: time, tstart, rmax, en(3), am(3), jcen(3)
-  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
-  character*80 outfile, mem(NMESS)
-  character*8 id(nbod)
-  !
-  ! Local
-  integer :: j, year, month
-  real(double_precision) :: r2,rmax2,t1,e,l
-  character*38 flost
-  character*6 tstring
-  integer :: error
-  !
-  !------------------------------------------------------------------------------
-  !
-  if (i0.le.0) i0 = 2
-  ejflag = 0
-  rmax2 = rmax * rmax
-  !
-  ! Calculate initial energy and angular momentum
-  call mxx_en (jcen,nbod,nbig,m,x,v,s,e,l)
-  !
-  ! Flag each object which is ejected, and set its mass to zero
-  do j = i0, nbod
-     r2 = x(1,j)*x(1,j) + x(2,j)*x(2,j) + x(3,j)*x(3,j)
-     if (r2.gt.rmax2) then
-        ejflag = 1
-        stat(j) = -3
-        m(j) = 0.d0
-        s(1,j) = 0.d0
-        s(2,j) = 0.d0
-        s(3,j) = 0.d0
-        !
-        ! Write message to information file
-        open  (23,file=outfile,status='old',access='append',iostat=error)
-        if (error /= 0) then
-           write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
-           stop
-        end if
-        if (opt(3).eq.1) then
-           call mio_jd2y (time,year,month,t1)
-           flost = '(1x,a8,a,i10,1x,i2,1x,f8.5)'
-           write (23,flost) id(j),mem(68)(1:lmem(68)),year,month,t1
-        else
-           if (opt(3).eq.3) then
-              t1 = (time - tstart) / 365.25d0
-              tstring = mem(2)
-              flost = '(1x,a8,a,f18.7,a)'
-           else
-              if (opt(3).eq.0) t1 = time
-              if (opt(3).eq.2) t1 = time - tstart
-              tstring = mem(1)
-              flost = '(1x,a8,a,f18.5,a)'
-           end if
-           write (23,flost) id(j),mem(68)(1:lmem(68)),t1,tstring
-        end if
-        close (23)
-     end if
-  end do
-  !
-  ! If ejections occurred, update ELOST and LLOST
-  if (ejflag.ne.0) then
-     call mxx_en (jcen,nbod,nbig,m,x,v,s,en(2),am(2))
-     en(3) = en(3) + (e - en(2))
-     am(3) = am(3) + (l - am(2))
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine mxx_ejec
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
@@ -6124,173 +6000,7 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfi
   return
 end subroutine mxx_elim
 !
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!     MXX_EN.FOR    (ErikSoft   21 February 2001)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Calculates the total energy and angular-momentum for a system of objects
-! with masses M, coordinates X, velocities V and spin angular momenta S.
-!
-! N.B. All coordinates and velocities must be with respect to the central
-! ===  body.
-!
-!------------------------------------------------------------------------------
-!
-subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
-  !
-  use physical_constant
-  use mercury_constant
-  use types_numeriques
 
-  implicit none
-
-  !
-  ! Input/Output
-  integer :: nbod,nbig
-  real(double_precision) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),e,l2
-  !
-  ! Local
-  integer :: j,k,iflag,itmp(8)
-  real(double_precision) :: x(3,NMAX),v(3,NMAX),temp,dx,dy,dz,r2,tmp,ke,pe,l(3)
-  real(double_precision) :: r_1,r_2,r_4,r_6,u2,u4,u6,tmp2(4,NMAX)
-  !
-  !------------------------------------------------------------------------------
-  !
-  ke = 0.d0
-  pe = 0.d0
-  l(1) = 0.d0
-  l(2) = 0.d0
-  l(3) = 0.d0
-  !
-  ! Convert to barycentric coordinates and velocities
-  call mco_h2b(temp,jcen,nbod,nbig,temp,m,xh,vh,x,v,tmp2,iflag,itmp)
-  !
-  ! Do the spin angular momenta first (probably the smallest terms)
-  do j = 1, nbod
-     l(1) = l(1) + s(1,j)
-     l(2) = l(2) + s(2,j)
-     l(3) = l(3) + s(3,j)
-  end do
-  !
-  ! Orbital angular momentum and kinetic energy terms
-  do j = 1, nbod
-     l(1) = l(1)  +  m(j)*(x(2,j) * v(3,j)  -  x(3,j) * v(2,j))
-     l(2) = l(2)  +  m(j)*(x(3,j) * v(1,j)  -  x(1,j) * v(3,j))
-     l(3) = l(3)  +  m(j)*(x(1,j) * v(2,j)  -  x(2,j) * v(1,j))
-     ke = ke + m(j)*(v(1,j)*v(1,j)+v(2,j)*v(2,j)+v(3,j)*v(3,j))
-  end do
-  !
-  ! Potential energy terms due to pairs of bodies
-  do j = 2, nbod
-     tmp = 0.d0
-     do k = j + 1, nbod
-        dx = x(1,k) - x(1,j)
-        dy = x(2,k) - x(2,j)
-        dz = x(3,k) - x(3,j)
-        r2 = dx*dx + dy*dy + dz*dz
-        if (r2.ne.0) tmp = tmp + m(k) / sqrt(r2)
-     end do
-     pe = pe  -  tmp * m(j)
-  end do
-  !
-  ! Potential energy terms involving the central body
-  do j = 2, nbod
-     dx = x(1,j) - x(1,1)
-     dy = x(2,j) - x(2,1)
-     dz = x(3,j) - x(3,1)
-     r2 = dx*dx + dy*dy + dz*dz
-     if (r2.ne.0) pe = pe  -  m(1) * m(j) / sqrt(r2)
-  end do
-  !
-  ! Corrections for oblateness
-  if (jcen(1).ne.0.or.jcen(2).ne.0.or.jcen(3).ne.0) then
-     do j = 2, nbod
-        r2 = xh(1,j)*xh(1,j) + xh(2,j)*xh(2,j) + xh(3,j)*xh(3,j)
-        r_1 = 1.d0 / sqrt(r2)
-        r_2 = r_1 * r_1
-        r_4 = r_2 * r_2
-        r_6 = r_4 * r_2
-        u2 = xh(3,j) * xh(3,j) * r_2
-        u4 = u2 * u2
-        u6 = u4 * u2
-        pe = pe + m(1) * m(j) * r_1 * (jcen(1) * r_2 * (1.5d0*u2 - 0.5d0) +  jcen(2) * r_4 * (4.375d0*u4 - 3.75d0*u2 + .375d0)&
-             +  jcen(3) * r_6 *(14.4375d0*u6 - 19.6875d0*u4 + 6.5625d0*u2 - .3125d0))
-     end do
-  end if
-  !
-  e = .5d0 * ke  +  pe
-  l2 = sqrt(l(1)*l(1) + l(2)*l(2) + l(3)*l(3))
-  !
-  !------------------------------------------------------------------------------
-  !
-  return	
-end subroutine mxx_en
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!     MXX_JAC.FOR    (ErikSoft   2 March 2001)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Calculates the Jacobi constant for massless particles. This assumes that
-! there are only 2 massive bodies (including the central body) moving on
-! circular orbits.
-!
-! N.B. All coordinates and velocities must be heliocentric!!
-! ===
-!
-!------------------------------------------------------------------------------
-!
-subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
-  !
-  use physical_constant
-  use mercury_constant
-  use types_numeriques
-
-  implicit none
-
-  !
-  ! Input/Output
-  integer :: nbod,nbig
-  real(double_precision) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod)
-  !
-  ! Local
-  integer :: j,itmp(8),iflag
-  real(double_precision) :: x(3,NMAX),v(3,NMAX),temp,dx,dy,dz,r,d,a2,n,jac(NMAX)
-  real(double_precision) :: tmp2(4,NMAX)
-  !
-  !------------------------------------------------------------------------------
-  !
-  call mco_h2b(temp,jcen,nbod,nbig,temp,m,xh,vh,x,v,tmp2,iflag,itmp)
-  dx = x(1,2) - x(1,1)
-  dy = x(2,2) - x(2,1)
-  dz = x(3,2) - x(3,1)
-  a2 = dx*dx + dy*dy + dz*dz
-  n = sqrt((m(1)+m(2)) / (a2*sqrt(a2)))
-  !
-  do j = nbig + 1, nbod
-     dx = x(1,j) - x(1,1)
-     dy = x(2,j) - x(2,1)
-     dz = x(3,j) - x(3,1)
-     r = sqrt(dx*dx + dy*dy + dz*dz)
-     dx = x(1,j) - x(1,2)
-     dy = x(2,j) - x(2,2)
-     dz = x(3,j) - x(3,2)
-     d = sqrt(dx*dx + dy*dy + dz*dz)
-     !
-     jac(j) = .5d0*(v(1,j)*v(1,j) + v(2,j)*v(2,j) + v(3,j)*v(3,j))     - m(1)/r - m(2)/d - n*(x(1,j)*v(2,j) - x(2,j)*v(1,j))
-  end do
-  !
-  !------------------------------------------------------------------------------
-  !
-  return	
-end subroutine mxx_jac
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
@@ -6357,144 +6067,6 @@ subroutine mxx_sort (n,x,index)
   return
 end subroutine mxx_sort
 !
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MXX_SYNC.FOR    (ErikSoft   2 March 2001)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Synchronizes the epochs of NBIG Big bodies (having a common epoch) and
-! NBOD-NBIG Small bodies (possibly having differing epochs), for an 
-! integration using MERCURY.
-! The Small bodies are picked up in order starting with the one with epoch
-! furthest from the time, TSTART, at which the main integration will begin
-! producing output.
-!
-! N.B. The synchronization integrations use Everhart's RA15 routine.
-! ---
-!
-!------------------------------------------------------------------------------
-!
-subroutine mxx_sync (time,tstart,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,ngf,opt,ngflag)
-  !
-  use physical_constant
-  use mercury_constant
-  use types_numeriques
 
-  implicit none
-
-  !
-  ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8),stat(nbod)
-  real(double_precision) :: time,tstart,h0,tol,jcen(3),m(nbod),x(3,nbod),v(3,nbod)
-  real(double_precision) :: s(3,nbod),rceh(nbod),rho(nbod),epoch(nbod),ngf(4,nbod)
-  character*8 id(nbod)
-  !
-  ! Local
-  integer :: j,k,l,nsml,nsofar,indx(NMAX),itemp,jtemp(NMAX)
-  integer :: raflag,nce,ice(NMAX),jce(NMAX)
-  real(double_precision) :: temp,epsml(NMAX),rtemp(NMAX)
-  real(double_precision) :: h,hdid,tsmall,rphys(NMAX),rcrit(NMAX)
-  character*8 ctemp(NMAX)
-  external mfo_all
-  !
-  !------------------------------------------------------------------------------
-  !
-  ! Reorder Small bodies by epoch so that ep(1) is furthest from TSTART
-  nsml = nbod - nbig
-  do j = nbig + 1, nbod
-     epsml(j-nbig) = epoch(j)
-  end do
-  call mxx_sort (nsml,epsml,indx)
-  !
-  if (abs(epsml(1)-tstart).lt.abs(epsml(nsml)-tstart)) then
-     k = nsml + 1
-     do j = 1, nsml / 2
-        l = k - j
-        temp = epsml(j)
-        epsml(j) = epsml (l)
-        epsml(l) = temp
-        itemp = indx(j)
-        indx(j) = indx (l)
-        indx(l) = itemp
-     end do
-  end if
-  !
-  do j = nbig + 1, nbod
-     epoch(j) = epsml(j-nbig)
-  end do
-  !
-  ! Reorder the other arrays associated with each Small body
-  do k = 1, 3
-     do j = 1, nsml
-        rtemp(j) = x(k,j+nbig)
-     end do
-     do j = 1, nsml
-        x(k,j+nbig) = rtemp(indx(j))
-     end do
-     do j = 1, nsml
-        rtemp(j) = v(k,j+nbig)
-     end do
-     do j = 1, nsml
-        v(k,j+nbig) = rtemp(indx(j))
-     end do
-     do j = 1, nsml
-        rtemp(j) = s(k,j+nbig)
-     end do
-     do j = 1, nsml
-        s(k,j+nbig) = rtemp(indx(j))
-     end do
-  end do
-  !
-  do j = 1, nsml
-     rtemp(j) = m(j+nbig)
-  end do
-  do j = 1, nsml
-     m(j+nbig) = rtemp(indx(j))
-  end do
-  do j = 1, nsml
-     rtemp(j) = rceh(j+nbig)
-  end do
-  do j = 1, nsml
-     rceh(j+nbig) = rtemp(indx(j))
-  end do
-  do j = 1, nsml
-     rtemp(j) = rho(j+nbig)
-  end do
-  do j = 1, nsml
-     rho(j+nbig) = rtemp(indx(j))
-  end do
-  !
-  do j = 1, nsml
-     ctemp(j) = id(j+nbig)
-     jtemp(j) = stat(j+nbig)
-  end do
-  do j = 1, nsml
-     id(j+nbig) = ctemp(indx(j))
-     stat(j+nbig) = jtemp(indx(j))
-  end do
-  !
-  ! Integrate Small bodies up to the same epoch
-  h = h0
-  tsmall = h0 * 1.d-12
-  raflag = 0
-  !
-  do j = nbig + 1, nbod
-     nsofar = j - 1
-     do while (abs(time-epoch(j)).gt.tsmall)
-        temp = epoch(j) - time
-        h = sign(max(min(abs(temp),abs(h)),tsmall),temp)
-        call mdt_ra15 (time,h,hdid,tol,jcen,nsofar,nbig,m,x,v,s,rphys,rcrit,ngf,stat,raflag,ngflag,opt,nce,ice,jce,mfo_all)
-        time = time + hdid
-     end do
-     raflag = 1
-  end do
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine mxx_sync
 !
 
