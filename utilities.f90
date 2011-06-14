@@ -346,7 +346,7 @@ subroutine mio_spl (length,string,nsub,delimit)
   integer, intent(in) :: length
   integer, intent(out) :: nsub!,delimit(2,100)
   integer, dimension(:,:), intent(out) :: delimit
-  ! TODO virer les warnings à propos de 'Actual argument contains too few elements for dummy argument
+
   character*1 string(length)
   ! TODO character(len=length) :: string make an error on the outputs
   !
