@@ -6,6 +6,7 @@ module algo_hybrid
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
+  use user_module
   
   private
   
