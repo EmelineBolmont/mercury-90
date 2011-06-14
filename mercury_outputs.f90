@@ -44,6 +44,7 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,
   use types_numeriques
   use ascii_conversion
   use orbital_elements
+  use utilities
 
   implicit none
 
@@ -440,6 +441,7 @@ subroutine mio_log (time,tstart,en,am,opt,mem,lmem)
   use physical_constant
   use mercury_constant
   use types_numeriques
+  use utilities
 
   implicit none
 

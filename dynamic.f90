@@ -6,6 +6,7 @@ module dynamic
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
+  use utilities
   
   contains
 

@@ -376,6 +376,7 @@ subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,op
   use physical_constant
   use mercury_constant
   use types_numeriques
+  use utilities
 
   implicit none
 
