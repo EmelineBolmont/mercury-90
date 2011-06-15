@@ -259,7 +259,6 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   ! Local
   real(double_precision) :: g,a,ci,si,cn,sn,cg,sg,ce,se,romes,temp
   real(double_precision) :: z1,z2,z3,z4,d11,d12,d13,d21,d22,d23
-!~   real(double_precision) :: mco_kep, orbel_fhybrid, orbel_zget
   !
   !------------------------------------------------------------------------------
   !
@@ -336,6 +335,59 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   !
   return
 end subroutine mco_el2x
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      MCO_OV2X.FOR    (ErikSoft   28 February 2001)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Converts output variables for an object to coordinates and velocities.
+! The output variables are:
+!  r = the radial distance
+!  theta = polar angle
+!  phi = azimuthal angle
+!  fv = 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
+!                             kinetic energies. (Note that 0 < fv < 1).
+!  vtheta = polar angle of velocity vector
+!  vphi = azimuthal angle of the velocity vector
+!
+!------------------------------------------------------------------------------
+!
+subroutine mco_ov2x (rcen,rmax,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
+  !
+  use physical_constant
+  use mercury_constant
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  real(double_precision) :: rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
+  !
+  ! Local
+  real(double_precision) :: r,v1,temp
+  !
+  !------------------------------------------------------------------------------
+  !
+  r = rcen * 10.d0**fr
+  temp = sqrt(.5d0*(1.d0/fv - 1.d0))
+  v1 = sqrt(2.d0 * temp * (mcen + m) / r)
+  !
+  x = r * sin(theta) * cos(phi)
+  y = r * sin(theta) * sin(phi)
+  z = r * cos(theta)
+  u = v1 * sin(vtheta) * cos(vphi)
+  v = v1 * sin(vtheta) * sin(vphi)
+  w = v1 * cos(vtheta)
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mco_ov2x
 
 
 end module orbital_elements
