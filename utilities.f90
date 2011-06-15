@@ -397,4 +397,40 @@ subroutine mio_spl (length,string,nsub,delimit)
   return
 end subroutine mio_spl
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      arcosh.FOR    (ErikSoft  2 March 1999)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Calculates inverse hyperbolic cosine of an angle X (in radians).
+!
+!------------------------------------------------------------------------------
+!
+function arcosh (x)
+  !
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  real(double_precision),intent(in) :: x
+  real(double_precision) :: arcosh
+  !
+  !------------------------------------------------------------------------------
+  !
+  if (x.ge.1.d0) then
+     arcosh = log (x + sqrt(x*x - 1.d0))
+  else
+     arcosh = 0.d0
+  end if
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end function arcosh
+
 end module utilities

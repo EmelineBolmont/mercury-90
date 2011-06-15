@@ -43,7 +43,7 @@ subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,
   !
   ! Local
   integer :: j
-  real(double_precision) :: rcen2,mco_acsh,a,q,u0,uhit,m0,mhit,mm,r0,mcen
+  real(double_precision) :: rcen2,a,q,u0,uhit,m0,mhit,mm,r0,mcen
   real(double_precision) :: hx,hy,hz,h2,p,rr0,rr1,rv0,rv1,temp,e,v2
   real(double_precision) :: xu0(3,NMAX),xu1(3,NMAX),vu0(3,NMAX),vu1(3,NMAX)
   !
@@ -110,8 +110,8 @@ subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,
               m0   = mod (u0   - e*sin(u0)   + PI, TWOPI) - PI
            else
               a = q / (e - 1.d0)
-              uhit = sign (mco_acsh((1.d0 - rcen/a)/e), -h)
-              u0   = sign (mco_acsh((1.d0 - r0/a  )/e), rv0)
+              uhit = sign (arcosh((1.d0 - rcen/a)/e), -h)
+              u0   = sign (arcosh((1.d0 - r0/a  )/e), rv0)
               mhit = mod (uhit - e*sinh(uhit) + PI, TWOPI) - PI
               m0   = mod (u0   - e*sinh(u0)   + PI, TWOPI) - PI
            end if
