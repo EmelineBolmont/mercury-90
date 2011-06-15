@@ -7,6 +7,7 @@ module algo_mvs
 !** Version 1.0 - june 2011
 !*************************************************************
   use user_module
+  use forces, only : mfo_ngf
   
   private
   
@@ -393,5 +394,170 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   !
   return
 end subroutine mdt_mvs
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!     MFO_MVS.FOR    (ErikSoft   2 October 2000)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Calculates accelerations on a set of NBOD bodies (of which NBIG are Big)
+! due to gravitational perturbations by all the other bodies.
+! This routine is designed for use with a mixed-variable symplectic
+! integrator using Jacobi coordinates.
+!
+! Based upon routines from Levison and Duncan's SWIFT integrator.
+!
+!------------------------------------------------------------------------------
+!
+subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
+  !
+  use physical_constant
+  use mercury_constant
+  use types_numeriques
+  use forces, only : mfo_obl
+
+  implicit none
+
+  !
+  ! Input/Output
+  integer :: nbod, nbig, stat(nbod)
+  real(double_precision) :: jcen(3), m(nbod), x(3,nbod), xj(3,nbod), a(3,nbod)
+  !
+  ! Local
+  integer :: i,j,k,k1
+  real(double_precision) :: fac0,fac1,fac12,fac2,minside,dx,dy,dz,s_1,s2,s_3,faci,facj
+  real(double_precision) :: a0(3),a0tp(3),a1(3,NMAX),a2(3,NMAX),a3(3,NMAX),aobl(3,NMAX)
+  real(double_precision) :: r,r2,r3,rj,rj2,rj3,q,q2,q3,q4,q5,q6,q7,acen(3)
+  !
+  !------------------------------------------------------------------------------
+  !
+  ! Initialize variables
+  a0(1) = 0.d0
+  a0(2) = 0.d0
+  a0(3) = 0.d0
+  a1(1,2) = 0.d0
+  a1(2,2) = 0.d0
+  a1(3,2) = 0.d0
+  a2(1,2) = 0.d0
+  a2(2,2) = 0.d0
+  a2(3,2) = 0.d0
+  minside = 0.d0
+  !
+  ! Calculate acceleration terms
+  do k = 3, nbig
+     k1 = k - 1
+     minside = minside + m(k1)
+     r2   = x(1,k)  * x(1,k)  +  x(2,k) * x(2,k)  +  x(3,k) * x(3,k)
+     rj2  = xj(1,k) * xj(1,k) + xj(2,k) * xj(2,k) + xj(3,k) * xj(3,k)
+     r  = 1.d0 / sqrt(r2)
+     rj = 1.d0 / sqrt(rj2)
+     r3  = r  * r  * r
+     rj3 = rj * rj * rj
+     !
+     fac0 = m(k) * r3
+     fac12 = m(1) * rj3
+     fac2 = m(k) * fac12 / (minside + m(1))
+     q = (r2 - rj2) * .5d0 / rj2
+     q2 = q  * q
+     q3 = q  * q2
+     q4 = q2 * q2
+     q5 = q2 * q3
+     q6 = q3 * q3
+     q7 = q3 * q4
+     fac1 = 402.1875d0*q7 - 187.6875d0*q6 + 86.625d0*q5   - 39.375d0*q4 + 17.5d0*q3 - 7.5d0*q2 + 3.d0*q - 1.d0
+     !
+     ! Add to A0 term
+     a0(1) = a0(1)  -  fac0 * x(1,k)
+     a0(2) = a0(2)  -  fac0 * x(2,k)
+     a0(3) = a0(3)  -  fac0 * x(3,k)
+     !
+     ! Calculate A1 for this body
+     a1(1,k) = fac12 * (xj(1,k) + fac1*x(1,k))
+     a1(2,k) = fac12 * (xj(2,k) + fac1*x(2,k))
+     a1(3,k) = fac12 * (xj(3,k) + fac1*x(3,k))
+     !
+     ! Calculate A2 for this body
+     a2(1,k) = a2(1,k1)  +  fac2 * xj(1,k)
+     a2(2,k) = a2(2,k1)  +  fac2 * xj(2,k)
+     a2(3,k) = a2(3,k1)  +  fac2 * xj(3,k)
+  end do
+  !
+  r2   = x(1,2)  * x(1,2)  +  x(2,2) * x(2,2)  +  x(3,2) * x(3,2)
+  r  = 1.d0 / sqrt(r2)
+  r3  = r  * r  * r
+  fac0 = m(2) * r3
+  a0tp(1) = a0(1)  -  fac0 * x(1,2)
+  a0tp(2) = a0(2)  -  fac0 * x(2,2)
+  a0tp(3) = a0(3)  -  fac0 * x(3,2)
+  !
+  ! Calculate A3 (direct terms)
+  do k = 2, nbod
+     a3(1,k) = 0.d0
+     a3(2,k) = 0.d0
+     a3(3,k) = 0.d0
+  end do
+  do i = 2, nbig
+     do j = i + 1, nbig
+        dx = x(1,j) - x(1,i)
+        dy = x(2,j) - x(2,i)
+        dz = x(3,j) - x(3,i)
+        s2 = dx*dx + dy*dy + dz*dz
+        s_1 = 1.d0 / sqrt(s2)
+        s_3 = s_1 * s_1 * s_1
+        faci = m(i) * s_3
+        facj = m(j) * s_3
+        a3(1,j) = a3(1,j)  -  faci * dx
+        a3(2,j) = a3(2,j)  -  faci * dy
+        a3(3,j) = a3(3,j)  -  faci * dz
+        a3(1,i) = a3(1,i)  +  facj * dx
+        a3(2,i) = a3(2,i)  +  facj * dy
+        a3(3,i) = a3(3,i)  +  facj * dz
+     end do
+     !
+     do j = nbig + 1, nbod
+        dx = x(1,j) - x(1,i)
+        dy = x(2,j) - x(2,i)
+        dz = x(3,j) - x(3,i)
+        s2 = dx*dx + dy*dy + dz*dz
+        s_1 = 1.d0 / sqrt(s2)
+        s_3 = s_1 * s_1 * s_1
+        faci = m(i) * s_3
+        a3(1,j) = a3(1,j)  -  faci * dx
+        a3(2,j) = a3(2,j)  -  faci * dy
+        a3(3,j) = a3(3,j)  -  faci * dz
+     end do
+  end do
+  !
+  ! Big-body accelerations
+  do k = 2, nbig
+     a(1,k) = a0(1) + a1(1,k) + a2(1,k) + a3(1,k)
+     a(2,k) = a0(2) + a1(2,k) + a2(2,k) + a3(2,k)
+     a(3,k) = a0(3) + a1(3,k) + a2(3,k) + a3(3,k)
+  end do
+  !
+  ! Small-body accelerations
+  do k = nbig + 1, nbod
+     a(1,k) = a0tp(1) + a3(1,k)
+     a(2,k) = a0tp(2) + a3(2,k)
+     a(3,k) = a0tp(3) + a3(3,k)
+  end do
+  !
+  ! Correct for oblateness of the central body
+  if ((jcen(1).ne.0).or.(jcen(2).ne.0).or.(jcen(3).ne.0)) then
+     call mfo_obl (jcen,nbod,m,x,aobl,acen)
+     do k = 2, nbod
+        a(1,k) = a(1,k) + (aobl(1,k) - acen(1))
+        a(2,k) = a(2,k) + (aobl(2,k) - acen(2))
+        a(3,k) = a(3,k) + (aobl(3,k) - acen(3))
+     end do
+  end if
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mfo_mvs
 
 end module algo_mvs

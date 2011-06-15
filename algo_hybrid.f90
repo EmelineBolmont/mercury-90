@@ -7,6 +7,7 @@ module algo_hybrid
 !** Version 1.0 - june 2011
 !*************************************************************
   use user_module
+  use forces, only : mfo_ngf
   
   private
   
@@ -60,7 +61,6 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
   integer :: j,nce,ice(NMAX),jce(NMAX),ce(NMAX),iflag
   real(double_precision) :: a(3,NMAX),hby2,hrec,x0(3,NMAX),v0(3,NMAX),mvsum(3),temp
   real(double_precision) :: angf(3,NMAX),ausr(3,NMAX)
-  external mfo_hkce
   !
   !------------------------------------------------------------------------------
   !
@@ -84,7 +84,7 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
      end do
      ! If required, apply non-gravitational and user-defined forces
      if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
-     if (ngflag.eq.1.or.ngflag.eq.3) call mfo_ngf (nbod,x,v,angf,ngf)
+     if ((ngflag.eq.1).or.(ngflag.eq.3)) call mfo_ngf (nbod,x,v,angf,ngf)
   end if
   !
   ! Advance interaction Hamiltonian for H/2
@@ -165,7 +165,7 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
   ! Advance interaction Hamiltonian for H/2
   call mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
   if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
-  if (ngflag.eq.1.or.ngflag.eq.3) call mfo_ngf (nbod,x,v,angf,ngf)
+  if ((ngflag.eq.1).or.(ngflag.eq.3)) call mfo_ngf (nbod,x,v,angf,ngf)
   !
   do j = 2, nbod
      v(1,j) = v(1,j)  +  hby2 * (angf(1,j) + ausr(1,j) + a(1,j))
@@ -450,5 +450,237 @@ subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   !
   return
 end subroutine mco_dh2h
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!     MFO_HKCE.FOR    (ErikSoft   27 February 2001)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Calculates accelerations due to the Keplerian part of the Hamiltonian 
+! of a hybrid symplectic integrator, when close encounters are taking place,
+! for a set of NBOD bodies (NBIG of which are Big). Note that Small bodies
+! do not interact with one another.
+!
+!------------------------------------------------------------------------------
+!
+subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+  !
+  use physical_constant
+  use mercury_constant
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  integer :: nbod,nbig,stat(nbod),ngflag,opt(8),nce,ice(nce),jce(nce)
+  real(double_precision) :: time,jcen(3),rcrit(nbod),ngf(4,nbod),m(nbod)
+  real(double_precision) :: x(3,nbod),v(3,nbod),a(3,nbod),spin(3,nbod)
+  !
+  ! Local
+  integer :: i, j, k
+  real(double_precision) :: tmp2,dx,dy,dz,s,s_1,s2,s_3,faci,facj,rc,rc2,q,q2,q3,q4,q5
+  !
+  !------------------------------------------------------------------------------
+  !
+  ! Initialize accelerations
+  do j = 1, nbod
+     a(1,j) = 0.d0
+     a(2,j) = 0.d0
+     a(3,j) = 0.d0
+  end do
+  !
+  ! Direct terms
+  do k = 1, nce
+     i = ice(k)
+     j = jce(k)
+     dx = x(1,j) - x(1,i)
+     dy = x(2,j) - x(2,i)
+     dz = x(3,j) - x(3,i)
+     s2 = dx * dx  +  dy * dy  +  dz * dz
+     rc = max (rcrit(i), rcrit(j))
+     rc2 = rc * rc
+     !
+     if (s2.lt.rc2) then
+        s_1 = 1.d0 / sqrt(s2)
+        s_3 = s_1 * s_1 * s_1
+        if (s2.le.0.01*rc2) then
+           tmp2 = s_3
+        else
+           s = 1.d0 / s_1
+           q = (s - 0.1d0*rc) / (0.9d0 * rc)
+           q2 = q * q
+           q3 = q * q2
+           q4 = q2 * q2
+           q5 = q2 * q3
+           tmp2 = (1.d0 - 10.d0*q3 + 15.d0*q4 - 6.d0*q5) * s_3
+        end if
+        !
+        faci = tmp2 * m(i)
+        facj = tmp2 * m(j)
+        a(1,j) = a(1,j)  -  faci * dx
+        a(2,j) = a(2,j)  -  faci * dy
+        a(3,j) = a(3,j)  -  faci * dz
+        a(1,i) = a(1,i)  +  facj * dx
+        a(2,i) = a(2,i)  +  facj * dy
+        a(3,i) = a(3,i)  +  facj * dz
+     end if
+  end do
+  !
+  ! Solar terms
+  do i = 2, nbod
+     s2 = x(1,i)*x(1,i) + x(2,i)*x(2,i) + x(3,i)*x(3,i)
+     s_1 = 1.d0 / sqrt(s2)
+     tmp2 = m(1) * s_1 * s_1 * s_1
+     a(1,i) = a(1,i)  -  tmp2 * x(1,i)
+     a(2,i) = a(2,i)  -  tmp2 * x(2,i)
+     a(3,i) = a(3,i)  -  tmp2 * x(3,i)
+  end do
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mfo_hkce
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!     MFO_HY.FOR    (ErikSoft   2 October 2000)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Calculates accelerations due to the Interaction part of the Hamiltonian 
+! of a hybrid symplectic integrator for a set of NBOD bodies (NBIG of which 
+! are Big), where Small bodies do not interact with one another.
+!
+!------------------------------------------------------------------------------
+!
+subroutine mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
+  !
+  use physical_constant
+  use mercury_constant
+  use types_numeriques
+  use forces, only : mfo_obl
+
+  implicit none
+
+  !
+  ! Input/Output
+  integer :: nbod, nbig, stat(nbod)
+  real(double_precision) :: jcen(3), m(nbod), x(3,nbod), a(3,nbod), rcrit(nbod)
+  !
+  ! Local
+  integer :: k
+  real(double_precision) :: aobl(3,NMAX),acen(3)
+  !
+  !------------------------------------------------------------------------------
+  !
+  ! Initialize accelerations to zero
+  do k = 1, nbod
+     a(1,k) = 0.d0
+     a(2,k) = 0.d0
+     a(3,k) = 0.d0
+  end do
+  !
+  ! Calculate direct terms
+  call mfo_drct (2,nbod,nbig,m,x,rcrit,a,stat)
+  !
+  ! Add accelerations due to oblateness of the central body
+  if (jcen(1).ne.0.or.jcen(2).ne.0.or.jcen(3).ne.0) then
+     call mfo_obl (jcen,nbod,m,x,aobl,acen)
+     do k = 2, nbod
+        a(1,k) = a(1,k) + aobl(1,k) - acen(1)
+        a(2,k) = a(2,k) + aobl(2,k) - acen(2)
+        a(3,k) = a(3,k) + aobl(3,k) - acen(3)
+     end do
+  end if
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mfo_hy
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!     MFO_DRCT.FOR    (ErikSoft   27 February 2001)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Calculates direct accelerations between bodies in the interaction part
+! of the Hamiltonian of a symplectic integrator that partitions close
+! encounter terms (e.g. hybrid symplectic algorithms or SyMBA).
+! The routine calculates accelerations between all pairs of bodies with
+! indices I >= I0.
+!
+!------------------------------------------------------------------------------
+!
+subroutine mfo_drct (i0,nbod,nbig,m,x,rcrit,a,stat)
+  !
+  use physical_constant
+  use mercury_constant
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  integer :: i0, nbod, nbig, stat(nbod)
+  real(double_precision) :: m(nbod), x(3,nbod), a(3,nbod), rcrit(nbod)
+  !
+  ! Local
+  integer :: i,j
+  real(double_precision) :: dx,dy,dz,s,s_1,s2,s_3,rc,rc2,q,q2,q3,q4,q5,tmp2,faci,facj
+  !
+  !------------------------------------------------------------------------------
+  !
+  if (i0.le.0) i0 = 2
+  !
+  do i = i0, nbig
+     do j = i + 1, nbod
+        dx = x(1,j) - x(1,i)
+        dy = x(2,j) - x(2,i)
+        dz = x(3,j) - x(3,i)
+        s2 = dx * dx  +  dy * dy  +  dz * dz
+        rc = max(rcrit(i), rcrit(j))
+        rc2 = rc * rc
+        !
+        if (s2.ge.rc2) then
+           s_1 = 1.d0 / sqrt(s2)
+           tmp2 = s_1 * s_1 * s_1
+        else if (s2.le.0.01*rc2) then
+           tmp2 = 0.d0
+        else
+           s_1 = 1.d0 / sqrt(s2)
+           s   = 1.d0 / s_1
+           s_3 = s_1 * s_1 * s_1
+           q = (s - 0.1d0*rc) / (0.9d0 * rc)
+           q2 = q  * q
+           q3 = q  * q2
+           q4 = q2 * q2
+           q5 = q2 * q3
+           tmp2 = (10.d0*q3 - 15.d0*q4 + 6.d0*q5) * s_3
+        end if
+        !
+        faci = tmp2 * m(i)
+        facj = tmp2 * m(j)
+        a(1,j) = a(1,j)  -  faci * dx
+        a(2,j) = a(2,j)  -  faci * dy
+        a(3,j) = a(3,j)  -  faci * dz
+        a(1,i) = a(1,i)  +  facj * dx
+        a(2,i) = a(2,i)  +  facj * dy
+        a(3,i) = a(3,i)  +  facj * dz
+     end do
+  end do
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mfo_drct
 
 end module algo_hybrid
