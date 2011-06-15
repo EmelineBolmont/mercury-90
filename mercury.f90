@@ -140,7 +140,7 @@ program mercury
   real(double_precision) :: cefac,time,tstart,tstop,dtout,h0,tol,en(3),am(3)
   character*8 id(NMAX)
   character*80 outfile(3), dumpfile(4), mem(NMESS)
-  external mco_b2h,mco_h2b,mco_iden
+  external mco_iden
   !
   data opt/0,1,1,2,0,1,0,0/
   !
@@ -1490,49 +1490,7 @@ function mco_acsh (x)
   return
 end function mco_acsh
 !
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MCO_B2H.FOR    (ErikSoft   2 March 2001)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Converts barycentric coordinates to coordinates with respect to the central
-! body.
-!
-!------------------------------------------------------------------------------
-!
-subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
-  !
-  use types_numeriques
 
-  implicit none
-
-  !
-  ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8)
-  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
-  !
-  ! Local
-  integer :: j
-  !
-  !------------------------------------------------------------------------------
-  !
-  do j = 2, nbod
-     xh(1,j) = x(1,j) - x(1,1)
-     xh(2,j) = x(2,j) - x(2,1)
-     xh(3,j) = x(3,j) - x(3,1)
-     vh(1,j) = v(1,j) - v(1,1)
-     vh(2,j) = v(2,j) - v(2,1)
-     vh(3,j) = v(3,j) - v(3,1)
-  enddo
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine mco_b2h
 !
 
 !
@@ -1578,83 +1536,6 @@ subroutine mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
   return
 end subroutine mco_iden
-!
-
-!
-
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MCO_H2B.FOR    (ErikSoft   2 March 2001)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Converts coordinates with respect to the central body to barycentric
-! coordinates.
-!
-!------------------------------------------------------------------------------
-!
-subroutine mco_h2b (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
-  !
-  use types_numeriques
-
-  implicit none
-
-  !
-  ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8)
-  real(double_precision) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
-  real(double_precision) :: v(3,nbod),ngf(4,nbod)
-  !
-  ! Local
-  integer :: j
-  real(double_precision) :: mtot,temp
-  !
-  !------------------------------------------------------------------------------
-  !
-  mtot = 0.d0
-  x(1,1) = 0.d0
-  x(2,1) = 0.d0
-  x(3,1) = 0.d0
-  v(1,1) = 0.d0
-  v(2,1) = 0.d0
-  v(3,1) = 0.d0
-  !
-  ! Calculate coordinates and velocities of the central body
-  do j = 2, nbod
-     mtot = mtot  +  m(j)
-     x(1,1) = x(1,1)  +  m(j) * xh(1,j)
-     x(2,1) = x(2,1)  +  m(j) * xh(2,j)
-     x(3,1) = x(3,1)  +  m(j) * xh(3,j)
-     v(1,1) = v(1,1)  +  m(j) * vh(1,j)
-     v(2,1) = v(2,1)  +  m(j) * vh(2,j)
-     v(3,1) = v(3,1)  +  m(j) * vh(3,j)
-  enddo
-  !
-  temp = -1.d0 / (mtot + m(1))
-  x(1,1) = temp * x(1,1)
-  x(2,1) = temp * x(2,1)
-  x(3,1) = temp * x(3,1)
-  v(1,1) = temp * v(1,1)
-  v(2,1) = temp * v(2,1)
-  v(3,1) = temp * v(3,1)
-  !
-  ! Calculate the barycentric coordinates and velocities
-  do j = 2, nbod
-     x(1,j) = xh(1,j) + x(1,1)
-     x(2,j) = xh(2,j) + x(2,1)
-     x(3,j) = xh(3,j) + x(3,1)
-     v(1,j) = vh(1,j) + v(1,1)
-     v(2,j) = vh(2,j) + v(2,1)
-     v(3,j) = vh(3,j) + v(3,1)
-  enddo
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine mco_h2b
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
