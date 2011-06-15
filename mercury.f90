@@ -921,7 +921,9 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      h = sign ( max( min( abs(tmp0), abs(h) ), tsmall), tmp0 )
      !
      ! Save the current coordinates and velocities
-     call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x0,v0,ngf,ngflag,opt)
+     x0(:,:) = xh(:,:)
+     v0(:,:) = vh(:,:)
+!~      call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x0,v0,ngf,ngflag,opt)
      !
      ! Advance one timestep
      call onestep (time,h,hdid,tol,jcen,nbod,nbig,m,xh,vh,s,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,mfo_all)
@@ -1163,7 +1165,9 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         !
         ! Save the current heliocentric coordinates and velocities
         if (algor.eq.1) then
-           call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
+          xh0(:,:) = x(:,:)
+          vh0(:,:) = v(:,:)
+!~            call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
         else
            call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag,opt)
         end if
@@ -1208,7 +1212,9 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         !
         ! Check for collisions with the central body
         if (algor.eq.1) then
-           call mco_iden(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+          xh(:,:) = x(:,:)
+          vh(:,:) = v(:,:)
+!~            call mco_iden(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
         else
            call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
         end if
@@ -1221,7 +1227,9 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            exit
         else 
            ! Redo that integration time step
-           call mco_iden (time,jcen,nbod,nbig,h0,m,xh0,vh0,xh,vh,ngf,ngflag,opt)
+           xh(:,:) = xh0(:,:)
+           vh(:,:) = vh0(:,:)
+!~            call mco_iden (time,jcen,nbod,nbig,h0,m,xh0,vh0,xh,vh,ngf,ngflag,opt)
            time = time - h0
            !
            ! Merge the object(s) with the central body
@@ -1237,7 +1245,9 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            dtflag = 1
            call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
            if (algor.eq.1) then
-              call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+              x(:,:) = xh(:,:)
+              v(:,:) = vh(:,:)
+!~               call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
            else
               call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
            end if
@@ -1276,7 +1286,9 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      !
      if (abs(time-tfun).ge.abs(dtfun).and.opflag.ge.-1) then
         if (algor.eq.1) then
-           call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
+           xh(:,:) = x(:,:)
+           vh(:,:) = v(:,:)
+!~            call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
         else
            call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag,opt)
         end if
@@ -1299,7 +1311,9 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            dtflag = 1
            call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile(2),0)
            if (algor.eq.1) then
-              call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
+              x(:,:) = xh(:,:)
+              v(:,:) = vh(:,:)
+!~               call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
            else
               call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag,opt)
            end if

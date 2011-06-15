@@ -382,8 +382,8 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   !
   ! Check for close-encounter minima during drift step
   temp = time + h0
-  call mce_stat (temp,h0,rcen,nbod,nbig,m,x0,v0,x,v,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,thit,&
-       thit1,nowflag,stat,outfile(3),mem,lmem)
+  call mce_stat (temp,h0,rcen,nbod,nbig,m,x0,v0,x,v,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
+       thit,thit1,nowflag,stat,outfile(3),mem,lmem)
   !
   ! Advance interaction Hamiltonian for H/2
   call mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
