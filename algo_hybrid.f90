@@ -115,7 +115,9 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
   end do
   !
   ! Save the current coordinates and velocities
-  call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag,opt)
+  x0(:,:) = x(:,:)
+  v0(:,:) = v(:,:)
+!~   call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag,opt)
   !
   ! Advance H_K for H
   do j = 2, nbod
@@ -277,7 +279,9 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
   if (abs(hlocal).gt.tmp0) hlocal = sign (tmp0, h0)
   !
   ! Save old coordinates and integrate
-  call mco_iden (time,jcen,nbs,0,h0,mbs,xbs,vbs,x0,v0,ngf,ngflag,opt)
+  x0(:,:) = xbs(:,:)
+  v0(:,:) = vbs(:,:)
+!~   call mco_iden (time,jcen,nbs,0,h0,mbs,xbs,vbs,x0,v0,ngf,ngflag,opt)
   call mdt_bs2 (time,hlocal,hdid,tol,jcen,nbs,nbsbig,mbs,xbs,vbs,sbs,rphybs,rcritbs,ngfbs,statbs,dtflag,ngflag,opt,nce,ibs,jbs,&
        force)
   tlocal = tlocal + hdid

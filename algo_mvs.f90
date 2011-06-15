@@ -364,7 +364,9 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   end do
   !
   ! Save current coordinates and velocities
-  call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag,opt)
+  x0(:,:) = x(:,:)
+  v0(:,:) = v(:,:)
+!~   call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag,opt)
   !
   ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
   call mco_h2j (time,jcen,nbig,nbig,h0,m,x,v,xj,vj,ngf,ngflag,opt)
@@ -386,7 +388,7 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   ! Advance interaction Hamiltonian for H/2
   call mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
-  if (ngflag.eq.1.or.ngflag.eq.3) call mfo_ngf (nbod,x,v,angf,ngf)
+  if ((ngflag.eq.1).or.(ngflag.eq.3)) call mfo_ngf (nbod,x,v,angf,ngf)
   !
   do j = 2, nbod
      v(1,j) = v(1,j)  +  hby2 * (angf(1,j) + ausr(1,j) + a(1,j))
