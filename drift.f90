@@ -430,6 +430,7 @@ subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
 
   use mercury_constant
   use types_numeriques
+  use utilities, only : mco_sine
 
   implicit none
 

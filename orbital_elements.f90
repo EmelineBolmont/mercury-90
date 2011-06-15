@@ -248,6 +248,7 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   use mercury_constant
   use types_numeriques
   use kepler_equation
+  use utilities, only : mco_sine
 
   implicit none
 
@@ -266,6 +267,12 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   g = p - n
   !
   ! Rotation factors
+!~   si = sin(i)
+!~   ci = cos(i)
+!~   sg = sin(g)
+!~   cg = cos(g)
+!~   sn = sin(n)
+!~   cn = cos(n)
   call mco_sine (i,si,ci)
   call mco_sine (g,sg,cg)
   call mco_sine (n,sn,cn)
@@ -287,6 +294,8 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   if (e.lt.1.d0) then
      romes = sqrt(1.d0 - e*e)
      temp = mco_kep (e,l)
+!~      se = sin(temp)
+!~      ce = cos(temp)
      call mco_sine (temp,se,ce)
      z1 = a * (ce - e)
      z2 = a * romes * se

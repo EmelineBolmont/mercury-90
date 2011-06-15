@@ -1500,55 +1500,6 @@ end subroutine mco_iden
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-!      MCO_SINE.FOR    (ErikSoft  17 April 1997)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Calculates sin and cos of an angle X (in radians).
-!
-!------------------------------------------------------------------------------
-!
-subroutine mco_sine (x,sx,cx)
-  !
-  use types_numeriques
-
-  implicit none
-
-  !
-  ! Input/Output
-  real(double_precision) :: x,sx,cx
-  !
-  ! Local
-  real(double_precision) :: pi,twopi
-  !
-  !------------------------------------------------------------------------------
-  !
-  pi = 3.141592653589793d0
-  twopi = 2.d0 * pi
-  !
-  if (x.gt.0) then
-     x = mod(x,twopi)
-  else
-     x = mod(x,twopi) + twopi
-  end if
-  !
-  cx = cos(x)
-  !
-  if (x.gt.pi) then
-     sx = -sqrt(1.d0 - cx*cx)
-  else
-     sx =  sqrt(1.d0 - cx*cx)
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine mco_sine
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
 !      MCO_SINH.FOR    (ErikSoft  12 June 1998)
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

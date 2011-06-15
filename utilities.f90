@@ -433,4 +433,53 @@ function arcosh (x)
   return
 end function arcosh
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      MCO_SINE.FOR    (ErikSoft  17 April 1997)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Calculates sin and cos of an angle X (in radians).
+!
+!------------------------------------------------------------------------------
+!
+subroutine mco_sine (x,sx,cx)
+  !
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  real(double_precision) :: x,sx,cx
+  !
+  ! Local
+  real(double_precision) :: pi,twopi
+  !
+  !------------------------------------------------------------------------------
+  !
+  pi = 3.141592653589793d0
+  twopi = 2.d0 * pi
+  ! TODO voir pourquoi les rÃ©sultats sont diffÃ©rents si je fais cos() et sin() au lieu d'un call Ã  cette routine.
+  if (x.gt.0) then
+     x = mod(x,twopi)
+  else
+     x = mod(x,twopi) + twopi
+  end if
+  !
+  cx = cos(x)
+  !
+  if (x.gt.pi) then
+     sx = -sqrt(1.d0 - cx*cx)
+  else
+     sx =  sqrt(1.d0 - cx*cx)
+  end if
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mco_sine
+
 end module utilities
