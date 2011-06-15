@@ -482,4 +482,47 @@ subroutine mco_sine (x,sx,cx)
   return
 end subroutine mco_sine
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      MCO_IDEN.FOR    (ErikSoft   2 November 2000)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Makes a new copy of a set of coordinates.
+!
+!------------------------------------------------------------------------------
+!
+subroutine mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
+  !
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  integer :: nbod,nbig,ngflag,opt(8)
+  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
+  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
+  !
+  ! Local
+  integer :: j
+  !
+  !------------------------------------------------------------------------------
+  !
+  do j = 1, nbod
+     x(1,j) = xh(1,j)
+     x(2,j) = xh(2,j)
+     x(3,j) = xh(3,j)
+     v(1,j) = vh(1,j)
+     v(2,j) = vh(2,j)
+     v(3,j) = vh(3,j)
+  enddo
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mco_iden
+
 end module utilities

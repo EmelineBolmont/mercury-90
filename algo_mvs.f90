@@ -64,7 +64,9 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
      ausr(2,j) = 0.d0
      ausr(3,j) = 0.d0
   end do
-  call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
+  x(:,:) = xh(:,:)
+  v(:,:) = vh(:,:)
+!~   call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
   ! Calculate effective central masses for Kepler drifts
   minside = m(1)
@@ -193,7 +195,9 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
      ausr(2,j) = 0.d0
      ausr(3,j) = 0.d0
   end do
-  call mco_iden (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
+  xh(:,:) = x(:,:)
+  vh(:,:) = v(:,:)
+!~   call mco_iden (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   !
   ! Calculate effective central masses for Kepler drifts
   minside = m(1)
