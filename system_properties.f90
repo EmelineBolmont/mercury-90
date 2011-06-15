@@ -6,6 +6,8 @@ module system_properties
 !** hill radii, if there are ejections and so on.
 !** Version 1.0 - june 2011
 !*************************************************************
+
+  private m_sfunc
   
   contains
 
@@ -224,7 +226,7 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   l(3) = 0.d0
   !
   ! Convert to barycentric coordinates and velocities
-  call mco_h2b(temp,jcen,nbod,nbig,temp,m,xh,vh,x,v,tmp2,iflag,itmp)
+  call mco_h2b(jcen,nbod,nbig,temp,m,xh,vh,x,v)
   !
   ! Do the spin angular momenta first (probably the smallest terms)
   do j = 1, nbod
@@ -324,7 +326,7 @@ subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
   !
   !------------------------------------------------------------------------------
   !
-  call mco_h2b(temp,jcen,nbod,nbig,temp,m,xh,vh,x,v,tmp2,iflag,itmp)
+  call mco_h2b(jcen,nbod,nbig,temp,m,xh,vh,x,v)
   dx = x(1,2) - x(1,1)
   dy = x(2,2) - x(2,1)
   dz = x(3,2) - x(3,1)
@@ -511,7 +513,7 @@ end subroutine mco_b2h
 !
 !------------------------------------------------------------------------------
 !
-subroutine mco_h2b (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
+subroutine mco_h2b (jcen,nbod,nbig,h,m,xh,vh,x,v)
   !
   use types_numeriques
 
@@ -519,9 +521,9 @@ subroutine mco_h2b (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
 
   !
   ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8)
-  real(double_precision) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
-  real(double_precision) :: v(3,nbod),ngf(4,nbod)
+  integer :: nbod,nbig
+  real(double_precision) :: jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
+  real(double_precision) :: v(3,nbod)
   !
   ! Local
   integer :: j
@@ -570,5 +572,176 @@ subroutine mco_h2b (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
   return
 end subroutine mco_h2b
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      MCO_H2CB.FOR    (ErikSoft   2 November 2000)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Convert coordinates with respect to the central body to close-binary
+! coordinates.
+!
+!------------------------------------------------------------------------------
+!
+subroutine mco_h2cb (jcen,nbod,nbig,h,m,xh,vh,x,v)
+  !
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  integer :: nbod,nbig
+  real(double_precision) :: jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod),v(3,nbod)
+  !
+  ! Local
+  integer :: j
+  real(double_precision) :: msum,mvsum(3),temp,mbin,mbin_1,mtot_1
+  !
+  !------------------------------------------------------------------------------
+  !
+  msum = 0.d0
+  mvsum(1) = 0.d0
+  mvsum(2) = 0.d0
+  mvsum(3) = 0.d0
+  mbin = m(1) + m(2)
+  mbin_1 = 1.d0 / mbin
+  !
+  x(1,2) = xh(1,2)
+  x(2,2) = xh(2,2)
+  x(3,2) = xh(3,2)
+  temp = m(1) * mbin_1
+  v(1,2) = temp * vh(1,2)
+  v(2,2) = temp * vh(2,2)
+  v(3,2) = temp * vh(3,2)
+  !
+  do j = 3, nbod
+     msum = msum + m(j)
+     mvsum(1) = mvsum(1)  +  m(j) * vh(1,j)
+     mvsum(2) = mvsum(2)  +  m(j) * vh(2,j)
+     mvsum(3) = mvsum(3)  +  m(j) * vh(3,j)
+  end do
+  mtot_1 = 1.d0 / (msum + mbin)
+  mvsum(1) = mtot_1 * (mvsum(1) + m(2)*vh(1,2))
+  mvsum(2) = mtot_1 * (mvsum(2) + m(2)*vh(2,2))
+  mvsum(3) = mtot_1 * (mvsum(3) + m(2)*vh(3,2))
+  !
+  temp = m(2) * mbin_1
+  do j = 3, nbod
+     x(1,j) = xh(1,j)  -  temp * xh(1,2)
+     x(2,j) = xh(2,j)  -  temp * xh(2,2)
+     x(3,j) = xh(3,j)  -  temp * xh(3,2)
+     v(1,j) = vh(1,j)  -  mvsum(1)
+     v(2,j) = vh(2,j)  -  mvsum(2)
+     v(3,j) = vh(3,j)  -  mvsum(3)
+  end do
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mco_h2cb
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      MCE_SPIN.FOR    (ErikSoft  2 December 1999)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Calculates the spin rate (in rotations per day) for a fluid body given
+! its mass, spin angular momentum and density. The routine assumes the
+! body is a MacClaurin ellipsoid, whose axis ratio is defined by the
+! quantity SS = SQRT(A^2/C^2 - 1), where A and C are the
+! major and minor axes.
+!
+!------------------------------------------------------------------------------
+!
+subroutine mce_spin (g,mass,spin,rho,rote)
+  !
+  use physical_constant
+  use mercury_constant
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  real(double_precision) :: g,mass,spin,rho,rote
+  !
+  ! Local
+  integer :: k
+  real(double_precision) :: ss,s2,f,df,z,dz,tmp0,tmp1,t23
+  !
+  !------------------------------------------------------------------------------
+  !
+  t23 = 2.d0 / 3.d0
+  tmp1 = spin * spin / (2.d0 * PI * rho * g)    * ( 250.d0*PI*PI*rho*rho / (9.d0*mass**5) )**t23
+  !
+  ! Calculate SS using Newton's method
+  ss = 1.d0
+  do k = 1, 20
+     s2 = ss * ss
+     tmp0 = (1.d0 + s2)**t23
+     call m_sfunc (ss,z,dz)
+     f = z * tmp0  -  tmp1
+     df = tmp0 * ( dz  +  4.d0 * ss * z / (3.d0*(1.d0 + s2)) )
+     ss = ss - f/df
+  end do
+  !
+  rote = sqrt(TWOPI * g * rho * z) / TWOPI
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mce_spin
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      M_SFUNC.FOR     (ErikSoft  14 November 1998)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Calculates Z = [ (3 + S^2)arctan(S) - 3S ] / S^3 and its derivative DZ,
+! for S > 0.
+!
+!------------------------------------------------------------------------------
+!
+subroutine m_sfunc (s,z,dz)
+  !
+  use types_numeriques
+
+  implicit none
+
+  !
+  ! Input/Output
+  real(double_precision) :: s, z, dz
+  !
+  ! Local
+  real(double_precision) :: s2,s4,s6,s8,a
+  !
+  !------------------------------------------------------------------------------
+  !
+  s2 = s * s
+  !
+  if (s.gt.1.d-2) then
+     a  = atan(s)
+     z  = ((3.d0 + s2)*a - 3.d0*s) / (s * s2)
+     dz = (2.d0*s*a - 3.d0 + (3.d0+s2)/(1.d0+s2)) / (s * s2) - 3.d0 * z / s
+  else
+     s4 = s2 * s2
+     s6 = s2 * s4
+     s8 = s4 * s4
+     z  = - .1616161616161616d0*s8   + .1904761904761905d0*s6   - .2285714285714286d0*s4   + .2666666666666667d0*s2
+     dz = s * (- 1.292929292929293d0*s6 + 1.142857142857143d0*s4 - 0.914285714285714d0*s2 + 0.533333333333333d0)
+  end if
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine m_sfunc
 
 end module system_properties

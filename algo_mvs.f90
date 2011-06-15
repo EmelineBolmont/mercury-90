@@ -11,7 +11,7 @@ module algo_mvs
   
   private
   
-  public :: mdt_mvs, mco_h2mvs, mco_mvs2h
+  public :: mdt_mvs, mco_h2mvs, mco_mvs2h, mco_h2j
   
   contains
 
@@ -79,7 +79,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   do k = 1, 2
      !
      ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
-     call mco_h2j (time,jcen,nbig,nbig,h,m,x,v,xj,vj,ngf,ngflag,opt)
+     call mco_h2j (jcen,nbig,nbig,h,m,x,v,xj,vj)
      do j = 2, nbig
         iflag = 0
         call drift_one (gm(j),xj(1,j),xj(2,j),xj(3,j),vj(1,j),vj(2,j),vj(3,j),ha(k),iflag)
@@ -104,7 +104,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
      end do
      !
      ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
-     call mco_h2j (time,jcen,nbig,nbig,h,m,x,v,xj,vj,ngf,ngflag,opt)
+     call mco_h2j (jcen,nbig,nbig,h,m,x,v,xj,vj)
      do j = 2, nbig
         iflag = 0
         call drift_one (gm(j),xj(1,j),xj(2,j),xj(3,j),vj(1,j),vj(2,j),vj(3,j),-2.d0*ha(k),iflag)
@@ -129,7 +129,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
      end do
      !
      ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
-     call mco_h2j (time,jcen,nbig,nbig,h,m,x,v,xj,vj,ngf,ngflag,opt)
+     call mco_h2j (jcen,nbig,nbig,h,m,x,v,xj,vj)
      do j = 2, nbig
         iflag = 0
         call drift_one (gm(j),xj(1,j),xj(2,j),xj(3,j),vj(1,j),vj(2,j),vj(3,j),ha(k),iflag)
@@ -211,7 +211,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   do k = 1, 2
      !
      ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
-     call mco_h2j(time,jcen,nbig,nbig,h,m,xh,vh,xj,vj,ngf,ngflag,opt)
+     call mco_h2j(jcen,nbig,nbig,h,m,xh,vh,xj,vj)
      do j = 2, nbig
         iflag = 0
         call drift_one (gm(j),xj(1,j),xj(2,j),xj(3,j),vj(1,j),vj(2,j),vj(3,j),ha(k),iflag)
@@ -236,7 +236,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
      end do
      !
      ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
-     call mco_h2j(time,jcen,nbig,nbig,h,m,xh,vh,xj,vj,ngf,ngflag,opt)
+     call mco_h2j(jcen,nbig,nbig,h,m,xh,vh,xj,vj)
      do j = 2, nbig
         iflag = 0
         call drift_one (gm(j),xj(1,j),xj(2,j),xj(3,j),vj(1,j),vj(2,j),vj(3,j),-2.d0*ha(k),iflag)
@@ -261,7 +261,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
      end do
      !
      ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
-     call mco_h2j(time,jcen,nbig,nbig,h,m,xh,vh,xj,vj,ngf,ngflag,opt)
+     call mco_h2j(jcen,nbig,nbig,h,m,xh,vh,xj,vj)
      do j = 2, nbig
         iflag = 0
         call drift_one (gm(j),xj(1,j),xj(2,j),xj(3,j),vj(1,j),vj(2,j),vj(3,j),ha(k),iflag)
@@ -336,7 +336,7 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   ! and also the Jacobi coordinates XJ, and effective central masses GM.
   if (dtflag.ne.2) then
      dtflag = 2
-     call mco_h2j (time,jcen,nbig,nbig,h0,m,x,v,xj,vj,ngf,ngflag,opt)
+     call mco_h2j (jcen,nbig,nbig,h0,m,x,v,xj,vj)
      call mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
      !
      minside = m(1)
@@ -369,7 +369,7 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
 !~   call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag,opt)
   !
   ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
-  call mco_h2j (time,jcen,nbig,nbig,h0,m,x,v,xj,vj,ngf,ngflag,opt)
+  call mco_h2j (jcen,nbig,nbig,h0,m,x,v,xj,vj)
   do j = 2, nbig
      iflag = 0
      call drift_one (gm(j),xj(1,j),xj(2,j),xj(3,j),vj(1,j),vj(2,j),vj(3,j),h0,iflag)
@@ -670,7 +670,7 @@ end subroutine mco_j2h
 !
 !------------------------------------------------------------------------------
 !
-subroutine mco_h2j (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
+subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
   !
   use types_numeriques
 
@@ -678,9 +678,9 @@ subroutine mco_h2j (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
 
   !
   ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8)
-  real(double_precision) :: time,jcen(3),h,m(nbig),xh(3,nbig),vh(3,nbig),x(3,nbig)
-  real(double_precision) :: v(3,nbig),ngf(4,nbod)
+  integer :: nbod,nbig
+  real(double_precision) :: jcen(3),h,m(nbig),xh(3,nbig),vh(3,nbig),x(3,nbig)
+  real(double_precision) :: v(3,nbig)
   !
   ! Local
   integer :: j

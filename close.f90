@@ -19,7 +19,6 @@ program close
   use mercury_constant
   use types_numeriques
   use ascii_conversion
-  use kepler_equation
   use orbital_elements
   use mercury_outputs
   use utilities
@@ -98,7 +97,7 @@ program close
   nopen = 0
   nwait = 0
   nmaster = 0
-  call get_ce_header (timestyle,fout,header,lenhead)
+  call get_clo_format (timestyle,fout,header,lenhead)
 60 continue
   read (10,'(a250)',end=70) string
   call mio_spl (250,string,nsub,lim)
@@ -331,7 +330,7 @@ end program close
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-!      get_ce_header.FOR    (ErikSoft  30 November 1999)
+!      get_clo_format.FOR    (ErikSoft  30 November 1999)
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
@@ -342,7 +341,7 @@ end program close
 !
 !------------------------------------------------------------------------------
 !
-subroutine get_ce_header (timestyle,fout,header,lenhead)
+subroutine get_clo_format (timestyle,fout,header,lenhead)
 
   implicit none
 
@@ -382,4 +381,4 @@ subroutine get_ce_header (timestyle,fout,header,lenhead)
   !------------------------------------------------------------------------------
   !
   return
-end subroutine get_ce_header
+end subroutine get_clo_format

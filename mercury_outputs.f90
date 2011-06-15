@@ -714,4 +714,75 @@ subroutine mio_clo (id,unitnum,header,lenhead,mem,lmem)
   return
 end subroutine mio_clo
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+!      MIO_AEI.FOR    (ErikSoft   31 January 2001)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Creates a filename and opens a file to store aei information for an object.
+! The filename is based on the name of the object.
+!
+!------------------------------------------------------------------------------
+!
+subroutine mio_aei (id,unitnum,header,lenhead,mem,lmem)
+  !
+  use physical_constant
+  use mercury_constant
+  use types_numeriques
+  use utilities, only : mio_spl
+
+  implicit none
+
+  !
+  ! Input/Output
+  integer :: unitnum,lenhead,lmem(NMESS)
+  character(len=4) :: extn = ".aei"
+  character*8 id
+  character*250 header
+  character*80 mem(NMESS)
+  !
+  ! Local
+  integer :: j,k,itmp,nsub,lim(2,4)
+  logical test
+  character*1 bad(5)
+  character*250 filename
+  !
+  !------------------------------------------------------------------------------
+  !
+  data bad/ '*', '/', '.', ':', '&'/
+  !
+  ! Create a filename based on the object's name
+  call mio_spl (8,id,nsub,lim)
+  itmp = min(7,lim(2,1)-lim(1,1))
+  filename(1:itmp+1) = id(1:itmp+1)
+  filename(itmp+2:itmp+5) = extn
+  do j = itmp + 6, 250
+     filename(j:j) = ' '
+  end do
+  !
+  ! Check for inappropriate characters in the filename
+  do j = 1, itmp + 1
+     do k = 1, 5
+        if (filename(j:j).eq.bad(k)) filename(j:j) = '_'
+     end do
+  end do
+  !
+  ! If the file exists already, give a warning and don't overwrite it
+  inquire (file=filename, exist=test)
+  if (test) then
+     write (*,'(/,3a)') mem(121)(1:lmem(121)),mem(87)(1:lmem(87)),filename(1:80)
+     unitnum = -1
+  else
+     open (unitnum, file=filename, status='new')
+     write (unitnum, '(/,30x,a8,//,a)') id,header(1:lenhead)
+  end if
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mio_aei
+
 end module mercury_outputs
