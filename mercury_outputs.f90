@@ -656,7 +656,7 @@ end subroutine mio_out
 !
 !------------------------------------------------------------------------------
 !
-subroutine mio_aei (id,extn,unitnum,header,lenhead,mem,lmem)
+subroutine mio_clo (id,unitnum,header,lenhead,mem,lmem)
   !
   use physical_constant
   use mercury_constant
@@ -668,7 +668,7 @@ subroutine mio_aei (id,extn,unitnum,header,lenhead,mem,lmem)
   !
   ! Input/Output
   integer :: unitnum,lenhead,lmem(NMESS)
-  character*4 extn
+  character(len=4) :: extn = ".clo"
   character*8 id
   character*250 header
   character*80 mem(NMESS)
@@ -712,6 +712,6 @@ subroutine mio_aei (id,extn,unitnum,header,lenhead,mem,lmem)
   !------------------------------------------------------------------------------
   !
   return
-end subroutine mio_aei
+end subroutine mio_clo
 
 end module mercury_outputs

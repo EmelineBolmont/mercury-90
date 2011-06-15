@@ -98,7 +98,7 @@ program close
   nopen = 0
   nwait = 0
   nmaster = 0
-  call m_formce (timestyle,fout,header,lenhead)
+  call get_ce_header (timestyle,fout,header,lenhead)
 60 continue
   read (10,'(a250)',end=70) string
   call mio_spl (250,string,nsub,lim)
@@ -112,7 +112,7 @@ program close
   if (nopen.lt.NFILES) then
      nopen = nopen + 1
      master_unit(nmaster) = 10 + nopen
-     call mio_aei (master_id(nmaster),'.clo',master_unit(nmaster),  header,lenhead,mem,lmem)
+     call mio_clo (master_id(nmaster),master_unit(nmaster),  header,lenhead,mem,lmem)
   else
      nwait = nwait + 1
      master_unit(nmaster) = -2
@@ -208,7 +208,7 @@ program close
                  if (nopen.lt.NFILES) then
                     nopen = nopen + 1
                     master_unit(nmaster) = 10 + nopen
-                    call mio_aei (master_id(nmaster),'.clo',master_unit(nmaster),header,lenhead,mem,lmem)
+                    call mio_clo (master_id(nmaster),master_unit(nmaster),header,lenhead,mem,lmem)
                  else
                     nwait = nwait + 1
                     master_unit(nmaster) = -2
@@ -320,7 +320,7 @@ program close
            nopen = nopen + 1
            nwait = nwait - 1
            master_unit(j) = 10 + nopen
-           call mio_aei (master_id(j),'.clo',master_unit(j),header,lenhead,mem,lmem)
+           call mio_clo (master_id(j),master_unit(j),header,lenhead,mem,lmem)
         end if
      end do
      goto 90
@@ -331,124 +331,55 @@ end program close
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-!      M_FORMCE.FOR    (ErikSoft  30 November 1999)
+!      get_ce_header.FOR    (ErikSoft  30 November 1999)
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
 ! Author: John E. Chambers
 !
+! This routine gives the header of the output .clo file regarding the timestyle used.
+! The len of the header, and the output format is also returned.
 !
 !------------------------------------------------------------------------------
 !
-subroutine m_formce (timestyle,fout,header,lenhead)
-  !
-  use types_numeriques
+subroutine get_ce_header (timestyle,fout,header,lenhead)
 
   implicit none
 
   !
-  ! Input/Output
-  integer :: timestyle,lenhead
-  character*250 fout,header
+  ! Input
+  integer,intent(in) :: timestyle
+  
+  ! Output
+  integer,intent(out) :: lenhead ! length of the header
+  character(len=250), intent(out) :: fout,& ! The output format for the .clo file
+                                     header ! The header of the .clo file
   !
   !------------------------------------------------------------------------------
   !
-  if (timestyle.eq.0.or.timestyle.eq.2) then
-     header(1:19) = '    Time (days)    '
-     header(20:58) = '  Object   dmin (AU)     a1       e1    '
-     header(59:90) = '   i1       a2       e2       i2'
-     lenhead = 90
-     fout = '(1x,f18.5,1x,a8,1x,f10.8,2(1x,f9.4,1x,f8.6,1x,f7.3))'
-  else
-     if (timestyle.eq.1) then
-        header(1:23) = '     Year/Month/Day    '
-        header(24:62) = '  Object   dmin (AU)     a1       e1    '
-        header(63:94) = '   i1       a2       e2       i2'
-        lenhead = 94
-        fout(1:37) = '(1x,i10,1x,i2,1x,f8.5,1x,a8,1x,f10.8,'
-        fout(38:64) = '2(1x,f9.4,1x,f8.6,1x,f7.3))'
-     else
-        header(1:19) = '    Time (years)   '
-        header(20:58) = '  Object   dmin (AU)     a1       e1    '
-        header(59:90) = '   i1       a2       e2       i2'
-        fout = '(1x,f18.7,1x,a8,1x,f10.8,2(1x,f9.4,1x,f8.6,1x,f7.3))'
-        lenhead = 90
-     end if
-  end if
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine m_formce
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MCO_SINH.FOR    (ErikSoft  12 June 1998)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Calculates sinh and cosh of an angle X (in radians)
-!
-!------------------------------------------------------------------------------
-!
-subroutine mco_sinh (x,sx,cx)
-  !
-  use types_numeriques
-
-  implicit none
-
-  !
-  ! Input/Output
-  real(double_precision) :: x,sx,cx
-  !
-  !------------------------------------------------------------------------------
-  !
-  sx = sinh(x)
-  cx = sqrt (1.d0 + sx*sx)
+  select case (timestyle)
+    case (0,2)
+      header(1:19) = '    Time (days)    '
+      header(20:58) = '  Object   dmin (AU)     a1       e1    '
+      header(59:90) = '   i1       a2       e2       i2'
+      lenhead = 90
+      fout = '(1x,f18.5,1x,a8,1x,f10.8,2(1x,f9.4,1x,f8.6,1x,f7.3))'
+    case (1)
+      header(1:23) = '     Year/Month/Day    '
+      header(24:62) = '  Object   dmin (AU)     a1       e1    '
+      header(63:94) = '   i1       a2       e2       i2'
+      lenhead = 94
+      fout(1:37) = '(1x,i10,1x,i2,1x,f8.5,1x,a8,1x,f10.8,'
+      fout(38:64) = '2(1x,f9.4,1x,f8.6,1x,f7.3))'
+    case default
+      header(1:19) = '    Time (years)   '
+      header(20:58) = '  Object   dmin (AU)     a1       e1    '
+      header(59:90) = '   i1       a2       e2       i2'
+      fout = '(1x,f18.7,1x,a8,1x,f10.8,2(1x,f9.4,1x,f8.6,1x,f7.3))'
+      lenhead = 90
+  end select
   !
   !------------------------------------------------------------------------------
   !
   return
-end subroutine mco_sinh
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MCO_IDEN.FOR    (ErikSoft   2 November 2000)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Makes a new copy of a set of coordinates.
-!
-!------------------------------------------------------------------------------
-!
-subroutine mco_iden (jcen,nbod,nbig,h,m,xh,vh,x,v)
-  !
-  use types_numeriques
-
-  implicit none
-
-  !
-  ! Input/Output
-  integer :: nbod,nbig
-  real(double_precision) :: jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod),vh(3,nbod)
-  !
-  ! Local
-  integer :: j
-  !
-  !------------------------------------------------------------------------------
-  !
-  do j = 1, nbod
-     x(1,j) = xh(1,j)
-     x(2,j) = xh(2,j)
-     x(3,j) = xh(3,j)
-     v(1,j) = vh(1,j)
-     v(2,j) = vh(2,j)
-     v(3,j) = vh(3,j)
-  enddo
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine mco_iden
+end subroutine get_ce_header
