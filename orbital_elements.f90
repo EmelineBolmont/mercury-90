@@ -314,7 +314,9 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
         ! Hyperbola
         romes = sqrt(e*e - 1.d0)
         temp = orbel_fhybrid(e,l)
-        call mco_sinh (temp,se,ce)
+        se = sinh(temp)
+        ce = cosh(temp)
+!~         call mco_sinh (temp,se,ce)
         z1 = a * (ce - e)
         z2 = -a * romes * se
         temp = sqrt(gm/abs(a)) / (e*ce - 1.d0)

@@ -1497,35 +1497,5 @@ subroutine mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
   return
 end subroutine mco_iden
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MCO_SINH.FOR    (ErikSoft  12 June 1998)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Calculates sinh and cosh of an angle X (in radians)
-!
-!------------------------------------------------------------------------------
-!
-subroutine mco_sinh (x,sx,cx)
-  !
-  use types_numeriques
-
-  implicit none
-
-  !
-  ! Input/Output
-  real(double_precision) :: x,sx,cx
-  !
-  !------------------------------------------------------------------------------
-  !
-  sx = sinh(x)
-  cx = sqrt (1.d0 + sx*sx)
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine mco_sinh
 
 

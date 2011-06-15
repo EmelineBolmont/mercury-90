@@ -327,7 +327,9 @@ real*8 function orbel_fget(e,capn)
   orbel_fget = x
 
   do i = 1,IMAX
-     call mco_sinh (x,shx,chx)
+    shx = sinh(x)
+    chx = cosh(x)
+!~      call mco_sinh (x,shx,chx)
      esh = e*shx
      ech = e*chx
      f = esh - x - capn
