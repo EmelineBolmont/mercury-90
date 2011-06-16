@@ -41,6 +41,7 @@ program close
   character*8 master_id(NMAX),id(NMAX)
   character*5 fin
   character*1 check,style,type,c1
+  integer :: error
   
   !------------------------------------------------------------------------------
   
@@ -53,10 +54,11 @@ program close
      stop
   end if
   open (14, file='message.in', status='old')
-10 continue
-  read (14,'(i3,1x,i2,1x,a80)',end=20) j,lmem(j),mem(j)
-  goto 10
-20 close (14)
+  do
+     read (14,'(i3,1x,i2,1x,a80)', iostat=error) j,lmem(j),mem(j)
+     if (error /= 0) exit
+  end do
+  close (14)
   
   ! Open file containing parameters for this programme
   inquire (file='close.in', exist=test)
