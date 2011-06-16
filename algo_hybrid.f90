@@ -7,6 +7,7 @@ module algo_hybrid
 !** Version 1.0 - june 2011
 !*************************************************************
   use types_numeriques
+  use mercury_globals
   use user_module
   use forces, only : mfo_ngf
   
@@ -36,7 +37,7 @@ module algo_hybrid
 
 !------------------------------------------------------------------------------
 
-subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,&
+subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,dtflag,ngflag,&
      opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
   
   use physical_constant
@@ -48,7 +49,7 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),algor,opt(8),dtflag,ngflag,opflag
+  integer :: nbod,nbig,stat(nbod),algor,dtflag,ngflag,opflag
   integer :: colflag,lmem(NMESS),nclo,iclo(CMAX),jclo(CMAX)
   real(double_precision) :: time,tstart,h0,tol,rmax,en(3),am(3),jcen(3),rcen
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
@@ -117,7 +118,7 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
   ! Save the current coordinates and velocities
   x0(:,:) = x(:,:)
   v0(:,:) = v(:,:)
-!~   call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag,opt)
+!~   call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag)
   
   ! Advance H_K for H
   do j = 2, nbod
@@ -140,7 +141,7 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
            v(3,j) = v0(3,j)
         end if
      end do
-     call mdt_hkce (time,tstart,h0,hrec,tol,rmax,en(3),jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,ngflag,&
+     call mdt_hkce (time,tstart,h0,hrec,tol,rmax,en(3),jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,ngflag,&
           colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem,mfo_hkce)
   end if
   
@@ -193,7 +194,7 @@ end subroutine mdt_hy
 
 !------------------------------------------------------------------------------
 
-subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcrit,rce,stat,id,ngf,algor,opt,ngflag,&
+subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcrit,rce,stat,id,ngf,algor,ngflag,&
      colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem,force)
   
   use physical_constant
@@ -206,7 +207,7 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
   
   ! Input/Output
   integer :: nbod,nbig,nce,ice(nce),jce(nce),stat(nbod),ngflag,ce(nbod)
-  integer :: algor,opt(8),colflag,lmem(NMESS),nclo,iclo(CMAX)
+  integer :: algor,colflag,lmem(NMESS),nclo,iclo(CMAX)
   integer :: jclo(CMAX)
   real(double_precision) :: time,tstart,h0,hrec,tol,rmax,elost,jcen(3),rcen
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
@@ -280,8 +281,8 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
   ! Save old coordinates and integrate
   x0(:,:) = xbs(:,:)
   v0(:,:) = vbs(:,:)
-!~   call mco_iden (time,jcen,nbs,0,h0,mbs,xbs,vbs,x0,v0,ngf,ngflag,opt)
-  call mdt_bs2 (time,hlocal,hdid,tol,jcen,nbs,nbsbig,mbs,xbs,vbs,sbs,rphybs,rcritbs,ngfbs,statbs,dtflag,ngflag,opt,nce,ibs,jbs,&
+!~   call mco_iden (time,jcen,nbs,0,h0,mbs,xbs,vbs,x0,v0,ngf,ngflag)
+  call mdt_bs2 (time,hlocal,hdid,tol,jcen,nbs,nbsbig,mbs,xbs,vbs,sbs,rphybs,rcritbs,ngfbs,statbs,dtflag,ngflag,nce,ibs,jbs,&
        force)
   tlocal = tlocal + hdid
   
@@ -297,7 +298,7 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
         if (chit(k).eq.1) then
            i = ihit(k)
            j = jhit(k)
-           call mce_coll (thit(k),tstart,elost,jcen,i,j,nbs,nbsbig,mbs,xbs,vbs,sbs,rphybs,statbs,idbs,opt,mem,lmem,outfile(3))
+           call mce_coll (thit(k),tstart,elost,jcen,i,j,nbs,nbsbig,mbs,xbs,vbs,sbs,rphybs,statbs,idbs,mem,lmem,outfile(3))
            colflag = colflag + 1
         end if
      end do
@@ -344,14 +345,14 @@ end subroutine mdt_hkce
 
 !------------------------------------------------------------------------------
 
-subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
+subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   
 
   implicit none
 
   
   ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8)
+  integer :: nbod,nbig,ngflag
   real(double_precision) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
   real(double_precision) :: v(3,nbod),ngf(4,nbod)
   
@@ -406,14 +407,14 @@ end subroutine mco_h2dh
 
 !------------------------------------------------------------------------------
 
-subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
+subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
 
   implicit none
 
   
   ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8)
+  integer :: nbod,nbig,ngflag
   real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
   real(double_precision) :: vh(3,nbod),ngf(4,nbod)
   
@@ -467,7 +468,7 @@ end subroutine mco_dh2h
 
 !------------------------------------------------------------------------------
 
-subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
   
   use physical_constant
   use mercury_constant
@@ -476,7 +477,7 @@ subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,opt,
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),ngflag,opt(8),nce,ice(nce),jce(nce)
+  integer :: nbod,nbig,stat(nbod),ngflag,nce,ice(nce),jce(nce)
   real(double_precision) :: time,jcen(3),rcrit(nbod),ngf(4,nbod),m(nbod)
   real(double_precision) :: x(3,nbod),v(3,nbod),a(3,nbod),spin(3,nbod)
   

@@ -36,18 +36,18 @@ module algo_bs2
 
 !------------------------------------------------------------------------------
 
-subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,force)
+subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,nce,ice,jce,force)
   use physical_constant
   use mercury_constant
 
   implicit none
 
   
-  real(double_precision) :: SHRINK,GROW
-  parameter (SHRINK=.55d0,GROW=1.3d0)
+  real(double_precision), parameter :: SHRINK = .55d0,&
+                                       GROW = 1.3d0
   
   ! Input/Output
-  integer :: nbod, nbig, opt(8), stat(nbod), dtflag, ngflag
+  integer :: nbod, nbig, stat(nbod), dtflag, ngflag
   real(double_precision) :: time,h0,hdid,tol,jcen(3),mass(nbod),x0(3,nbod),v0(3,nbod)
   real(double_precision) :: s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
   integer :: nce,ice(nce),jce(nce)
@@ -73,7 +73,7 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   end do
   
   ! Calculate accelerations at the start of the step
-  call force (time,jcen,nbod,nbig,mass,x0,v0,s,rcrit,a0,stat,ngf,ngflag,opt,nce,ice,jce)
+  call force (time,jcen,nbod,nbig,mass,x0,v0,s,rcrit,a0,stat,ngf,ngflag,nce,ice,jce)
   
   do
      
@@ -97,7 +97,7 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
         end do
         
         do j = 2, n
-           call force (time,jcen,nbod,nbig,mass,xend,v0,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+           call force (time,jcen,nbod,nbig,mass,xend,v0,s,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
            tmp0 = h * dble(j)
            do k = 2, nbod
               b(1,k) = b(1,k) + a(1,k)
@@ -112,7 +112,7 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
            end do
         end do
         
-        call force (time,jcen,nbod,nbig,mass,xend,v0,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+        call force (time,jcen,nbod,nbig,mass,xend,v0,s,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
         
         do k = 2, nbod
            d(1,k,n) = xend(1,k)

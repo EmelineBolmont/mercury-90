@@ -8,6 +8,7 @@ module dynamic
 !*************************************************************
   use types_numeriques
   use utilities
+  use mercury_globals
   
   contains
 
@@ -143,7 +144,7 @@ end subroutine mce_cent
 
 !------------------------------------------------------------------------------
 
-subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,opt,mem,lmem,outfile)
+subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,mem,lmem,outfile)
   
   use physical_constant
   use mercury_constant
@@ -152,7 +153,7 @@ subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,i
 
   
   ! Input/Output
-  integer :: i,j,nbod,nbig,stat(nbod),opt(8),lmem(NMESS)
+  integer :: i,j,nbod,nbig,stat(nbod),lmem(NMESS)
   real(double_precision) :: time,tstart,elost,jcen(3)
   real(double_precision) :: m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),rphys(nbod)
   character*80 outfile,mem(NMESS)

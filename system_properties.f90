@@ -7,6 +7,7 @@ module system_properties
 !** Version 1.0 - june 2011
 !*************************************************************
   use types_numeriques
+  use mercury_globals
 
   private m_sfunc
   
@@ -92,7 +93,7 @@ end subroutine mce_hill
 
 !------------------------------------------------------------------------------
 
-subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcrit,id,opt,outfile,rcritflag)
+subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcrit,id,outfile,rcritflag)
   
   use physical_constant
   use mercury_constant
@@ -105,7 +106,7 @@ subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,r
   parameter (N2=.4d0,THIRD=.3333333333333333d0)
   
   ! Input/Output
-  integer :: nbod,nbig,algor,opt(8),rcritflag
+  integer :: nbod,nbig,algor,rcritflag
   real(double_precision) :: tstart,h,jcen(3),rcen,rmax,cefac,m(nbod),x(3,nbod)
   real(double_precision) :: v(3,nbod),s(3,nbod),rho(nbod),rceh(nbod),rphys(nbod)
   real(double_precision) :: rce(nbod),rcrit(nbod)
@@ -370,7 +371,7 @@ end subroutine mxx_jac
 
 !------------------------------------------------------------------------------
 
-subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,opt,ejflag,outfile,mem,lmem)
+subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile,mem,lmem)
   
   use physical_constant
   use mercury_constant
@@ -380,7 +381,7 @@ subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,op
 
   
   ! Input/Output
-  integer :: i0, nbod, nbig, stat(nbod), opt(8), ejflag, lmem(NMESS)
+  integer :: i0, nbod, nbig, stat(nbod), ejflag, lmem(NMESS)
   real(double_precision) :: time, tstart, rmax, en(3), am(3), jcen(3)
   real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
   character*80 outfile, mem(NMESS)
@@ -465,14 +466,14 @@ end subroutine mxx_ejec
 
 !------------------------------------------------------------------------------
 
-subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
+subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
 
   implicit none
 
   
   ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8)
+  integer :: nbod,nbig,ngflag
   real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
   real(double_precision) :: vh(3,nbod),ngf(4,nbod)
   
@@ -651,12 +652,12 @@ end subroutine mco_h2cb
 
 !------------------------------------------------------------------------------
 
-subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag,opt)
+subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag)
   implicit none
 
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig,ngflag,opt(8)
+  integer,intent(in) :: nbod,nbig,ngflag
   real(double_precision),intent(in) :: time,jcen(3),h,m(nbod),x_in(3,nbod),v_in(3,nbod),ngf(4,nbod)
 
   real(double_precision), intent(out) ::x_out(3,nbod),v_out(3,nbod)

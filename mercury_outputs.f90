@@ -6,6 +6,7 @@ module mercury_outputs
 !** Version 1.0 - june 2011
 !*************************************************************
   use types_numeriques
+  use mercury_globals
 
   contains
 
@@ -37,7 +38,7 @@ module mercury_outputs
 
 !------------------------------------------------------------------------------
 
-subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,&
+subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,&
      outfile,nstored,ceflush)
   
   use physical_constant
@@ -50,7 +51,7 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,
 
   
   ! Input/Output
-  integer :: nbod,nbig,opt(8),stat(nbod),lmem(NMESS),stopflag
+  integer :: nbod,nbig,stat(nbod),lmem(NMESS),stopflag
   integer :: nclo,iclo(nclo),jclo(nclo),nstored,ceflush
   real(double_precision) :: time,tstart,rcen,rmax,m(nbod),tclo(nclo),dclo(nclo)
   real(double_precision) :: ixvclo(6,nclo),jxvclo(6,nclo)
@@ -115,7 +116,7 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,
   
   ! If new encounter minima have occurred, decide whether to stop integration
   stopflag = 0
-  if (opt(1).eq.1.and.nclo.gt.0) then
+  if ((opt(1).eq.1).and.(nclo.gt.0)) then
      open (23, file=outfile(3), status='old', access='append',iostat=error)
      if (error /= 0) then
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
@@ -165,7 +166,7 @@ end subroutine mio_ce
 !------------------------------------------------------------------------------
 
 subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,&
-     ngf,epoch,opt,opflag,dumpfile,mem,lmem)
+     ngf,epoch,opflag,dumpfile,mem,lmem)
   
   use physical_constant
   use mercury_constant
@@ -174,7 +175,7 @@ subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
 
   
   ! Input/Output
-  integer :: algor,nbod,nbig,stat(nbod),opt(8),opflag,ndump,nfun
+  integer :: algor,nbod,nbig,stat(nbod),opflag,ndump,nfun
   integer :: lmem(NMESS)
   real(double_precision) :: time,tstart,tstop,dtout,h0,tol,rmax,en(3),am(3)
   real(double_precision) :: jcen(3),rcen,cefac,m(nbod),x(3,nbod),v(3,nbod)
@@ -320,12 +321,12 @@ subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         write (33,'(2a)') mem(167)(1:lmem(167)),mem(6)(1:lmem(6))
         write (33,'(2a)') mem(168)(1:lmem(168)),mem(5)(1:lmem(5))
      end if
-     if (opt(3).eq.0.or.opt(3).eq.2) then
+     if ((opt(3).eq.0).or.(opt(3).eq.2)) then
         write (33,'(2a)') mem(169)(1:lmem(169)),mem(1)(1:lmem(1))
      else
         write (33,'(2a)') mem(169)(1:lmem(169)),mem(2)(1:lmem(2))
      end if
-     if (opt(3).eq.2.or.opt(3).eq.3) then
+     if ((opt(3).eq.2).or.(opt(3).eq.3)) then
         write (33,'(2a)') mem(170)(1:lmem(170)),mem(6)(1:lmem(6))
      else
         write (33,'(2a)') mem(170)(1:lmem(170)),mem(5)(1:lmem(5))
@@ -435,7 +436,7 @@ end subroutine mio_err
 
 !------------------------------------------------------------------------------
 
-subroutine mio_log (time,tstart,en,am,opt,mem,lmem)
+subroutine mio_log (time,tstart,en,am,mem,lmem)
   
   use physical_constant
   use mercury_constant
@@ -445,7 +446,7 @@ subroutine mio_log (time,tstart,en,am,opt,mem,lmem)
 
   
   ! Input/Output
-  integer :: lmem(NMESS), opt(8)
+  integer :: lmem(NMESS)
   real(double_precision) :: time, tstart, en(3), am(3)
   character*80 mem(NMESS)
   
@@ -516,7 +517,7 @@ end subroutine mio_log
 
 !------------------------------------------------------------------------------
 
-subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opflag,algor,outfile)
+subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,algor,outfile)
   
   use physical_constant
   use mercury_constant
@@ -527,7 +528,7 @@ subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opfl
 
   
   ! Input/Output
-  integer :: nbod, nbig, stat(nbod), opt(8), opflag, algor
+  integer :: nbod, nbig, stat(nbod), opflag, algor
   real(double_precision) :: time,jcen(3),rcen,rmax,m(nbod),xh(3,nbod),vh(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod)
   character*80 outfile

@@ -62,7 +62,7 @@ real(double_precision), dimension(7), parameter :: vc = (/.5d0,.3333333333333333
 
 !------------------------------------------------------------------------------
 
-subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,force)
+subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,ngf,stat,dtflag,ngflag,nce,ice,jce,force)
   
   use physical_constant
   use mercury_constant
@@ -71,7 +71,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
 
   
   ! Input/Output
-  integer :: nbod,nbig,dtflag,ngflag,opt(8),stat(nbod)
+  integer :: nbod,nbig,dtflag,ngflag,stat(nbod)
   integer :: nce,ice(nce),jce(nce)
   real(double_precision) :: time,t,tdid,tol,jcen(3),mass(nbod)
   real(double_precision) :: x1(3*nbod),v1(3*nbod),spin(3*nbod)
@@ -139,7 +139,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   end if
   
   ! Calculate forces at the start of the sequence
-  call force (time,jcen,nbod,nbig,mass,x1,v1,spin,rcrit,a1,stat,ngf,ngflag,opt,nce,ice,jce)
+  call force (time,jcen,nbod,nbig,mass,x1,v1,spin,rcrit,a1,stat,ngf,ngflag,nce,ice,jce)
   
   ! Find G values from B values predicted at the last call (Eqs. 7 of Everhart)
   do k = 4, nv
@@ -196,7 +196,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
         end if
         
         ! Calculate forces at the current substep
-        call force (time,jcen,nbod,nbig,mass,x,v,spin,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+        call force (time,jcen,nbod,nbig,mass,x,v,spin,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
         
         ! Update G values using Eqs. 4 of Everhart, and update B values using Eqs. 5
         select case (j)

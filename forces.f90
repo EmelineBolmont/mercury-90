@@ -6,6 +6,7 @@ module forces
 !** Version 1.0 - june 2011
 !*************************************************************
   use types_numeriques
+  use mercury_globals
 
   private
   
@@ -33,7 +34,7 @@ module forces
 
 !------------------------------------------------------------------------------
 
-subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
   
   use physical_constant
   use mercury_constant
@@ -43,7 +44,7 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,
 
   
   ! Input/Output
-  integer :: nbod,nbig,ngflag,stat(nbod),opt(8),nce,ice(nce),jce(nce)
+  integer :: nbod,nbig,ngflag,stat(nbod),nce,ice(nce),jce(nce)
   real(double_precision) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
   real(double_precision) :: a(3,nbod),ngf(4,nbod),rcrit(nbod)
   

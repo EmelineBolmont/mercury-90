@@ -32,7 +32,7 @@ module algo_bs1
 
 !------------------------------------------------------------------------------
 
-subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,force)
+subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,nce,ice,jce,force)
   use physical_constant
   use mercury_constant
 
@@ -43,7 +43,7 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   parameter (SHRINK=.55d0,GROW=1.3d0)
   
   ! Input/Output
-  integer :: nbod, nbig, opt(8), stat(nbod), dtflag, ngflag
+  integer :: nbod, nbig, stat(nbod), dtflag, ngflag
   integer :: nce, ice(nce), jce(nce)
   real(double_precision) :: time,h0,hdid,tol,jcen(3),mass(nbod),x0(3,nbod),v0(3,nbod)
   real(double_precision) :: s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
@@ -69,7 +69,7 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   end do
   
   ! Calculate accelerations at the start of the step
-  call force (time,jcen,nbod,nbig,mass,x0,v0,s,rcrit,a0,stat,ngf,ngflag,opt,nce,ice,jce)
+  call force (time,jcen,nbod,nbig,mass,x0,v0,s,rcrit,a0,stat,ngf,ngflag,nce,ice,jce)
   
   do
      
@@ -87,7 +87,7 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
            v(2,k) = v0(2,k) + h*a0(2,k)
            v(3,k) = v0(3,k) + h*a0(3,k)
         end do
-        call force (time,jcen,nbod,nbig,mass,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+        call force (time,jcen,nbod,nbig,mass,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
         do k = 2, nbod
            xend(1,k) = x0(1,k) + hx2*v(1,k)
            xend(2,k) = x0(2,k) + hx2*v(2,k)
@@ -98,7 +98,7 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
         end do
         
         do j = 2, n
-           call force (time,jcen,nbod,nbig,mass,xend,vend,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+           call force (time,jcen,nbod,nbig,mass,xend,vend,s,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
            do k = 2, nbod
               x(1,k) = x(1,k) + hx2*vend(1,k)
               x(2,k) = x(2,k) + hx2*vend(2,k)
@@ -107,7 +107,7 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
               v(2,k) = v(2,k) + hx2*a(2,k)
               v(3,k) = v(3,k) + hx2*a(3,k)
            end do
-           call force (time,jcen,nbod,nbig,mass,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+           call force (time,jcen,nbod,nbig,mass,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
            do k = 2, nbod
               xend(1,k) = xend(1,k) + hx2*v(1,k)
               xend(2,k) = xend(2,k) + hx2*v(2,k)
@@ -118,7 +118,7 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
            end do
         end do
         
-        call force (time,jcen,nbod,nbig,mass,xend,vend,s,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
+        call force (time,jcen,nbod,nbig,mass,xend,vend,s,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
         
         do k = 2, nbod
            d(1,k,n) = .5d0*(xend(1,k) + x(1,k) + h*vend(1,k))

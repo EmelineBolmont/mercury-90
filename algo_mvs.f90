@@ -7,6 +7,7 @@ module algo_mvs
 !** Version 1.0 - june 2011
 !*************************************************************
   use types_numeriques
+  use mercury_globals
   use user_module
   use forces, only : mfo_ngf
   
@@ -30,7 +31,7 @@ module algo_mvs
 
 !------------------------------------------------------------------------------
 
-subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
+subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   
   use physical_constant
   use mercury_constant
@@ -40,7 +41,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
 
   
   ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8)
+  integer :: nbod,nbig,ngflag
   real(double_precision) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
   real(double_precision) :: v(3,nbod),ngf(4,nbod)
   
@@ -66,7 +67,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   end do
   x(:,:) = xh(:,:)
   v(:,:) = vh(:,:)
-!~   call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
+!~   call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   
   ! Calculate effective central masses for Kepler drifts
   minside = m(1)
@@ -90,7 +91,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
      end do
      
      ! Advance Interaction Hamiltonian
-     call mco_j2h (time,jcen,nbig,nbig,h,m,xj,vj,x,v,ngf,ngflag,opt)
+     call mco_j2h (time,jcen,nbig,nbig,h,m,xj,vj,x,v,ngf,ngflag)
      call mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
      
      ! If required, apply non-gravitational and user-defined forces
@@ -115,7 +116,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
      end do
      
      ! Advance Interaction Hamiltonian
-     call mco_j2h (time,jcen,nbig,nbig,h,m,xj,vj,x,v,ngf,ngflag,opt)
+     call mco_j2h (time,jcen,nbig,nbig,h,m,xj,vj,x,v,ngf,ngflag)
      call mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
      
      ! If required, apply non-gravitational and user-defined forces
@@ -138,7 +139,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
         iflag = 0
         call drift_one (m(1),x(1,j),x(2,j),x(3,j),v(1,j),v(2,j),v(3,j),ha(k),iflag)
      end do
-     call mco_j2h (time,jcen,nbig,nbig,h,m,xj,vj,x,v,ngf,ngflag,opt)
+     call mco_j2h (time,jcen,nbig,nbig,h,m,xj,vj,x,v,ngf,ngflag)
   end do
   
   !------------------------------------------------------------------------------
@@ -160,7 +161,7 @@ end subroutine mco_h2mvs
 
 !------------------------------------------------------------------------------
 
-subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
+subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
   use physical_constant
   use mercury_constant
@@ -170,7 +171,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
 
   
   ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8)
+  integer :: nbod,nbig,ngflag
   real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
   real(double_precision) :: vh(3,nbod),ngf(4,nbod)
   
@@ -196,7 +197,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   end do
   xh(:,:) = x(:,:)
   vh(:,:) = v(:,:)
-!~   call mco_iden (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
+!~   call mco_iden (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
   ! Calculate effective central masses for Kepler drifts
   minside = m(1)
@@ -221,7 +222,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
      end do
      
      ! Advance Interaction Hamiltonian
-     call mco_j2h(time,jcen,nbig,nbig,h,m,xj,vj,xh,vh,ngf,ngflag,opt)
+     call mco_j2h(time,jcen,nbig,nbig,h,m,xj,vj,xh,vh,ngf,ngflag)
      call mfo_mvs (jcen,nbod,nbig,m,xh,xj,a,stat)
      
      ! If required, apply non-gravitational and user-defined forces
@@ -246,7 +247,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
      end do
      
      ! Advance Interaction Hamiltonian
-     call mco_j2h(time,jcen,nbig,nbig,h,m,xj,vj,xh,vh,ngf,ngflag,opt)
+     call mco_j2h(time,jcen,nbig,nbig,h,m,xj,vj,xh,vh,ngf,ngflag)
      call mfo_mvs (jcen,nbod,nbig,m,xh,xj,a,stat)
      
      ! If required, apply non-gravitational and user-defined forces
@@ -269,7 +270,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
         iflag = 0
         call drift_one (m(1),xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),ha(k),iflag)
      end do
-     call mco_j2h(time,jcen,nbig,nbig,h,m,xj,vj,xh,vh,ngf,ngflag,opt)
+     call mco_j2h(time,jcen,nbig,nbig,h,m,xj,vj,xh,vh,ngf,ngflag)
   end do
   
   !------------------------------------------------------------------------------
@@ -297,7 +298,7 @@ end subroutine mco_mvs2h
 
 !------------------------------------------------------------------------------
 
-subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,opt,dtflag,ngflag,&
+subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,dtflag,ngflag,&
      opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
   
   use physical_constant
@@ -309,7 +310,7 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),algor,opt(8),dtflag,ngflag,opflag
+  integer :: nbod,nbig,stat(nbod),algor,dtflag,ngflag,opflag
   integer :: colflag,lmem(NMESS),nclo,iclo(CMAX),jclo(CMAX)
   real(double_precision) :: time,tstart,h0,tol,rmax,en(3),am(3),jcen(3),rcen
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
@@ -364,7 +365,7 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   ! Save current coordinates and velocities
   x0(:,:) = x(:,:)
   v0(:,:) = v(:,:)
-!~   call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag,opt)
+!~   call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag)
   
   ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
   call mco_h2j (jcen,nbig,nbig,h0,m,x,v,xj,vj)
@@ -376,7 +377,7 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
      iflag = 0
      call drift_one (m(1),x(1,j),x(2,j),x(3,j),v(1,j),v(2,j),v(3,j),h0,iflag)
   end do
-  call mco_j2h (time,jcen,nbig,nbig,h0,m,xj,vj,x,v,ngf,ngflag,opt)
+  call mco_j2h (time,jcen,nbig,nbig,h0,m,xj,vj,x,v,ngf,ngflag)
   
   ! Check for close-encounter minima during drift step
   temp = time + h0
@@ -579,14 +580,14 @@ end subroutine mfo_mvs
 
 !------------------------------------------------------------------------------
 
-subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
+subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
 
   implicit none
 
   
   ! Input/Output
-  integer :: nbod,nbig,ngflag,opt(8)
+  integer :: nbod,nbig,ngflag
   real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
   real(double_precision) :: vh(3,nbod),ngf(4,nbod)
   

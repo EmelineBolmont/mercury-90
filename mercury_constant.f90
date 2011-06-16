@@ -25,9 +25,6 @@ integer, parameter :: NMESS = 200 ! NMESS = maximum number of messages in messag
 integer, parameter :: NFILES = 50 ! NFILES = maximum number of files that can be open at the same time
 real(double_precision), parameter :: HUGE = 9.9d29 ! HUGE  = an implausibly large number
 
-
-
-
 !Part were we define the parameters that were previously in swift.inc
 
 !...   Maximum array size
