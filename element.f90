@@ -491,14 +491,12 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
   
   ! Local
   integer :: i,j,pos,nsub,lim(2,20),formflag,lenfout,f1,f2,itmp
-  character*1 elcode(22)
-  character*4 elhead(22)
+  character(len=1), dimension(22), parameter :: elcode = (/ 'a','e','i','g','n','l','p','q','b','x','y','z','u','v',&
+      'w','r','f','m','o','s','d','c'/)
+  character(len=4), dimension(22), parameter :: elhead = (/ '  a ','  e ','  i ','peri','node','  M ','long','  q ',&
+      '  Q ','  x ','  y ','  z ',' vx ',' vy ',' vz ','  r ','  f ','mass','oblq','spin','dens','comp'/)
   
   !------------------------------------------------------------------------------
-  
-  data elcode/ 'a','e','i','g','n','l','p','q','b','x','y','z','u','v','w','r','f','m','o','s','d','c'/
-  data elhead/ '  a ','  e ','  i ','peri','node','  M ','long','  q ','  Q ','  x ','  y ','  z ',' vx ',&
-       ' vy ',' vz ','  r ','  f ','mass','oblq','spin','dens','comp'/
   
   ! Initialize header to a blank string
   do i = 1, 250
@@ -506,22 +504,23 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
   end do
   
   ! Create part of the format list and header for the required time style
-  if (timestyle.eq.0.or.timestyle.eq.2) then
-     fout(1:9) = '(1x,f18.5'
-     lenfout = 9
-     header(1:19) = '    Time (days)    '
-     lenhead = 19
-  else if (timestyle.eq.1) then
-     fout(1:21) = '(1x,i10,1x,i2,1x,f8.5'
-     lenfout = 21
-     header(1:23) = '    Year/Month/Day     '
-     lenhead = 23
-  else if (timestyle.eq.3) then
-     fout(1:9) = '(1x,f18.7'
-     lenfout = 9
-     header(1:19) = '    Time (years)   '
-     lenhead = 19
-  end if
+  select case (timestyle)
+    case (0,2)
+      fout(1:9) = '(1x,f18.5'
+      lenfout = 9
+      header(1:19) = '    Time (days)    '
+      lenhead = 19
+    case (1)
+      fout(1:21) = '(1x,i10,1x,i2,1x,f8.5'
+      lenfout = 21
+      header(1:23) = '    Year/Month/Day     '
+      lenhead = 23
+    case (3)
+      fout(1:9) = '(1x,f18.7'
+      lenfout = 9
+      header(1:19) = '    Time (years)   '
+      lenhead = 19
+  end select
   
   ! Identify the required elements
   call mio_spl (250,string,nsub,lim)
