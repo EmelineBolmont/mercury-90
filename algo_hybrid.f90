@@ -11,6 +11,8 @@ module algo_hybrid
   use user_module
   use forces, only : mfo_ngf
   
+  implicit none
+  
   private
   
   public :: mdt_hy, mco_h2dh, mco_dh2h

@@ -8,6 +8,8 @@ module forces
   use types_numeriques
   use mercury_globals
 
+  implicit none
+  
   private
   
   public :: mfo_all

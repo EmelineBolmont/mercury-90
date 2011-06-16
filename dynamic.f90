@@ -10,6 +10,8 @@ module dynamic
   use utilities
   use mercury_globals
   
+  implicit none
+  
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

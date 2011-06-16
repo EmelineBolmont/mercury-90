@@ -8,7 +8,6 @@ module algo_radau
 !*************************************************************
   use types_numeriques
 
-  
   implicit none
 
   private

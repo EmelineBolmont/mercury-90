@@ -9,6 +9,8 @@ module system_properties
   use types_numeriques
   use mercury_globals
 
+  implicit none
+  
   private m_sfunc
   
   contains

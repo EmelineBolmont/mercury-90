@@ -11,6 +11,8 @@ module algo_mvs
   use user_module
   use forces, only : mfo_ngf
   
+  implicit none
+  
   private
   
   public :: mdt_mvs, mco_h2mvs, mco_mvs2h, mco_h2j

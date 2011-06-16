@@ -7,6 +7,8 @@ module drift
 !*************************************************************
   use types_numeriques
 
+  implicit none
+  
   private
   
   public :: drift_one ! Only drift_one can be used externaly.
