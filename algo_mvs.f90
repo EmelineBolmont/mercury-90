@@ -6,6 +6,7 @@ module algo_mvs
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
+  use types_numeriques
   use user_module
   use forces, only : mfo_ngf
   
@@ -33,7 +34,6 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag,opt)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use drift
   
   implicit none
@@ -164,7 +164,6 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use drift
   
   implicit none
@@ -303,7 +302,6 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use drift
   use dynamic
   
@@ -422,7 +420,6 @@ subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use forces, only : mfo_obl
 
   implicit none
@@ -584,7 +581,6 @@ end subroutine mfo_mvs
 !
 subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   !
-  use types_numeriques
 
   implicit none
 
@@ -671,8 +667,6 @@ end subroutine mco_j2h
 !------------------------------------------------------------------------------
 !
 subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
-  !
-  use types_numeriques
 
   implicit none
 

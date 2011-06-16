@@ -4,7 +4,8 @@ module kepler_equation
 !** Modules that solve the kepler equation
 !** Version 1.0 - june 2011
 !*************************************************************
-  
+  use types_numeriques
+
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -25,7 +26,6 @@ module kepler_equation
 !------------------------------------------------------------------------------
 !
 function mco_kep (e,oldl)
-  use types_numeriques
 
   implicit none
 
@@ -182,7 +182,6 @@ end function mco_kep
 real*8 function orbel_flon(e,capn)
 
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -295,7 +294,6 @@ end function orbel_flon     ! orbel_flon
 real*8 function orbel_fget(e,capn)
 
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -375,7 +373,6 @@ end function orbel_fget   ! orbel_fget
 real*8 function orbel_fhybrid(e,n)
 
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -426,7 +423,6 @@ end function orbel_fhybrid  ! orbel_fhybrid
 real*8 function orbel_zget(q)
 
   use mercury_constant
-  use types_numeriques
 
   implicit none
 

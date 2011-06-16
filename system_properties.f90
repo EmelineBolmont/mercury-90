@@ -6,6 +6,7 @@ module system_properties
 !** hill radii, if there are ejections and so on.
 !** Version 1.0 - june 2011
 !*************************************************************
+  use types_numeriques
 
   private m_sfunc
   
@@ -38,7 +39,6 @@ subroutine mce_hill (nbod,m,x,v,hill,a)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use orbital_elements
 
   implicit none
@@ -96,7 +96,6 @@ subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,r
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use ascii_conversion
 
   implicit none
@@ -203,7 +202,6 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -310,7 +308,6 @@ subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -377,7 +374,6 @@ subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,op
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use utilities
 
   implicit none
@@ -471,7 +467,6 @@ end subroutine mxx_ejec
 !
 subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag,opt)
   !
-  use types_numeriques
 
   implicit none
 
@@ -515,7 +510,6 @@ end subroutine mco_b2h
 !
 subroutine mco_h2b (jcen,nbod,nbig,h,m,xh,vh,x,v)
   !
-  use types_numeriques
 
   implicit none
 
@@ -588,7 +582,6 @@ end subroutine mco_h2b
 !
 subroutine mco_h2cb (jcen,nbod,nbig,h,m,xh,vh,x,v)
   !
-  use types_numeriques
 
   implicit none
 
@@ -646,6 +639,43 @@ end subroutine mco_h2cb
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
+!      MCO_IDEN.FOR    (ErikSoft   2 November 2000)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+! Author: John E. Chambers
+!
+! Fake subroutine that simulate a change of coordinate system. In fact, 
+! it only duplicate the existing coordinates. So it's the identity. 
+! It is used to test the program with a fake algorithm (I think)
+!
+!------------------------------------------------------------------------------
+!
+subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag,opt)
+  implicit none
+
+  !
+  ! Input/Output
+  integer,intent(in) :: nbod,nbig,ngflag,opt(8)
+  real(double_precision),intent(in) :: time,jcen(3),h,m(nbod),x_in(3,nbod),v_in(3,nbod),ngf(4,nbod)
+
+  real(double_precision), intent(out) ::x_out(3,nbod),v_out(3,nbod)
+  !
+  ! Local
+  integer :: j
+  !
+  !------------------------------------------------------------------------------
+  !
+  x_out(:,:) = x_in(:,:)
+  v_out(:,:) = v_in(:,:)
+  !
+  !------------------------------------------------------------------------------
+  !
+  return
+end subroutine mco_iden
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
 !      MCE_SPIN.FOR    (ErikSoft  2 December 1999)
 !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -664,7 +694,6 @@ subroutine mce_spin (g,mass,spin,rho,rote)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -712,7 +741,6 @@ end subroutine mce_spin
 !
 subroutine m_sfunc (s,z,dz)
   !
-  use types_numeriques
 
   implicit none
 

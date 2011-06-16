@@ -111,10 +111,9 @@
 !
 
 program mercury
-
+  use types_numeriques
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use system_properties
   use mercury_outputs
   use utilities
@@ -140,7 +139,6 @@ program mercury
   real(double_precision) :: cefac,time,tstart,tstop,dtout,h0,tol,en(3),am(3)
   character*8 id(NMAX)
   character*80 outfile(3), dumpfile(4), mem(NMESS)
-  external mco_iden
   !
   data opt/0,1,1,2,0,1,0,0/
   !
@@ -240,7 +238,6 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use orbital_elements
 
   implicit none
@@ -828,7 +825,6 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use dynamic
 
   implicit none
@@ -1068,7 +1064,6 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use dynamic
 
   implicit none
@@ -1352,7 +1347,6 @@ subroutine mxx_sync (time,tstart,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -1468,45 +1462,5 @@ subroutine mxx_sync (time,tstart,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,
 end subroutine mxx_sync
 
 end program mercury
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-!      MCO_IDEN.FOR    (ErikSoft   2 November 2000)
-!
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
-! Author: John E. Chambers
-!
-! Fake subroutine that simulate a change of coordinate system. In fact, 
-! it only duplicate the existing coordinates. So it's the identity. 
-! It is used to test the program with a fake algorithm (I think)
-!
-!------------------------------------------------------------------------------
-!
-subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag,opt)
-  !
-  use types_numeriques
-
-  implicit none
-
-  !
-  ! Input/Output
-  integer,intent(in) :: nbod,nbig,ngflag,opt(8)
-  real(double_precision),intent(in) :: time,jcen(3),h,m(nbod),x_in(3,nbod),v_in(3,nbod),ngf(4,nbod)
-
-  real(double_precision), intent(out) ::x_out(3,nbod),v_out(3,nbod)
-  !
-  ! Local
-  integer :: j
-  !
-  !------------------------------------------------------------------------------
-  !
-  x_out(:,:) = x_in(:,:)
-  v_out(:,:) = v_in(:,:)
-  !
-  !------------------------------------------------------------------------------
-  !
-  return
-end subroutine mco_iden
 
 

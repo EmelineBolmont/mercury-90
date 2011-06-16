@@ -5,7 +5,8 @@ module ascii_conversion
 !** in order to store those strings in files and thus compress data
 !** Version 1.0 - june 2011
 !*************************************************************
-  
+  use types_numeriques
+
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -23,7 +24,6 @@ module ascii_conversion
 !
 function mio_c2fl (c)
   !
-  use types_numeriques
 
   implicit none
 
@@ -69,7 +69,6 @@ end function mio_c2fl
 !
 function mio_c2re (c,xmin,xmax,nchar)
   !
-  use types_numeriques
 
   implicit none
 
@@ -124,7 +123,6 @@ end function mio_c2re
 !
 function mio_fl2c (x)
   !
-  use types_numeriques
 
   implicit none
 
@@ -186,8 +184,6 @@ end function mio_fl2c
 !------------------------------------------------------------------------------
 !
 function mio_re2c (x,xmin,xmax)
-  !
-  use types_numeriques
 
   implicit none
 

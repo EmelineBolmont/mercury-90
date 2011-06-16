@@ -6,7 +6,8 @@ module algo_bs2
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
-  
+  use types_numeriques
+
   private
   
   public :: mdt_bs2
@@ -36,10 +37,8 @@ module algo_bs2
 !------------------------------------------------------------------------------
 !
 subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,force)
-  !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 

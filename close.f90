@@ -15,9 +15,9 @@
 !
 
 program close
+  use types_numeriques
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use ascii_conversion
   use orbital_elements
   use mercury_outputs

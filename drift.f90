@@ -5,6 +5,7 @@ module drift
 !** (don't know exactly what it is)
 !** Version 1.0 - june 2011
 !*************************************************************
+  use types_numeriques
 
   private
   
@@ -44,7 +45,6 @@ module drift
 subroutine drift_one(mu,x,y,z,vx,vy,vz,dt,iflg)
 
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -110,7 +110,6 @@ subroutine drift_dan(mu,x0,y0,z0,vx0,vy0,vz0,dt0,iflg)
 
   use mercury_constant
   use physical_constant
-  use types_numeriques
 
   implicit none
 
@@ -241,7 +240,6 @@ end subroutine drift_dan   ! drift_dan
 
 subroutine drift_kepmd(dm,es,ec,x,s,c)
 
-  use types_numeriques
 
   implicit none
 
@@ -317,7 +315,6 @@ end subroutine drift_kepmd
 subroutine drift_kepu(dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -378,7 +375,6 @@ end subroutine drift_kepu    ! drift_kepu
 
 subroutine drift_kepu_fchk(dt,r0,mu,alpha,u,s,f)
 
-  use types_numeriques
 
   implicit none
 
@@ -429,7 +425,6 @@ end subroutine drift_kepu_fchk     !   drift_kepu_fchk
 subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
 
   use mercury_constant
-  use types_numeriques
   use utilities, only : mco_sine
 
   implicit none
@@ -512,7 +507,6 @@ end subroutine drift_kepu_guess     !   drift_kepu_guess
 subroutine drift_kepu_lag(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -604,7 +598,6 @@ end subroutine drift_kepu_lag    !    drift_kepu_leg
 subroutine drift_kepu_new(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflgn)
 
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -680,7 +673,6 @@ end subroutine drift_kepu_new  ! drift_kepu_new
 ! Last revision: March 12/93
 
 subroutine drift_kepu_p3solve(dt,r0,mu,alpha,u,s,iflg)
-  use types_numeriques
 
   implicit none
 
@@ -751,7 +743,6 @@ end subroutine drift_kepu_p3solve     !   drift_kepu_p3solve
 subroutine drift_kepu_stumpff(x,c0,c1,c2,c3)
 
   use mercury_constant
-  use types_numeriques
 
   implicit none
 

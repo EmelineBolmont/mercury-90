@@ -5,7 +5,8 @@ module orbital_elements
 !** and the opposite. 
 !** Version 1.0 - june 2011
 !*************************************************************
-  
+  use types_numeriques
+
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -22,7 +23,6 @@ module orbital_elements
 !
 subroutine mco_x2a (gm,x,y,z,u,v,w,a,r,v2)
   !
-  use types_numeriques
 
   implicit none
 
@@ -65,7 +65,6 @@ subroutine mco_x2ov (rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -122,7 +121,6 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -246,7 +244,6 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use kepler_equation
   use utilities, only : mco_sine
 
@@ -360,7 +357,6 @@ subroutine mco_ov2x (rcen,rmax,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 

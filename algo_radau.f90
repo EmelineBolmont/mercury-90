@@ -6,7 +6,8 @@ module algo_radau
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
-  
+  use types_numeriques
+
   private
   
   public :: mdt_ra15
@@ -46,7 +47,6 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 

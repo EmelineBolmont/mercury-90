@@ -5,7 +5,8 @@ module forces
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
-  
+  use types_numeriques
+
   private
   
   public :: mfo_all
@@ -36,7 +37,6 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,opt,nce,
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use user_module
 
   implicit none
@@ -135,7 +135,6 @@ subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -226,7 +225,6 @@ subroutine mfo_ngf (nbod,x,v,a,ngf)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -309,7 +307,6 @@ subroutine mfo_pn (nbod,nbig,m,x,v,a)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -358,7 +355,6 @@ subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -403,7 +399,6 @@ subroutine mfo_obl (jcen,nbod,m,x,a,acen)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 

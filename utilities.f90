@@ -7,7 +7,8 @@ module utilities
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
-  
+  use types_numeriques
+
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -28,7 +29,6 @@ module utilities
 !
 subroutine mxx_sort (n,x,index)
   !
-  use types_numeriques
 
   implicit none
 
@@ -96,7 +96,6 @@ subroutine mce_box (nbod,h,x0,v0,x1,v1,xmin,xmax,ymin,ymax)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -160,7 +159,6 @@ end subroutine mce_box
 !
 subroutine mce_min (d0,d1,d0t,d1t,h,d2min,tmin)
   !
-  use types_numeriques
 
   implicit none
 
@@ -238,7 +236,6 @@ end subroutine mce_min
 !
 subroutine mio_jd2y (jd0,year,month,day)
   !
-  use types_numeriques
 
   implicit none
 
@@ -411,7 +408,6 @@ end subroutine mio_spl
 !
 function arcosh (x)
   !
-  use types_numeriques
 
   implicit none
 
@@ -447,7 +443,6 @@ end function arcosh
 !
 subroutine mco_sine (x,sx,cx)
   !
-  use types_numeriques
 
   implicit none
 

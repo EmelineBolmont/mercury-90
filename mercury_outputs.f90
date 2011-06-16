@@ -5,7 +5,8 @@ module mercury_outputs
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
-  
+  use types_numeriques
+
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -41,7 +42,6 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,opt,
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use ascii_conversion
   use orbital_elements
   use utilities
@@ -169,7 +169,6 @@ subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -440,7 +439,6 @@ subroutine mio_log (time,tstart,en,am,opt,mem,lmem)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use utilities
 
   implicit none
@@ -522,7 +520,6 @@ subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opt,opfl
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use ascii_conversion
   use orbital_elements
 
@@ -660,7 +657,6 @@ subroutine mio_clo (id,unitnum,header,lenhead,mem,lmem)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use utilities, only : mio_spl
 
   implicit none
@@ -731,7 +727,6 @@ subroutine mio_aei (id,unitnum,header,lenhead,mem,lmem)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use utilities, only : mio_spl
 
   implicit none

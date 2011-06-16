@@ -17,7 +17,7 @@
 !
 
 program element
-
+  use types_numeriques
   use physical_constant
   use mercury_constant
   use ascii_conversion
@@ -28,7 +28,6 @@ program element
   use system_properties
   use algo_mvs, only : mco_h2j
   
-  use types_numeriques
 
   implicit none
 
@@ -481,7 +480,6 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use utilities, only : mio_spl
 
   implicit none

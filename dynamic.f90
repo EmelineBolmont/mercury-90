@@ -6,6 +6,7 @@ module dynamic
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
+  use types_numeriques
   use utilities
   
   contains
@@ -31,7 +32,6 @@ subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -147,7 +147,6 @@ subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,i
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -246,7 +245,6 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
   use system_properties
 
   implicit none
@@ -378,7 +376,6 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfi
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -482,7 +479,6 @@ subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
@@ -601,7 +597,6 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   !
   use physical_constant
   use mercury_constant
-  use types_numeriques
 
   implicit none
 
