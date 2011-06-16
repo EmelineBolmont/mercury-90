@@ -15,49 +15,49 @@ module user_module
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 !      MFO_USER.FOR    (ErikSoft   2 March 2001)
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 ! Author: John E. Chambers
-!
+
 ! Applies an arbitrary force, defined by the user.
-!
+
 ! If using with the symplectic algorithm MAL_MVS, the force should be
 ! small compared with the force from the central object.
 ! If using with the conservative Bulirsch-Stoer algorithm MAL_BS2, the
 ! force should not be a function of the velocities.
-!
+
 ! N.B. All coordinates and velocities must be with respect to central body
 ! ===
 !------------------------------------------------------------------------------
-!
+
 subroutine mfo_user (time,jcen,nbod,nbig,m,x,v,a)
-  !
+  
   use physical_constant
   use mercury_constant  
 
   implicit none
 
-  !
+  
   ! Input/Output
   integer :: nbod, nbig
   real(double_precision) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),a(3,nbod)
-  !
+  
   ! Local
   integer :: j
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   do j = 1, nbod
      a(1,j) = 0.d0
      a(2,j) = 0.d0
      a(3,j) = 0.d0
   end do
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   return
 end subroutine mfo_user
 

@@ -10,45 +10,45 @@ module orbital_elements
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 !      MCO_X2A.FOR    (ErikSoft   4 October 2000)
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 ! Author: John E. Chambers
-!
+
 ! Calculates an object's orbital semi-major axis given its Cartesian coords.
-!
+
 !------------------------------------------------------------------------------
-!
+
 subroutine mco_x2a (gm,x,y,z,u,v,w,a,r,v2)
-  !
+  
 
   implicit none
 
-  !
+  
   ! Input/Output
   real(double_precision) :: gm,x,y,z,u,v,w,a,r,v2
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   r  = sqrt(x * x  +  y * y  +  z * z)
   v2 =      u * u  +  v * v  +  w * w
   a  = gm * r / (2.d0 * gm  -  r * v2)
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   return
 end subroutine mco_x2a
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 !      MCO_X2OV.FOR    (ErikSoft   20 February 2001)
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 ! Author: John E. Chambers
-!
+
 ! Calculates output variables for an object given its coordinates and
 ! velocities. The output variables are:
 !  r = the radial distance
@@ -58,82 +58,82 @@ end subroutine mco_x2a
 !                             kinetic energies. (Note that 0 < fv < 1).
 !  vtheta = polar angle of velocity vector
 !  vphi = azimuthal angle of the velocity vector
-!
+
 !------------------------------------------------------------------------------
-!
+
 subroutine mco_x2ov (rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
-  !
+  
   use physical_constant
   use mercury_constant
 
   implicit none
 
-  !
+  
   ! Input/Output
   real(double_precision) :: rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
-  !
+  
   ! Local
   real(double_precision) :: r,v2,v1,be,ke,temp
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   r = sqrt(x*x + y*y + z*z)
   v2 =     u*u + v*v + w*w
   v1 = sqrt(v2)
   be = (mcen + m) / r
   ke = .5d0 * v2
-  !
+  
   fr = log10 (min(max(r, rcen), rmax) / rcen)
   temp = ke / be
   fv = 1.d0 / (1.d0 + 2.d0*temp*temp)
-  !
+  
   theta  = mod (acos (z / r) + TWOPI, TWOPI)
   vtheta = mod (acos (w / v1) + TWOPI, TWOPI)
   phi  = mod (atan2 (y, x) + TWOPI, TWOPI)
   vphi = mod (atan2 (v, u) + TWOPI, TWOPI)
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   return
 end subroutine mco_x2ov
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 !      MCO_X2EL.FOR    (ErikSoft  23 January 2001)
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 ! Author: John E. Chambers
-!
+
 ! Calculates Keplerian orbital elements given relative coordinates and
 ! velocities, and GM = G times the sum of the masses.
-!
+
 ! The elements are: q = perihelion distance
 !                   e = eccentricity
 !                   i = inclination
 !                   p = longitude of perihelion (NOT argument of perihelion!!)
 !                   n = longitude of ascending node
 !                   l = mean anomaly (or mean longitude if e < 1.e-8)
-!
+
 !------------------------------------------------------------------------------
-!
+
 subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
-  !
+  
   use physical_constant
   use mercury_constant
 
   implicit none
 
-  !
+  
   ! Input/Output
   real(double_precision) :: gm,q,e,i,p,n,l,x,y,z,u,v,w
-  !
+  
   ! Local
   real(double_precision) :: hx,hy,hz,h2,h,v2,r,rv,s,true
   real(double_precision) :: ci,to,temp,tmp2,bige,f,cf,ce
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   hx = y * w  -  z * v
   hy = z * u  -  x * w
   hz = x * v  -  y * u
@@ -143,7 +143,7 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   r = sqrt(x*x + y*y + z*z)
   h = sqrt(h2)
   s = h2 / gm
-  !
+  
   ! Inclination and node
   ci = hz / h
   if (abs(ci).lt.1) then
@@ -155,7 +155,7 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
      if (ci.lt.0) i = PI
      n = 0.d0
   end if
-  !
+  
   ! Eccentricity and perihelion distance
   temp = 1.d0  +  s * (v2 / gm  -  2.d0 / r)
   if (temp.le.0) then
@@ -164,7 +164,7 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
      e = sqrt (temp)
   end if
   q = s / (1.d0 + e)
-  !
+  
   ! True longitude
   if (hy.ne.0) then
      to = -hx/hy
@@ -175,13 +175,13 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
      true = atan2(y * ci, x)
   end if
   if (ci.lt.0) true = true + PI
-  !
+  
   if (e.lt.3.d-8) then
      p = 0.d0
      l = true
   else
      ce = (v2*r - gm) / (e*gm)
-     !
+     
      ! Mean anomaly for ellipse
      if (e.lt.1) then
         if (abs(ce).gt.1) ce = sign(1.d0,ce)
@@ -189,14 +189,14 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
         if (rv.lt.0) bige = TWOPI - bige
         l = bige - e*sin(bige)
      else
-        !
+        
         ! Mean anomaly for hyperbola
         if (ce.lt.1) ce = 1.d0
         bige = log( ce + sqrt(ce*ce-1.d0) )
         if (rv.lt.0) bige = - bige
         l = e*sinh(bige) - bige
      end if
-     !
+     
      ! Longitude of perihelion
      cf = (s - r) / (e*r)
      if (abs(cf).gt.1) cf = sign(1.d0,cf)
@@ -205,28 +205,28 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
      p = true - f
      p = mod (p + TWOPI + TWOPI, TWOPI)
   end if
-  !
+  
   if (l.lt.0) l = l + TWOPI
   if (l.gt.TWOPI) l = mod (l, TWOPI)
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   return
 end subroutine mco_x2el
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 !      MCO_EL2X.FOR    (ErikSoft  7 July 1999)
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 ! Author: John E. Chambers
-!
+
 ! Calculates Cartesian coordinates and velocities given Keplerian orbital
 ! elements (for elliptical, parabolic or hyperbolic orbits).
-!
+
 ! Based on a routine from Levison and Duncan's SWIFT integrator.
-!
+
 !  gm = grav const * (central + secondary mass)
 !  q = perihelion distance
 !  e = eccentricity
@@ -234,14 +234,14 @@ end subroutine mco_x2el
 !  p = longitude of perihelion !!! )   in
 !  n = longitude of ascending node ) radians
 !  l = mean anomaly                )
-!
+
 !  x,y,z = Cartesian positions  ( units the same as a )
 !  u,v,w =     "     velocities ( units the same as sqrt(gm/a) )
-!
+
 !------------------------------------------------------------------------------
-!
+
 subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
-  !
+  
   use physical_constant
   use mercury_constant
   use kepler_equation
@@ -249,19 +249,19 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
 
   implicit none
 
-  !
+  
   ! Input/Output
   real(double_precision) :: gm,q,e,i,p,n,l,x,y,z,u,v,w
-  !
+  
   ! Local
   real(double_precision) :: g,a,ci,si,cn,sn,cg,sg,ce,se,romes,temp
   real(double_precision) :: z1,z2,z3,z4,d11,d12,d13,d21,d22,d23
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   ! Change from longitude of perihelion to argument of perihelion
   g = p - n
-  !
+  
   ! Rotation factors
 !~   si = sin(i)
 !~   ci = cos(i)
@@ -282,10 +282,10 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   d21 = -z3 - z2*ci
   d22 = -z4 + z1*ci
   d23 = cg * si
-  !
+  
   ! Semi-major axis
   a = q / (1.d0 - e)
-  !
+  
   ! Ellipse
   if (e.lt.1.d0) then
      romes = sqrt(1.d0 - e*e)
@@ -320,27 +320,27 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
         z4 = romes * ce * temp
      end if
   endif
-  !
+  
   x = d11 * z1  +  d21 * z2
   y = d12 * z1  +  d22 * z2
   z = d13 * z1  +  d23 * z2
   u = d11 * z3  +  d21 * z4
   v = d12 * z3  +  d22 * z4
   w = d13 * z3  +  d23 * z4
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   return
 end subroutine mco_el2x
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 !      MCO_OV2X.FOR    (ErikSoft   28 February 2001)
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 ! Author: John E. Chambers
-!
+
 ! Converts output variables for an object to coordinates and velocities.
 ! The output variables are:
 !  r = the radial distance
@@ -350,38 +350,38 @@ end subroutine mco_el2x
 !                             kinetic energies. (Note that 0 < fv < 1).
 !  vtheta = polar angle of velocity vector
 !  vphi = azimuthal angle of the velocity vector
-!
+
 !------------------------------------------------------------------------------
-!
+
 subroutine mco_ov2x (rcen,rmax,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
-  !
+  
   use physical_constant
   use mercury_constant
 
   implicit none
 
-  !
+  
   ! Input/Output
   real(double_precision) :: rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
-  !
+  
   ! Local
   real(double_precision) :: r,v1,temp
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   r = rcen * 10.d0**fr
   temp = sqrt(.5d0*(1.d0/fv - 1.d0))
   v1 = sqrt(2.d0 * temp * (mcen + m) / r)
-  !
+  
   x = r * sin(theta) * cos(phi)
   y = r * sin(theta) * sin(phi)
   z = r * cos(theta)
   u = v1 * sin(vtheta) * cos(vphi)
   v = v1 * sin(vtheta) * sin(vphi)
   w = v1 * cos(vtheta)
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   return
 end subroutine mco_ov2x
 

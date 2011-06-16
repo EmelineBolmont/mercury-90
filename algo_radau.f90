@@ -8,49 +8,68 @@ module algo_radau
 !*************************************************************
   use types_numeriques
 
+  
+  implicit none
+
   private
+  ! Gauss-Radau spacings for substeps within a sequence, for the 15th order 
+  ! integrator. The sum of the H values should be 3.733333333333333
+  
+real(double_precision), dimension(8), parameter :: h = (/ 0.d0,.0562625605369221d0,.1802406917368924d0,&
+  .3526247171131696d0,.5471536263305554d0,.7342101772154105d0,.8853209468390958d0,.9775206135612875d0/)
+  
+  ! Constant coefficients used in series expansions for X and V
+  !  XC: 1/2,  1/6,  1/12, 1/20, 1/30, 1/42, 1/56, 1/72
+  !  VC: 1/2,  1/3,  1/4,  1/5,  1/6,  1/7,  1/8
+real(double_precision), dimension(8), parameter :: xc = (/.5d0,.1666666666666667d0,.08333333333333333d0,.05d0,&
+    .03333333333333333d0,.02380952380952381d0,.01785714285714286d0,.01388888888888889d0/)
+    
+real(double_precision), dimension(7), parameter :: vc = (/.5d0,.3333333333333333d0,.25d0,.2d0,.1666666666666667d0,&
+      .1428571428571429d0,.125d0/)
+
+
   
   public :: mdt_ra15
   
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 !      MDT_RA15.FOR    (ErikSoft   2 March 2001)
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 ! Author: John E. Chambers
-!
+
 ! Integrates NBOD bodies (of which NBIG are Big) for one timestep H0 using
 ! Everhart's RA15 integrator algorithm. The accelerations are calculated
 ! using the subroutine FORCE. The accuracy of the step is approximately 
 ! determined by the tolerance parameter TOL.
-!
+
 ! Based on RADAU by E. Everhart, Physics Department, University of Denver.
 ! Comments giving equation numbers refer to Everhart (1985) ``An Efficient
 ! Integrator that Uses Gauss-Radau Spacings'', in The Dynamics of Comets:
 ! Their Origin and Evolution, p185-202, eds. A. Carusi & G. B. Valsecchi,
 ! pub Reidel. (A listing of the original subroutine is also given in this 
 ! paper.)
-!
+
 ! DTFLAG = 0 implies first ever call to this subroutine, 
 !        = 1 implies first call since number/masses of objects changed.
 !        = 2 normal call
-!
+
 ! N.B. Input/output must be in coordinates with respect to the central body.
 ! ===
-!
+
 !------------------------------------------------------------------------------
-!
+
 subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,ngf,stat,dtflag,ngflag,opt,nce,ice,jce,force)
-  !
+  
   use physical_constant
   use mercury_constant
 
   implicit none
 
-  !
+  
   ! Input/Output
   integer :: nbod,nbig,dtflag,ngflag,opt(8),stat(nbod)
   integer :: nce,ice(nce),jce(nce)
@@ -58,31 +77,18 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   real(double_precision) :: x1(3*nbod),v1(3*nbod),spin(3*nbod)
   real(double_precision) :: ngf(4,nbod),rphys(nbod),rcrit(nbod)
   external force
-  !
+  
   ! Local
   integer :: nv,niter,j,k,n
   real(double_precision) :: x(3*NMAX),v(3*NMAX),a(3*NMAX),a1(3*NMAX)
   real(double_precision) :: g(7,3*NMAX),b(7,3*NMAX),e(7,3*NMAX)
-  real(double_precision) :: h(8),xc(8),vc(7),c(21),d(21),r(28),s(9)
+  real(double_precision) :: c(21),d(21),r(28),s(9)
   real(double_precision) :: q,q2,q3,q4,q5,q6,q7,temp,gk
-  !
+  
   !------------------------------------------------------------------------------
-  !
-  save h,xc,vc,c,d,r,b,e
-  !
-  ! Gauss-Radau spacings for substeps within a sequence, for the 15th order 
-  ! integrator. The sum of the H values should be 3.733333333333333
-  !
-  data h/ 0.d0,.0562625605369221d0,.1802406917368924d0,.3526247171131696d0,.5471536263305554d0,.7342101772154105d0,&
-       .8853209468390958d0,.9775206135612875d0/
-  !
-  ! Constant coefficients used in series expansions for X and V
-  !  XC: 1/2,  1/6,  1/12, 1/20, 1/30, 1/42, 1/56, 1/72
-  !  VC: 1/2,  1/3,  1/4,  1/5,  1/6,  1/7,  1/8
-  data xc/.5d0,.1666666666666667d0,.08333333333333333d0,.05d0,.03333333333333333d0,.02380952380952381d0,&
-       .01785714285714286d0,.01388888888888889d0/
-  data vc/.5d0,.3333333333333333d0,.25d0,.2d0,.1666666666666667d0,.1428571428571429d0,.125d0/
-  !
+  
+  save c,d,r,b,e
+  
   ! If this is first call to the subroutine, set values of the constant arrays
   ! (R = R21, R31, R32, R41, R42, R43 in Everhart's paper.)
   if (dtflag.eq.0) then
@@ -93,7 +99,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
            r(n) = 1.d0 / (h(j) - h(k))
         end do
      end do
-     !
+     
      ! Constants to convert between B and G arrays (C = C21, C31, C32, C41, C42...)
      c(1) = - h(2)
      d(1) =   h(2)
@@ -111,13 +117,13 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
         c(n) = c(n-j+1) - h(j)
         d(n) = d(n-j+1) + h(j)
      end do
-     !
+     
      dtflag = 1
   end if
-  !
+  
   nv = 3 * nbod
 100 continue
-  !
+  
   ! If this is first call to subroutine since number/masses of objects changed
   ! do 6 iterations and initialize B, E arrays, otherwise do 2 iterations.
   if (dtflag.eq.1) then
@@ -131,10 +137,10 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   else
      niter = 2
   end if
-  !
+  
   ! Calculate forces at the start of the sequence
   call force (time,jcen,nbod,nbig,mass,x1,v1,spin,rcrit,a1,stat,ngf,ngflag,opt,nce,ice,jce)
-  !
+  
   ! Find G values from B values predicted at the last call (Eqs. 7 of Everhart)
   do k = 4, nv
      g(1,k) = b(7,k)*d(16) + b(6,k)*d(11) + b(5,k)*d(7) + b(4,k)*d(4) + b(3,k)*d(2) + b(2,k)*d(1) + b(1,k)
@@ -145,17 +151,17 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
      g(6,k) = b(7,k)*d(21) + b(6,k)
      g(7,k) = b(7,k)
   end do
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   !  MAIN  LOOP  STARTS  HERE
-  !
+  
   ! For each iteration (six for first call to subroutine, two otherwise)...
   do n = 1, niter
-     !
+     
      ! For each substep within a sequence...
      do j = 2, 8
-        !
+        
         ! Calculate position predictors using Eqn. 9 of Everhart
         s(1) = t * h(j)
         s(2) = s(1) * s(1) * .5d0
@@ -166,12 +172,12 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
         s(7) = s(6) * h(j) * .7142857142857143d0
         s(8) = s(7) * h(j) * .75d0
         s(9) = s(8) * h(j) * .7777777777777778d0
-        !
+        
         do k = 4, nv
            x(k) = s(9)*b(7,k) + s(8)*b(6,k) + s(7)*b(5,k) + s(6)*b(4,k) + s(5)*b(3,k) + s(4)*b(2,k) &
                 + s(3)*b(1,k) + s(2)*a1(k)  + s(1)*v1(k) + x1(k)
         end do
-        !
+        
         ! If necessary, calculate velocity predictors too, from Eqn. 10 of Everhart
         if (ngflag.ne.0) then
            s(1) = t * h(j)
@@ -182,16 +188,16 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
            s(6) = s(5) * h(j) * .8333333333333333d0
            s(7) = s(6) * h(j) * .8571428571428571d0
            s(8) = s(7) * h(j) * .875d0
-           !
+           
            do k = 4, nv
               v(k) = s(8)*b(7,k) + s(7)*b(6,k) + s(6)*b(5,k) + s(5)*b(4,k) + s(4)*b(3,k)&
                    + s(3)*b(2,k) + s(2)*b(1,k) + s(1)*a1(k)  + v1(k)
            end do
         end if
-        !
+        
         ! Calculate forces at the current substep
         call force (time,jcen,nbod,nbig,mass,x,v,spin,rcrit,a,stat,ngf,ngflag,opt,nce,ice,jce)
-        !
+        
         ! Update G values using Eqs. 4 of Everhart, and update B values using Eqs. 5
         select case (j)
         case (2)
@@ -273,11 +279,11 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
         end select
      end do
   end do
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   !  END  OF  MAIN  LOOP
-  !
+  
   ! Estimate suitable sequence size for the next call to subroutine (Eqs. 15, 16)
   temp = 0.d0
   do k = 4, nv
@@ -290,27 +296,27 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   else
      t = sign( (tol/temp)**(1.d0/9.d0), tdid )
   end if
-  !
+  
   ! If sequence size for the first subroutine call is too big, go back and redo
   ! the sequence using a smaller size.
   if ((dtflag.eq.1).and.(abs(t/tdid).lt.1)) then
      t = t * .8d0
      goto 100
   end if
-  !
+  
   ! If new sequence size is much bigger than the current one, reduce it
   if (abs(t/tdid).gt.1.4d0) t = tdid * 1.4d0
-  !
+  
   ! Find new position and velocity values at end of the sequence (Eqs. 11, 12)
   temp = tdid * tdid
   do k = 4 , nv
      x1(k) = (xc(8)*b(7,k) + xc(7)*b(6,k) + xc(6)*b(5,k) + xc(5)*b(4,k) + xc(4)*b(3,k) + xc(3)*b(2,k)&
           + xc(2)*b(1,k) + xc(1)*a1(k))*temp + v1(k)*tdid + x1(k)
-     !
+     
      v1(k) = (vc(7)*b(7,k) + vc(6)*b(6,k) + vc(5)*b(5,k) + vc(4)*b(4,k) + vc(3)*b(3,k) + vc(2)*b(2,k)&
           + vc(1)*b(1,k) + a1(k))*tdid + v1(k)
   end do
-  !
+  
   ! Predict new B values to use at the start of the next sequence. The predicted
   ! values from the last call are saved as E. The correction, BD, between the
   ! actual and predicted values of B is applied in advance as a correction.
@@ -321,7 +327,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   q5 = q2 * q3
   q6 = q3 * q3
   q7 = q3 * q4
-  !
+  
   do k = 4, nv
      s(1) = b(1,k) - e(1,k)
      s(2) = b(2,k) - e(2,k)
@@ -330,7 +336,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
      s(5) = b(5,k) - e(5,k)
      s(6) = b(6,k) - e(6,k)
      s(7) = b(7,k) - e(7,k)
-     !
+     
      ! Estimate B values for the next sequence (Eqs. 13 of Everhart).
      e(1,k) = q* (b(7,k)* 7.d0 + b(6,k)* 6.d0 + b(5,k)* 5.d0 + b(4,k)* 4.d0 + b(3,k)* 3.d0 + b(2,k)*2.d0 + b(1,k))
      e(2,k) = q2*(b(7,k)*21.d0 + b(6,k)*15.d0 + b(5,k)*10.d0 + b(4,k)* 6.d0 + b(3,k)* 3.d0 + b(2,k))
@@ -339,7 +345,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
      e(5,k) = q5*(b(7,k)*21.d0 + b(6,k)*6.d0 + b(5,k))
      e(6,k) = q6*(b(7,k)*7.d0 + b(6,k))
      e(7,k) = q7* b(7,k)
-     !
+     
      b(1,k) = e(1,k) + s(1)
      b(2,k) = e(2,k) + s(2)
      b(3,k) = e(3,k) + s(3)
@@ -349,9 +355,9 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
      b(7,k) = e(7,k) + s(7)
   end do
   dtflag = 2
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   return
 end subroutine mdt_ra15
   

@@ -1,20 +1,20 @@
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 !      ELEMENT6.FOR    (ErikSoft   5 June 2001)
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 ! Author: John E. Chambers
-!
+
 ! Makes output files containing Keplerian orbital elements from data created
 ! by Mercury6 and higher.
-!
+
 ! The user specifies the names of the required objects in the file elements.in
 ! See subroutine get_aei_format for the identities of each element in the EL array
 ! e.g. el(1)=a, el(2)=e etc.
-!
+
 !------------------------------------------------------------------------------
-!
+
 
 program element
   use types_numeriques
@@ -31,7 +31,7 @@ program element
 
   implicit none
 
-  !
+  
   integer :: itmp,i,j,k,l,iback(NMAX),precision,lenin
   integer :: nmaster,nopen,nwait,nbig,nsml,nbod,nsub,lim(2,100)
   integer :: year,month,timestyle,line_num,lenhead,lmem(NMESS)
@@ -48,13 +48,13 @@ program element
   character*5 fin
   character*1 check,style,type,c1
   character*2 c2
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   allflag = 0
   tprevious = 0.d0
   rhocgs = AU * AU * AU * K2 / MSUN
-  !
+  
   ! Read in output messages
   inquire (file='message.in', exist=test)
   if (.not.test) then
@@ -66,7 +66,7 @@ program element
   read (14,'(i3,1x,i2,1x,a80)',end=20) j,lmem(j),mem(j)
   goto 10
 20 close (14)
-  !
+  
   ! Open file containing parameters for this programme
   inquire (file='element.in', exist=test)
   if (test) then
@@ -74,13 +74,13 @@ program element
   else
      call mio_err (6,mem(81),lmem(81),mem(88),lmem(88),' ',1,'element.in',9)
   end if
-  !
+  
   ! Read number of input files
 30 read (10,'(a250)') string
   if (string(1:1).eq.')') goto 30
   call mio_spl (250,string,nsub,lim)
   read (string(lim(1,nsub):lim(2,nsub)),*) ninfile
-  !
+  
   ! Make sure all the input files exist
   do j = 1, ninfile
 40   read (10,'(a250)') string
@@ -90,7 +90,7 @@ program element
      inquire (file=infile(j), exist=test)
      if (.not.test) call mio_err (6,mem(81),lmem(81),mem(88),lmem(88),' ',1,infile(j),80)
   end do
-  !
+  
   ! What type elements does the user want?
   centre = 0
 45 read (10,'(a250)') string
@@ -106,7 +106,7 @@ program element
   else
      call mio_err (6,mem(81),lmem(81),mem(107),lmem(107),' ',1,'       Check element.in',23)
   end if
-  !
+  
   ! Read parameters used by this programme
   timestyle = 1
   do j = 1, 4
@@ -120,7 +120,7 @@ program element
      if (j.eq.3.and.(c1.eq.'y'.or.c1.eq.'Y')) timestyle = timestyle+2
      if (j.eq.4) call get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
   end do
-  !
+  
   ! Read in the names of the objects for which orbital elements are required
   nopen = 0
   nwait = 0
@@ -129,7 +129,7 @@ program element
   read (10,'(a250)',end=70) string
   call mio_spl (250,string,nsub,lim)
   if (string(1:1).eq.')'.or.lim(1,1).eq.-1) goto 60
-  !
+  
   ! Either open an aei file for this object or put it on the waiting list
   nmaster = nmaster + 1
   itmp = min(7,lim(2,1)-lim(1,1))
@@ -144,44 +144,44 @@ program element
      master_unit(nmaster) = -2
   end if
   goto 60
-  !
+  
 70 continue
   ! If no objects are listed in ELEMENT.IN assume that all objects are required
   if (nopen.eq.0) allflag = 1
   close (10)
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   !  LOOP  OVER  EACH  INPUT  FILE  CONTAINING  INTEGRATION  DATA
-  !
+  
 90 continue
   firstflag = 0
   do i = 1, ninfile
      line_num = 0
      open (10, file=infile(i), status='old')
-     !
+     
      ! Loop over each time slice
 100  continue
      line_num = line_num + 1
      read (10,'(3a1)',end=900,err=666) check,style,type
      line_num = line_num - 1
      backspace 10
-     !
+     
      ! Check if this is an old style input file
      if (ichar(check).eq.12.and.(style.eq.'0'.or.style.eq.'1'.or.style.eq.'2'.or.style.eq.'3'.or.style.eq.'4')) then
         write (*,'(/,2a)') ' ERROR: This is an old style data file','        Try running m_elem5.for instead.'
         stop
      end if
      if (ichar(check).ne.12) goto 666
-     !
+     
      !------------------------------------------------------------------------------
-     !
+     
      !  IF  SPECIAL  INPUT,  READ  TIME,  PARAMETERS,  NAMES,  MASSES  ETC.
-     !
+     
      if (type.eq.'a') then
         line_num = line_num + 1
         read (10,'(3x,i2,a62,i1)') algor,cc(1:62),precision
-        !
+        
         ! Decompress the time, number of objects, central mass and J components etc.
         time = mio_c2fl (cc(1:8))
         nbig = int(.5d0 + mio_c2re(cc(9:16), 0.d0, 11239424.d0, 3))
@@ -193,13 +193,13 @@ program element
         rcen = mio_c2fl (cc(47:54))
         rmax = mio_c2fl (cc(55:62))
         rfac = log10 (rmax / rcen)
-        !
+        
         ! Read in strings containing compressed data for each object
         do j = 1, nbig + nsml
            line_num = line_num + 1
            read (10,'(a)',err=666) c(j)(1:51)
         end do
-        !
+        
         ! Create input format list
         if (precision.eq.1) nchar = 2
         if (precision.eq.2) nchar = 4
@@ -207,7 +207,7 @@ program element
         lenin = 3  +  6 * nchar
         fin(1:5) = '(a00)'
         write (fin(3:4),'(i2)') lenin
-        !
+        
         ! For each object decompress its name, code number, mass, spin and density
         do j = 1, nbig + nsml
            k = int(.5d0 + mio_c2re(c(j)(1:8),0.d0,11239424.d0,3))
@@ -217,7 +217,7 @@ program element
            s(2) = mio_c2fl (c(j)(28:35))
            s(3) = mio_c2fl (c(j)(36:43))
            el(21,k) = mio_c2fl (c(j)(44:51))
-           !
+           
            ! Calculate spin rate and longitude & inclination of spin vector
            temp = sqrt(s(1)*s(1) + s(2)*s(2) + s(3)*s(3))
            if (temp.gt.0) then
@@ -236,18 +236,18 @@ program element
               is(k) = 0.d0
               ns(k) = 0.d0
            end if
-           !
+           
            ! Find the object on the master list
            unit(k) = 0
            do l = 1, nmaster
               if (id(k).eq.master_id(l)) unit(k) = master_unit(l)
            end do
-           !
+           
            ! If object is not on the master list, add it to the list now
            if (unit(k).eq.0) then
               nmaster = nmaster + 1
               master_id(nmaster) = id(k)
-              !
+              
               ! Either open an aei file for this object or put it on the waiting list
               if (allflag.eq.1) then
                  if (nopen.lt.NFILES) then
@@ -264,28 +264,28 @@ program element
               unit(k) = master_unit(nmaster)
            end if
         end do
-        !
+        
         !------------------------------------------------------------------------------
-        !
+        
         !  IF  NORMAL  INPUT,  READ  COMPRESSED  ORBITAL  VARIABLES  FOR  ALL  OBJECTS
-        !
+        
      else if (type.eq.'b') then
         line_num = line_num + 1
         read (10,'(3x,a14)',err=666) cc(1:14)
-        !
+        
         ! Decompress the time and the number of objects
         time = mio_c2fl (cc(1:8))
         nbig = int(.5d0 + mio_c2re(cc(9:16),  0.d0, 11239424.d0, 3))
         nsml = int(.5d0 + mio_c2re(cc(12:19), 0.d0, 11239424.d0, 3))
         nbod = nbig + nsml
         if (firstflag.eq.0) t0 = time
-        !
+        
         ! Read in strings containing compressed data for each object
         do j = 1, nbod
            line_num = line_num + 1
            read (10,fin,err=666) c(j)(1:lenin)
         end do
-        !
+        
         ! Look for objects for which orbital elements are required
         m(1) = mcen * K2
         do j = 1, nbod
@@ -294,7 +294,7 @@ program element
               write (*,'(/,2a)') mem(81)(1:lmem(81)),  mem(90)(1:lmem(90))
               stop
            end if
-           !
+           
            ! Decompress orbital variables for each object
            l = j + 1
            m(l) = el(18,code(j)) * K2
@@ -307,7 +307,7 @@ program element
            call mco_ov2x (rcen,rmax,m(1),m(l),fr,theta,phi,fv,vtheta,vphi,x(1,l),x(2,l),x(3,l),v(1,l),v(2,l),v(3,l))
            el(16,code(j)) = sqrt(x(1,l)*x(1,l) + x(2,l)*x(2,l)    + x(3,l)*x(3,l))
         end do
-        !
+        
         ! Convert to barycentric, Jacobi or close-binary coordinates if desired
         nbod1 = nbod + 1
         nbig1 = nbig + 1
@@ -317,7 +317,7 @@ program element
         if (centre.eq.1) call mco_h2b (jcen,nbod1,nbig1,temp,m,xh,vh,x,v)
         if (centre.eq.2) call mco_h2j (jcen,nbod1,nbig1,temp,m,xh,vh,x,v)
         if ((centre.eq.0).and.(algor.eq.11)) call mco_h2cb (jcen,nbod1,nbig1,temp,m,xh,vh,x,v)
-        !
+        
         ! Put Cartesian coordinates into element arrays
         do j = 1, nbod
            k = code(j)
@@ -328,7 +328,7 @@ program element
            el(13,k) = v(1,l)
            el(14,k) = v(2,l)
            el(15,k) = v(3,l)
-           !
+           
            ! Convert to Keplerian orbital elements
            gm = (mcen + el(18,k)) * K2
            call mco_x2el (gm,el(10,k),el(11,k),el(12,k),el(13,k),el(14,k),el(15,k),el(8,k),el(2,k),el(3,k),el(7,k),el(5,k),el(6,k))
@@ -346,7 +346,7 @@ program element
            end if
            ! Calculate obliquity
            el(19,k) = acos (cos(el(3,k))*cos(is(k))+ sin(el(3,k))*sin(is(k))*cos(ns(k) - el(5,k)))
-           !
+           
            ! Convert angular elements from radians to degrees
            do l = 3, 7
               el(l,k) = mod(el(l,k) * RAD2DEG, 360.d0)
@@ -354,18 +354,18 @@ program element
            el(17,k) = el(17,k) * RAD2DEG
            el(19,k) = el(19,k) * RAD2DEG
         end do
-        !
+        
         ! Convert time to desired format
         if (timestyle.eq.0) t1 = time
         if (timestyle.eq.1) call mio_jd2y (time,year,month,t1)
         if (timestyle.eq.2) t1 = time - t0
         if (timestyle.eq.3) t1 = (time - t0) / 365.25d0
-        !
+        
         ! If output is required at this epoch, write elements to appropriate files
         if (firstflag.eq.0.or.abs(time-tprevious).ge.teval) then
            firstflag = 1
            tprevious = time
-           !
+           
            ! Write required elements to the appropriate aei file
            do j = 1, nbod
               k = code(j)
@@ -378,18 +378,18 @@ program element
               end if
            end do
         end if
-        !
+        
         !------------------------------------------------------------------------------
-        !
+        
         !  IF  TYPE  IS  NOT  'a'  OR  'b',  THE  INPUT  FILE  IS  CORRUPTED
-        !
+        
      else
         goto 666
      end if
-     !
+     
      ! Move on to the next time slice
      goto 100
-     !
+     
      ! If input file is corrupted, try to continue from next uncorrupted time slice
 666  continue
      write (*,'(2a,/,a,i10)') mem(121)(1:lmem(121)),infile(i)(1:60),mem(104)(1:lmem(104)),line_num
@@ -400,18 +400,18 @@ program element
      end do
      line_num = line_num - 1
      backspace 10
-     !
+     
      ! Move on to the next file containing integration data
 900  continue
      close (10)
   end do
-  !
+  
   ! Close aei files
   do j = 1, nopen
      close (10+j)
   end do
   nopen = 0
-  !
+  
   ! If some objects remain on waiting list, read through input files again
   if (nwait.gt.0) then
      do j = 1, nmaster
@@ -425,14 +425,14 @@ program element
      end do
      goto 90
   end if
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   !  CREATE  A  SUMMARY  OF  FINAL  MASSES  AND  ELEMENTS
-  !
+  
   open (10, file='element.out', status='unknown')
   rewind 10
-  !
+  
   if (timestyle.eq.0.or.timestyle.eq.2) then
      write (10,'(/,a,f18.5,/)') ' Time (days): ',t1
   else if (timestyle.eq.1) then
@@ -441,70 +441,70 @@ program element
      write (10,'(/,a,f18.7,/)') ' Time (years): ',t1
   end if
   write (10,'(2a,/)') '              a        e       i      mass','    Rot/day  Obl'
-  !
+  
   ! Sort surviving objects in order of increasing semi-major axis
   do j = 1, nbod
      k = code(j)
      a(j) = el(1,k)
   end do
   call mxx_sort (nbod,a,iback)
-  !
+  
   ! Write values of a, e, i and m for surviving objects in an output file
   do j = 1, nbod
      k = code(iback(j))
      write (10,213) id(k),el(1,k),el(2,k),el(3,k),el(18,k),el(20,k),  el(19,k)
   end do
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   ! Format statements
 213 format (1x,a8,1x,f8.4,1x,f7.5,1x,f7.3,1p,e11.4,0p,1x,f6.3,1x,f6.2)
-  !
+  
 end program element
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 !      get_aei_format.FOR    (ErikSoft   31 January 2001)
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 ! Author: John E. Chambers
-!
+
 ! Makes an output format list and file header for the orbital-element files
 ! created by M_ELEM3.FOR
 ! Also identifies which orbital elements will be output for each object.
-!
+
 !------------------------------------------------------------------------------
-!
+
 subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
-  !
+  
   use physical_constant
   use mercury_constant
   use utilities, only : mio_spl
 
   implicit none
 
-  !
+  
   ! Input/Output
   integer :: timestyle,nel,iel(22),lenhead
   character*250 string,header,fout
-  !
+  
   ! Local
   integer :: i,j,pos,nsub,lim(2,20),formflag,lenfout,f1,f2,itmp
   character*1 elcode(22)
   character*4 elhead(22)
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   data elcode/ 'a','e','i','g','n','l','p','q','b','x','y','z','u','v','w','r','f','m','o','s','d','c'/
   data elhead/ '  a ','  e ','  i ','peri','node','  M ','long','  q ','  Q ','  x ','  y ','  z ',' vx ',&
        ' vy ',' vz ','  r ','  f ','mass','oblq','spin','dens','comp'/
-  !
+  
   ! Initialize header to a blank string
   do i = 1, 250
      header(i:i) = ' '
   end do
-  !
+  
   ! Create part of the format list and header for the required time style
   if (timestyle.eq.0.or.timestyle.eq.2) then
      fout(1:9) = '(1x,f18.5'
@@ -522,7 +522,7 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
      header(1:19) = '    Time (years)   '
      lenhead = 19
   end if
-  !
+  
   ! Identify the required elements
   call mio_spl (250,string,nsub,lim)
   do i = 1, nsub
@@ -531,7 +531,7 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
      end do
   end do
   nel = nsub
-  !
+  
   ! For each element, see whether normal or exponential notation is required
   do i = 1, nsub
      formflag = 0
@@ -540,7 +540,7 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
         if (string(j:j).eq.'.') formflag = 1
         if (string(j:j).eq.'e') formflag = 2
      end do
-     !
+     
      ! Create the rest of the format list and header
      if (formflag.eq.1) then
         read (string(lim(1,i)+1:pos-1),*) f1
@@ -560,12 +560,12 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
      header(lenhead+itmp+2:lenhead+itmp+5) = elhead(iel(i))
      lenhead = lenhead + f1 + 1
   end do
-  !
+  
   lenfout = lenfout + 1
   fout(lenfout:lenfout) = ')'
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   return
 end subroutine get_aei_format
 

@@ -14,14 +14,14 @@ module drift
   contains
 
 !------------------------------------------------------------------
-!
+
 !*************************************************************************
 !                        DRIFT_ONE.F
 !*************************************************************************
 ! This subroutine does the danby-type drift for one particle, using 
 ! appropriate vbles and redoing a drift if the accuracy is too poor 
 ! (as flagged by the integer iflg).
-!
+
 !             Input:
 !                 nbod          ==>  number of massive bodies (int scalar)
 !                 mass          ==>  mass of bodies (real array)
@@ -36,11 +36,11 @@ module drift
 !                 vx,vy,vz      ==>  final position in jacobi coord 
 !                                       (real scalars)
 !                 iflg          ==>  integer :: (zero for successful step)
-!
+
 ! Authors:  Hal Levison & Martin Duncan 
 ! Date:    2/10/93
 ! Last revision: 2/10/93
-!
+
 
 subroutine drift_one(mu,x,y,z,vx,vy,vz,dt,iflg)
 
@@ -85,7 +85,7 @@ end subroutine drift_one    ! drift_one
 !                        DRIFT_DAN.F
 !*************************************************************************
 ! This subroutine does the Danby and decides which vbles to use
-!
+
 !             Input:
 !                 nbod          ==>  number of massive bodies (int scalar)
 !                 mass          ==>  mass of bodies (real array)
@@ -101,7 +101,7 @@ end subroutine drift_one    ! drift_one
 !                                       (real scalars)
 !                 iflg             ==>  integer :: flag (zero if satisfactory)
 !					      (non-zero if nonconvergence)
-!
+
 ! Authors:  Hal Levison & Martin Duncan  
 ! Date:    2/10/93
 ! Last revision: April 6/93 - MD adds dt and keeps dt0 unchanged
@@ -218,7 +218,7 @@ subroutine drift_dan(mu,x0,y0,z0,vx0,vy0,vz0,dt0,iflg)
 
   return
 end subroutine drift_dan   ! drift_dan
-!
+
 !********************************************************************#
 !                  DRIFT_KEPMD
 !********************************************************************#
@@ -228,15 +228,15 @@ end subroutine drift_dan   ! drift_dan
 !  WARNING - BUILT FOR SPEED : DOES NOT CHECK HOW WELL THE ORIGINAL
 !  EQUATION IS SOLVED! (CAN DO THAT IN THE CALLING ROUTINE BY
 !  CHECKING HOW CLOSE (x - ec*s +es*(1.-c) - dm) IS TO ZERO.
-!
+
 !	Input:
 !	    dm		==> increment in mean anomaly M (real*8 scalar)
 !	    es,ec       ==> ecc. times sin and cos of E_0 (real*8 scalars)
-!
+
 !       Output:
 !            x          ==> solution to Kepler's difference eqn (real*8 scalar)
 !            s,c        ==> sin and cosine of x (real*8 scalars)
-!
+
 
 subroutine drift_kepmd(dm,es,ec,x,s,c)
 
@@ -288,12 +288,12 @@ subroutine drift_kepmd(dm,es,ec,x,s,c)
   return
 end subroutine drift_kepmd
 !-----------------------------------------------------------------------------
-!
+
 !*************************************************************************
 !                        DRIFT_KEPU.F
 !*************************************************************************
 ! subroutine for solving kepler's equation using universal variables.
-!
+
 !             Input:
 !                 dt            ==>  time step (real scalor)
 !                 r0            ==>  Distance between `Sun' and paritcle
@@ -307,7 +307,7 @@ end subroutine drift_kepmd
 !                 c1,c2,c3      ==>  c's from p171-172
 !                                       (real scalors)
 !                 iflg          ==>  =0 if converged; !=0 if not
-!
+
 ! Author:  Hal Levison  
 ! Date:    2/3/93
 ! Last revision: 2/3/93
@@ -351,13 +351,13 @@ subroutine drift_kepu(dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
   return
 end subroutine drift_kepu    ! drift_kepu
 !----------------------------------------------------------------------
-!
+
 !*************************************************************************
 !                        DRIFT_KEPU_FCHK.F
 !*************************************************************************
 ! Returns the value of the function f of which we are trying to find the root
 ! in universal variables.
-!
+
 !             Input:
 !                 dt            ==>  time step (real scalar)
 !                 r0            ==>  Distance between `Sun' and particle
@@ -368,7 +368,7 @@ end subroutine drift_kepu    ! drift_kepu
 !                 s             ==>  Approx. root of f 
 !             Output:
 !                 f             ==>  function value ( = 0 if O.K.) (integer)
-!
+
 ! Author:  Martin Duncan  
 ! Date:    March 12/93
 ! Last revision: March 12/93
@@ -400,12 +400,12 @@ subroutine drift_kepu_fchk(dt,r0,mu,alpha,u,s,f)
   return
 end subroutine drift_kepu_fchk     !   drift_kepu_fchk
 !-------------------------------------------------------------------
-!
+
 !*************************************************************************
 !                        DRIFT_KEPU_GUESS.F
 !*************************************************************************
 ! Initial guess for solving kepler's equation using universal variables.
-!
+
 !             Input:
 !                 dt            ==>  time step (real scalor)
 !                 r0            ==>  Distance between `Sun' and paritcle
@@ -416,7 +416,7 @@ end subroutine drift_kepu_fchk     !   drift_kepu_fchk
 !             Output:
 !                 s             ==>  initial guess for the value of 
 !                                    universal variable
-!
+
 ! Author:  Hal Levison & Martin Duncan 
 ! Date:    3/12/93
 ! Last revision: April 6/93
@@ -458,9 +458,9 @@ subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
         es = u/(en*a*a)
         e = sqrt(ec*ec + es*es)
         y = en*dt - es
-        !
+        
         call mco_sine (y,sy,cy)
-        !
+        
         sigma = dsign(1.d0,(es*cy + ec*sy))
         x = y + sigma*.85*e
         s = x/sqrt(alpha)
@@ -477,13 +477,13 @@ subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
   return
 end subroutine drift_kepu_guess     !   drift_kepu_guess
 !-------------------------------------------------------------------
-!
+
 !*************************************************************************
 !                        DRIFT_KEPU_LAG.F
 !*************************************************************************
 ! subroutine for solving kepler's equation in universal variables.
 ! using LAGUERRE'S METHOD
-!
+
 !             Input:
 !                 s             ==>  inital value of universal variable
 !                 dt            ==>  time step (real scalor)
@@ -499,7 +499,7 @@ end subroutine drift_kepu_guess     !   drift_kepu_guess
 !                 c1,c2,c3      ==>  c's from p171-172
 !                                       (real scalors)
 !                 iflgn          ==>  =0 if converged; !=0 if not
-!
+
 ! Author:  Hal Levison  
 ! Date:    2/3/93
 ! Last revision: 4/21/93
@@ -567,13 +567,13 @@ subroutine drift_kepu_lag(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
 end subroutine drift_kepu_lag    !    drift_kepu_leg
 !-----------------------------------------------------------------------
-!
+
 !*************************************************************************
 !                        DRIFT_KEPU_NEW.F
 !*************************************************************************
 ! subroutine for solving kepler's equation in universal variables.
 ! using NEWTON'S METHOD
-!
+
 !             Input:
 !                 s             ==>  inital value of universal variable
 !                 dt            ==>  time step (real scalor)
@@ -589,7 +589,7 @@ end subroutine drift_kepu_lag    !    drift_kepu_leg
 !                 c1,c2,c3      ==>  c's from p171-172
 !                                       (real scalors)
 !                 iflgn          ==>  =0 if converged; !=0 if not
-!
+
 ! Author:  Hal Levison  
 ! Date:    2/3/93
 ! Last revision: 4/21/93
@@ -649,13 +649,13 @@ subroutine drift_kepu_new(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflgn)
 
 end subroutine drift_kepu_new  ! drift_kepu_new
 !----------------------------------------------------------------------
-!
+
 !*************************************************************************
 !                        DRIFT_KEPU_P3SOLVE.F
 !*************************************************************************
 ! Returns the real root of cubic often found in solving kepler
 ! problem in universal variables.
-!
+
 !             Input:
 !                 dt            ==>  time step (real scalar)
 !                 r0            ==>  Distance between `Sun' and paritcle
@@ -667,7 +667,7 @@ end subroutine drift_kepu_new  ! drift_kepu_new
 !                 s             ==>  solution of cubic eqn for the  
 !                                    universal variable
 !                 iflg          ==>  success flag ( = 0 if O.K.) (integer)
-!
+
 ! Author:  Martin Duncan  
 ! Date:    March 12/93
 ! Last revision: March 12/93
@@ -723,13 +723,13 @@ subroutine drift_kepu_p3solve(dt,r0,mu,alpha,u,s,iflg)
   return
 end subroutine drift_kepu_p3solve     !   drift_kepu_p3solve
 !-------------------------------------------------------------------
-!
+
 !*************************************************************************
 !                        DRIFT_KEPU_STUMPFF.F
 !*************************************************************************
 ! subroutine for the calculation of stumpff functions
 ! see Danby p.172  equations 6.9.15
-!
+
 !             Input:
 !                 x             ==>  argument
 !             Output:
@@ -739,7 +739,7 @@ end subroutine drift_kepu_p3solve     !   drift_kepu_p3solve
 ! Date:    2/3/93
 ! Last revision: 2/3/93
 ! Modified by JEC: 31/3/98
-!
+
 subroutine drift_kepu_stumpff(x,c0,c1,c2,c3)
 
   use mercury_constant
@@ -766,22 +766,22 @@ subroutine drift_kepu_stumpff(x,c0,c1,c2,c3)
      n = n + 1
      x = x * .25d0
   enddo
-  !
+  
   x2 = x  * x
   x3 = x  * x2
   x4 = x2 * x2
   x5 = x2 * x3
   x6 = x3 * x3
-  !
+  
   c2 = 1.147074559772972d-11*x6 - 2.087675698786810d-9*x5 + 2.755731922398589d-7*x4  - 2.480158730158730d-5*x3&
        + 1.388888888888889d-3*x2  - 4.166666666666667d-2*x + .5d0
-  !
+  
   c3 = 7.647163731819816d-13*x6 - 1.605904383682161d-10*x5 + 2.505210838544172d-8*x4  - 2.755731922398589d-6*x3&
        + 1.984126984126984d-4*x2  - 8.333333333333333d-3*x + 1.666666666666667d-1
-  !
+  
   c1 = 1. - x*c3
   c0 = 1. - x*c2
-  !
+  
   if(n.ne.0) then
      do i=n,1,-1
         c3 = (c2 + c0*c3)*.25d0

@@ -9,42 +9,42 @@ module kepler_equation
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 !      MCO_KEP.FOR    (ErikSoft  7 July 1999)
-!
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!
+
 ! Author: John E. Chambers
-!
+
 ! Solves Kepler's equation for eccentricities less than one.
 ! Algorithm from A. Nijenhuis (1991) Cel. Mech. Dyn. Astron. 51, 319-330.
-!
+
 !  e = eccentricity
 !  l = mean anomaly      (radians)
 !  u = eccentric anomaly (   "   )
-!
+
 !------------------------------------------------------------------------------
-!
+
 function mco_kep (e,oldl)
 
   implicit none
 
-  !
+  
   ! Input/Outout
   real(double_precision) :: oldl,e,mco_kep
-  !
+  
   ! Local
   real(double_precision) :: l,pi,twopi,piby2,u1,u2,ome,sign
   real(double_precision) :: x,x2,sn,dsn,z1,z2,z3,f0,f1,f2,f3
   real(double_precision) :: p,q,p2,ss,cc
   logical flag,big,bigg
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   pi = 3.141592653589793d0
   twopi = 2.d0 * pi
   piby2 = .5d0 * pi
-  !
+  
   ! Reduce mean anomaly to lie in the range 0 < l < pi
   if (oldl.ge.0) then
      l = mod(oldl, twopi)
@@ -56,14 +56,14 @@ function mco_kep (e,oldl)
      l = twopi - l
      sign = -1.d0
   end if
-  !
+  
   ome = 1.d0 - e
-  !
+  
   if (l.ge..45d0.or.e.lt..55d0) then
-     !
+     
      ! Regions A,B or C in Nijenhuis
      ! -----------------------------
-     !
+     
      ! Rough starting value for eccentric anomaly
      if (l.lt.ome) then
         u1 = ome
@@ -74,7 +74,7 @@ function mco_kep (e,oldl)
            u1 = l + e
         end if
      end if
-     !
+     
      ! Improved value using Halley's method
      flag = u1.gt.piby2
      if (flag) then
@@ -91,10 +91,10 @@ function mco_kep (e,oldl)
      f1 = 1.d0 - e*dsn
      u2 = u1 - f0/(f1 - .5d0*f0*f2/f1)
   else
-     !
+     
      ! Region D in Nijenhuis
      ! ---------------------
-     !
+     
      ! Rough starting value for eccentric anomaly
      z1 = 4.d0*e + .5d0
      p = ome / z1
@@ -102,17 +102,17 @@ function mco_kep (e,oldl)
      p2 = p*p
      z2 = exp( log( dsqrt( p2*p + q*q ) + q )/1.5 )
      u1 = 2.d0*q / ( z2 + p + p2/z2 )
-     !
+     
      ! Improved value using Newton's method
      z2 = u1*u1
      z3 = z2*z2
      u2 = u1 - .075d0*u1*z3 / (ome + z1*z2 + .375d0*z3)
      u2 = l + e*u2*( 3.d0 - 4.d0*u2*u2 )
   end if
-  !
+  
   ! Accurate value using 3rd-order version of Newton's method
-  ! N.B. Keep cos(u2) rather than sqrt( 1-sin^2(u2) ) to maintain accuracy!
-  !
+  ! N.B. Keep cos(u2) rather than sqrt( 1-sin^2(u2) ) to maintain accuracy
+  
   ! First get accurate values for u2 - sin(u2) and 1 - cos(u2)
   bigg = (u2.gt.piby2)
   if (bigg) then
@@ -120,21 +120,21 @@ function mco_kep (e,oldl)
   else
      z3 = u2
   end if
-  !
+  
   big = (z3.gt.(.5d0*piby2))
   if (big) then
      x = piby2 - z3
   else
      x = z3
   end if
-  !
+  
   x2 = x*x
   ss = 1.d0
   cc = 1.d0
-  !
+  
   ss = x*x2/6.*(1. - x2/20.*(1. - x2/42.*(1. - x2/72.*(1. - x2/110.*(1. - x2/156.*(1. - x2/210.*(1. - x2/272.)))))))
   cc =   x2/2.*(1. - x2/12.*(1. - x2/30.*(1. - x2/56.*(1. - x2/ 90.*(1. - x2/132.*(1. - x2/182.*(1. - x2/240.*(1. - x2/306.))))))))
-  !
+  
   if (big) then
      z1 = cc + z3 - 1.d0
      z2 = ss + z3 + 1.d0 - piby2
@@ -142,12 +142,12 @@ function mco_kep (e,oldl)
      z1 = ss
      z2 = cc
   end if
-  !
+  
   if (bigg) then
      z1 = 2.d0*u2 + z1 - pi
      z2 = 2.d0 - z2
   end if
-  !
+  
   f0 = l - u2*ome - e*z1
   f1 = ome + e*z2
   f2 = .5d0*e*(u2-z1)
@@ -155,9 +155,9 @@ function mco_kep (e,oldl)
   z1 = f0/f1
   z2 = f0/(f2*z1+f1)
   mco_kep = sign*( u2 + f0/((f3*z1+f2)*z2+f1) )
-  !
+  
   !------------------------------------------------------------------------------
-  !
+  
   return
 end function mco_kep
 
@@ -349,7 +349,7 @@ real*8 function orbel_fget(e,capn)
 end function orbel_fget   ! orbel_fget
 
 !------------------------------------------------------------------
-!
+
 !***********************************************************************
 !                    ORBEL_FHYBRID.F
 !***********************************************************************
@@ -398,9 +398,9 @@ real*8 function orbel_fhybrid(e,n)
   return
 end function orbel_fhybrid  ! orbel_fhybrid
 !-------------------------------------------------------------------
-!
 
-!
+
+
 !***********************************************************************
 !!                    ORBEL_ZGET.F
 !***********************************************************************
