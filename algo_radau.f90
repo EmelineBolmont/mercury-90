@@ -121,7 +121,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   end if
   
   nv = 3 * nbod
-100 continue
+do
   
   ! If this is first call to subroutine since number/masses of objects changed
   ! do 6 iterations and initialize B, E arrays, otherwise do 2 iterations.
@@ -300,8 +300,10 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   ! the sequence using a smaller size.
   if ((dtflag.eq.1).and.(abs(t/tdid).lt.1)) then
      t = t * .8d0
-     goto 100
+  else
+    exit
   end if
+  end do
   
   ! If new sequence size is much bigger than the current one, reduce it
   if (abs(t/tdid).gt.1.4d0) t = tdid * 1.4d0
