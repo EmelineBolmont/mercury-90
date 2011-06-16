@@ -38,9 +38,9 @@ subroutine mxx_sort (n,x,index)
   real(double_precision) :: x(n)
   
   ! Local
-  integer :: i,j,k,l,m,inc,incarr(9),iy
+  integer :: i,j,k,l,m,inc,iy
   real(double_precision) :: y
-  data incarr/1,4,13,40,121,364,1093,3280,9841/
+  integer, dimension(9), parameter :: incarr = (/1,4,13,40,121,364,1093,3280,9841/)
   
   !------------------------------------------------------------------------------
   
