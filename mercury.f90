@@ -256,18 +256,26 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   !      real(double_precision) :: v0(3,NMAX),x0(3,NMAX)
   logical test,oldflag,flag1,flag2
   character*1 c1
-  character*3 c3,alg(60)
+  character*3 c3
   character*80 infile(3),filename,c80
   character*150 string
   integer :: error
+
+  character(len=3), dimension(60), parameter :: alg = (/'MVS','Mvs','mvs','mvs','mvs',&
+      'BS ','Bs ','bs ','Bul', 'bul',&
+      'BS2','Bs2','bs2','Bu2','bu2',&
+       'RAD','Rad','rad','RA ', 'ra ',&
+       'xxx','xxx','xxx','xxx','xxx',&
+       'xxx','xxx','xxx','xxx', 'xxx',&
+       'xxx','xxx','xxx','xxx','xxx',&
+       'xxx','xxx','xxx','xxx', 'xxx',&
+       'TES','Tes','tes','Tst','tst',&
+       'HYB','Hyb','hyb','HY ', 'hy ',&
+       'CLO','Clo','clo','CB ','cb ',&
+       'WID','Wid','wid','WB ', 'wb '/)
   
   !------------------------------------------------------------------------------
-  
-  data alg/'MVS','Mvs','mvs','mvs','mvs','BS ','Bs ','bs ','Bul', 'bul','BS2','Bs2','bs2','Bu2','bu2',&
-       'RAD','Rad','rad','RA ', 'ra ','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx', 'xxx',&
-       'xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx','xxx', 'xxx','TES','Tes','tes','Tst','tst',&
-       'HYB','Hyb','hyb','HY ', 'hy ','CLO','Clo','clo','CB ','cb ','WID','Wid','wid','WB ', 'wb '/
-  
+    
   rhocgs = AU * AU * AU * K2 / MSUN
   do j = 1, 80
      filename(j:j) = ' '
