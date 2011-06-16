@@ -7,6 +7,10 @@ module mercury_outputs
 !*************************************************************
   use types_numeriques
   use mercury_globals
+  
+  implicit none
+  
+  character(len=1), dimension(5), parameter, private :: bad = (/'*', '/', '.', ':', '&'/)
 
   contains
 
@@ -673,12 +677,11 @@ subroutine mio_clo (id,unitnum,header,lenhead,mem,lmem)
   ! Local
   integer :: j,k,itmp,nsub,lim(2,4)
   logical test
-  character*1 bad(5)
   character*250 filename
   
   !------------------------------------------------------------------------------
   
-  data bad/ '*', '/', '.', ':', '&'/
+
   
   ! Create a filename based on the object's name
   call mio_spl (8,id,nsub,lim)
@@ -743,12 +746,10 @@ subroutine mio_aei (id,unitnum,header,lenhead,mem,lmem)
   ! Local
   integer :: j,k,itmp,nsub,lim(2,4)
   logical test
-  character*1 bad(5)
   character*250 filename
   
   !------------------------------------------------------------------------------
   
-  data bad/ '*', '/', '.', ':', '&'/
   
   ! Create a filename based on the object's name
   call mio_spl (8,id,nsub,lim)
