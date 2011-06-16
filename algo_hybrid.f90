@@ -275,7 +275,7 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
   hlocal = sign(hrec,h0)
   
   ! Begin the Bulirsch-Stoer integration
-50 continue
+do
   tmp0 = abs(h0) - abs(tlocal)
   hrec = hlocal
   if (abs(hlocal).gt.tmp0) hlocal = sign (tmp0, h0)
@@ -307,7 +307,8 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
   end if
   
   ! If necessary, continue integrating objects undergoing close encounters
-  if ((tlocal - h0)*h0.lt.0) goto 50
+  if (.not.((tlocal - h0)*h0.lt.0)) exit
+  end do
   
   ! Return data for the close-encounter objects to global arrays
   do k = 2, nbs
