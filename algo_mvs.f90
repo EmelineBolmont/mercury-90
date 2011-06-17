@@ -301,7 +301,7 @@ end subroutine mco_mvs2h
 !------------------------------------------------------------------------------
 
 subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,dtflag,ngflag,&
-     opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile)
+     opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo)
   
   use physical_constant
   use mercury_constant
@@ -318,7 +318,6 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
   real(double_precision) :: rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character*80 outfile(3)
   character*8 id(nbod)
   
   ! Local

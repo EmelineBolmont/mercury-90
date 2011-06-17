@@ -40,7 +40,7 @@ module algo_hybrid
 !------------------------------------------------------------------------------
 
 subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,dtflag,ngflag,&
-     opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile)
+     opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo)
   
   use physical_constant
   use mercury_constant
@@ -57,7 +57,6 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
   real(double_precision) :: rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character*80 outfile(3)
   character*8 id(nbod)
   
   ! Local
@@ -144,7 +143,7 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
         end if
      end do
      call mdt_hkce (time,tstart,h0,hrec,tol,rmax,en(3),jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,ngflag,&
-          colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mfo_hkce)
+          colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,mfo_hkce)
   end if
   
   ! Advance solar Hamiltonian for H/2
@@ -197,7 +196,7 @@ end subroutine mdt_hy
 !------------------------------------------------------------------------------
 
 subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcrit,rce,stat,id,ngf,algor,ngflag,&
-     colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,force)
+     colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,force)
   
   use physical_constant
   use mercury_constant
@@ -215,7 +214,6 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
   real(double_precision) :: rce(nbod),rphy(nbod),rcrit(nbod),ngf(4,nbod)
   real(double_precision) :: tclo(CMAX),dclo(CMAX),ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character*80 outfile(3)
   character*8 id(nbod)
   external force
   

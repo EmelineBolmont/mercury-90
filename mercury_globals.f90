@@ -14,5 +14,8 @@ module mercury_globals
   
   character(len=80), dimension(NMESS) :: mem ! Various messages and strings used by mercury
   integer, dimension(NMESS) :: lmem ! the length of each string of the 'mem' elements
-
+  
+  character(len=80), dimension(3) :: outfile
+  character(len=80), dimension(4) :: dumpfile
+  
 end module mercury_globals

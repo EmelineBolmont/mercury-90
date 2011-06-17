@@ -138,13 +138,12 @@ program mercury
   real(double_precision) :: rceh(NMAX),epoch(NMAX),ngf(4,NMAX),rmax,rcen,jcen(3)
   real(double_precision) :: cefac,time,tstart,tstop,dtout,h0,tol,en(3),am(3)
   character*8 id(NMAX)
-  character*80 outfile(3), dumpfile(4)
   
   !------------------------------------------------------------------------------
   
   ! Get initial conditions and integration parameters
   call mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,id,&
-       epoch,ngf,opflag,ngflag,outfile,dumpfile)
+       epoch,ngf,opflag,ngflag)
   
   ! If this is a new integration, integrate all the objects to a common epoch.
   if (opflag.eq.-2) then
@@ -164,29 +163,29 @@ program mercury
   
   ! Main integration
   if (algor.eq.1) call mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_mvs,mco_h2mvs,mco_mvs2h)
+       rho,rceh,stat,id,ngf,opflag,ngflag,mdt_mvs,mco_h2mvs,mco_mvs2h)
   
   if (algor.eq.9) call mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_mvs,mco_iden,mco_iden)
+       rho,rceh,stat,id,ngf,opflag,ngflag,mdt_mvs,mco_iden,mco_iden)
   
   if (algor.eq.2) call mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_bs1)
+       rho,rceh,stat,id,ngf,opflag,ngflag,mdt_bs1)
   
   if (algor.eq.3) call mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_bs2)
+       rho,rceh,stat,id,ngf,opflag,ngflag,mdt_bs2)
   
   if (algor.eq.4) call mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_ra15)
+       rho,rceh,stat,id,ngf,opflag,ngflag,mdt_ra15)
   
   if (algor.eq.10) call mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_hy,mco_h2dh,mco_dh2h)
+       rho,rceh,stat,id,ngf,opflag,ngflag,mdt_hy,mco_h2dh,mco_dh2h)
   
   ! Do a final data dump
   do j = 2, nbod
      epoch(j) = time
   end do
   call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-       id,ngf,epoch,opflag,dumpfile)
+       id,ngf,epoch,opflag)
   
   ! Calculate and record the overall change in energy and ang. momentum
   open  (23, file=outfile(3), status='old', access='append',iostat=error)
@@ -232,7 +231,7 @@ program mercury
 !------------------------------------------------------------------------------
 
 subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,&
-     id,epoch,ngf,opflag,ngflag,outfile,dumpfile)
+     id,epoch,ngf,opflag,ngflag)
   
   use orbital_elements
 
@@ -245,7 +244,6 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   real(double_precision) :: time,tstart,tstop,dtout,h0,tol,rmax,rcen,jcen(3)
   real(double_precision) :: en(3),am(3),m(NMAX),x(3,NMAX),v(3,NMAX),s(3,NMAX)
   real(double_precision) :: rho(NMAX),rceh(NMAX),epoch(NMAX),ngf(4,NMAX),cefac
-  character*80 outfile(3),dumpfile(4)
   character*8 id(NMAX)
   
   ! Local
@@ -825,7 +823,7 @@ end subroutine mio_in
 !------------------------------------------------------------------------------
 
 subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-     id,ngf,opflag,ngflag,outfile,dumpfile,onestep)
+     id,ngf,opflag,ngflag,onestep)
   
   use dynamic
 
@@ -838,7 +836,6 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
   character*8 id(nbod)
-  character*80 outfile(3),dumpfile(4)
   
   ! Local
   integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
@@ -894,7 +891,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         
         ! Output data for all bodies
         call mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,algor,outfile(1))
-        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,outfile,&
+        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
              nstored,0)
         tmp0 = tstop - tout
         tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
@@ -904,7 +901,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            epoch(j) = time
         end do
         call mio_dump (time,tstart,tstop,dtout,algor,h,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-             id,ngf,epoch,opflag,dumpfile)
+             id,ngf,epoch,opflag)
         tdump = time
      end if
      
@@ -939,7 +936,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      if (nclo.gt.0.and.opflag.ge.-1) then
         itmp = 1
         if (nhit.ne.0) itmp = 0
-        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,outfile,nstored,itmp)
+        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,nstored,itmp)
         if (stopflag.eq.1) return
      end if
      
@@ -995,10 +992,10 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         do j = 2, nbod
            epoch(j) = time
         end do
-        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,outfile,&
+        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
              nstored,0)
         call mio_dump (time,tstart,tstop,dtout,algor,h,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-             id,ngf,epoch,opflag,dumpfile)
+             id,ngf,epoch,opflag)
         tdump = time
      end if
      
@@ -1060,7 +1057,7 @@ end subroutine mal_hvar
 !------------------------------------------------------------------------------
 
 subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-     id,ngf,opflag,ngflag,outfile,dumpfile,onestep,coord,bcoord)
+     id,ngf,opflag,ngflag,onestep,coord,bcoord)
   
   use dynamic
 
@@ -1074,7 +1071,6 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
   character*8 id(nbod)
-  character*80 outfile(3),dumpfile(4)
   
   ! Local
   integer :: i,j,k,n,itmp,nclo,nhit,jhit(CMAX),iclo(CMAX),jclo(CMAX)
@@ -1129,7 +1125,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         ! Convert to heliocentric coordinates and output data for all bodies
         call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
         call mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,algor,outfile(1))
-        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,outfile,&
+        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
              nstored,0)
         tmp0 = tstop - tout
         tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
@@ -1139,7 +1135,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            epoch(j) = time
         end do
         call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,&
-             stat,id,ngf,epoch,opflag,dumpfile)
+             stat,id,ngf,epoch,opflag)
         tdump = time
      end if
      
@@ -1165,7 +1161,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag)
         end if
         call onestep (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,dtflag,&
-             ngflag,opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile)
+             ngflag,opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo)
         time = time + h0
         
         !------------------------------------------------------------------------------
@@ -1176,8 +1172,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         if ((nclo.gt.0).and.(opflag.ge.-1)) then
            itmp = 1
            if (colflag.ne.0) itmp = 0
-           call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
-                outfile,nstored,itmp)
+           call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,nstored,itmp)
            if (stopflag.eq.1) return
         end if
         
@@ -1258,10 +1253,10 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         do j = 2, nbod
            epoch(j) = time
         end do
-        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,outfile,&
+        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
              nstored,0)
         call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,&
-             stat,id,ngf,epoch,opflag,dumpfile)
+             stat,id,ngf,epoch,opflag)
         tdump = time
      end if
      

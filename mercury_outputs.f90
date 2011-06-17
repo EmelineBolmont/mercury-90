@@ -43,7 +43,7 @@ module mercury_outputs
 !------------------------------------------------------------------------------
 
 subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
-     outfile,nstored,ceflush)
+     nstored,ceflush)
   
   use physical_constant
   use mercury_constant
@@ -59,7 +59,6 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stop
   integer :: nclo,iclo(nclo),jclo(nclo),nstored,ceflush
   real(double_precision) :: time,tstart,rcen,rmax,m(nbod),tclo(nclo),dclo(nclo)
   real(double_precision) :: ixvclo(6,nclo),jxvclo(6,nclo)
-  character*80 outfile(3)
   character*8 id(nbod)
   
   ! Local
@@ -170,7 +169,7 @@ end subroutine mio_ce
 !------------------------------------------------------------------------------
 
 subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,&
-     ngf,epoch,opflag,dumpfile)
+     ngf,epoch,opflag)
   
   use physical_constant
   use mercury_constant
@@ -183,7 +182,6 @@ subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   real(double_precision) :: time,tstart,tstop,dtout,h0,tol,rmax,en(3),am(3)
   real(double_precision) :: jcen(3),rcen,cefac,m(nbod),x(3,nbod),v(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod),epoch(nbod)
-  character*80 dumpfile(4)
   character*8 id(nbod)
   
   ! Local
