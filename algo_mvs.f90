@@ -318,7 +318,7 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
   real(double_precision) :: rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character*8 id(nbod)
+  character(len=8), dimension(nbod) :: id
   
   ! Local
   integer :: j,iflag,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),nowflag

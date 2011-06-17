@@ -37,11 +37,11 @@ program close
   real(double_precision) :: x1(3),x2(3),v1(3),v2(3),m(NMAX)
   real(double_precision) :: a1,a2,e1,e2,i1,i2,p1,p2,n1,n2,l1,l2,q1,q2
   logical test
-  character*250 string,fout,header,infile(50)
-  character*80 cc,c(NMAX)
-  character*8 master_id(NMAX),id(NMAX)
-  character*5 fin
-  character*1 check,style,type,c1
+  character(len=250) :: string,fout,header,infile(50)
+  character(len=80) :: cc,c(NMAX)
+  character(len=8) :: master_id(NMAX),id(NMAX)
+  character(len=5) :: fin
+  character(len=1) :: check,style,type,c1
   integer :: error
   
   !------------------------------------------------------------------------------

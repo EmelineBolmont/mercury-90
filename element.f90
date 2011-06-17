@@ -43,12 +43,12 @@ program element
   real(double_precision) :: fr,theta,phi,fv,vtheta,vphi,gm
   real(double_precision) :: x(3,NMAX),v(3,NMAX),xh(3,NMAX),vh(3,NMAX),m(NMAX)
   logical test
-  character*250 string,fout,header,infile(50)
-  character*80 cc,c(NMAX)
-  character*8 master_id(NMAX),id(NMAX)
-  character*5 fin
-  character*1 check,style,type,c1
-  character*2 c2
+  character(len=250) string,fout,header,infile(50)
+  character(len=80) cc,c(NMAX)
+  character(len=8) master_id(NMAX),id(NMAX)
+  character(len=5) fin
+  character(len=1) check,style,type,c1
+  character(len=2) c2
   
   !------------------------------------------------------------------------------
   
@@ -488,7 +488,7 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
   
   ! Input/Output
   integer :: timestyle,nel,iel(22),lenhead
-  character*250 string,header,fout
+  character(len=250) string,header,fout
   
   ! Local
   integer :: i,j,pos,nsub,lim(2,20),formflag,lenfout,f1,f2,itmp

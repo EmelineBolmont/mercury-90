@@ -108,13 +108,13 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   real(double_precision) :: h,jcen(3),rcen,cefac,m(nbod),x(3,nbod)
   real(double_precision) :: v(3,nbod),s(3,nbod),rho(nbod),rceh(nbod),rphys(nbod)
   real(double_precision) :: rce(nbod),rcrit(nbod)
-  character*8 id(nbod)
-  character*80 outfile
+  character(len=8) id(nbod)
+  character(len=80) outfile
   
   ! Local
   integer :: j, error
   real(double_precision) :: a(NMAX),hill(NMAX),temp,amin,vmax,k_2,rhocgs,rcen_2
-  character*80 header,c(NMAX)
+  character(len=80) header,c(NMAX)
   
   !------------------------------------------------------------------------------
   
@@ -382,14 +382,14 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   integer :: i0, nbod, nbig, stat(nbod), ejflag
   real(double_precision) :: time, en(3), am(3), jcen(3)
   real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
-  character*80 outfile
-  character*8 id(nbod)
+  character(len=80) outfile
+  character(len=8) id(nbod)
   
   ! Local
   integer :: j, year, month
   real(double_precision) :: r2,rmax2,t1,e,l
-  character*38 flost
-  character*6 tstring
+  character(len=38) flost
+  character(len=6) tstring
   integer :: error
   
   !------------------------------------------------------------------------------

@@ -59,14 +59,14 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   integer :: nclo,iclo(nclo),jclo(nclo),nstored,ceflush
   real(double_precision) :: time,rcen,m(nbod),tclo(nclo),dclo(nclo)
   real(double_precision) :: ixvclo(6,nclo),jxvclo(6,nclo)
-  character*8 id(nbod)
+  character(len=8) id(nbod)
   
   ! Local
   integer :: k,year,month
   real(double_precision) :: tmp0,t1,rfac,fr,fv,theta,phi,vtheta,vphi
-  character*80 c(200)
-  character*38 fstop
-  character*6 tstring
+  character(len=80) c(200)
+  character(len=38) fstop
+  character(len=6) tstring
   integer :: error
   
   !------------------------------------------------------------------------------
@@ -182,12 +182,12 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   real(double_precision) :: time,h0,tol,en(3),am(3)
   real(double_precision) :: jcen(3),rcen,cefac,m(nbod),x(3,nbod),v(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod),epoch(nbod)
-  character*8 id(nbod)
+  character(len=8) id(nbod)
   
   ! Local
   integer :: idp,i,j,k,len,j1,j2
   real(double_precision) :: rhocgs,k_2,rcen_2,rcen_4,rcen_6,x0(3,NMAX),v0(3,NMAX)
-  character*150 c
+  character(len=150) c
   integer :: error
   
   !------------------------------------------------------------------------------
@@ -410,7 +410,7 @@ subroutine mio_err (unit,s1,ls1,s2,ls2,s3,ls3,s4,ls4)
   
   ! Input/Output
   integer :: unit,ls1,ls2,ls3,ls4
-  character*80 s1,s2
+  character(len=80) s1,s2
   character(len=*) :: s3,s4
   
   !------------------------------------------------------------------------------
@@ -452,8 +452,8 @@ subroutine mio_log (time,en,am)
   ! Local
   integer :: year, month
   real(double_precision) :: tmp0, tmp1, t1
-  character*38 flog
-  character*6 tstring
+  character(len=38) flog
+  character(len=6) tstring
   
   !------------------------------------------------------------------------------
   
@@ -530,14 +530,14 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   integer :: nbod, nbig, stat(nbod), opflag
   real(double_precision) :: time,jcen(3),rcen,m(nbod),xh(3,nbod),vh(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod)
-  character*80 outfile
-  character*8 id(nbod)
+  character(len=80) outfile
+  character(len=8) id(nbod)
   
   ! Local
   integer :: k, len, nchar
   real(double_precision) :: rhocgs,k_2,rfac,rcen_2,fr,fv,theta,phi,vtheta,vphi
-  character*80 header,c(NMAX)
-  character*5 fout
+  character(len=80) header,c(NMAX)
+  character(len=5) fout
   integer :: error
   
   !------------------------------------------------------------------------------
@@ -665,13 +665,13 @@ subroutine mio_clo (id,unitnum,header,lenhead)
   ! Input/Output
   integer :: unitnum,lenhead
   character(len=4) :: extn = ".clo"
-  character*8 id
-  character*250 header
+  character(len=8) id
+  character(len=250) header
   
   ! Local
   integer :: j,k,itmp,nsub,lim(2,4)
   logical test
-  character*250 filename
+  character(len=250) filename
   
   !------------------------------------------------------------------------------
   
@@ -733,13 +733,13 @@ subroutine mio_aei (id,unitnum,header,lenhead)
   ! Input/Output
   integer :: unitnum,lenhead
   character(len=4) :: extn = ".aei"
-  character*8 id
-  character*250 header
+  character(len=8) id
+  character(len=250) header
   
   ! Local
   integer :: j,k,itmp,nsub,lim(2,4)
   logical test
-  character*250 filename
+  character(len=250) filename
   
   !------------------------------------------------------------------------------
   

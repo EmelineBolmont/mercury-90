@@ -32,7 +32,7 @@ function mio_c2fl (c)
   
   ! Input/Output
   real(double_precision) :: mio_c2fl
-  character*8 c
+  character(len=8) :: c
   
   ! Local
   integer :: ex
@@ -78,7 +78,7 @@ function mio_c2re (c,xmin,xmax,nchar)
   ! Input/output
   integer :: nchar
   real(double_precision) :: xmin,xmax,mio_c2re
-  character*8 c
+  character(len=8) :: c
   
   ! Local
   integer :: j
@@ -131,7 +131,7 @@ function mio_fl2c (x)
   
   ! Input/Output
   real(double_precision) :: x
-  character*8 mio_fl2c
+  character(len=8) :: mio_fl2c
   
   ! Local
   integer :: ex
@@ -192,7 +192,7 @@ function mio_re2c (x,xmin,xmax)
   
   ! Input/output
   real(double_precision) :: x,xmin,xmax
-  character*8 mio_re2c
+  character(len=8) :: mio_re2c
   
   ! Local
   integer :: j

@@ -27,6 +27,6 @@ module mercury_globals
   real(double_precision) :: dtdump ! DTDUMP = data-dump interval             (days)
   real(double_precision) :: dtfun ! DTFUN  = interval for other periodic effects (e.g. check for ejections)
 
-  real(double_precision) :: rmax ! TODO
+  real(double_precision) :: rmax !  RMAX  = heliocentric distance at which objects are considered ejected (AU)
   
 end module mercury_globals

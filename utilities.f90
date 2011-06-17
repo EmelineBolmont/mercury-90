@@ -351,7 +351,7 @@ subroutine mio_spl (length,string,nsub,delimit)
   
   ! Local
   integer :: j,k
-  character*1 c
+  character(len=1) c
   
   ! If the first dimension of the array 'delimit' is not 2, return an error
   if (size(delimit,1) /= 2) then

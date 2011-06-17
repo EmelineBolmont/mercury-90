@@ -57,7 +57,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
   real(double_precision) :: rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character*8 id(nbod)
+  character(len=8), dimension(nbod) :: id
   
   ! Local
   integer :: j,nce,ice(NMAX),jce(NMAX),ce(NMAX),iflag
@@ -214,7 +214,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
   real(double_precision) :: rce(nbod),rphy(nbod),rcrit(nbod),ngf(4,nbod)
   real(double_precision) :: tclo(CMAX),dclo(CMAX),ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character*8 id(nbod)
+  character(len=8), dimension(nbod) :: id
   external force
   
   ! Local
@@ -226,7 +226,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   real(double_precision) :: rcritbs(NMAX),rcebs(NMAX),rphybs(NMAX)
   real(double_precision) :: ngfbs(4,NMAX),x0(3,NMAX),v0(3,NMAX)
   real(double_precision) :: thit(CMAX),dhit(CMAX),thit1,temp
-  character*8 idbs(NMAX)
+  character(len=8) :: idbs(NMAX)
   
   !------------------------------------------------------------------------------
   

@@ -137,7 +137,7 @@ program mercury
   real(double_precision) :: m(NMAX),xh(3,NMAX),vh(3,NMAX),s(3,NMAX),rho(NMAX)
   real(double_precision) :: rceh(NMAX),epoch(NMAX),ngf(4,NMAX),rcen,jcen(3)
   real(double_precision) :: cefac,time,h0,tol,en(3),am(3)
-  character*8 id(NMAX)
+  character(len=8) id(NMAX)
   
   !------------------------------------------------------------------------------
   
@@ -244,17 +244,17 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   real(double_precision) :: time,h0,tol,rcen,jcen(3)
   real(double_precision) :: en(3),am(3),m(NMAX),x(3,NMAX),v(3,NMAX),s(3,NMAX)
   real(double_precision) :: rho(NMAX),rceh(NMAX),epoch(NMAX),ngf(4,NMAX),cefac
-  character*8 id(NMAX)
+  character(len=8) id(NMAX)
   
   ! Local
   integer :: j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
   real(double_precision) :: q,a,e,i,p,n,l,temp,tmp2,tmp3,rhocgs,t1,tmp4,tmp5,tmp6
   !      real(double_precision) :: v0(3,NMAX),x0(3,NMAX)
   logical test,oldflag,flag1,flag2
-  character*1 c1
-  character*3 c3
-  character*80 infile(3),filename,c80
-  character*150 string
+  character(len=1) c1
+  character(len=3) c3
+  character(len=80) infile(3),filename,c80
+  character(len=150) string
   integer :: error
 
   character(len=3), dimension(60), parameter :: alg = (/'MVS','Mvs','mvs','mvs','mvs',&
@@ -835,7 +835,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision) :: time,h0,tol,jcen(3),rcen
   real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
-  character*8 id(nbod)
+  character(len=8) id(nbod)
   
   ! Local
   integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
@@ -1070,7 +1070,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision) :: time,h0,tol,jcen(3),rcen
   real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
-  character*8 id(nbod)
+  character(len=8) id(nbod)
   
   ! Local
   integer :: i,j,k,n,itmp,nclo,nhit,jhit(CMAX),iclo(CMAX),jclo(CMAX)
@@ -1345,14 +1345,14 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   integer :: nbod,nbig,ngflag,stat(nbod)
   real(double_precision) :: time,h0,tol,jcen(3),m(nbod),x(3,nbod),v(3,nbod)
   real(double_precision) :: s(3,nbod),rceh(nbod),rho(nbod),epoch(nbod),ngf(4,nbod)
-  character*8 id(nbod)
+  character(len=8) id(nbod)
   
   ! Local
   integer :: j,k,l,nsml,nsofar,indx(NMAX),itemp,jtemp(NMAX)
   integer :: raflag,nce,ice(NMAX),jce(NMAX)
   real(double_precision) :: temp,epsml(NMAX),rtemp(NMAX)
   real(double_precision) :: h,hdid,tsmall,rphys(NMAX),rcrit(NMAX)
-  character*8 ctemp(NMAX)
+  character(len=8) ctemp(NMAX)
   
   !------------------------------------------------------------------------------
   
