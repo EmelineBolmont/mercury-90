@@ -42,7 +42,7 @@ module mercury_outputs
 
 !------------------------------------------------------------------------------
 
-subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,&
+subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
      outfile,nstored,ceflush)
   
   use physical_constant
@@ -55,11 +55,11 @@ subroutine mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stop
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),lmem(NMESS),stopflag
+  integer :: nbod,nbig,stat(nbod),stopflag
   integer :: nclo,iclo(nclo),jclo(nclo),nstored,ceflush
   real(double_precision) :: time,tstart,rcen,rmax,m(nbod),tclo(nclo),dclo(nclo)
   real(double_precision) :: ixvclo(6,nclo),jxvclo(6,nclo)
-  character*80 outfile(3),mem(NMESS)
+  character*80 outfile(3)
   character*8 id(nbod)
   
   ! Local
@@ -170,7 +170,7 @@ end subroutine mio_ce
 !------------------------------------------------------------------------------
 
 subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,&
-     ngf,epoch,opflag,dumpfile,mem,lmem)
+     ngf,epoch,opflag,dumpfile)
   
   use physical_constant
   use mercury_constant
@@ -180,11 +180,10 @@ subroutine mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   
   ! Input/Output
   integer :: algor,nbod,nbig,stat(nbod),opflag,ndump,nfun
-  integer :: lmem(NMESS)
   real(double_precision) :: time,tstart,tstop,dtout,h0,tol,rmax,en(3),am(3)
   real(double_precision) :: jcen(3),rcen,cefac,m(nbod),x(3,nbod),v(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod),epoch(nbod)
-  character*80 dumpfile(4),mem(NMESS)
+  character*80 dumpfile(4)
   character*8 id(nbod)
   
   ! Local
@@ -440,7 +439,7 @@ end subroutine mio_err
 
 !------------------------------------------------------------------------------
 
-subroutine mio_log (time,tstart,en,am,mem,lmem)
+subroutine mio_log (time,tstart,en,am)
   
   use physical_constant
   use mercury_constant
@@ -450,9 +449,7 @@ subroutine mio_log (time,tstart,en,am,mem,lmem)
 
   
   ! Input/Output
-  integer :: lmem(NMESS)
   real(double_precision) :: time, tstart, en(3), am(3)
-  character*80 mem(NMESS)
   
   ! Local
   integer :: year, month
@@ -658,7 +655,7 @@ end subroutine mio_out
 
 !------------------------------------------------------------------------------
 
-subroutine mio_clo (id,unitnum,header,lenhead,mem,lmem)
+subroutine mio_clo (id,unitnum,header,lenhead)
   
   use physical_constant
   use mercury_constant
@@ -668,11 +665,10 @@ subroutine mio_clo (id,unitnum,header,lenhead,mem,lmem)
 
   
   ! Input/Output
-  integer :: unitnum,lenhead,lmem(NMESS)
+  integer :: unitnum,lenhead
   character(len=4) :: extn = ".clo"
   character*8 id
   character*250 header
-  character*80 mem(NMESS)
   
   ! Local
   integer :: j,k,itmp,nsub,lim(2,4)
@@ -727,7 +723,7 @@ end subroutine mio_clo
 
 !------------------------------------------------------------------------------
 
-subroutine mio_aei (id,unitnum,header,lenhead,mem,lmem)
+subroutine mio_aei (id,unitnum,header,lenhead)
   
   use physical_constant
   use mercury_constant
@@ -737,11 +733,10 @@ subroutine mio_aei (id,unitnum,header,lenhead,mem,lmem)
 
   
   ! Input/Output
-  integer :: unitnum,lenhead,lmem(NMESS)
+  integer :: unitnum,lenhead
   character(len=4) :: extn = ".aei"
   character*8 id
   character*250 header
-  character*80 mem(NMESS)
   
   ! Local
   integer :: j,k,itmp,nsub,lim(2,4)

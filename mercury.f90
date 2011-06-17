@@ -131,20 +131,20 @@ program mercury
 
   implicit none
   
-  integer :: j,algor,nbod,nbig,stat(NMAX),lmem(NMESS)
+  integer :: j,algor,nbod,nbig,stat(NMAX)
   integer :: opflag,ngflag,ndump,nfun
   integer :: error
   real(double_precision) :: m(NMAX),xh(3,NMAX),vh(3,NMAX),s(3,NMAX),rho(NMAX)
   real(double_precision) :: rceh(NMAX),epoch(NMAX),ngf(4,NMAX),rmax,rcen,jcen(3)
   real(double_precision) :: cefac,time,tstart,tstop,dtout,h0,tol,en(3),am(3)
   character*8 id(NMAX)
-  character*80 outfile(3), dumpfile(4), mem(NMESS)
+  character*80 outfile(3), dumpfile(4)
   
   !------------------------------------------------------------------------------
   
   ! Get initial conditions and integration parameters
   call mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,id,&
-       epoch,ngf,opflag,ngflag,outfile,dumpfile,lmem,mem)
+       epoch,ngf,opflag,ngflag,outfile,dumpfile)
   
   ! If this is a new integration, integrate all the objects to a common epoch.
   if (opflag.eq.-2) then
@@ -164,29 +164,29 @@ program mercury
   
   ! Main integration
   if (algor.eq.1) call mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mem,lmem,mdt_mvs,mco_h2mvs,mco_mvs2h)
+       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_mvs,mco_h2mvs,mco_mvs2h)
   
   if (algor.eq.9) call mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mem,lmem,mdt_mvs,mco_iden,mco_iden)
+       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_mvs,mco_iden,mco_iden)
   
   if (algor.eq.2) call mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mem,lmem,mdt_bs1)
+       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_bs1)
   
   if (algor.eq.3) call mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mem,lmem,mdt_bs2)
+       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_bs2)
   
   if (algor.eq.4) call mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mem,lmem,mdt_ra15)
+       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_ra15)
   
   if (algor.eq.10) call mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
-       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mem,lmem,mdt_hy,mco_h2dh,mco_dh2h)
+       rho,rceh,stat,id,ngf,opflag,ngflag,outfile,dumpfile,mdt_hy,mco_h2dh,mco_dh2h)
   
   ! Do a final data dump
   do j = 2, nbod
      epoch(j) = time
   end do
   call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-       id,ngf,epoch,opflag,dumpfile,mem,lmem)
+       id,ngf,epoch,opflag,dumpfile)
   
   ! Calculate and record the overall change in energy and ang. momentum
   open  (23, file=outfile(3), status='old', access='append',iostat=error)
@@ -232,10 +232,8 @@ program mercury
 !------------------------------------------------------------------------------
 
 subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,&
-     id,epoch,ngf,opflag,ngflag,outfile,dumpfile,lmem,mem)
+     id,epoch,ngf,opflag,ngflag,outfile,dumpfile)
   
-  use physical_constant
-  use mercury_constant
   use orbital_elements
 
   implicit none
@@ -243,11 +241,11 @@ subroutine mio_in (time,tstart,tstop,dtout,algor,h0,tol,rmax,rcen,jcen,en,am,cef
   
   ! Input/Output
   integer :: algor,nbod,nbig,stat(NMAX),opflag,ngflag
-  integer :: lmem(NMESS),ndump,nfun
+  integer :: ndump,nfun
   real(double_precision) :: time,tstart,tstop,dtout,h0,tol,rmax,rcen,jcen(3)
   real(double_precision) :: en(3),am(3),m(NMAX),x(3,NMAX),v(3,NMAX),s(3,NMAX)
   real(double_precision) :: rho(NMAX),rceh(NMAX),epoch(NMAX),ngf(4,NMAX),cefac
-  character*80 outfile(3),dumpfile(4), mem(NMESS)
+  character*80 outfile(3),dumpfile(4)
   character*8 id(NMAX)
   
   ! Local
@@ -827,10 +825,8 @@ end subroutine mio_in
 !------------------------------------------------------------------------------
 
 subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-     id,ngf,opflag,ngflag,outfile,dumpfile,mem,lmem,onestep)
+     id,ngf,opflag,ngflag,outfile,dumpfile,onestep)
   
-  use physical_constant
-  use mercury_constant
   use dynamic
 
   implicit none
@@ -838,12 +834,11 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   
   ! Input/Output
   integer :: algor,nbod,nbig,stat(nbod),opflag,ngflag,ndump,nfun
-  integer :: lmem(NMESS)
   real(double_precision) :: time,tstart,tstop,dtout,h0,tol,jcen(3),rcen,rmax
   real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
   character*8 id(nbod)
-  character*80 outfile(3),dumpfile(4),mem(NMESS)
+  character*80 outfile(3),dumpfile(4)
   
   ! Local
   integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
@@ -899,7 +894,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         
         ! Output data for all bodies
         call mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,algor,outfile(1))
-        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
+        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,outfile,&
              nstored,0)
         tmp0 = tstop - tout
         tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
@@ -909,7 +904,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            epoch(j) = time
         end do
         call mio_dump (time,tstart,tstop,dtout,algor,h,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-             id,ngf,epoch,opflag,dumpfile,mem,lmem)
+             id,ngf,epoch,opflag,dumpfile)
         tdump = time
      end if
      
@@ -934,7 +929,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      ! Check if close encounters or collisions occurred
      nclo = 0
      call mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,xh,vh,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
-          thit,thit1,nowflag,stat,outfile(3),mem,lmem)
+          thit,thit1,nowflag,stat,outfile(3))
      
      !------------------------------------------------------------------------------
      
@@ -944,8 +939,7 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      if (nclo.gt.0.and.opflag.ge.-1) then
         itmp = 1
         if (nhit.ne.0) itmp = 0
-        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
-             mem,lmem,outfile,nstored,itmp)
+        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,outfile,nstored,itmp)
         if (stopflag.eq.1) return
      end if
      
@@ -959,12 +953,12 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            if (chit(k).eq.1) then
               i = ihit(k)
               j = jhit(k)
-              call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,mem,lmem,outfile(3))
+              call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfile(3))
            end if
         end do
         
         ! Remove lost objects, reset flags and recompute Hill and physical radii
-        call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+        call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,outfile(3),itmp)
         dtflag = 1
         if (opflag.ge.0) opflag = 1
         call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,outfile(2),1)
@@ -982,11 +976,11 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         do k = 1, nhit
            i = 1
            j = jhit(k)
-           call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,mem,lmem,outfile(3))
+           call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfile(3))
         end do
         
         ! Remove lost objects, reset flags and recompute Hill and physical radii
-        call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+        call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,outfile(3),itmp)
         dtflag = 1
         if (opflag.ge.0) opflag = 1
         call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,outfile(2),0)
@@ -1001,17 +995,17 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         do j = 2, nbod
            epoch(j) = time
         end do
-        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
+        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,outfile,&
              nstored,0)
         call mio_dump (time,tstart,tstop,dtout,algor,h,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-             id,ngf,epoch,opflag,dumpfile,mem,lmem)
+             id,ngf,epoch,opflag,dumpfile)
         tdump = time
      end if
      
      ! Write a progress report to the log file
      if (abs(time-tlog).ge.abs(dtdump).and.opflag.ge.0) then
         call mxx_en (jcen,nbod,nbig,m,xh,vh,s,en(2),am(2))
-        call mio_log (time,tstart,en,am,mem,lmem)
+        call mio_log (time,tstart,en,am)
         tlog = time
      end if
      
@@ -1028,11 +1022,11 @@ subroutine mal_hvar (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         end do
         
         ! Check for ejections
-        call mxx_ejec (time,tstart,rmax,en,am,jcen,2,nbod,nbig,m,xh,vh,s,stat,id,ejflag,outfile(3),mem,lmem)
+        call mxx_ejec (time,tstart,rmax,en,am,jcen,2,nbod,nbig,m,xh,vh,s,stat,id,ejflag,outfile(3))
         
         ! Remove lost objects, reset flags and recompute Hill and physical radii
         if (ejflag.ne.0) then
-           call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+           call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,outfile(3),itmp)
            dtflag = 1
            if (opflag.ge.0) opflag = 1
            call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,outfile(2),0)
@@ -1066,10 +1060,8 @@ end subroutine mal_hvar
 !------------------------------------------------------------------------------
 
 subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
-     id,ngf,opflag,ngflag,outfile,dumpfile,mem,lmem,onestep,coord,bcoord)
+     id,ngf,opflag,ngflag,outfile,dumpfile,onestep,coord,bcoord)
   
-  use physical_constant
-  use mercury_constant
   use dynamic
 
   implicit none
@@ -1077,12 +1069,12 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
   
   ! Input/Output
   integer :: algor,nbod,nbig,stat(nbod),opflag,ngflag
-  integer :: lmem(NMESS),ndump,nfun
+  integer :: ndump,nfun
   real(double_precision) :: time,tstart,tstop,dtout,h0,tol,jcen(3),rcen,rmax
   real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
   character*8 id(nbod)
-  character*80 outfile(3),dumpfile(4),mem(NMESS)
+  character*80 outfile(3),dumpfile(4)
   
   ! Local
   integer :: i,j,k,n,itmp,nclo,nhit,jhit(CMAX),iclo(CMAX),jclo(CMAX)
@@ -1137,7 +1129,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         ! Convert to heliocentric coordinates and output data for all bodies
         call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
         call mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,algor,outfile(1))
-        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
+        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,outfile,&
              nstored,0)
         tmp0 = tstop - tout
         tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
@@ -1147,7 +1139,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            epoch(j) = time
         end do
         call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,&
-             stat,id,ngf,epoch,opflag,dumpfile,mem,lmem)
+             stat,id,ngf,epoch,opflag,dumpfile)
         tdump = time
      end if
      
@@ -1173,7 +1165,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag)
         end if
         call onestep (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,dtflag,&
-             ngflag,opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
+             ngflag,opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile)
         time = time + h0
         
         !------------------------------------------------------------------------------
@@ -1184,7 +1176,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         if ((nclo.gt.0).and.(opflag.ge.-1)) then
            itmp = 1
            if (colflag.ne.0) itmp = 0
-           call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,&
+           call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
                 outfile,nstored,itmp)
            if (stopflag.eq.1) return
         end if
@@ -1198,7 +1190,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            
            ! Reindex the surviving objects
            call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
-           call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+           call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,outfile(3),itmp)
            
            ! Reset flags, and calculate new Hill radii and physical radii
            dtflag = 1
@@ -1237,11 +1229,11 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
            do k = 1, nhit
               i = 1
               j = jhit(k)
-              call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,mem,lmem,outfile(3))
+              call mce_coll (thit(k),tstart,en(3),jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfile(3))
            end do
            
            ! Remove lost objects, reset flags and recompute Hill and physical radii
-           call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+           call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,outfile(3),itmp)
            if (opflag.ge.0) opflag = 1
            dtflag = 1
            call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,outfile(2),0)
@@ -1266,10 +1258,10 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         do j = 2, nbod
            epoch(j) = time
         end do
-        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,mem,lmem,outfile,&
+        call mio_ce (time,tstart,rcen,rmax,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,outfile,&
              nstored,0)
         call mio_dump (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,&
-             stat,id,ngf,epoch,opflag,dumpfile,mem,lmem)
+             stat,id,ngf,epoch,opflag,dumpfile)
         tdump = time
      end if
      
@@ -1277,7 +1269,7 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
      if (abs(time-tlog).ge.abs(dtdump).and.opflag.ge.0) then
         call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
         call mxx_en (jcen,nbod,nbig,m,xh,vh,s,en(2),am(2))
-        call mio_log (time,tstart,en,am,mem,lmem)
+        call mio_log (time,tstart,en,am)
         tlog = time
      end if
      
@@ -1303,11 +1295,11 @@ subroutine mal_hcon (time,tstart,tstop,dtout,algor,h0,tol,jcen,rcen,rmax,en,am,c
         ! Check for ejections
         itmp = 2
         if ((algor.eq.11).or.(algor.eq.12)) itmp = 3
-        call mxx_ejec (time,tstart,rmax,en,am,jcen,itmp,nbod,nbig,m,xh,vh,s,stat,id,ejflag,outfile(3),mem,lmem)
+        call mxx_ejec (time,tstart,rmax,en,am,jcen,itmp,nbod,nbig,m,xh,vh,s,stat,id,ejflag,outfile(3))
         
         ! Remove ejected objects, reset flags, calculate new Hill and physical radii
         if (ejflag.ne.0) then
-           call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile(3),itmp)
+           call mxx_elim (nbod,nbig,m,xh,vh,s,rho,rceh,rcrit,ngf,stat,id,outfile(3),itmp)
            if (opflag.ge.0) opflag = 1
            dtflag = 1
            call mce_init (tstart,algor,h0,jcen,rcen,rmax,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,outfile(2),0)

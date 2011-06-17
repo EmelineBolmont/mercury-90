@@ -21,6 +21,7 @@ program close
   use ascii_conversion
   use orbital_elements
   use mercury_outputs
+  use mercury_globals
   use utilities
 
   implicit none
@@ -28,7 +29,7 @@ program close
   
   integer :: itmp,i,j,k,l,iclo,jclo,precision,lenin
   integer :: nmaster,nopen,nwait,nbig,nsml,nsub,lim(2,100)
-  integer :: year,month,timestyle,line_num,lenhead,lmem(NMESS)
+  integer :: year,month,timestyle,line_num,lenhead
   integer :: nchar,algor,allflag,firstflag,ninfile
   integer :: unit(NMAX),master_unit(NMAX)
   real(double_precision) :: time,t0,t1,rmax,rcen,rfac,dclo,mcen,jcen(3)
@@ -37,7 +38,7 @@ program close
   real(double_precision) :: a1,a2,e1,e2,i1,i2,p1,p2,n1,n2,l1,l2,q1,q2
   logical test
   character*250 string,fout,header,infile(50)
-  character*80 mem(NMESS),cc,c(NMAX)
+  character*80 cc,c(NMAX)
   character*8 master_id(NMAX),id(NMAX)
   character*5 fin
   character*1 check,style,type,c1
@@ -113,7 +114,7 @@ program close
   if (nopen.lt.NFILES) then
      nopen = nopen + 1
      master_unit(nmaster) = 10 + nopen
-     call mio_clo (master_id(nmaster),master_unit(nmaster),  header,lenhead,mem,lmem)
+     call mio_clo (master_id(nmaster),master_unit(nmaster),  header,lenhead)
   else
      nwait = nwait + 1
      master_unit(nmaster) = -2
@@ -209,7 +210,7 @@ program close
                  if (nopen.lt.NFILES) then
                     nopen = nopen + 1
                     master_unit(nmaster) = 10 + nopen
-                    call mio_clo (master_id(nmaster),master_unit(nmaster),header,lenhead,mem,lmem)
+                    call mio_clo (master_id(nmaster),master_unit(nmaster),header,lenhead)
                  else
                     nwait = nwait + 1
                     master_unit(nmaster) = -2
@@ -321,7 +322,7 @@ program close
            nopen = nopen + 1
            nwait = nwait - 1
            master_unit(j) = 10 + nopen
-           call mio_clo (master_id(j),master_unit(j),header,lenhead,mem,lmem)
+           call mio_clo (master_id(j),master_unit(j),header,lenhead)
         end if
      end do
      goto 90

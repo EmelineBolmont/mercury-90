@@ -301,7 +301,7 @@ end subroutine mco_mvs2h
 !------------------------------------------------------------------------------
 
 subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,dtflag,ngflag,&
-     opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile,mem,lmem)
+     opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,outfile)
   
   use physical_constant
   use mercury_constant
@@ -313,12 +313,12 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   
   ! Input/Output
   integer :: nbod,nbig,stat(nbod),algor,dtflag,ngflag,opflag
-  integer :: colflag,lmem(NMESS),nclo,iclo(CMAX),jclo(CMAX)
+  integer :: colflag,nclo,iclo(CMAX),jclo(CMAX)
   real(double_precision) :: time,tstart,h0,tol,rmax,en(3),am(3),jcen(3),rcen
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
   real(double_precision) :: rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character*80 outfile(3),mem(NMESS)
+  character*80 outfile(3)
   character*8 id(nbod)
   
   ! Local
@@ -384,7 +384,7 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
   ! Check for close-encounter minima during drift step
   temp = time + h0
   call mce_stat (temp,h0,rcen,nbod,nbig,m,x0,v0,x,v,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
-       thit,thit1,nowflag,stat,outfile(3),mem,lmem)
+       thit,thit1,nowflag,stat,outfile(3))
   
   ! Advance interaction Hamiltonian for H/2
   call mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)

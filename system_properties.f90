@@ -373,7 +373,7 @@ end subroutine mxx_jac
 
 !------------------------------------------------------------------------------
 
-subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile,mem,lmem)
+subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile)
   
   use physical_constant
   use mercury_constant
@@ -383,10 +383,10 @@ subroutine mxx_ejec (time,tstart,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ej
 
   
   ! Input/Output
-  integer :: i0, nbod, nbig, stat(nbod), ejflag, lmem(NMESS)
+  integer :: i0, nbod, nbig, stat(nbod), ejflag
   real(double_precision) :: time, tstart, rmax, en(3), am(3), jcen(3)
   real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
-  character*80 outfile, mem(NMESS)
+  character*80 outfile
   character*8 id(nbod)
   
   ! Local

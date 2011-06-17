@@ -146,7 +146,7 @@ end subroutine mce_cent
 
 !------------------------------------------------------------------------------
 
-subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,mem,lmem,outfile)
+subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfile)
   
   use physical_constant
   use mercury_constant
@@ -155,10 +155,10 @@ subroutine mce_coll (time,tstart,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,i
 
   
   ! Input/Output
-  integer :: i,j,nbod,nbig,stat(nbod),lmem(NMESS)
+  integer :: i,j,nbod,nbig,stat(nbod)
   real(double_precision) :: time,tstart,elost,jcen(3)
   real(double_precision) :: m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),rphys(nbod)
-  character*80 outfile,mem(NMESS)
+  character*80 outfile
   character*8 id(nbod)
   
   ! Local
@@ -375,7 +375,7 @@ end subroutine mce_merg
 
 !------------------------------------------------------------------------------
 
-subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfile,nelim)
+subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   
   use physical_constant
   use mercury_constant
@@ -384,11 +384,11 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,mem,lmem,outfi
 
   
   ! Input/Output
-  integer :: nbod, nbig, nelim, stat(nbod), lmem(NMESS)
+  integer :: nbod, nbig, nelim, stat(nbod)
   real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
   real(double_precision) :: rho(nbod), rceh(nbod), rcrit(nbod), ngf(4,nbod)
   character*8 id(nbod)
-  character*80 outfile, mem(NMESS)
+  character*80 outfile
   
   ! Local
   integer :: j, k, l, nbigelim, elim(NMAX+1)
@@ -596,7 +596,7 @@ end subroutine mce_snif
 !------------------------------------------------------------------------------
 
 subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
-     thit,thit1,nowflag,stat,outfile,mem,lmem)
+     thit,thit1,nowflag,stat,outfile)
   
   use physical_constant
   use mercury_constant
@@ -607,12 +607,12 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   ! Input/Output
   integer :: nbod,nbig,stat(nbod),nowflag
   integer :: nclo,iclo(CMAX),jclo(CMAX)
-  integer :: nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),lmem(NMESS)
+  integer :: nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
   real(double_precision) :: time,h,rcen,m(nbod),x0(3,nbod),v0(3,nbod)
   real(double_precision) :: x1(3,nbod),v1(3,nbod),rce(nbod),rphys(nbod)
   real(double_precision) :: dclo(CMAX),tclo(CMAX),thit(CMAX),dhit(CMAX),thit1
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character*80 outfile,mem(NMESS)
+  character*80 outfile
   
   ! Local
   integer :: i,j, error

@@ -24,6 +24,7 @@ program element
   use orbital_elements
   use utilities
   use mercury_outputs
+  use mercury_globals
   
   use system_properties
   use algo_mvs, only : mco_h2j
@@ -34,7 +35,7 @@ program element
   
   integer :: itmp,i,j,k,l,iback(NMAX),precision,lenin
   integer :: nmaster,nopen,nwait,nbig,nsml,nbod,nsub,lim(2,100)
-  integer :: year,month,timestyle,line_num,lenhead,lmem(NMESS)
+  integer :: year,month,timestyle,line_num,lenhead
   integer :: nchar,algor,centre,allflag,firstflag,ninfile,nel,iel(22)
   integer :: nbod1,nbig1,unit(NMAX),code(NMAX),master_unit(NMAX)
   real(double_precision) :: time,teval,t0,t1,tprevious,rmax,rcen,rfac,rhocgs,temp
@@ -43,7 +44,7 @@ program element
   real(double_precision) :: x(3,NMAX),v(3,NMAX),xh(3,NMAX),vh(3,NMAX),m(NMAX)
   logical test
   character*250 string,fout,header,infile(50)
-  character*80 mem(NMESS),cc,c(NMAX)
+  character*80 cc,c(NMAX)
   character*8 master_id(NMAX),id(NMAX)
   character*5 fin
   character*1 check,style,type,c1
@@ -138,7 +139,7 @@ program element
   if (nopen.lt.NFILES) then
      nopen = nopen + 1
      master_unit(nmaster) = 10 + nopen
-     call mio_aei (master_id(nmaster),master_unit(nmaster),  header,lenhead,mem,lmem)
+     call mio_aei (master_id(nmaster),master_unit(nmaster),  header,lenhead)
   else
      nwait = nwait + 1
      master_unit(nmaster) = -2
@@ -253,7 +254,7 @@ program element
                  if (nopen.lt.NFILES) then
                     nopen = nopen + 1
                     master_unit(nmaster) = 10 + nopen
-                    call mio_aei (master_id(nmaster),master_unit(nmaster),header,lenhead,mem,lmem)
+                    call mio_aei (master_id(nmaster),master_unit(nmaster),header,lenhead)
                  else
                     nwait = nwait + 1
                     master_unit(nmaster) = -2
@@ -420,7 +421,7 @@ program element
            nopen = nopen + 1
            nwait = nwait - 1
            master_unit(j) = 10 + nopen
-           call mio_aei (master_id(j),master_unit(j),header,lenhead,mem,lmem)
+           call mio_aei (master_id(j),master_unit(j),header,lenhead)
         end if
      end do
      goto 90
