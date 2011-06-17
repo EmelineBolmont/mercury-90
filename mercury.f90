@@ -841,7 +841,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig
   integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
   integer :: dtflag,ejflag,nowflag,stopflag,nstored,ce(NMAX)
   integer :: nclo,iclo(CMAX),jclo(CMAX),nce,ice(NMAX),jce(NMAX)
-  real(double_precision) :: tmp0,h,hdid,tout,tdump,tfun,tlog,tsmall,dtdump,dtfun
+  real(double_precision) :: tmp0,h,hdid,tout,tdump,tfun,tlog,tsmall,dtfun
   real(double_precision) :: thit(CMAX),dhit(CMAX),thit1,x0(3,NMAX),v0(3,NMAX)
   real(double_precision) :: rce(NMAX),rphys(NMAX),rcrit(NMAX),a(NMAX)
   real(double_precision) :: dclo(CMAX),tclo(CMAX),epoch(NMAX)
@@ -1077,7 +1077,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig
   integer :: dtflag,ejflag,stopflag,colflag,nstored
   real(double_precision) :: x(3,NMAX),v(3,NMAX),xh0(3,NMAX),vh0(3,NMAX)
   real(double_precision) :: rce(NMAX),rphys(NMAX),rcrit(NMAX),epoch(NMAX)
-  real(double_precision) :: hby2,tout,tmp0,tdump,tfun,tlog,dtdump,dtfun
+  real(double_precision) :: hby2,tout,tmp0,tdump,tfun,tlog,dtfun
   real(double_precision) :: dclo(CMAX),tclo(CMAX),dhit(CMAX),thit(CMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX),a(NMAX)
   external onestep,coord,bcoord
