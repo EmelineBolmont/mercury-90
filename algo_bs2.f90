@@ -9,6 +9,9 @@ module algo_bs2
   use types_numeriques
 
   private
+
+  real(double_precision), parameter :: SHRINK=.55d0
+  real(double_precision), parameter :: GROW=1.3d0
   
   public :: mdt_bs2
   
@@ -41,10 +44,6 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   use mercury_constant
 
   implicit none
-
-  
-  real(double_precision), parameter :: SHRINK = .55d0,&
-                                       GROW = 1.3d0
   
   ! Input/Output
   integer :: nbod, nbig, stat(nbod), dtflag, ngflag

@@ -10,6 +10,9 @@ module algo_bs1
 
   private
   
+  real(double_precision), parameter :: SHRINK=.55d0
+  real(double_precision), parameter :: GROW=1.3d0
+  
   public :: mdt_bs1
   
   contains
@@ -37,13 +40,9 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   use mercury_constant
 
   implicit none
-
-  
-  real(double_precision) :: SHRINK,GROW
-  parameter (SHRINK=.55d0,GROW=1.3d0)
   
   ! Input/Output
-  integer :: nbod, nbig, stat(nbod), dtflag, ngflag
+  integer,intent(in) :: nbod, nbig, stat(nbod), dtflag, ngflag
   integer :: nce, ice(nce), jce(nce)
   real(double_precision) :: time,h0,hdid,tol,jcen(3),mass(nbod),x0(3,nbod),v0(3,nbod)
   real(double_precision) :: s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)

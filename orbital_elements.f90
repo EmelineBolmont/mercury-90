@@ -30,7 +30,8 @@ subroutine mco_x2a (gm,x,y,z,u,v,w,a,r,v2)
 
   
   ! Input/Output
-  real(double_precision) :: gm,x,y,z,u,v,w,a,r,v2
+  real(double_precision),intent(in) :: gm,x,y,z,u,v,w
+  real(double_precision),intent(out) :: a,r,v2
   
   !------------------------------------------------------------------------------
   

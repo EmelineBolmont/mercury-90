@@ -1342,9 +1342,6 @@ end subroutine mal_hcon
 !------------------------------------------------------------------------------
 
 subroutine mxx_sync (time,tstart,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,ngf,ngflag)
-  
-  use physical_constant
-  use mercury_constant
 
   implicit none
 

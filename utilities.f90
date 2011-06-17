@@ -346,7 +346,7 @@ subroutine mio_spl (length,string,nsub,delimit)
   integer, intent(out) :: nsub!,delimit(2,100)
   integer, dimension(:,:), intent(out) :: delimit
 
-  character*1 string(length)
+  character(len=1), dimension(length),intent(in) :: string
   ! TODO character(len=length) :: string make an error on the outputs
   
   ! Local

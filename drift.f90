@@ -253,9 +253,12 @@ subroutine drift_kepmd(dm,es,ec,x,s,c)
   real(double_precision) :: x,s,c
 
   !...    Internals
-  real(double_precision) :: A0, A1, A2, A3, A4
-  parameter(A0 = 39916800.d0, A1 = 6652800.d0, A2 = 332640.d0)
-  parameter(A3 = 7920.d0, A4 = 110.d0)
+  real(double_precision), parameter :: A0 = 39916800.d0
+  real(double_precision), parameter :: A1 = 6652800.d0
+  real(double_precision), parameter :: A2 = 332640.d0
+  real(double_precision), parameter :: A3 = 7920.d0
+  real(double_precision), parameter :: A4 = 110.d0
+
   real(double_precision) :: dx
   real(double_precision) :: fac1,fac2,q,y
   real(double_precision) :: f,fp,fpp,fppp
