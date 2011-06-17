@@ -158,14 +158,14 @@ subroutine mce_coll (time,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfi
   integer :: i,j,nbod,nbig,stat(nbod)
   real(double_precision) :: time,elost,jcen(3)
   real(double_precision) :: m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),rphys(nbod)
-  character(len=80) outfile
-  character(len=8) id(nbod)
+  character(len=80) :: outfile
+  character(len=8) :: id(nbod)
   
   ! Local
   integer :: year,month,itmp, error
   real(double_precision) :: t1
-  character(len=38) flost,fcol
-  character(len=6) tstring
+  character(len=38) :: flost,fcol
+  character(len=6) :: tstring
   
   !------------------------------------------------------------------------------
   
@@ -387,8 +387,8 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   integer :: nbod, nbig, nelim, stat(nbod)
   real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
   real(double_precision) :: rho(nbod), rceh(nbod), rcrit(nbod), ngf(4,nbod)
-  character(len=8) id(nbod)
-  character(len=80) outfile
+  character(len=8) :: id(nbod)
+  character(len=80) :: outfile
   
   ! Local
   integer :: j, k, l, nbigelim, elim(NMAX+1)
@@ -612,7 +612,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   real(double_precision) :: x1(3,nbod),v1(3,nbod),rce(nbod),rphys(nbod)
   real(double_precision) :: dclo(CMAX),tclo(CMAX),thit(CMAX),dhit(CMAX),thit1
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character(len=80) outfile
+  character(len=80) :: outfile
   
   ! Local
   integer :: i,j, error
