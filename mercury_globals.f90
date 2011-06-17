@@ -25,5 +25,6 @@ module mercury_globals
   
   real(double_precision) :: dtout
   real(double_precision) :: dtdump
+  real(double_precision) :: dtfun
   
 end module mercury_globals
