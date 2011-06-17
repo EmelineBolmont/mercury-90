@@ -23,4 +23,6 @@ module mercury_globals
   real(double_precision) :: tstart ! TSTART = epoch of first required output (days)
   real(double_precision) :: tstop ! TSTOP  =   epoch final required output (days)
   
+  real(double_precision) :: dtout
+  
 end module mercury_globals
