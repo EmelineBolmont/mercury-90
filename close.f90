@@ -30,7 +30,7 @@ program close
   integer :: itmp,i,j,k,l,iclo,jclo,precision,lenin
   integer :: nmaster,nopen,nwait,nbig,nsml,nsub,lim(2,100)
   integer :: year,month,timestyle,line_num,lenhead
-  integer :: nchar,algor,allflag,firstflag,ninfile
+  integer :: nchar,allflag,firstflag,ninfile
   integer :: unit(NMAX),master_unit(NMAX)
   real(double_precision) :: time,t0,t1,rmax,rcen,rfac,dclo,mcen,jcen(3)
   real(double_precision) :: fr,theta,phi,fv,vtheta,vphi,gm

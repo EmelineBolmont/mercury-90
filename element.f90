@@ -36,7 +36,7 @@ program element
   integer :: itmp,i,j,k,l,iback(NMAX),precision,lenin
   integer :: nmaster,nopen,nwait,nbig,nsml,nbod,nsub,lim(2,100)
   integer :: year,month,timestyle,line_num,lenhead
-  integer :: nchar,algor,centre,allflag,firstflag,ninfile,nel,iel(22)
+  integer :: nchar,centre,allflag,firstflag,ninfile,nel,iel(22)
   integer :: nbod1,nbig1,unit(NMAX),code(NMAX),master_unit(NMAX)
   real(double_precision) :: time,teval,t0,t1,tprevious,rmax,rcen,rfac,rhocgs,temp
   real(double_precision) :: mcen,jcen(3),el(22,NMAX),s(3),is(NMAX),ns(NMAX),a(NMAX)

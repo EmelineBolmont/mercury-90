@@ -92,7 +92,7 @@ end subroutine mce_hill
 
 !------------------------------------------------------------------------------
 
-subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcrit,id,outfile,rcritflag)
+subroutine mce_init (tstart,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcrit,id,outfile,rcritflag)
   
   use physical_constant
   use mercury_constant
@@ -104,7 +104,7 @@ subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,r
   real(double_precision), parameter :: N2=.4d0
   
   ! Input/Output
-  integer :: nbod,nbig,algor,rcritflag
+  integer :: nbod,nbig,rcritflag
   real(double_precision) :: tstart,h,jcen(3),rcen,rmax,cefac,m(nbod),x(3,nbod)
   real(double_precision) :: v(3,nbod),s(3,nbod),rho(nbod),rceh(nbod),rphys(nbod)
   real(double_precision) :: rce(nbod),rcrit(nbod)

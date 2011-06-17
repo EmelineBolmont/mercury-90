@@ -31,7 +31,7 @@ module dynamic
 ! ===
 !------------------------------------------------------------------------------
 
-subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,dhit,algor,ngf,ngflag)
+subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,dhit,ngf,ngflag)
   
   use physical_constant
   use mercury_constant
@@ -40,7 +40,7 @@ subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,
 
   
   ! Input/Output
-  integer :: i0, nbod, nbig, nhit, jhit(CMAX), algor, ngflag
+  integer :: i0, nbod, nbig, nhit, jhit(CMAX), ngflag
   real(double_precision) :: time,h,rcen,jcen(3),m(nbod),x0(3,nbod),v0(3,nbod)
   real(double_precision) :: x1(3,nbod),v1(3,nbod),thit(CMAX),dhit(CMAX),ngf(4,nbod)
   

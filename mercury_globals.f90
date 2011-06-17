@@ -18,4 +18,6 @@ module mercury_globals
   character(len=80), dimension(3) :: outfile
   character(len=80), dimension(4) :: dumpfile
   
+  integer :: algor ! An index that represent the algorithm used. (may change over time, especially for the HYBRID integrator).
+  
 end module mercury_globals

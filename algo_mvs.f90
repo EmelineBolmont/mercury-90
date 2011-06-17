@@ -300,7 +300,7 @@ end subroutine mco_mvs2h
 
 !------------------------------------------------------------------------------
 
-subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,algor,dtflag,ngflag,&
+subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,dtflag,ngflag,&
      opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo)
   
   use physical_constant
@@ -312,7 +312,7 @@ subroutine mdt_mvs (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rp
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),algor,dtflag,ngflag,opflag
+  integer :: nbod,nbig,stat(nbod),dtflag,ngflag,opflag
   integer :: colflag,nclo,iclo(CMAX),jclo(CMAX)
   real(double_precision) :: time,tstart,h0,tol,rmax,en(3),am(3),jcen(3),rcen
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
