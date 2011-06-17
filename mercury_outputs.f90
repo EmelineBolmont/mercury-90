@@ -168,7 +168,7 @@ end subroutine mio_ce
 
 !------------------------------------------------------------------------------
 
-subroutine mio_dump (time,tstop,dtout,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,&
+subroutine mio_dump (time,dtout,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,&
      ngf,epoch,opflag)
   
   use physical_constant
@@ -179,7 +179,7 @@ subroutine mio_dump (time,tstop,dtout,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nf
   
   ! Input/Output
   integer :: nbod,nbig,stat(nbod),opflag,ndump,nfun
-  real(double_precision) :: time,tstop,dtout,h0,tol,rmax,en(3),am(3)
+  real(double_precision) :: time,dtout,h0,tol,rmax,en(3),am(3)
   real(double_precision) :: jcen(3),rcen,cefac,m(nbod),x(3,nbod),v(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod),epoch(nbod)
   character*8 id(nbod)
