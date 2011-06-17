@@ -39,7 +39,7 @@ module algo_hybrid
 
 !------------------------------------------------------------------------------
 
-subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,dtflag,ngflag,&
+subroutine mdt_hy (time,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,dtflag,ngflag,&
      opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo)
   
   use physical_constant
@@ -53,7 +53,7 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
   ! Input/Output
   integer :: nbod,nbig,stat(nbod),dtflag,ngflag,opflag
   integer :: colflag,nclo,iclo(CMAX),jclo(CMAX)
-  real(double_precision) :: time,tstart,h0,tol,rmax,en(3),am(3),jcen(3),rcen
+  real(double_precision) :: time,h0,tol,rmax,en(3),am(3),jcen(3),rcen
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
   real(double_precision) :: rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
@@ -142,7 +142,7 @@ subroutine mdt_hy (time,tstart,h0,tol,rmax,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rph
            v(3,j) = v0(3,j)
         end if
      end do
-     call mdt_hkce (time,tstart,h0,hrec,tol,rmax,en(3),jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,ngflag,&
+     call mdt_hkce (time,h0,hrec,tol,rmax,en(3),jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,ngflag,&
           colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,mfo_hkce)
   end if
   
@@ -195,7 +195,7 @@ end subroutine mdt_hy
 
 !------------------------------------------------------------------------------
 
-subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcrit,rce,stat,id,ngf,ngflag,&
+subroutine mdt_hkce (time,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcrit,rce,stat,id,ngf,ngflag,&
      colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,force)
   
   use physical_constant
@@ -210,7 +210,7 @@ subroutine mdt_hkce (time,tstart,h0,hrec,tol,rmax,elost,jcen,rcen,nbod,nbig,m,x,
   integer :: nbod,nbig,nce,ice(nce),jce(nce),stat(nbod),ngflag,ce(nbod)
   integer :: colflag,nclo,iclo(CMAX)
   integer :: jclo(CMAX)
-  real(double_precision) :: time,tstart,h0,hrec,tol,rmax,elost,jcen(3),rcen
+  real(double_precision) :: time,h0,hrec,tol,rmax,elost,jcen(3),rcen
   real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
   real(double_precision) :: rce(nbod),rphy(nbod),rcrit(nbod),ngf(4,nbod)
   real(double_precision) :: tclo(CMAX),dclo(CMAX),ixvclo(6,CMAX),jxvclo(6,CMAX)
@@ -298,7 +298,7 @@ do
         if (chit(k).eq.1) then
            i = ihit(k)
            j = jhit(k)
-           call mce_coll (thit(k),tstart,elost,jcen,i,j,nbs,nbsbig,mbs,xbs,vbs,sbs,rphybs,statbs,idbs,outfile(3))
+           call mce_coll (thit(k),elost,jcen,i,j,nbs,nbsbig,mbs,xbs,vbs,sbs,rphybs,statbs,idbs,outfile(3))
            colflag = colflag + 1
         end if
      end do

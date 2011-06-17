@@ -20,4 +20,6 @@ module mercury_globals
   
   integer :: algor ! An index that represent the algorithm used. (may change over time, especially for the HYBRID integrator).
   
+  real(double_precision) :: tstart ! TSTART = epoch of first required output (days)
+  
 end module mercury_globals
