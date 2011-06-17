@@ -32,7 +32,7 @@ program close
   integer :: year,month,timestyle,line_num,lenhead
   integer :: nchar,allflag,firstflag,ninfile
   integer :: unit(NMAX),master_unit(NMAX)
-  real(double_precision) :: time,t0,t1,rmax,rcen,rfac,dclo,mcen,jcen(3)
+  real(double_precision) :: time,t0,t1,rcen,rfac,dclo,mcen,jcen(3)
   real(double_precision) :: fr,theta,phi,fv,vtheta,vphi,gm
   real(double_precision) :: x1(3),x2(3),v1(3),v2(3),m(NMAX)
   real(double_precision) :: a1,a2,e1,e2,i1,i2,p1,p2,n1,n2,l1,l2,q1,q2
@@ -245,7 +245,7 @@ program close
         fv     = mio_c2re (cc(35:42), 0.d0, 1.d0,  4)
         vtheta = mio_c2re (cc(39:46), 0.d0, PI,    4)
         vphi   = mio_c2re (cc(43:50), 0.d0, TWOPI, 4)
-        call mco_ov2x (rcen,rmax,mcen,m(iclo),fr,theta,phi,fv,vtheta,vphi,x1(1),x1(2),x1(3),v1(1),v1(2),v1(3))
+        call mco_ov2x (rcen,mcen,m(iclo),fr,theta,phi,fv,vtheta,vphi,x1(1),x1(2),x1(3),v1(1),v1(2),v1(3))
         
         fr     = mio_c2re (cc(47:54), 0.d0, rfac,  4)
         theta  = mio_c2re (cc(51:58), 0.d0, PI,    4)
@@ -253,7 +253,7 @@ program close
         fv     = mio_c2re (cc(59:66), 0.d0, 1.d0,  4)
         vtheta = mio_c2re (cc(63:70), 0.d0, PI,    4)
         vphi   = mio_c2re (cc(67:74), 0.d0, TWOPI, 4)
-        call mco_ov2x (rcen,rmax,mcen,m(jclo),fr,theta,phi,fv,vtheta,vphi,x2(1),x2(2),x2(3),v2(1),v2(2),v2(3))
+        call mco_ov2x (rcen,mcen,m(jclo),fr,theta,phi,fv,vtheta,vphi,x2(1),x2(2),x2(3),v2(1),v2(2),v2(3))
         
         ! Convert to Keplerian elements
         gm = mcen + m(iclo)

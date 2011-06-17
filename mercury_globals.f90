@@ -23,8 +23,10 @@ module mercury_globals
   real(double_precision) :: tstart ! TSTART = epoch of first required output (days)
   real(double_precision) :: tstop ! TSTOP  =   epoch final required output (days)
   
-  real(double_precision) :: dtout
-  real(double_precision) :: dtdump
-  real(double_precision) :: dtfun
+  real(double_precision) :: dtout ! DTOUT  = data output interval           (days)
+  real(double_precision) :: dtdump ! DTDUMP = data-dump interval             (days)
+  real(double_precision) :: dtfun ! DTFUN  = interval for other periodic effects (e.g. check for ejections)
+
+  real(double_precision) :: rmax ! TODO
   
 end module mercury_globals

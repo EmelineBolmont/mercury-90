@@ -38,7 +38,7 @@ program element
   integer :: year,month,timestyle,line_num,lenhead
   integer :: nchar,centre,allflag,firstflag,ninfile,nel,iel(22)
   integer :: nbod1,nbig1,unit(NMAX),code(NMAX),master_unit(NMAX)
-  real(double_precision) :: time,teval,t0,t1,tprevious,rmax,rcen,rfac,rhocgs,temp
+  real(double_precision) :: time,teval,t0,t1,tprevious,rcen,rfac,rhocgs,temp
   real(double_precision) :: mcen,jcen(3),el(22,NMAX),s(3),is(NMAX),ns(NMAX),a(NMAX)
   real(double_precision) :: fr,theta,phi,fv,vtheta,vphi,gm
   real(double_precision) :: x(3,NMAX),v(3,NMAX),xh(3,NMAX),vh(3,NMAX),m(NMAX)
@@ -305,7 +305,7 @@ program element
            fv     = mio_c2re (c(j)(4+3*nchar:11+3*nchar), 0.d0, 1.d0,     nchar)
            vtheta = mio_c2re (c(j)(4+4*nchar:11+4*nchar), 0.d0, PI,     nchar)
            vphi   = mio_c2re (c(j)(4+5*nchar:11+5*nchar), 0.d0, TWOPI,     nchar)
-           call mco_ov2x (rcen,rmax,m(1),m(l),fr,theta,phi,fv,vtheta,vphi,x(1,l),x(2,l),x(3,l),v(1,l),v(2,l),v(3,l))
+           call mco_ov2x (rcen,m(1),m(l),fr,theta,phi,fv,vtheta,vphi,x(1,l),x(2,l),x(3,l),v(1,l),v(2,l),v(3,l))
            el(16,code(j)) = sqrt(x(1,l)*x(1,l) + x(2,l)*x(2,l)    + x(3,l)*x(3,l))
         end do
         

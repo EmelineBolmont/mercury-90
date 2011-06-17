@@ -92,7 +92,7 @@ end subroutine mce_hill
 
 !------------------------------------------------------------------------------
 
-subroutine mce_init (h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcrit,id,outfile,rcritflag)
+subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcrit,id,outfile,rcritflag)
   
   use physical_constant
   use mercury_constant
@@ -105,7 +105,7 @@ subroutine mce_init (h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce
   
   ! Input/Output
   integer :: nbod,nbig,rcritflag
-  real(double_precision) :: h,jcen(3),rcen,rmax,cefac,m(nbod),x(3,nbod)
+  real(double_precision) :: h,jcen(3),rcen,cefac,m(nbod),x(3,nbod)
   real(double_precision) :: v(3,nbod),s(3,nbod),rho(nbod),rceh(nbod),rphys(nbod)
   real(double_precision) :: rce(nbod),rcrit(nbod)
   character*8 id(nbod)
@@ -369,7 +369,7 @@ end subroutine mxx_jac
 
 !------------------------------------------------------------------------------
 
-subroutine mxx_ejec (time,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile)
+subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile)
   
   use physical_constant
   use mercury_constant
@@ -380,7 +380,7 @@ subroutine mxx_ejec (time,rmax,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,ou
   
   ! Input/Output
   integer :: i0, nbod, nbig, stat(nbod), ejflag
-  real(double_precision) :: time, rmax, en(3), am(3), jcen(3)
+  real(double_precision) :: time, en(3), am(3), jcen(3)
   real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
   character*80 outfile
   character*8 id(nbod)

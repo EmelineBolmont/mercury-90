@@ -64,16 +64,17 @@ end subroutine mco_x2a
 
 !------------------------------------------------------------------------------
 
-subroutine mco_x2ov (rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
+subroutine mco_x2ov (rcen,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
   
   use physical_constant
   use mercury_constant
+  use mercury_globals
 
   implicit none
 
   
   ! Input/Output
-  real(double_precision) :: rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
+  real(double_precision) :: rcen,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
   
   ! Local
   real(double_precision) :: r,v2,v1,be,ke,temp
@@ -356,7 +357,7 @@ end subroutine mco_el2x
 
 !------------------------------------------------------------------------------
 
-subroutine mco_ov2x (rcen,rmax,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
+subroutine mco_ov2x (rcen,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
   
   use physical_constant
   use mercury_constant
@@ -365,7 +366,7 @@ subroutine mco_ov2x (rcen,rmax,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
 
   
   ! Input/Output
-  real(double_precision) :: rcen,rmax,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
+  real(double_precision) :: rcen,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
   
   ! Local
   real(double_precision) :: r,v1,temp

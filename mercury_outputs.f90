@@ -42,7 +42,7 @@ module mercury_outputs
 
 !------------------------------------------------------------------------------
 
-subroutine mio_ce (time,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
+subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
      nstored,ceflush)
   
   use physical_constant
@@ -57,7 +57,7 @@ subroutine mio_ce (time,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tc
   ! Input/Output
   integer :: nbod,nbig,stat(nbod),stopflag
   integer :: nclo,iclo(nclo),jclo(nclo),nstored,ceflush
-  real(double_precision) :: time,rcen,rmax,m(nbod),tclo(nclo),dclo(nclo)
+  real(double_precision) :: time,rcen,m(nbod),tclo(nclo),dclo(nclo)
   real(double_precision) :: ixvclo(6,nclo),jxvclo(6,nclo)
   character*8 id(nbod)
   
@@ -84,7 +84,7 @@ subroutine mio_ce (time,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tc
      c(nstored)(12:19) = mio_re2c(dble(jclo(k)-1),0.d0,11239423.99d0)
      c(nstored)(15:22) = mio_fl2c(dclo(k))
      
-     call mco_x2ov (rcen,rmax,m(1),0.d0,ixvclo(1,k),ixvclo(2,k),ixvclo(3,k),ixvclo(4,k),ixvclo(5,k),ixvclo(6,k),fr,theta,phi,fv,&
+     call mco_x2ov (rcen,m(1),0.d0,ixvclo(1,k),ixvclo(2,k),ixvclo(3,k),ixvclo(4,k),ixvclo(5,k),ixvclo(6,k),fr,theta,phi,fv,&
           vtheta,vphi)
      c(nstored)(23:30) = mio_re2c (fr    , 0.d0, rfac)
      c(nstored)(27:34) = mio_re2c (theta , 0.d0, PI)
@@ -93,7 +93,7 @@ subroutine mio_ce (time,rcen,rmax,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tc
      c(nstored)(39:46) = mio_re2c (vtheta, 0.d0, PI)
      c(nstored)(43:50) = mio_re2c (vphi  , 0.d0, TWOPI)
      
-     call mco_x2ov (rcen,rmax,m(1),0.d0,jxvclo(1,k),jxvclo(2,k),jxvclo(3,k),jxvclo(4,k),jxvclo(5,k),jxvclo(6,k),fr,theta,phi,fv,&
+     call mco_x2ov (rcen,m(1),0.d0,jxvclo(1,k),jxvclo(2,k),jxvclo(3,k),jxvclo(4,k),jxvclo(5,k),jxvclo(6,k),fr,theta,phi,fv,&
           vtheta,vphi)
      c(nstored)(47:54) = mio_re2c (fr    , 0.d0, rfac)
      c(nstored)(51:58) = mio_re2c (theta , 0.d0, PI)
@@ -168,7 +168,7 @@ end subroutine mio_ce
 
 !------------------------------------------------------------------------------
 
-subroutine mio_dump (time,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,&
+subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,&
      ngf,epoch,opflag)
   
   use physical_constant
@@ -179,7 +179,7 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,rmax,en,am,cefac,ndump,nfun,nbod,nbig
   
   ! Input/Output
   integer :: nbod,nbig,stat(nbod),opflag,ndump,nfun
-  real(double_precision) :: time,h0,tol,rmax,en(3),am(3)
+  real(double_precision) :: time,h0,tol,en(3),am(3)
   real(double_precision) :: jcen(3),rcen,cefac,m(nbod),x(3,nbod),v(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod),epoch(nbod)
   character*8 id(nbod)
@@ -516,7 +516,7 @@ end subroutine mio_log
 
 !------------------------------------------------------------------------------
 
-subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfile)
+subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfile)
   
   use physical_constant
   use mercury_constant
@@ -528,7 +528,7 @@ subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,o
   
   ! Input/Output
   integer :: nbod, nbig, stat(nbod), opflag
-  real(double_precision) :: time,jcen(3),rcen,rmax,m(nbod),xh(3,nbod),vh(3,nbod)
+  real(double_precision) :: time,jcen(3),rcen,m(nbod),xh(3,nbod),vh(3,nbod)
   real(double_precision) :: s(3,nbod),rho(nbod)
   character*80 outfile
   character*8 id(nbod)
@@ -614,7 +614,7 @@ subroutine mio_out (time,jcen,rcen,rmax,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,o
   
   ! Calculate output variables for each body and convert to compressed format
   do k = 2, nbod
-     call mco_x2ov (rcen,rmax,m(1),m(k),xh(1,k),xh(2,k),xh(3,k),vh(1,k),vh(2,k),vh(3,k),fr,theta,phi,fv,vtheta,vphi)
+     call mco_x2ov (rcen,m(1),m(k),xh(1,k),xh(2,k),xh(3,k),vh(1,k),vh(2,k),vh(3,k),fr,theta,phi,fv,vtheta,vphi)
      
      ! Object's index number and output variables
      c(k)(1:8) = mio_re2c (dble(k - 1), 0.d0, 11239423.99d0)
