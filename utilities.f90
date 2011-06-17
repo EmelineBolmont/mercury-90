@@ -339,7 +339,6 @@ end subroutine mio_jd2y
 subroutine mio_spl (length,string,nsub,delimit)
 
   implicit none
-
   
   ! Input/Output
   integer, intent(in) :: length
@@ -347,7 +346,6 @@ subroutine mio_spl (length,string,nsub,delimit)
   integer, dimension(:,:), intent(out) :: delimit
 
   character(len=1), dimension(length),intent(in) :: string
-  ! TODO character(len=length) :: string make an error on the outputs
   
   ! Local
   integer :: j,k
