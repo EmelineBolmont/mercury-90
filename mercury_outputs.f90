@@ -42,8 +42,7 @@ module mercury_outputs
 
 !------------------------------------------------------------------------------
 
-subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
-     nstored,ceflush)
+subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,nstored,ceflush)
   
   use physical_constant
   use mercury_constant
@@ -168,8 +167,7 @@ end subroutine mio_ce
 
 !------------------------------------------------------------------------------
 
-subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,&
-     ngf,epoch,opflag)
+subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,ngf,epoch,opflag)
   
   use physical_constant
   use mercury_constant
@@ -664,7 +662,7 @@ subroutine mio_clo (id,unitnum,header,lenhead)
   
   ! Input/Output
   integer :: unitnum,lenhead
-  character(len=4) :: extn = ".clo"
+  character(len=4),parameter :: extn = ".clo"
   character(len=8) :: id
   character(len=250) :: header
   
@@ -732,7 +730,7 @@ subroutine mio_aei (id,unitnum,header,lenhead)
   
   ! Input/Output
   integer :: unitnum,lenhead
-  character(len=4) :: extn = ".aei"
+  character(len=4),parameter :: extn = ".aei"
   character(len=8) :: id
   character(len=250) :: header
   

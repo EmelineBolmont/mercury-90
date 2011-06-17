@@ -642,7 +642,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   ! Check for close encounters between each pair of objects
   do i = 2, nbig
      do j = i + 1, nbod
-        if (   xmax(i).ge.xmin(j).and.xmax(j).ge.xmin(i).and.ymax(i).ge.ymin(j).and.ymax(j).ge.ymin(i).and.&
+        if (xmax(i).ge.xmin(j).and.xmax(j).ge.xmin(i).and.ymax(i).ge.ymin(j).and.ymax(j).ge.ymin(i).and.&
              stat(i).ge.0.and.stat(j).ge.0) then
            
            ! If the X-Y boxes for this pair overlap, check circumstances more closely
