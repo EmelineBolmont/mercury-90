@@ -22,4 +22,7 @@ real(double_precision), parameter :: K2 = 2.959122082855911d-4 ! K2 = Gaussian g
 real(double_precision), parameter :: AU = 1.4959787e13 ! AU = astronomical unit in cm
 real(double_precision), parameter :: MSUN = 1.9891e33 ! MSUN = mass of the Sun in g
 
+! Numerical Constants
+real(double_precision), parameter :: THIRD = .3333333333333333d0
+
 end module physical_constant

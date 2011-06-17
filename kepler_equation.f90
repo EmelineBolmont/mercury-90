@@ -192,18 +192,26 @@ real*8 function orbel_flon(e,capn)
   real(double_precision) :: e,capn
 
   !...  Internals:
-  integer :: iflag,i,IMAX
+  integer :: iflag,i
   real(double_precision) :: a,b,sq,biga,bigb
   real(double_precision) :: x,x2
   real(double_precision) :: f,fp,dx
   real(double_precision) :: diff
-  real(double_precision) :: a0,a1,a3,a5,a7,a9,a11
-  real(double_precision) :: b1,b3,b5,b7,b9,b11
-  PARAMETER (IMAX = 10)
-  PARAMETER (a11 = 156.d0,a9 = 17160.d0,a7 = 1235520.d0)
-  PARAMETER (a5 = 51891840.d0,a3 = 1037836800.d0)
-  PARAMETER (b11 = 11.d0*a11,b9 = 9.d0*a9,b7 = 7.d0*a7)
-  PARAMETER (b5 = 5.d0*a5, b3 = 3.d0*a3)
+  real(double_precision) :: a0,a1
+  real(double_precision) :: b1
+  
+  integer, parameter :: IMAX = 10
+  real(double_precision), parameter :: a3 = 1037836800.d0
+  real(double_precision), parameter :: a5 = 51891840.d0
+  real(double_precision), parameter :: a7 = 1235520.d0
+  real(double_precision), parameter :: a9 = 17160.d0
+  real(double_precision), parameter :: a11 = 156.d0
+  
+  real(double_precision), parameter :: b3 = 3.d0*a3
+  real(double_precision), parameter :: b5 = 5.d0*a5
+  real(double_precision), parameter :: b7 = 7.d0*a7
+  real(double_precision), parameter :: b9 = 9.d0*a9
+  real(double_precision), parameter :: b11 = 11.d0*a11
 
   !----
   !...  Executable code 

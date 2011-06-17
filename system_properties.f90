@@ -45,9 +45,6 @@ subroutine mce_hill (nbod,m,x,v,hill,a)
   use orbital_elements
 
   implicit none
-
-  real(double_precision) :: THIRD
-  parameter (THIRD = .3333333333333333d0)
   
   ! Input/Output
   integer :: nbod
@@ -104,8 +101,7 @@ subroutine mce_init (tstart,algor,h,jcen,rcen,rmax,cefac,nbod,nbig,m,x,v,s,rho,r
   implicit none
 
   
-  real(double_precision) :: N2,THIRD
-  parameter (N2=.4d0,THIRD=.3333333333333333d0)
+  real(double_precision), parameter :: N2=.4d0
   
   ! Input/Output
   integer :: nbod,nbig,algor,rcritflag

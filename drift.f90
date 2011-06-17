@@ -529,8 +529,8 @@ subroutine drift_kepu_lag(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
   real(double_precision) :: x,fpp,ds,c0,f
   real(double_precision) :: fdt
 
-  integer :: NTMP
-  parameter(NTMP=NLAG2+1)
+  integer, parameter :: NTMP=NLAG2+1
+
 
   !----
   !...  Executable code 
