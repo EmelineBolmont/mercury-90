@@ -14,9 +14,18 @@ import os
 import subprocess # To launch various process, get outputs et errors, returnCode and so on.
 import difflib # To compare two strings
 import pdb # To debug
+from time import time
 
 # We import all variables linked to original output files.
-from original_files import *
+#from original_files import *
+
+MERCURY_FILENAMES = ["info.out", "big.dmp", "small.dmp", "param.dmp", "restart.dmp", "big.tmp", "small.tmp", "param.tmp", "restart.tmp"]
+ELEMENT_FILENAMES = ["APOLLO.aei", "JUPITER.aei", "MERCURY.aei", "ORPHEUS.aei", "TOUTATIS.aei", "EARTHMOO.aei", "KHUFU.aei", "MINOS.aei", 
+  "PLUTO.aei", "URANUS.aei", "JASON.aei", "MARS.aei", "NEPTUNE.aei", "SATURN.aei", "VENUS.aei"]
+CLOSE_FILENAMES = ["APOLLO.clo", "JUPITER.clo", "MERCURY.clo", "ORPHEUS.clo", "TOUTATIS.clo", "EARTHMOO.clo", "KHUFU.clo", "MINOS.clo", 
+  "PLUTO.clo", "URANUS.clo", "JASON.clo", "MARS.clo", "NEPTUNE.clo", "SATURN.clo", "VENUS.clo"]
+
+EXTENTION_ORIGINAL = ".ori"
 
 def run(command):
   """run a command that will be a string.
@@ -77,7 +86,7 @@ def compare(original, new):
   else:
     return None
 
-def compare2file(originals,new_files):
+def compare2file(ori_files,new_files):
   """Function that will use compare to see differences between 'original' 
   that is thought to be a variable and 'new_file' that is the name of a 
   file to read then use as input
@@ -85,17 +94,21 @@ def compare2file(originals,new_files):
   no_diff = []
   diff = []
   
-  for (original, new_file) in zip(originals, new_files):
-    f = open(new_file, 'r')
-    new_lines = f.readlines()
-    f.close()
+  for (original, new) in zip(ori_files, new_files):
+    f_old = open(original, 'r')
+    old_lines = f_old.readlines()
+    f_old.close()
+    
+    f_new = open(new, 'r')
+    new_lines = f_new.readlines()
+    f_new.close()
     
     
-    difference = compare(original, ''.join(new_lines))
+    difference = compare(''.join(old_lines), ''.join(new_lines))
     if (difference == None):
-      no_diff.append(new_file)
+      no_diff.append(new)
     else:
-      diff.append([new_file, difference])
+      diff.append([new, difference])
   
   # Now we output results
   if (no_diff != []):
@@ -121,40 +134,127 @@ os.chdir(FOLDER)
 # We clean undesirable files. 
 clean(["out", "clo", "aei", "dmp", "tmp"])
 
+# We clean original files from mercury, element and close
+clean(["ori"])
+
+print("""###################
+# Running original binaries #
+###################""")
+start = time()
+(merc_or_stdout, merc_or_stderr) = run("../mercury_original/mercury")
+t_merc_ori = time() - start
+
+start = time()
+(clo_or_stdout, clo_or_stderr) = run("../mercury_original/close")
+t_clo_ori = time() - start
+
+start = time()
+(ele_or_stdout, ele_or_stderr) = run("../mercury_original/element")
+t_ele_ori = time() - start
+
+for file in MERCURY_FILENAMES:
+  os.rename(file, file+EXTENTION_ORIGINAL)
+
+for file in CLOSE_FILENAMES:
+  os.rename(file, file+EXTENTION_ORIGINAL)
+  
+for file in ELEMENT_FILENAMES:
+  os.rename(file, file+EXTENTION_ORIGINAL)
+  
+MERCURY_FILENAMES_OLD = []
+for file in MERCURY_FILENAMES:
+  MERCURY_FILENAMES_OLD.append(file+EXTENTION_ORIGINAL)
+
+ELEMENT_FILENAMES_OLD = []
+for file in ELEMENT_FILENAMES:
+  ELEMENT_FILENAMES_OLD.append(file+EXTENTION_ORIGINAL)
+  
+CLOSE_FILENAMES_OLD = []
+for file in CLOSE_FILENAMES:
+  CLOSE_FILENAMES_OLD.append(file+EXTENTION_ORIGINAL)
+
+
+print("""###################
+# Running new binaries #
+###################""")
+
+clean(["out"])
+
+start = time()
+(merc_new_stdout, merc_new_stderr) = run("../mercury")
+t_merc_new = time() - start
+
+start = time()
+(clo_new_stdout, clo_new_stderr) = run("../close")
+t_clo_new = time() - start
+
+start = time()
+(ele_new_stdout, ele_new_stderr) = run("../element")
+t_ele_new = time() - start
+
+  
 print("""###################
 # Test of mercury #
 ###################""")
 
-(process_stdout, process_stderr) = run("../mercury")
 
 print("For the Output of mercury")
-diff = compare(MERCURY_OUTPUT_ORIGINAL, process_stdout)
+diff = compare(merc_or_stdout, merc_new_stdout)
 if (diff != None):
   print diff
 else:
   print("OK : No differences\n")
 
-compare2file(MERCURY_FILES, MERCURY_NAMES)
+compare2file(MERCURY_FILENAMES_OLD, MERCURY_FILENAMES)
   
 print("""
 #################
 # Test of close #
 #################""")
 
-(process_stdout, process_stderr) = run("../close")
 
-compare2file(CLOSE_FILES, CLOSE_NAMES)
+print("For the Output of close")
+diff = compare(clo_or_stdout, clo_new_stdout)
+if (diff != None):
+  print diff
+else:
+  print("OK : No differences\n")
+
+compare2file(CLOSE_FILENAMES_OLD, CLOSE_FILENAMES)
 
 print("""
 ###################
 # Test of element #
 ###################""")
 
-(process_stdout, process_stderr) = run("../element")
 
-compare2file(ELEMENT_FILES, ELEMENT_NAMES)
+print("For the Output of element")
+diff = compare(ele_or_stdout, ele_new_stdout)
+if (diff != None):
+  print diff
+else:
+  print("OK : No differences\n")
 
+compare2file(ELEMENT_FILENAMES_OLD, ELEMENT_FILENAMES)
 
-
-
+# Not representative, it depend really on the execution. We should do a mean value on several runs, or a longer run.
+#~ print("""
+#~ #############################
+#~ # Execution time comparison #
+#~ #############################""")
+#~ 
+#~ # We determine the pourcentage of difference from original and new binaries
+#~ pourcent = (t_merc_new - t_merc_ori) / t_merc_ori
+#~ merc_pourcent = " ("+str(round(pourcent*100))+")"
+#~ 
+#~ pourcent = (t_ele_new - t_ele_ori) / t_ele_ori
+#~ ele_pourcent = " ("+str(round(pourcent*100))+")"
+#~ 
+#~ pourcent = (t_clo_new - t_clo_ori) / t_clo_ori
+#~ clo_pourcent = " ("+str(round(pourcent*100))+")"
+#~ 
+#~ print("binary\toriginal\tnew")
+#~ print("mercury\t"+str(t_merc_ori)+"\t"+str(t_merc_new)+merc_pourcent)
+#~ print("element\t"+str(t_ele_ori)+"\t"+str(t_ele_new)+ele_pourcent)
+#~ print("close\t"+str(t_clo_ori)+"\t"+str(t_clo_new)+clo_pourcent)
 
