@@ -47,8 +47,9 @@ subroutine mce_hill (nbod,m,x,v,hill,a)
   implicit none
   
   ! Input/Output
-  integer :: nbod
-  real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),hill(nbod),a(nbod)
+  integer,intent(in) :: nbod
+  real(double_precision),intent(in) :: m(nbod),x(3,nbod),v(3,nbod)
+  real(double_precision),intent(out) :: hill(nbod),a(nbod)
   
   ! Local
   integer :: j
@@ -104,12 +105,14 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   real(double_precision), parameter :: N2=.4d0
   
   ! Input/Output
-  integer :: nbod,nbig,rcritflag
-  real(double_precision) :: h,jcen(3),rcen,cefac,m(nbod),x(3,nbod)
-  real(double_precision) :: v(3,nbod),s(3,nbod),rho(nbod),rceh(nbod),rphys(nbod)
-  real(double_precision) :: rce(nbod),rcrit(nbod)
-  character(len=8) :: id(nbod)
-  character(len=80) :: outfile
+  integer,intent(in) :: nbod,nbig,rcritflag
+  real(double_precision),intent(in) :: m(nbod),x(3,nbod),v(3,nbod),rho(nbod),rceh(nbod),jcen(3),s(3,nbod)
+  real(double_precision),intent(in) :: h,rcen,cefac
+  character(len=8),intent(in) :: id(nbod)
+  character(len=80),intent(in) :: outfile
+  
+  real(double_precision), intent(out) :: rce(nbod),rphys(nbod),rcrit(nbod)
+
   
   ! Local
   integer :: j, error
@@ -207,7 +210,8 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   
   ! Input/Output
   integer :: nbod,nbig
-  real(double_precision) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),e,l2
+  real(double_precision),intent(in) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod)
+  real(double_precision),intent(out) :: e,l2 ! energy and angular momentum
   
   ! Local
   integer :: j,k,iflag,itmp(8)
@@ -379,14 +383,20 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
 
   
   ! Input/Output
-  integer :: i0, nbod, nbig, stat(nbod), ejflag
-  real(double_precision) :: time, en(3), am(3), jcen(3)
-  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
-  character(len=80) :: outfile
-  character(len=8) :: id(nbod)
+  integer,intent(in) :: i0, nbod, nbig
+
+  real(double_precision),intent(in) :: time, jcen(3)
+  real(double_precision),intent(in) :: x(3,nbod), v(3,nbod)
+  character(len=80),intent(in) :: outfile
+  character(len=8),intent(in) :: id(nbod)
   
+  real(double_precision), intent(out) :: en(3), am(3)
+  integer, intent(out) :: ejflag, stat(nbod)
+  
+  real(double_precision),intent(inout) :: m(nbod), s(3,nbod)
+
   ! Local
-  integer :: j, year, month
+  integer :: j,j0, year, month
   real(double_precision) :: r2,rmax2,t1,e,l
   character(len=38) :: flost
   character(len=6) :: tstring
@@ -394,7 +404,12 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   
   !------------------------------------------------------------------------------
   
-  if (i0.le.0) i0 = 2
+  if (i0.le.0) then
+    j0 = 2
+  else
+    j0 = i0
+  end if
+  
   ejflag = 0
   rmax2 = rmax * rmax
   
@@ -402,7 +417,7 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   call mxx_en (jcen,nbod,nbig,m,x,v,s,e,l)
   
   ! Flag each object which is ejected, and set its mass to zero
-  do j = i0, nbod
+  do j = j0, nbod
      r2 = x(1,j)*x(1,j) + x(2,j)*x(2,j) + x(3,j)*x(3,j)
      if (r2.gt.rmax2) then
         ejflag = 1
@@ -471,9 +486,10 @@ subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
 
   
   ! Input/Output
-  integer :: nbod,nbig,ngflag
-  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
+  integer,intent(in) :: nbod,nbig,ngflag
+  real(double_precision),intent(in) :: time,h
+  real(double_precision),intent(in) :: jcen(3),m(nbod),x(3,nbod),v(3,nbod),ngf(4,nbod)
+  real(double_precision),intent(out) :: xh(3,nbod),vh(3,nbod)
   
   ! Local
   integer :: j
@@ -514,9 +530,10 @@ subroutine mco_h2b (jcen,nbod,nbig,h,m,xh,vh,x,v)
 
   
   ! Input/Output
-  integer :: nbod,nbig
-  real(double_precision) :: jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
-  real(double_precision) :: v(3,nbod)
+  integer,intent(in) :: nbod,nbig
+  real(double_precision),intent(in) :: h,jcen(3)
+  real(double_precision),intent(in) :: m(nbod),xh(3,nbod),vh(3,nbod)
+  real(double_precision),intent(out) :: x(3,nbod),v(3,nbod)
   
   ! Local
   integer :: j
@@ -586,8 +603,10 @@ subroutine mco_h2cb (jcen,nbod,nbig,h,m,xh,vh,x,v)
 
   
   ! Input/Output
-  integer :: nbod,nbig
-  real(double_precision) :: jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod),v(3,nbod)
+  integer,intent(in) :: nbod,nbig
+  real(double_precision),intent(in) :: jcen(3),h
+  real(double_precision),intent(in) :: m(nbod),xh(3,nbod),vh(3,nbod)
+  real(double_precision),intent(out) :: x(3,nbod),v(3,nbod)
   
   ! Local
   integer :: j
@@ -698,7 +717,8 @@ subroutine mce_spin (g,mass,spin,rho,rote)
 
   
   ! Input/Output
-  real(double_precision) :: g,mass,spin,rho,rote
+  real(double_precision),intent(in) :: g,mass,spin,rho
+  real(double_precision),intent(out) :: rote ! spin rate (in rotations per day)
   
   ! Local
   integer :: k
@@ -745,7 +765,8 @@ subroutine m_sfunc (s,z,dz)
 
   
   ! Input/Output
-  real(double_precision) :: s, z, dz
+  real(double_precision),intent(in) :: s
+  real(double_precision),intent(out) :: z, dz
   
   ! Local
   real(double_precision) :: s2,s4,s6,s8,a
