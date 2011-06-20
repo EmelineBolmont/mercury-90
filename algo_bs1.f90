@@ -43,9 +43,15 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   
   ! Input/Output
   integer,intent(in) :: nbod, nbig, stat(nbod), dtflag, ngflag
-  integer :: nce, ice(nce), jce(nce)
-  real(double_precision) :: time,h0,hdid,tol,jcen(3),mass(nbod),x0(3,nbod),v0(3,nbod)
-  real(double_precision) :: s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
+  integer,intent(in) :: nce, ice(nce), jce(nce)
+  real(double_precision),intent(in) :: time,tol,jcen(3)
+  real(double_precision),intent(in) :: mass(nbod),s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
+  
+  real(double_precision), intent(out) :: hdid
+  
+  real(double_precision), intent(inout) :: h0
+  real(double_precision), intent(inout) :: x0(3,nbod),v0(3,nbod)
+  
   external force
   
   ! Local
