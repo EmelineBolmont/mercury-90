@@ -16,9 +16,7 @@ import difflib # To compare two strings
 import pdb # To debug
 from time import time
 
-# We import all variables linked to original output files.
-#from original_files import *
-
+# Here are all the name of the output files, for each binary
 MERCURY_FILENAMES = ["info.out", "big.dmp", "small.dmp", "param.dmp", "restart.dmp", "big.tmp", "small.tmp", "param.tmp", "restart.tmp"]
 ELEMENT_FILENAMES = ["APOLLO.aei", "JUPITER.aei", "MERCURY.aei", "ORPHEUS.aei", "TOUTATIS.aei", "EARTHMOO.aei", "KHUFU.aei", "MINOS.aei", 
   "PLUTO.aei", "URANUS.aei", "JASON.aei", "MARS.aei", "NEPTUNE.aei", "SATURN.aei", "VENUS.aei"]
