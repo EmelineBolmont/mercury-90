@@ -207,14 +207,18 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
 
   
   ! Input/Output
-  integer :: nbod,nbig,nce,ice(nce),jce(nce),stat(nbod),ngflag,ce(nbod)
-  integer :: colflag,nclo,iclo(CMAX)
-  integer :: jclo(CMAX)
-  real(double_precision) :: time,h0,hrec,tol,elost,jcen(3),rcen
-  real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
-  real(double_precision) :: rce(nbod),rphy(nbod),rcrit(nbod),ngf(4,nbod)
-  real(double_precision) :: tclo(CMAX),dclo(CMAX),ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character(len=8), dimension(nbod) :: id
+  integer,intent(in) :: nbod,nbig,nce,ice(nce),jce(nce),ngflag,ce(nbod)
+  integer,intent(in) :: nclo
+
+  real(double_precision),intent(in) :: time,h0,tol,elost,jcen(3),rcen
+  real(double_precision),intent(in) :: rce(nbod),rphy(nbod),rcrit(nbod),ngf(4,nbod)
+  real(double_precision),intent(in) :: tclo(CMAX),dclo(CMAX),ixvclo(6,CMAX),jxvclo(6,CMAX)
+  character(len=8), dimension(nbod),intent(in) :: id
+  
+  integer, intent(out) :: colflag,iclo(CMAX),jclo(CMAX),stat(nbod)
+  real(double_precision),intent(out) :: hrec
+  real(double_precision),intent(out) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
+  
   external force
   
   ! Local
@@ -353,9 +357,10 @@ subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
 
   
   ! Input/Output
-  integer :: nbod,nbig,ngflag
-  real(double_precision) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
-  real(double_precision) :: v(3,nbod),ngf(4,nbod)
+  integer,intent(in) :: nbod,nbig,ngflag
+  real(double_precision),intent(in) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),ngf(4,nbod)
+  
+  real(double_precision),intent(out) :: v(3,nbod),x(3,nbod)
   
   ! Local
   integer :: j
@@ -415,9 +420,10 @@ subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
 
   
   ! Input/Output
-  integer :: nbod,nbig,ngflag
-  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
+  integer,intent(in) :: nbod,nbig,ngflag
+  real(double_precision),intent(in) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),ngf(4,nbod)
+  
+  real(double_precision), intent(out) :: xh(3,nbod),vh(3,nbod)
   
   ! Local
   integer :: j
@@ -571,8 +577,10 @@ subroutine mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
 
   
   ! Input/Output
-  integer :: nbod, nbig, stat(nbod)
-  real(double_precision) :: jcen(3), m(nbod), x(3,nbod), a(3,nbod), rcrit(nbod)
+  integer,intent(in) :: nbod, nbig, stat(nbod)
+  real(double_precision),intent(in) :: jcen(3), m(nbod), x(3,nbod), rcrit(nbod)
+  
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: k

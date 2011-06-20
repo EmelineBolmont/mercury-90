@@ -52,8 +52,10 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   real(double_precision),intent(in) :: s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
   
   real(double_precision), intent(out) :: hdid
-  real(double_precision), intent(inout) :: h0
   real(double_precision), intent(out) :: x0(3,nbod),v0(3,nbod)
+  
+  real(double_precision), intent(inout) :: h0
+  
   external force
   
   ! Local
