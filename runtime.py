@@ -4,8 +4,8 @@
 # Of course, everything is not tested, but it is planed to test as many things as possible
 
 __author__ = "Christophe Cossou <cossou@obs.u-bordeaux1.fr>"
-__date__ = "22 juin 2011"
-__version__ = "$Revision: 1.0 $"
+__date__ = "1st july 2011"
+__version__ = "$Revision: 1.1 $"
 __credits__ = """We run a test simulation several times using original binairies and new binaries in order to compare their running time."""
 
 from make import *
@@ -19,6 +19,22 @@ nb_runs = 10
 
 FOLDER = "simu_test"
 
+def cputime(command, method='time'):
+  """function that return the CPU time in second"""
+  if (method == "time"):
+    (stdout, stderr) = run("time "+command)
+    temp = stderr.split("\n")[-2]
+    temp = temp.split("\t")
+    temp = temp[-1][0:-2].split("m")
+    cpu_time = float(temp[1])
+    if (temp[0] != "0"):
+      cpu_time += float(temp[0]) * 60.
+  elif (method == "python"):
+    start = time()
+    run(command)
+    cpu_time = time() - start
+  
+  return cpu_time
 
 os.chdir(FOLDER)
 
@@ -92,7 +108,7 @@ elementin.write()
 closein = Close(time_format="years", relative_time="yes")
 closein.write()
 
-paramin = Param(algorithme="HYBRID", start_time=2451179.5, stop_time=3451179.5, output_interval=365.25e0, 
+paramin = Param(algorithme="HYBRID", start_time=2451179.5, stop_time=2454179.5, output_interval=365.25e0, 
 h=8, accuracy=1.e-12, stop_integration="no", collisions="no", fragmentation="no", 
 time_format="years", relative_time="no", output_precision="medium", relativity="no", 
 user_force="no", ejection_distance=100, radius_star=0.005, central_mass=1.0, 
@@ -108,32 +124,20 @@ for i in range(nb_runs):
   #Old binaries
   clean(["out", "clo", "aei", "dmp", "tmp"])
   
-  start = time()
-  run("../mercury_original/mercury")
-  time_merc_old.append(time() - start)
+  time_merc_old.append(cputime("../mercury_original/mercury"))
   
-  start = time()
-  run("../mercury_original/close")
-  time_clo_old.append(time() - start)
+  time_clo_old.append(cputime("../mercury_original/close"))
   
-  start = time()
-  run("../mercury_original/element")
-  time_ele_old.append(time() - start)
+  time_ele_old.append(cputime("../mercury_original/element"))
 
   # New binaries
   clean(["out", "clo", "aei", "dmp", "tmp"])
   
-  start = time()
-  run("../mercury")
-  time_merc_new.append(time() - start)
+  time_merc_new.append(cputime("../mercury"))
   
-  start = time()
-  run("../close")
-  time_clo_new.append(time() - start)
+  time_clo_new.append(cputime("../close"))
     
-  start = time()
-  run("../element")
-  time_ele_new.append(time() - start)
+  time_ele_new.append(cputime("../element"))
 
 # We calculate mean values and standard deviation for running time of mercury, element and close
 t_merc_old = np.mean(time_merc_old)

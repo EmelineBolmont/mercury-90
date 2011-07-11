@@ -23,6 +23,6 @@ close = sourceFile.findSource["close.f90"]
 
 excluded = []#"types_numeriques", "physical_constant", "mercury_constant"]
 
-mercury.writeArchitecture("mercury_graph.svg", excluded=excluded)
+mercury.writeArchitecture("mercury_graph.svg", excluded=excluded, direction="leftright")
 element.writeArchitecture("element_graph.svg", excluded=excluded)
 close.writeArchitecture("close_graph.svg", excluded=excluded)
