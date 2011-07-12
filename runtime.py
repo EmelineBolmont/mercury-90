@@ -4,8 +4,8 @@
 # Of course, everything is not tested, but it is planed to test as many things as possible
 
 __author__ = "Christophe Cossou <cossou@obs.u-bordeaux1.fr>"
-__date__ = "1st july 2011"
-__version__ = "$Revision: 1.1 $"
+__date__ = "12 Juillet 2011"
+__version__ = "$Revision: 1.1.1 $"
 __credits__ = """We run a test simulation several times using original binairies and new binaries in order to compare their running time."""
 
 from make import *
@@ -14,8 +14,10 @@ import numpy as np # to calculate mean and standard deviation
 from time import time
 import os
 from mercury import *
-
+import progressbar
 nb_runs = 10
+start_time = 2451179.5
+delta_t = 2000
 
 FOLDER = "simu_test"
 
@@ -108,7 +110,7 @@ elementin.write()
 closein = Close(time_format="years", relative_time="yes")
 closein.write()
 
-paramin = Param(algorithme="HYBRID", start_time=2451179.5, stop_time=2454179.5, output_interval=365.25e0, 
+paramin = Param(algorithme="HYBRID", start_time=start_time, stop_time=start_time+delta_t, output_interval=365.25e0, 
 h=8, accuracy=1.e-12, stop_integration="no", collisions="no", fragmentation="no", 
 time_format="years", relative_time="no", output_precision="medium", relativity="no", 
 user_force="no", ejection_distance=100, radius_star=0.005, central_mass=1.0, 
@@ -119,6 +121,9 @@ Files().write()
 Message().write()
 
 print("Comparison of running time, for an average on "+str(nb_runs)+" runs")
+widgets = [progressbar.Percentage(), ' ', progressbar.Bar(marker='=', progress_marker='>'),' ', progressbar.ETA()]
+pbar = progressbar.ProgressBar(widgets=widgets, maxval=2*nb_runs)
+pbar.start()
 for i in range(nb_runs):
   #The two types of binaries are runed in the same loop in order to be as partial as possible for the calculation of runtime.
   #Old binaries
@@ -129,7 +134,7 @@ for i in range(nb_runs):
   time_clo_old.append(cputime("../mercury_original/close"))
   
   time_ele_old.append(cputime("../mercury_original/element"))
-
+  pbar.update(2*i+1)
   # New binaries
   clean(["out", "clo", "aei", "dmp", "tmp"])
   
@@ -138,7 +143,8 @@ for i in range(nb_runs):
   time_clo_new.append(cputime("../close"))
     
   time_ele_new.append(cputime("../element"))
-
+  pbar.update(2*(i+1))
+pbar.finish()
 # We calculate mean values and standard deviation for running time of mercury, element and close
 t_merc_old = np.mean(time_merc_old)
 t_ele_old = np.mean(time_ele_old)
@@ -177,9 +183,9 @@ else:
   clo_pourcent = " ("+str(round(pourcent*100.,2))+"%)"
 
 print("Binary\tOld\tNew")
-print("mercury\t"+str(round(t_merc_old,2))+"±"+str(round(dt_merc_old,2))+"\t"+str(round(t_merc_new,2))+"±"+str(round(dt_merc_new,2))+merc_pourcent)
-print("element\t"+str(round(t_ele_old,2))+"±"+str(round(dt_ele_old,2))+"\t"+str(round(t_ele_new,2))+"±"+str(round(dt_ele_new,2))+ele_pourcent)
-print("close\t"+str(round(t_clo_old,2))+"±"+str(round(dt_clo_old,2))+"\t"+str(round(t_clo_new,2))+"±"+str(round(dt_clo_new,2))+clo_pourcent)
+print("mercury\t("+str(round(t_merc_old,2))+" ± "+str(round(dt_merc_old,2))+") s\t("+str(round(t_merc_new,2))+" ± "+str(round(dt_merc_new,2))+") s "+merc_pourcent)
+print("element\t("+str(round(t_ele_old,2))+"±"+str(round(dt_ele_old,2))+") s\t("+str(round(t_ele_new,2))+" ± "+str(round(dt_ele_new,2))+") s "+ele_pourcent)
+print("close\t("+str(round(t_clo_old,2))+"±"+str(round(dt_clo_old,2))+") s\t("+str(round(t_clo_new,2))+" ± "+str(round(dt_clo_new,2))+") s "+clo_pourcent)
 
 
 #~ #############################
@@ -209,4 +215,16 @@ print("close\t"+str(round(t_clo_old,2))+"±"+str(round(dt_clo_old,2))+"\t"+str(r
 #~ element	0.09±0.01	0.11±0.05 (+20.01%)
 #~ close	0.03±0.01	0.03±0.01 (-2.08%)
 
+#~ #############################
+#~ # Executing time comparison #
+#~ #############################
+#~ Comparison of running time, for an average on 10 runs
+#~ 100% |==========================================================| Time: 00:07:13
+#~ Binary	Old	New
+#~ mercury	(11.97 ± 0.2) s	(27.26 ± 0.27) s  (+127.76%)
+#~ element	(0.56±0.05) s	(0.7 ± 0.04) s  (+24.91%)
+#~ close	(0.17±0.0) s	(0.17 ± 0.01) s  (+0.57%)
 
+
+
+#TODO utiliser progressbar pour voir combien de temps il reste avant la fin.

@@ -3,7 +3,7 @@
 )---------------------------------------------------------------------
 ) Important integration parameters:
 )---------------------------------------------------------------------
- algorithm (MVS, BS, BS2, RADAU, HYBRID etc) = HYBRID
+ algorithm (MVS, BS, BS2, RADAU, HYBRID etc) = BS
  start time (days) = 2451179.5
  stop time (days) = 2462502.5
  output interval (days) = 365.25
