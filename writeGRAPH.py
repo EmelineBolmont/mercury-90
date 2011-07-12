@@ -17,12 +17,12 @@ objects = []
 for source in sources_filename:
 	objects.append(sourceFile(source))
 
-mercury = sourceFile.findSource["mercury.f90"]
-element = sourceFile.findSource["element.f90"]
-close = sourceFile.findSource["close.f90"]
+mercury = sourceFile.findSource["mercury"]
+element = sourceFile.findSource["element"]
+close = sourceFile.findSource["close"]
 
-excluded = []#"types_numeriques", "physical_constant", "mercury_constant"]
+excluded = ["types_numeriques", "physical_constant", "mercury_constant"]
 
 mercury.writeArchitecture("mercury_graph.svg", excluded=excluded, direction="leftright")
-element.writeArchitecture("element_graph.svg", excluded=excluded)
-close.writeArchitecture("close_graph.svg", excluded=excluded)
+element.writeArchitecture("element_graph.svg", excluded=excluded, direction="leftright")
+close.writeArchitecture("close_graph.svg", excluded=excluded, direction="leftright")

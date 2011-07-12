@@ -4,8 +4,8 @@
 # Of course, everything is not tested, but it is planed to test as many things as possible
 
 __author__ = "Christophe Cossou <cossou@obs.u-bordeaux1.fr>"
-__date__ = "24 juin 2011"
-__version__ = "$Revision: 2.6 $"
+__date__ = "12 Juillet 2011"
+__version__ = "$Revision: 2.6.1 $"
 __credits__ = """We run a test simulation and erase all the files created after the tests. The simulations files are thought to be 
 in a "simu_test" subdirectory of the directory were are the sources (and binaries) of mercury (and this script)"""
 
@@ -129,7 +129,7 @@ for algo in ["BS", "BS2", "MVS", "RADAU", "HYBRID"]:
 	
 	paramin.set_algorithme(algo)
 	paramin.write()
-	
+	print("##########################################")
 	print("Running original binaries with "+algo+"...")
 	(merc_or_stdout, merc_or_stderr) = run("../mercury_original/mercury")
 	
@@ -158,6 +158,7 @@ for algo in ["BS", "BS2", "MVS", "RADAU", "HYBRID"]:
 	(clo_new_stdout, clo_new_stderr) = run("../close")
 
 	(ele_new_stdout, ele_new_stderr) = run("../element")
+	print("##########################################")
 	
 	print("\nTest of mercury with "+algo)
 
@@ -199,3 +200,4 @@ for algo in ["BS", "BS2", "MVS", "RADAU", "HYBRID"]:
 
 # CHANGELOG
 # V2.6 : Je teste maintenant les 5 algorithmes usuels
+# v2.6.1 : Rajout de lignes de séparation entre les tests des différents algorithmes pour plus de lisibilité.
