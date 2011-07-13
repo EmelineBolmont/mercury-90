@@ -8,12 +8,9 @@ FOLDER = "mercury_original"
 
 os.chdir(FOLDER)
 
-
-# We clean undesirable files. Indeed, we will compile everything everytime.
-clean(["o"])
+sourceFile.setCompilingOptions("")
 
 sources_filename = lister("*.for")
-
 mains = {"mercury6_2.for":"mercury", "element6.for":"element", "close6.for":"close"}
 
 # We create the binaries

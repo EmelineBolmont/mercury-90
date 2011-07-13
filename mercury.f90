@@ -142,7 +142,7 @@ program mercury
   !------------------------------------------------------------------------------
   
   ! Get initial conditions and integration parameters
-  call mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,id,&
+  call mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,id,&
        epoch,ngf,opflag,ngflag)
   
   ! If this is a new integration, integrate all the objects to a common epoch.
@@ -230,7 +230,7 @@ program mercury
 
 !------------------------------------------------------------------------------
 
-subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,&
+subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,&
      id,epoch,ngf,opflag,ngflag)
   
   use orbital_elements
@@ -239,7 +239,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(NMAX),opflag,ngflag
+  integer :: nbod,nbig,opflag,ngflag
   integer :: ndump,nfun
   real(double_precision) :: time,h0,tol,rcen,jcen(3)
   real(double_precision) :: en(3),am(3),m(NMAX),x(3,NMAX),v(3,NMAX),s(3,NMAX)
