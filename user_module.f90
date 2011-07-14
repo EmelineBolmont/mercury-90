@@ -43,21 +43,22 @@ subroutine mfo_user (time,jcen,nbod,nbig,m,x,v,a)
   implicit none
 
   
-  ! Input/Output
+  ! Input
   integer, intent(in) :: nbod, nbig
   real(double_precision),intent(in) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod)
+  
+  ! Output
   real(double_precision),intent(out) :: a(3,nbod)
   
   ! Local
   integer :: j
   
   !------------------------------------------------------------------------------
+  ! Setup
+  a(:,:) = 0.d0
+  !------------------------------------------------------------------------------
   
-  do j = 1, nbod
-     a(1,j) = 0.d0
-     a(2,j) = 0.d0
-     a(3,j) = 0.d0
-  end do
+  
   
   !------------------------------------------------------------------------------
   
@@ -67,3 +68,6 @@ end subroutine mfo_user
 
 
 end module user_module
+
+! TODO utiliser la masse des objets pour ne pas faire le calcul si trop massif, il faut respecter le domaine de validité des formules des couples
+! TODO routine générale de conversion des couples en accélération afin de pouvoir réutiliser ailleurs

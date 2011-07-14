@@ -15,9 +15,9 @@ from time import time
 import os
 from mercury import *
 import progressbar
-nb_runs = 10
+nb_runs = 1
 start_time = 2451179.5
-delta_t = 2e4
+delta_t = 1.8e6
 
 FOLDER = "simu_test"
 
@@ -218,13 +218,13 @@ print("close\t("+str(round(t_clo_old,2))+"±"+str(round(dt_clo_old,2))+") s\t("+
 #~ #############################
 #~ # Executing time comparison #
 #~ #############################
-#~ Comparison of running time, for an average on 10 runs
-#~ 100% |==========================================================| Time: 00:07:13
+#~ Comparison of running time, for an average on 1 runs
+#~ 100% [=========================================================>] Time: 00:00:33
 #~ Binary	Old	New
-#~ mercury	(11.97 ± 0.2) s	(27.26 ± 0.27) s  (+127.76%)
-#~ element	(0.56±0.05) s	(0.7 ± 0.04) s  (+24.91%)
-#~ close	(0.17±0.0) s	(0.17 ± 0.01) s  (+0.57%)
+#~ mercury	(11.77 ± 0.0) s	(15.94 ± 0.0) s  (+35.43%)
+#~ element	(0.51±0.0) s	(0.78 ± 0.0) s  (+52.94%)
+#~ close	(0.18±0.0) s	(0.17 ± 0.0) s  (-5.56%)
 
 
 
-#TODO utiliser progressbar pour voir combien de temps il reste avant la fin.
+
