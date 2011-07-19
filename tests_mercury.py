@@ -48,8 +48,11 @@ FOLDER = "simu_test"
 # Theses outputs are those of the original version of mercury, that is, mercury6_2.for
 ##################
 
-os.chdir(FOLDER)
-
+try:
+  os.chdir(FOLDER)
+except OSError:
+  os.mkdir(FOLDER) # If the folder does not exist, we create it.
+  
 ######################
 # Génération de la simulation de base de mercury
 ######################

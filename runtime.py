@@ -15,9 +15,9 @@ from time import time
 import os
 from mercury import *
 import progressbar
-nb_runs = 1
+nb_runs = 10
 start_time = 2451179.5
-delta_t = 1.8e6
+delta_t = 1.8e4
 
 FOLDER = "simu_test"
 
