@@ -2,6 +2,7 @@ module mercury_constant
   use types_numeriques
 
 implicit none
+save
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 !      MERCURY.INC    (ErikSoft   4 March 2001)
