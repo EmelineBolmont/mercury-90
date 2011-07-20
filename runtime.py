@@ -17,11 +17,11 @@ from mercury import *
 import progressbar
 nb_runs = 10
 start_time = 2451179.5
-delta_t = 1.8e4
+delta_t = 1.8e6
 
 FOLDER = "simu_test"
 
-def cputime(command, method='time'):
+def cputime(command, method='python'):
   """function that return the CPU time in second"""
   if (method == "time"):
     (stdout, stderr) = run("time "+command)
@@ -40,7 +40,6 @@ def cputime(command, method='time'):
 
 os.chdir(FOLDER)
 
-# Not representative, it depend really on the execution. We should do a mean value on several runs, or a longer run.
 print("""
 #############################
 # Executing time comparison #
