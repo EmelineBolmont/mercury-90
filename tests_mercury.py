@@ -4,8 +4,8 @@
 # Of course, everything is not tested, but it is planed to test as many things as possible
 
 __author__ = "Christophe Cossou <cossou@obs.u-bordeaux1.fr>"
-__date__ = "12 Juillet 2011"
-__version__ = "$Revision: 2.6.1 $"
+__date__ = "21 Juillet 2011"
+__version__ = "$Revision: 2.6.2 $"
 __credits__ = """We run a test simulation and erase all the files created after the tests. The simulations files are thought to be 
 in a "simu_test" subdirectory of the directory were are the sources (and binaries) of mercury (and this script)"""
 
@@ -194,3 +194,5 @@ for algo in ["BS", "BS2", "MVS", "RADAU", "HYBRID"]:
 # CHANGELOG
 # V2.6 : Je teste maintenant les 5 algorithmes usuels
 # v2.6.1 : Rajout de lignes de séparation entre les tests des différents algorithmes pour plus de lisibilité.
+# v2.6.2 : Suppression de la plupart des lignes si les fichiers n'ont pas de différences, ceci afin d'améliorer la lisibilité des 
+#          différences justement.

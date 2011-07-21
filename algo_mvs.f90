@@ -59,14 +59,11 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   hb(1) = -h * rt10 / 24.d0
   ha(2) = -h * rt10 * 3.d0 / 10.d0
   hb(2) =  h * rt10 / 72.d0
-  do j = 2, nbod
-     angf(1,j) = 0.d0
-     angf(2,j) = 0.d0
-     angf(3,j) = 0.d0
-     ausr(1,j) = 0.d0
-     ausr(2,j) = 0.d0
-     ausr(3,j) = 0.d0
-  end do
+  
+  ! We initialize the two arrays of accelerations
+  angf(:,:) = 0.d0
+  ausr(:,:) = 0.d0
+
   x(:,:) = xh(:,:)
   v(:,:) = vh(:,:)
 !~   call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
