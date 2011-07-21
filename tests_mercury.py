@@ -162,41 +162,31 @@ for algo in ["BS", "BS2", "MVS", "RADAU", "HYBRID"]:
 
 	(ele_new_stdout, ele_new_stderr) = run("../element")
 	print("##########################################")
-	
-	print("\nTest of mercury with "+algo)
 
 
-	print("\tFor the Output of mercury")
 	diff = compare(merc_or_stdout, merc_new_stdout)
 	if (diff != None):
+	  print("\nTest of mercury with "+algo)
+	  print("\tFor the Output of mercury")
 	  print diff
-	else:
-	  print("\tOK : No differences\n")
 
 	compare2file(MERCURY_FILENAMES_OLD, MERCURY_FILENAMES)
 
-
-	print("\nTest of close with "+algo)
-
-
-	print("\tFor the Output of close")
 	diff = compare(clo_or_stdout, clo_new_stdout)
 	if (diff != None):
+	  print("\nTest of close with "+algo)
+	  print("\tFor the Output of close")
 	  print diff
-	else:
-	  print("\tOK : No differences\n")
+
 
 	compare2file(CLOSE_FILENAMES_OLD, CLOSE_FILENAMES)
 
-	print("\nTest of element with "+algo)
-
-
-	print("\tFor the Output of element")
 	diff = compare(ele_or_stdout, ele_new_stdout)
 	if (diff != None):
+	  print("\nTest of element with "+algo)
+	  print("\tFor the Output of element")
 	  print diff
-	else:
-	  print("\tOK : No differences\n")
+
 
 	compare2file(ELEMENT_FILENAMES_OLD, ELEMENT_FILENAMES)
 
