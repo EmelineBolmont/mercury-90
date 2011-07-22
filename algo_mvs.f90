@@ -556,7 +556,8 @@ subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
   ! Local
   integer :: j
-  real(double_precision) :: mtot, mx, my, mz, mu, mv, mw, temp
+  real(double_precision) :: mtot, temp
+  real(double_precision), dimension(3) :: mx, mv
   
   !------------------------------------------------------------------------------
   
@@ -564,37 +565,23 @@ subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   vh(:,2) = v(:,2)
   mtot = m(2)
   temp = m(2) / (mtot + m(1))
-  mx = temp * x(1,2)
-  my = temp * x(2,2)
-  mz = temp * x(3,2)
-  mu = temp * v(1,2)
-  mv = temp * v(2,2)
-  mw = temp * v(3,2)
+  mx(:) = temp * x(:,2)
+  mv(:) = temp * v(:,2)
   
   do j = 3, nbig - 1
-     xh(1,j) = x(1,j) + mx
-     xh(2,j) = x(2,j) + my
-     xh(3,j) = x(3,j) + mz
-     vh(1,j) = v(1,j) + mu
-     vh(2,j) = v(2,j) + mv
-     vh(3,j) = v(3,j) + mw
+     xh(:,j) = x(:,j) + mx(:)
+     vh(:,j) = v(:,j) + mv(:)
+
      mtot = mtot + m(j)
      temp = m(j) / (mtot + m(1))
-     mx = mx  +  temp * x(1,j)
-     my = my  +  temp * x(2,j)
-     mz = mz  +  temp * x(3,j)
-     mu = mu  +  temp * v(1,j)
-     mv = mv  +  temp * v(2,j)
-     mw = mw  +  temp * v(3,j)
+     
+     mx(:) = mx(:)  +  temp * x(:,j)
+     mv(:) = mv(:)  +  temp * v(:,j)
   enddo
   
   if (nbig.gt.2) then
-     xh(1,nbig) = x(1,nbig) + mx
-     xh(2,nbig) = x(2,nbig) + my
-     xh(3,nbig) = x(3,nbig) + mz
-     vh(1,nbig) = v(1,nbig) + mu
-     vh(2,nbig) = v(2,nbig) + mv
-     vh(3,nbig) = v(3,nbig) + mw
+     xh(:,nbig) = x(:,nbig) + mx(:)
+     vh(:,nbig) = v(:,nbig) + mv(:)
   end if
   
   xh(:,nbig+1:nbod) = x(:,nbig+1:nbod)
@@ -632,45 +619,31 @@ subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
   
   ! Local
   integer :: j
-  real(double_precision) :: mtot, mx, my, mz, mu, mv, mw, temp
+  real(double_precision) :: mtot, temp
+  real(double_precision), dimension(3) :: mx, mv
   
   !------------------------------------------------------------------------------c
   mtot = m(2)
   x(:,2) = xh(:,2)
   v(:,2) = vh(:,2)
   
-  mx = m(2) * xh(1,2)
-  my = m(2) * xh(2,2)
-  mz = m(2) * xh(3,2)
-  mu = m(2) * vh(1,2)
-  mv = m(2) * vh(2,2)
-  mw = m(2) * vh(3,2)
+  mx(:) = m(2) * xh(:,2)
+  mv(:) = m(2) * vh(:,2)
   
   do j = 3, nbig - 1
      temp = 1.d0 / (mtot + m(1))
      mtot = mtot + m(j)
-     x(1,j) = xh(1,j)  -  temp * mx
-     x(2,j) = xh(2,j)  -  temp * my
-     x(3,j) = xh(3,j)  -  temp * mz
-     v(1,j) = vh(1,j)  -  temp * mu
-     v(2,j) = vh(2,j)  -  temp * mv
-     v(3,j) = vh(3,j)  -  temp * mw
-     mx = mx  +  m(j) * xh(1,j)
-     my = my  +  m(j) * xh(2,j)
-     mz = mz  +  m(j) * xh(3,j)
-     mu = mu  +  m(j) * vh(1,j)
-     mv = mv  +  m(j) * vh(2,j)
-     mw = mw  +  m(j) * vh(3,j)
+     x(:,j) = xh(:,j)  -  temp * mx(:)
+     v(:,j) = vh(:,j)  -  temp * mv(:)
+
+     mx(:) = mx(:)  +  m(j) * xh(:,j)
+     mv(:) = mv(:)  +  m(j) * vh(:,j)
   enddo
   
   if (nbig.gt.2) then
      temp = 1.d0 / (mtot + m(1))
-     x(1,nbig) = xh(1,nbig)  -  temp * mx
-     x(2,nbig) = xh(2,nbig)  -  temp * my
-     x(3,nbig) = xh(3,nbig)  -  temp * mz
-     v(1,nbig) = vh(1,nbig)  -  temp * mu
-     v(2,nbig) = vh(2,nbig)  -  temp * mv
-     v(3,nbig) = vh(3,nbig)  -  temp * mw
+     x(:,nbig) = xh(:,nbig)  -  temp * mx(:)
+     v(:,nbig) = vh(:,nbig)  -  temp * mv(:)
   end if
   
   x(:,nbig+1:nbod) = xh(:,nbig+1:nbod)
