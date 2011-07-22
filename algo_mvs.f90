@@ -336,29 +336,24 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
      call mco_h2j (jcen,nbig,nbig,h0,m,x,v,xj,vj)
      call mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
      
+     
+     angf(:,2:) = 0.d0
+     ausr(:,2:) = 0.d0
+     
      minside = m(1)
      do j = 2, nbig
         msofar = minside + m(j)
         gm(j) = m(1) * msofar / minside
         minside = msofar
-        angf(1,j) = 0.d0
-        angf(2,j) = 0.d0
-        angf(3,j) = 0.d0
-        ausr(1,j) = 0.d0
-        ausr(2,j) = 0.d0
-        ausr(3,j) = 0.d0
      end do
+     
      ! If required, apply non-gravitational and user-defined forces
      if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
-     if (ngflag.eq.1.or.ngflag.eq.3) call mfo_ngf (nbod,x,v,angf,ngf)
+     if ((ngflag.eq.1).or.(ngflag.eq.3)) call mfo_ngf (nbod,x,v,angf,ngf)
   end if
   
   ! Advance interaction Hamiltonian for H/2
-  do j = 2, nbod
-     v(1,j) = v(1,j)  +  hby2 * (angf(1,j) + ausr(1,j) + a(1,j))
-     v(2,j) = v(2,j)  +  hby2 * (angf(2,j) + ausr(2,j) + a(2,j))
-     v(3,j) = v(3,j)  +  hby2 * (angf(3,j) + ausr(3,j) + a(3,j))
-  end do
+  v(:,2:) = v(:,2:)  +  hby2 * (angf(:,2:) + ausr(:,2:) + a(:,2:))
   
   ! Save current coordinates and velocities
   x0(:,:) = x(:,:)
@@ -387,11 +382,7 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
   if ((ngflag.eq.1).or.(ngflag.eq.3)) call mfo_ngf (nbod,x,v,angf,ngf)
   
-  do j = 2, nbod
-     v(1,j) = v(1,j)  +  hby2 * (angf(1,j) + ausr(1,j) + a(1,j))
-     v(2,j) = v(2,j)  +  hby2 * (angf(2,j) + ausr(2,j) + a(2,j))
-     v(3,j) = v(3,j)  +  hby2 * (angf(3,j) + ausr(3,j) + a(3,j))
-  end do
+  v(:,2:) = v(:,2:)  +  hby2 * (angf(:,2:) + ausr(:,2:) + a(:,2:))
   
   !------------------------------------------------------------------------------
   

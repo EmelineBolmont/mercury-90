@@ -521,6 +521,9 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
      lenfout = 9
      header(1:19) = '    Time (years)   '
      lenhead = 19
+  case default
+    lenfout = 0
+    lenhead = 0
   end select
 
   ! Identify the required elements

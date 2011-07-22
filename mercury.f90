@@ -484,15 +484,18 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
     end do
      call mio_spl (150,string,nsub,lim)
      c3 = string(lim(1,nsub):(lim(1,nsub)+2))
-     if (c3.eq.'Car'.or.c3.eq.'car'.or.c3.eq.'CAR') then
-        informat = 1
-     else if (c3.eq.'Ast'.or.c3.eq.'ast'.or.c3.eq.'AST') then
-        informat = 2
-     else if (c3.eq.'Com'.or.c3.eq.'com'.or.c3.eq.'COM') then
-        informat = 3
-     else
-        call mio_err (23,mem(81),lmem(81),mem(91),lmem(91),' ',1,mem(82+j),lmem(82+j))
-     end if
+     
+     select case (c3)
+     case ('Car', 'car', 'CAR')
+      informat = 1
+     case ('Ast', 'ast', 'AST')
+      informat = 2
+     case ('Com', 'com', 'COM')
+      informat = 3
+     case default
+      informat = 0
+      call mio_err (23,mem(81),lmem(81),mem(91),lmem(91),' ',1,mem(82+j),lmem(82+j))
+      end select
      
      ! Read epoch of Big bodies
      if (j.eq.1) then

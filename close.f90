@@ -181,9 +181,16 @@ program close
         end do
         
         ! Create input format list
-        if (precision.eq.1) nchar = 2
-        if (precision.eq.2) nchar = 4
-        if (precision.eq.3) nchar = 7
+        select case (precision)
+          case(1)
+            nchar = 2
+          case(2)
+            nchar = 4
+          case(3)
+            nchar = 7
+          case default
+            nchar = 0
+        end select
         lenin = 3  +  6 * nchar
         fin(1:5) = '(a00)'
         write (fin(3:4),'(i2)') lenin
