@@ -61,8 +61,8 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   hb(2) =  h * rt10 / 72.d0
   
   ! We initialize the two arrays of accelerations
-  angf(:,:) = 0.d0
-  ausr(:,:) = 0.d0
+  angf(:,2:) = 0.d0
+  ausr(:,2:) = 0.d0
 
   x(:,:) = xh(:,:)
   v(:,:) = vh(:,:)
@@ -97,11 +97,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
      if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
      if (ngflag.eq.1.or.ngflag.eq.3) call mfo_ngf (nbod,x,v,angf,ngf)
      
-     do j = 2, nbod
-        v(1,j) = v(1,j)  +  hb(k) * (angf(1,j) + ausr(1,j) + a(1,j))
-        v(2,j) = v(2,j)  +  hb(k) * (angf(2,j) + ausr(2,j) + a(2,j))
-        v(3,j) = v(3,j)  +  hb(k) * (angf(3,j) + ausr(3,j) + a(3,j))
-     end do
+     v(:,2:) = v(:,2:)  +  hb(k) * (angf(:,2:) + ausr(:,2:) + a(:,2:))
      
      ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
      call mco_h2j (jcen,nbig,nbig,h,m,x,v,xj,vj)
@@ -122,11 +118,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
      if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
      if (ngflag.eq.1.or.ngflag.eq.3) call mfo_ngf (nbod,x,v,angf,ngf)
      
-     do j = 2, nbod
-        v(1,j) = v(1,j)  -  hb(k) * (angf(1,j) + ausr(1,j) + a(1,j))
-        v(2,j) = v(2,j)  -  hb(k) * (angf(2,j) + ausr(2,j) + a(2,j))
-        v(3,j) = v(3,j)  -  hb(k) * (angf(3,j) + ausr(3,j) + a(3,j))
-     end do
+     v(:,2:) = v(:,2:)  -  hb(k) * (angf(:,2:) + ausr(:,2:) + a(:,2:))
      
      ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
      call mco_h2j (jcen,nbig,nbig,h,m,x,v,xj,vj)
@@ -186,14 +178,9 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   hb(1) = -h * rt10 / 72.d0
   ha(2) =  h * rt10 / 5.d0
   hb(2) =  h * rt10 / 24.d0
-  do j = 2, nbod
-     angf(1,j) = 0.d0
-     angf(2,j) = 0.d0
-     angf(3,j) = 0.d0
-     ausr(1,j) = 0.d0
-     ausr(2,j) = 0.d0
-     ausr(3,j) = 0.d0
-  end do
+  
+  angf(:,2:) = 0.d0
+  ausr(:,2:) = 0.d0
   xh(:,:) = x(:,:)
   vh(:,:) = v(:,:)
 !~   call mco_iden (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
@@ -228,11 +215,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
      if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,xh,vh,ausr)
      if (ngflag.eq.1.or.ngflag.eq.3) call mfo_ngf (nbod,xh,vh,angf,ngf)
      
-     do j = 2, nbod
-        vh(1,j) = vh(1,j)  -  hb(k) * (angf(1,j) + ausr(1,j) + a(1,j))
-        vh(2,j) = vh(2,j)  -  hb(k) * (angf(2,j) + ausr(2,j) + a(2,j))
-        vh(3,j) = vh(3,j)  -  hb(k) * (angf(3,j) + ausr(3,j) + a(3,j))
-     end do
+     vh(:,2:) = vh(:,2:)  -  hb(k) * (angf(:,2:) + ausr(:,2:) + a(:,2:))
      
      ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
      call mco_h2j(jcen,nbig,nbig,h,m,xh,vh,xj,vj)
@@ -253,11 +236,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
      if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,xh,vh,ausr)
      if (ngflag.eq.1.or.ngflag.eq.3) call mfo_ngf (nbod,xh,vh,angf,ngf)
      
-     do j = 2, nbod
-        vh(1,j) = vh(1,j)  +  hb(k) * (angf(1,j) + ausr(1,j) + a(1,j))
-        vh(2,j) = vh(2,j)  +  hb(k) * (angf(2,j) + ausr(2,j) + a(2,j))
-        vh(3,j) = vh(3,j)  +  hb(k) * (angf(3,j) + ausr(3,j) + a(3,j))
-     end do
+     vh(:,2:) = vh(:,2:)  +  hb(k) * (angf(:,2:) + ausr(:,2:) + a(:,2:))
      
      ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
      call mco_h2j(jcen,nbig,nbig,h,m,xh,vh,xj,vj)
@@ -428,15 +407,10 @@ subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   !------------------------------------------------------------------------------
   
   ! Initialize variables
-  a0(1) = 0.d0
-  a0(2) = 0.d0
-  a0(3) = 0.d0
-  a1(1,2) = 0.d0
-  a1(2,2) = 0.d0
-  a1(3,2) = 0.d0
-  a2(1,2) = 0.d0
-  a2(2,2) = 0.d0
-  a2(3,2) = 0.d0
+  a0(:) = 0.d0
+  a1(:,2) = 0.d0
+  a2(:,2) = 0.d0
+  
   minside = 0.d0
   
   ! Calculate acceleration terms
@@ -586,12 +560,8 @@ subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
   !------------------------------------------------------------------------------
   
-  xh(1,2) = x(1,2)
-  xh(2,2) = x(2,2)
-  xh(3,2) = x(3,2)
-  vh(1,2) = v(1,2)
-  vh(2,2) = v(2,2)
-  vh(3,2) = v(3,2)
+  xh(:,2) = x(:,2)
+  vh(:,2) = v(:,2)
   mtot = m(2)
   temp = m(2) / (mtot + m(1))
   mx = temp * x(1,2)
@@ -627,14 +597,8 @@ subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
      vh(3,nbig) = v(3,nbig) + mw
   end if
   
-  do j = nbig + 1, nbod
-     xh(1,j) = x(1,j)
-     xh(2,j) = x(2,j)
-     xh(3,j) = x(3,j)
-     vh(1,j) = v(1,j)
-     vh(2,j) = v(2,j)
-     vh(3,j) = v(3,j)
-  end do
+  xh(:,nbig+1:nbod) = x(:,nbig+1:nbod)
+  vh(:,nbig+1:nbod) = v(:,nbig+1:nbod)
   
   !------------------------------------------------------------------------------
   
@@ -672,12 +636,9 @@ subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
   
   !------------------------------------------------------------------------------c
   mtot = m(2)
-  x(1,2) = xh(1,2)
-  x(2,2) = xh(2,2)
-  x(3,2) = xh(3,2)
-  v(1,2) = vh(1,2)
-  v(2,2) = vh(2,2)
-  v(3,2) = vh(3,2)
+  x(:,2) = xh(:,2)
+  v(:,2) = vh(:,2)
+  
   mx = m(2) * xh(1,2)
   my = m(2) * xh(2,2)
   mz = m(2) * xh(3,2)
@@ -712,14 +673,8 @@ subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
      v(3,nbig) = vh(3,nbig)  -  temp * mw
   end if
   
-  do j = nbig + 1, nbod
-     x(1,j) = xh(1,j)
-     x(2,j) = xh(2,j)
-     x(3,j) = xh(3,j)
-     v(1,j) = vh(1,j)
-     v(2,j) = vh(2,j)
-     v(3,j) = vh(3,j)
-  end do
+  x(:,nbig+1:nbod) = xh(:,nbig+1:nbod)
+  v(:,nbig+1:nbod) = vh(:,nbig+1:nbod)
   
   !------------------------------------------------------------------------------
   
