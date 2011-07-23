@@ -205,9 +205,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   nbsbig = 0
   mbs(1) = m(1)
   if (algor.eq.11) mbs(1) = m(1) + m(2)
-  sbs(1,1) = s(1,1)
-  sbs(2,1) = s(2,1)
-  sbs(3,1) = s(3,1)
+  sbs(:,1) = s(:,1)
   
   ! Put data for close-encounter bodies into local arrays for use with BS routine
   do j = 2, nbod
@@ -215,15 +213,9 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
         nbs = nbs + 1
         if (j.le.nbig) nbsbig = nbs
         mbs(nbs)   = m(j)
-        xbs(1,nbs) = x(1,j)
-        xbs(2,nbs) = x(2,j)
-        xbs(3,nbs) = x(3,j)
-        vbs(1,nbs) = v(1,j)
-        vbs(2,nbs) = v(2,j)
-        vbs(3,nbs) = v(3,j)
-        sbs(1,nbs) = s(1,j)
-        sbs(2,nbs) = s(2,j)
-        sbs(3,nbs) = s(3,j)
+        xbs(:,nbs) = x(:,j)
+        vbs(:,nbs) = v(:,j)
+        sbs(:,nbs) = s(:,j)
         rcebs(nbs) = rce(j)
         rphybs(nbs) = rphy(j)
         statbs(nbs) = stat(j)
@@ -282,15 +274,9 @@ do
   do k = 2, nbs
      j = index(k)
      m(j)   = mbs(k)
-     x(1,j) = xbs(1,k)
-     x(2,j) = xbs(2,k)
-     x(3,j) = xbs(3,k)
-     v(1,j) = vbs(1,k)
-     v(2,j) = vbs(2,k)
-     v(3,j) = vbs(3,k)
-     s(1,j) = sbs(1,k)
-     s(2,j) = sbs(2,k)
-     s(3,j) = sbs(3,k)
+     x(:,j) = xbs(:,k)
+     v(:,j) = vbs(:,k)
+     s(:,j) = sbs(:,k)
      stat(j) = statbs(k)
   end do
   do k = 1, nclo
