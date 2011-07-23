@@ -127,8 +127,11 @@ function get_total_torque(n_bodies, mass, radius_p)
   implicit none
   integer, intent(in) :: n_bodies
   real(double_precision), intent(in) :: mass(n_bodies), radius_p(n_bodies-1)
+  
   real(double_precision) :: get_total_torque(n_bodies-1)
 
+  !Local
+  real(double_precision) :: torque_lindblad, torque_corotation, torque_c_baro, torque_c_ent
   
   get_total_torque(:) = 1
   
