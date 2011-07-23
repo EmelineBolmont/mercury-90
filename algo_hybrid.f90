@@ -76,45 +76,28 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
      if (dtflag.eq.0) hrec = h0
      call mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
      dtflag = 2
-     do j = 2, nbod
-        angf(1,j) = 0.d0
-        angf(2,j) = 0.d0
-        angf(3,j) = 0.d0
-        ausr(1,j) = 0.d0
-        ausr(2,j) = 0.d0
-        ausr(3,j) = 0.d0
-     end do
+     angf(:,:) = 0.d0
+     ausr(:,:) = 0.d0
+
      ! If required, apply non-gravitational and user-defined forces
      if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
      if ((ngflag.eq.1).or.(ngflag.eq.3)) call mfo_ngf (nbod,x,v,angf,ngf)
   end if
   
   ! Advance interaction Hamiltonian for H/2
-  do j = 2, nbod
-     v(1,j) = v(1,j)  +  hby2 * (angf(1,j) + ausr(1,j) + a(1,j))
-     v(2,j) = v(2,j)  +  hby2 * (angf(2,j) + ausr(2,j) + a(2,j))
-     v(3,j) = v(3,j)  +  hby2 * (angf(3,j) + ausr(3,j) + a(3,j))
-  end do
+  v(:,2:) = v(:,2:)  +  hby2 * (angf(:,2:) + ausr(:,2:) + a(:,2:))
   
   ! Advance solar Hamiltonian for H/2
-  mvsum(1) = 0.d0
-  mvsum(2) = 0.d0
-  mvsum(3) = 0.d0
-  do j = 2, nbod
-     mvsum(1) = mvsum(1)  +  m(j) * v(1,j)
-     mvsum(2) = mvsum(2)  +  m(j) * v(2,j)
-     mvsum(3) = mvsum(3)  +  m(j) * v(3,j)
-  end do
+  mvsum(1) = sum(m(:) * v(1,:))
+  mvsum(2) = sum(m(:) * v(2,:))
+  mvsum(3) = sum(m(:) * v(3,:))
   
   temp = hby2 / m(1)
-  mvsum(1) = temp * mvsum(1)
-  mvsum(2) = temp * mvsum(2)
-  mvsum(3) = temp * mvsum(3)
-  do j = 2, nbod
-     x(1,j) = x(1,j)  +  mvsum(1)
-     x(2,j) = x(2,j)  +  mvsum(2)
-     x(3,j) = x(3,j)  +  mvsum(3)
-  end do
+  mvsum(:) = temp * mvsum(:)
+
+  x(1,:) = x(1,:)  +  mvsum(1)
+  x(2,:) = x(2,:)  +  mvsum(2)
+  x(3,:) = x(3,:)  +  mvsum(3)
   
   ! Save the current coordinates and velocities
   x0(:,:) = x(:,:)
@@ -134,12 +117,8 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   if (nce.gt.0) then
      do j = 2, nbod
         if (ce(j).ne.0) then
-           x(1,j) = x0(1,j)
-           x(2,j) = x0(2,j)
-           x(3,j) = x0(3,j)
-           v(1,j) = v0(1,j)
-           v(2,j) = v0(2,j)
-           v(3,j) = v0(3,j)
+           x(:,j) = x0(:,j)
+           v(:,j) = v0(:,j)
         end if
      end do
      call mdt_hkce (time,h0,hrec,tol,en(3),jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,ngflag,&
@@ -147,35 +126,22 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   end if
   
   ! Advance solar Hamiltonian for H/2
-  mvsum(1) = 0.d0
-  mvsum(2) = 0.d0
-  mvsum(3) = 0.d0
-  do j = 2, nbod
-     mvsum(1) = mvsum(1)  +  m(j) * v(1,j)
-     mvsum(2) = mvsum(2)  +  m(j) * v(2,j)
-     mvsum(3) = mvsum(3)  +  m(j) * v(3,j)
-  end do
+  mvsum(1) = sum(m(:) * v(1,:))
+  mvsum(2) = sum(m(:) * v(2,:))
+  mvsum(3) = sum(m(:) * v(3,:))
   
   temp = hby2 / m(1)
-  mvsum(1) = temp * mvsum(1)
-  mvsum(2) = temp * mvsum(2)
-  mvsum(3) = temp * mvsum(3)
-  do j = 2, nbod
-     x(1,j) = x(1,j)  +  mvsum(1)
-     x(2,j) = x(2,j)  +  mvsum(2)
-     x(3,j) = x(3,j)  +  mvsum(3)
-  end do
+  mvsum(:) = temp * mvsum(:)
+  x(1,:) = x(1,:)  +  mvsum(1)
+  x(2,:) = x(2,:)  +  mvsum(2)
+  x(3,:) = x(3,:)  +  mvsum(3)
   
   ! Advance interaction Hamiltonian for H/2
   call mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
   if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
   if ((ngflag.eq.1).or.(ngflag.eq.3)) call mfo_ngf (nbod,x,v,angf,ngf)
-  
-  do j = 2, nbod
-     v(1,j) = v(1,j)  +  hby2 * (angf(1,j) + ausr(1,j) + a(1,j))
-     v(2,j) = v(2,j)  +  hby2 * (angf(2,j) + ausr(2,j) + a(2,j))
-     v(3,j) = v(3,j)  +  hby2 * (angf(3,j) + ausr(3,j) + a(3,j))
-  end do
+
+  v(:,2:) = v(:,2:)  +  hby2 * (angf(:,2:) + ausr(:,2:) + a(:,2:))
   
   !------------------------------------------------------------------------------
   

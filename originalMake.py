@@ -8,6 +8,7 @@ FOLDER = "mercury_original"
 
 os.chdir(FOLDER)
 
+sourceFile.setCompilator("g77")
 sourceFile.setCompilingOptions("")
 
 sources_filename = lister("*.for")

@@ -495,7 +495,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
      case default
       informat = 0
       call mio_err (23,mem(81),lmem(81),mem(91),lmem(91),' ',1,mem(82+j),lmem(82+j))
-      end select
+     end select
      
      ! Read epoch of Big bodies
      if (j.eq.1) then
