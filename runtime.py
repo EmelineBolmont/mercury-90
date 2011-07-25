@@ -4,8 +4,8 @@
 # Of course, everything is not tested, but it is planed to test as many things as possible
 
 __author__ = "Christophe Cossou <cossou@obs.u-bordeaux1.fr>"
-__date__ = "12 Juillet 2011"
-__version__ = "$Revision: 1.1.1 $"
+__date__ = "25 Juillet 2011"
+__version__ = "$Revision: 1.2.0 $"
 __credits__ = """We run a test simulation several times using original binairies and new binaries in order to compare their running time."""
 
 from make import *
@@ -21,16 +21,17 @@ delta_t = 1.8e4
 
 FOLDER = "simu_test"
 
-def cputime(command, method='python'):
+def cputime(command, method='time'):
   """function that return the CPU time in second"""
   if (method == "time"):
-    (stdout, stderr) = run("time "+command)
-    temp = stderr.split("\n")[-2]
-    temp = temp.split("\t")
-    temp = temp[-1][0:-2].split("m")
-    cpu_time = float(temp[1])
-    if (temp[0] != "0"):
-      cpu_time += float(temp[0]) * 60.
+    (stdout, stderr) = run("/usr/bin/time --format='user:%U\tsys:%S' "+command)
+    temp = stderr.split("\n")[-1]
+    [user_time, sys_time] = temp.split("\t")
+    
+    cpu_time = 0.
+    for time in (user_time, sys_time):
+      seconds = time.split(":")[1]
+      cpu_time += float(seconds)
   elif (method == "python"):
     start = time()
     run(command)

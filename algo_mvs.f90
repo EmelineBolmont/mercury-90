@@ -8,6 +8,7 @@ module algo_mvs
 !*************************************************************
   use types_numeriques
   use mercury_globals
+  use system_properties
   use user_module
   use forces, only : mfo_ngf
   
@@ -67,9 +68,8 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
      ausr(2,j) = 0.d0
      ausr(3,j) = 0.d0
   end do
-  x(:,:) = xh(:,:)
-  v(:,:) = vh(:,:)
-!~   call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
+
+  call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   
   ! Calculate effective central masses for Kepler drifts
   minside = m(1)
@@ -197,9 +197,8 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
      ausr(2,j) = 0.d0
      ausr(3,j) = 0.d0
   end do
-  xh(:,:) = x(:,:)
-  vh(:,:) = v(:,:)
-!~   call mco_iden (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
+
+  call mco_iden (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
   ! Calculate effective central masses for Kepler drifts
   minside = m(1)
@@ -364,9 +363,8 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   end do
   
   ! Save current coordinates and velocities
-  x0(:,:) = x(:,:)
-  v0(:,:) = v(:,:)
-!~   call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag)
+
+  call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag)
   
   ! Advance Keplerian Hamiltonian (Jacobi/helio coords for Big/Small bodies)
   call mco_h2j (jcen,nbig,nbig,h0,m,x,v,xj,vj)

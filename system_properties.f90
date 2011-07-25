@@ -686,8 +686,14 @@ subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag)
   
   !------------------------------------------------------------------------------
   
-  x_out(:,:) = x_in(:,:)
-  v_out(:,:) = v_in(:,:)
+  do j = 1, nbod
+    x_out(1,j) = x_in(1,j)
+    x_out(2,j) = x_in(2,j)
+    x_out(3,j) = x_in(3,j)
+    v_out(1,j) = v_in(1,j)
+    v_out(2,j) = v_in(2,j)
+    v_out(3,j) = v_in(3,j)
+  enddo
   
   !------------------------------------------------------------------------------
   
