@@ -49,6 +49,10 @@ program element
   character(len=5) :: fin
   character(len=1) :: check,style,type,c1
   character(len=2) :: c2
+  
+  ! fake variables to be able to use mco_iden
+  integer :: ngflag
+  real(double_precision), dimension(1,1) :: ngf
 
   !------------------------------------------------------------------------------
 
@@ -312,9 +316,9 @@ program element
         ! Convert to barycentric, Jacobi or close-binary coordinates if desired
         nbod1 = nbod + 1
         nbig1 = nbig + 1
-        xh(:,:) = x(:,:)
-        vh(:,:) = v(:,:)
-        !~         call mco_iden (jcen,nbod1,nbig1,temp,m,x,v,xh,vh)
+!~         xh(:,:) = x(:,:)
+!~         vh(:,:) = v(:,:)
+        call mco_iden (time,jcen,nbod1,nbig1,temp,m,x,v,xh,vh,ngf,ngflag)
         if (centre.eq.1) call mco_h2b (jcen,nbod1,nbig1,temp,m,xh,vh,x,v)
         if (centre.eq.2) call mco_h2j (jcen,nbod1,nbig1,temp,m,xh,vh,x,v)
         if ((centre.eq.0).and.(algor.eq.11)) call mco_h2cb (jcen,nbod1,nbig1,temp,m,xh,vh,x,v)

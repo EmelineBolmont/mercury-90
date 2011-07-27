@@ -5,7 +5,7 @@
 
 __author__ = "Christophe Cossou <cossou@obs.u-bordeaux1.fr>"
 __date__ = "25 Juillet 2011"
-__version__ = "$Revision: 1.2.0 $"
+__version__ = "$Revision: 1.2.1 $"
 __credits__ = """We run a test simulation several times using original binairies and new binaries in order to compare their running time."""
 
 from make import *
@@ -15,9 +15,9 @@ from time import time
 import os
 from mercury import *
 import progressbar
-nb_runs = 10
+nb_runs = 3
 start_time = 2451179.5
-delta_t = 1.8e4
+delta_t = 1e3 * 365.25
 
 FOLDER = "simu_test"
 
@@ -29,7 +29,8 @@ def cputime(command, method='time'):
     [user_time, sys_time] = temp.split("\t")
     
     cpu_time = 0.
-    for time in (user_time, sys_time):
+    times = [user_time, sys_time]
+    for time in times:
       seconds = time.split(":")[1]
       cpu_time += float(seconds)
   elif (method == "python"):
@@ -41,8 +42,7 @@ def cputime(command, method='time'):
 
 os.chdir(FOLDER)
 
-print("""
-#############################
+print("""#############################
 # Executing time comparison #
 #############################""")
 time_merc_new = []
@@ -184,8 +184,8 @@ else:
 
 print("Binary\tOld\tNew")
 print("mercury\t("+str(round(t_merc_old,2))+" ± "+str(round(dt_merc_old,2))+") s\t("+str(round(t_merc_new,2))+" ± "+str(round(dt_merc_new,2))+") s "+merc_pourcent)
-print("element\t("+str(round(t_ele_old,2))+"±"+str(round(dt_ele_old,2))+") s\t("+str(round(t_ele_new,2))+" ± "+str(round(dt_ele_new,2))+") s "+ele_pourcent)
-print("close\t("+str(round(t_clo_old,2))+"±"+str(round(dt_clo_old,2))+") s\t("+str(round(t_clo_new,2))+" ± "+str(round(dt_clo_new,2))+") s "+clo_pourcent)
+print("element\t("+str(round(t_ele_old,2))+" ± "+str(round(dt_ele_old,2))+") s\t("+str(round(t_ele_new,2))+" ± "+str(round(dt_ele_new,2))+") s "+ele_pourcent)
+print("close\t("+str(round(t_clo_old,2))+" ± "+str(round(dt_clo_old,2))+") s\t("+str(round(t_clo_new,2))+" ± "+str(round(dt_clo_new,2))+") s "+clo_pourcent)
 
 
 #~ #############################
@@ -225,6 +225,15 @@ print("close\t("+str(round(t_clo_old,2))+"±"+str(round(dt_clo_old,2))+") s\t("+
 #~ element	(0.51±0.0) s	(0.78 ± 0.0) s  (+52.94%)
 #~ close	(0.18±0.0) s	(0.17 ± 0.0) s  (-5.56%)
 
+#~ #############################
+#~ # Executing time comparison #
+#~ #############################
+#~ Comparison of running time, for an average on 10 runs
+#~ 100% [=========================================================>] Time: 00:00:10
+#~ Binary	Old	New
+#~ mercury	(0.36 ± 0.07) s	(0.3 ± 0.05) s  (-18.36%)
+#~ element	(0.01 ± 0.0) s	(0.01 ± 0.0) s  (+9.09%)
+#~ close	(0.0 ± 0.0) s	(0.0 ± 0.0) s  (-100.0%)
 
 
 

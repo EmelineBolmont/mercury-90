@@ -918,9 +918,9 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
      h = sign ( max( min( abs(tmp0), abs(h) ), tsmall), tmp0 )
      
      ! Save the current coordinates and velocities
-     x0(:,:) = xh(:,:)
-     v0(:,:) = vh(:,:)
-!~      call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x0,v0,ngf,ngflag)
+!~      x0(:,:) = xh(:,:)
+!~      v0(:,:) = vh(:,:)
+     call mco_iden (time,jcen,nbod,nbig,h,m,xh,vh,x0,v0,ngf,ngflag)
      
      ! Advance one timestep
      call onestep (time,h,hdid,tol,jcen,nbod,nbig,m,xh,vh,s,rphys,rcrit,ngf,stat,dtflag,ngflag,nce,ice,jce,mfo_all)
@@ -1157,9 +1157,9 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
         
         ! Save the current heliocentric coordinates and velocities
         if (algor.eq.1) then
-          xh0(:,:) = x(:,:)
-          vh0(:,:) = v(:,:)
-!~            call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag)
+!~           xh0(:,:) = x(:,:)
+!~           vh0(:,:) = v(:,:)
+           call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag)
         else
            call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh0,vh0,ngf,ngflag)
         end if
@@ -1203,9 +1203,9 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
         
         ! Check for collisions with the central body
         if (algor.eq.1) then
-          xh(:,:) = x(:,:)
-          vh(:,:) = v(:,:)
-!~            call mco_iden(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
+!~           xh(:,:) = x(:,:)
+!~           vh(:,:) = v(:,:)
+           call mco_iden(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
         else
            call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
         end if
@@ -1218,9 +1218,9 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
            exit
         else 
            ! Redo that integration time step
-           xh(:,:) = xh0(:,:)
-           vh(:,:) = vh0(:,:)
-!~            call mco_iden (time,jcen,nbod,nbig,h0,m,xh0,vh0,xh,vh,ngf,ngflag)
+!~            xh(:,:) = xh0(:,:)
+!~            vh(:,:) = vh0(:,:)
+           call mco_iden (time,jcen,nbod,nbig,h0,m,xh0,vh0,xh,vh,ngf,ngflag)
            time = time - h0
            
            ! Merge the object(s) with the central body
@@ -1236,9 +1236,9 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
            dtflag = 1
            call mce_init (h0,jcen,rcen,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,outfile(2),0)
            if (algor.eq.1) then
-              x(:,:) = xh(:,:)
-              v(:,:) = vh(:,:)
-!~               call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag)
+!~               x(:,:) = xh(:,:)
+!~               v(:,:) = vh(:,:)
+              call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag)
            else
               call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag)
            end if
@@ -1277,9 +1277,9 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
      
      if (abs(time-tfun).ge.abs(dtfun).and.opflag.ge.-1) then
         if (algor.eq.1) then
-           xh(:,:) = x(:,:)
-           vh(:,:) = v(:,:)
-!~            call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
+!~            xh(:,:) = x(:,:)
+!~            vh(:,:) = v(:,:)
+           call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
         else
            call bcoord(time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
         end if
@@ -1302,9 +1302,9 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
            dtflag = 1
            call mce_init (h0,jcen,rcen,cefac,nbod,nbig,m,xh,vh,s,rho,rceh,rphys,rce,rcrit,id,outfile(2),0)
            if (algor.eq.1) then
-              x(:,:) = xh(:,:)
-              v(:,:) = vh(:,:)
-!~               call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag)
+!~               x(:,:) = xh(:,:)
+!~               v(:,:) = vh(:,:)
+              call mco_iden (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag)
            else
               call coord (time,jcen,nbod,nbig,h0,m,xh,vh,x,v,ngf,ngflag)
            end if

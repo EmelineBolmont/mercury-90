@@ -70,7 +70,7 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   end if
   
   ! Include non-gravitational (cometary jet) accelerations if necessary
-  if (ngflag.eq.1.or.ngflag.eq.3) then
+  if ((ngflag.eq.1).or.(ngflag.eq.3)) then
      call mfo_ngf (nbod,x,v,acor,ngf)
      do j = 2, nbod
         a(1,j) = a(1,j) + acor(1,j)

@@ -10,6 +10,7 @@ module algo_hybrid
   use mercury_globals
   use user_module
   use forces, only : mfo_ngf
+  use system_properties, only : mco_iden
   
   implicit none
   
@@ -117,9 +118,9 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   end do
   
   ! Save the current coordinates and velocities
-  x0(:,:) = x(:,:)
-  v0(:,:) = v(:,:)
-!~   call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag)
+!~   x0(:,:) = x(:,:)
+!~   v0(:,:) = v(:,:)
+  call mco_iden (time,jcen,nbod,nbig,h0,m,x,v,x0,v0,ngf,ngflag)
   
   ! Advance H_K for H
   do j = 2, nbod
@@ -283,9 +284,9 @@ do
   if (abs(hlocal).gt.tmp0) hlocal = sign (tmp0, h0)
   
   ! Save old coordinates and integrate
-  x0(:,:) = xbs(:,:)
-  v0(:,:) = vbs(:,:)
-!~   call mco_iden (time,jcen,nbs,0,h0,mbs,xbs,vbs,x0,v0,ngf,ngflag)
+!~   x0(:,:) = xbs(:,:)
+!~   v0(:,:) = vbs(:,:)
+  call mco_iden (time,jcen,nbs,0,h0,mbs,xbs,vbs,x0,v0,ngf,ngflag)
   call mdt_bs2 (time,hlocal,hdid,tol,jcen,nbs,nbsbig,mbs,xbs,vbs,sbs,rphybs,rcritbs,ngfbs,statbs,dtflag,ngflag,nce,ibs,jbs,&
        force)
   tlocal = tlocal + hdid
