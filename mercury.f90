@@ -414,15 +414,15 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
      if (j.eq.12) then
         if((c1.eq.'l').or.(c1.eq.'L')) then
            opt(4) = 1
-        else if (j.eq.12.and.(c1.eq.'m'.or.c1.eq.'M')) then
+        else if ((j.eq.12).and.(c1.eq.'m'.or.c1.eq.'M')) then
            opt(4) = 2
-        else if (j.eq.12.and.(c1.eq.'h'.or.c1.eq.'H')) then
+        else if ((j.eq.12).and.(c1.eq.'h'.or.c1.eq.'H')) then
            opt(4) = 3
         else
            goto 661
         end if
      end if
-     if (j.eq.15.and.(c1.eq.'y'.or.c1.eq.'Y')) opt(8) = 1
+     if ((j.eq.15).and.(c1.eq.'y'.or.c1.eq.'Y')) opt(8) = 1
      if (j.eq.16) read (c80,*,err=661) rmax
      if (j.eq.17) read (c80,*,err=661) rcen
      if (j.eq.18) read (c80,*,err=661) m(1)
