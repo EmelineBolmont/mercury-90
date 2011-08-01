@@ -30,6 +30,7 @@ real(double_precision), parameter :: SIGMA_STEFAN = 5.670400d-8 / (1.d-3 * MSUN)
 ! in CGS : \sigma \approx 5.6704 \times 10^{-5}\ \textrm{erg}\,\textrm{cm}^{-2}\,\textrm{s}^{-1}\,\textrm{K}^{-4}
 
 ! Numerical Constants
-real(double_precision), parameter :: THIRD = .3333333333333333d0
+real(double_precision), parameter :: THIRD = .33333333333333333d0
+real(double_precision), parameter :: TWOTHIRD = 0.66666666666666666d0
 
 end module physical_constant

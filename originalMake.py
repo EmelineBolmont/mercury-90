@@ -10,6 +10,8 @@ os.chdir(FOLDER)
 
 #sourceFile.setCompilator("g77")
 sourceFile.setCompilingOptions("")
+#~ sourceFile.setCompilingOptions("-O2 -march=native -fomit-frame-pointer -falign-functions -falign-loops -falign-jumps -funroll-loops")
+
 
 sources_filename = lister("*.for")
 mains = {"mercury6_2.for":"mercury", "element6.for":"element", "close6.for":"close"}
