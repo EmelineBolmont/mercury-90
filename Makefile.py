@@ -9,7 +9,7 @@ clean(["o", "mod"])
 
 sourceFile.setCompilator("gfortran")
 
-sourceFile.setCompilingOptions("-O2 -march=native -fomit-frame-pointer -falign-functions -falign-loops -falign-jumps -funroll-loops")
+sourceFile.setCompilingOptions("-O2 -march=native -funroll-loops -pipe")
 
 sources_filename = lister("*.f90")
 

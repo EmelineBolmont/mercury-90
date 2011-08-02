@@ -10,7 +10,7 @@ os.chdir(FOLDER)
 
 #sourceFile.setCompilator("g77")
 sourceFile.setCompilingOptions("")
-#~ sourceFile.setCompilingOptions("-O2 -march=native -fomit-frame-pointer -falign-functions -falign-loops -falign-jumps -funroll-loops")
+#~ sourceFile.setCompilingOptions("-O2 -march=native -funroll-loops")
 
 
 sources_filename = lister("*.for")
