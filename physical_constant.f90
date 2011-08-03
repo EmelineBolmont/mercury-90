@@ -21,7 +21,7 @@ real(double_precision), parameter :: RAD2DEG = 180.d0 / PI ! RAD2DEG = conversio
 ! Values in CGS
 real(double_precision), parameter :: AU = 1.4959787e13 ! AU = astronomical unit in [cm]
 real(double_precision), parameter :: MSUN = 1.9891e33 ! MSUN = mass of the Sun in [g]
-real(double_precision), parameter :: DAY = 86400 ! amount of second in one day. [s]
+real(double_precision), parameter :: DAY = 86400.d0 ! amount of second in one day. [s]
 
 ! values in numerical Units. Time is in Days, lengths are in AU and masses are in MSUN
 real(double_precision), parameter :: K2 = 2.959122082855911d-4 ! K2 = Gaussian gravitational constant squared [AU^3.MSUN-1.DAY-2]
