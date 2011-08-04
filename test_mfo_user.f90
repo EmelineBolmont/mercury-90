@@ -30,7 +30,9 @@ program test_mfo_user
   ! Units are mass in solar mass, length in AU and time in day
   
   real(double_precision) :: stellar_mass, mass, position(3), velocity(3)
-  
+!~   call unitary_tests()
+!~   call test_gamma_eff()
+
   position(:) = 0.d0
   velocity(:) = 0.d0
   
@@ -48,8 +50,7 @@ program test_mfo_user
   ! we define the planet mass, radius and velocity, considering that we set a semi major axis and a mass. 
   ! Position will be only on one component (x), the same goes for velocity (y)
   
-  call unitary_tests()
-  
+
   x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
 
   chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
@@ -58,12 +59,14 @@ program test_mfo_user
   torque_hs_baro = 1.1d0 * (3.d0/2.d0 - sigma_index)
   torque_c_lin_baro = 0.7d0 * (3.d0/2.d0 - sigma_index)
   
-  call test_torque(stellar_mass, mass, position, velocity)
+  call test_corotation_torque(stellar_mass, mass, position, velocity)
+  
+
   
   contains
 
   
-  subroutine test_torque(stellar_mass, mass, position, velocity)
+  subroutine test_corotation_torque(stellar_mass, mass, position, velocity)
 ! function that return the total torque exerted by the disk on the planet 
 !
 ! Parameter:
@@ -156,7 +159,7 @@ program test_mfo_user
       !------------------------------------------------------------------------------
       
       gamma_eff = 2.d0 * Q_p * adiabatic_index / (adiabatic_index * Q_p + 0.5d0 * &
-      sqrt(2.d0 * sqrt((adiabatic_index * adiabatic_index * Q_p * Q_p + 1.d0)**2 + 16.d0 * Q_p * Q_p * (adiabatic_index - 1.d0)) &
+      sqrt(2.d0 * sqrt((adiabatic_index * adiabatic_index * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (adiabatic_index - 1.d0)) &
       + 2.d0 * adiabatic_index * adiabatic_index * Q_p * Q_p - 2.d0))
       
       !------------------------------------------------------------------------------
@@ -183,8 +186,8 @@ program test_mfo_user
       torque_c_lin_ent = (2.2d0 - 1.4d0 / gamma_eff) * zeta_eff
       
       !------------------------------------------------------------------------------
-
-      corotation_torque(j) = (1 / gamma_eff) * (torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
+      corotation_torque(j) = (1.d0 / gamma_eff) * (torque_hs_baro * get_F(p_nu) * get_G(p_nu) &
+        + torque_c_lin_baro * (1 - get_K(p_nu)) &
         + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
         + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi))))
         
@@ -195,12 +198,15 @@ program test_mfo_user
   end do
   close(10)
   
+  ! To see the plot, run "gnuplot corotation.gnuplot"
   open(10, file="corotation.gnuplot")
   write(10,*) 'set terminal x11 enhanced'
   write(10,*) 'set xlabel "p_{/Symbol n}"'
   write(10,*) 'set ylabel "corotation torque {/Symbol G}_c/{/Symbol G}_0"'
   write(10,*) 'set logscale x'
-  write(10,*) 'set grid'
+  write(10,*) 'set mxtics 5'
+  write(10,*) 'set mytics 5'
+  write(10,*) 'set grid xtics ytics mxtics mytics'
   write(10,*) 'set xrange [', p_nu_min, ':', p_nu_max, ']'
   write(10,*) "plot 'test_corotation_torque.dat' using 1:2 with lines title '{/Symbol c}_p=10^{-5}', \"
   write(10,*) "     '' using 1:3 with lines title '{/Symbol c}_p=2* 10^{-6}',\"
@@ -217,7 +223,7 @@ program test_mfo_user
     
   
   return
-end subroutine test_torque
+end subroutine test_corotation_torque
 
   function get_F(p)
   ! F function (22) of the paper : "A torque formula for non-isothermal Type I planetary migration - II Effects of diffusion"
@@ -342,4 +348,74 @@ end subroutine test_torque
 
     return
   end function get_opacity
+  
+  subroutine test_gamma_eff()
+  
+  ! subroutine that test the function 'get_opacity'
+  
+  ! Return:
+  !  a data file 'test_opacity.dat' 
+  ! and an associated gnuplot file 'opacity.gnuplot' that display values for get_opacity for a range of p values.
+    implicit none
+    
+    real(double_precision) :: adiabatic_index = 5.d0/3.d0
+    real(double_precision), dimension(3) :: h = (/ 0.025, 0.05, 0.1/)
+    real(double_precision), dimension(3) :: gamma_eff
+    real(double_precision) :: alpha
+    
+    real(double_precision), parameter :: alpha_min = 0.0004
+    real(double_precision), parameter :: alpha_max = 80.
+    integer, parameter :: nb_points = 400
+    real(double_precision), parameter :: alpha_step = (alpha_max/alpha_min) ** (1/(nb_points-1.d0))
+    
+    integer :: i,j ! for loops
+    real(double_precision) :: Q_p
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='test_gamma_eff.dat')
+    write(10,*) "Correspond to the figure 8 of Bell & Lin 1994"
+    write(10,*) 'alpha_chi ; gamma_eff for aspect ratio equal to 0.025, 0.05 and 0.1'
+    
+    do i=1, nb_points
+      alpha = alpha_min * alpha_step ** (i-1)
+      
+      do j=1,3
+        
+        !------------------------------------------------------------------------------
+        ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
+!~         Q_p = TWOTHIRD * chi_p / (aspect_ratio_p**3 * radius_p**2 * omega_p)
+        Q_p = 2.d0 * alpha / (3.d0 * h(j))
+        !------------------------------------------------------------------------------
+        
+        gamma_eff(j) = 2.d0 * Q_p * adiabatic_index / (adiabatic_index * Q_p + 0.5d0 * &
+        sqrt(2.d0 * sqrt((adiabatic_index * adiabatic_index * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (adiabatic_index - 1.d0)) &
+        + 2.d0 * adiabatic_index * adiabatic_index * Q_p * Q_p - 2.d0))
+          !gamma_eff_t = 2. * Q * gamma / (gamma * Q + 0.5 * sqrt(2. * sqrt((gamma**2 * Q**2 + 1.)**2 -16. * Q**2 * (gamma - 1.)) + 2. * gamma**2 * Q**2 - 2.))
+
+      end do
+      
+      write(10,*) alpha, gamma_eff(1), gamma_eff(2), gamma_eff(3)
+    end do
+    close(10)
+    write(*,*) "alpha_step=",alpha_step
+    
+    open(10, file="gamma_eff.gnuplot")
+    write(10,*) 'set terminal x11 enhanced'
+    write(10,*) 'set xlabel "{/Symbol a}_{/Symbol c}={/Symbol c}/(c_s H)"'
+    write(10,*) 'set ylabel "{/Symbol g}_{eff}"'
+    write(10,*) 'set logscale x'
+    write(10,*) 'set grid'
+    write(10,*) 'set xrange [', alpha_min, ':', alpha_max, ']'
+    write(10,*) "plot 'test_gamma_eff.dat' using 1:2 with lines title 'h=0.025',\"
+    write(10,*) "     '' using 1:3 with lines title 'h=0.05',\"
+    write(10,*) "     '' using 1:4 with lines title 'h=0.1'"
+    write(10,*) "pause -1 # wait until a carriage return is hit"
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) "set output 'gamma_eff.pdf'"
+    write(10,*) "replot # pour générer le fichier d'output"  
+    
+    close(10)
+  
+
+  end subroutine test_gamma_eff
 end program test_mfo_user
