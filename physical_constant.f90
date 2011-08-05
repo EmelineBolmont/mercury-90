@@ -29,6 +29,9 @@ real(double_precision), parameter :: K2 = 2.959122082855911d-4 ! K2 = Gaussian g
 real(double_precision), parameter :: SIGMA_STEFAN = 5.670400d-8 / (1.d-3 * MSUN) * DAY**3  ! stefan-Boltzmann constant [MSUN.DAY-3.T-4] 
 ! in CGS : \sigma \approx 5.6704 \times 10^{-5}\ \textrm{erg}\,\textrm{cm}^{-2}\,\textrm{s}^{-1}\,\textrm{K}^{-4}
 
+! Various constants in (MSUN, AU, DAY) units
+real(double_precision), parameter :: EARTH_MASS = 3.00374072d-6 ! the mass of the earth in solar mass [MSUN]
+
 ! Numerical Constants
 real(double_precision), parameter :: THIRD = .33333333333333333d0
 real(double_precision), parameter :: TWOTHIRD = 0.66666666666666666d0

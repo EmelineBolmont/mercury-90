@@ -6,31 +6,10 @@ program test_mfo_user
   
   implicit none
   
-  real(double_precision), parameter :: b_over_h = 0.4 ! the smoothing length for the planet's potential
-  real(double_precision), parameter :: adiabatic_index = 1.4 ! the adiabatic index for the gas equation of state
-  real(double_precision), parameter :: aspect_ratio = 0.05 ! the aspect_ratio of the disk. Is used by the function get_aspect_ratio
-  
-  ! Here we define the power law for surface density sigma(R) = sigma_0 * R^sigma_index
-  real(double_precision), parameter :: sigma_0 = 1700 ! the surface density at (R=1AU) [g/cm^2]
-  real(double_precision), parameter :: sigma_index = 0.5! the slope of the surface density power law (alpha in the paper)
-  real(double_precision), parameter :: sigma_0_num = sigma_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Numerical Units]
-  
-  ! Here we define the power law for temperature T(R) = temperature_0 * R^temperature_index
-  real(double_precision), parameter :: temperature_0 = 150 ! the temperature at (R=1AU) [K]
-  real(double_precision), parameter :: temperature_index = 1.! the slope of the temperature power law (beta in the paper)
-  
-  !prefactors
-  real(double_precision) :: x_s_prefactor
-  real(double_precision) :: chi_p_prefactor
-  
-  real(double_precision) :: torque_lindblad ! prefactor for the lindblad torque
-  real(double_precision) :: torque_hs_baro ! barotropic part of the horseshoe drag
-  real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
-  
   ! Units are mass in solar mass, length in AU and time in day
   
   real(double_precision) :: stellar_mass, mass, position(3), velocity(3)
-!~   call unitary_tests()
+  call unitary_tests()
 !~   call test_gamma_eff()
 
   position(:) = 0.d0
@@ -50,14 +29,6 @@ program test_mfo_user
   ! we define the planet mass, radius and velocity, considering that we set a semi major axis and a mass. 
   ! Position will be only on one component (x), the same goes for velocity (y)
   
-
-  x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
-
-  chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
-  
-  torque_lindblad = -2.5d0 - 1.7d0 * temperature_index + 0.1d0 * sigma_index
-  torque_hs_baro = 1.1d0 * (3.d0/2.d0 - sigma_index)
-  torque_c_lin_baro = 0.7d0 * (3.d0/2.d0 - sigma_index)
   
   call test_corotation_torque(stellar_mass, mass, position, velocity)
   
@@ -111,6 +82,27 @@ program test_mfo_user
   real(double_precision) :: torque_hs_ent ! entropy related part of the horseshoe drag
   real(double_precision) :: torque_c_lin_ent ! entropy related part of the linear corotation torque
   
+  real(double_precision), parameter :: b_over_h = 0.4 ! the smoothing length for the planet's potential
+  real(double_precision), parameter :: adiabatic_index = 1.4 ! the adiabatic index for the gas equation of state
+  real(double_precision), parameter :: aspect_ratio = 0.05 ! the aspect_ratio of the disk. Is used by the function get_aspect_ratio
+  
+  ! Here we define the power law for surface density sigma(R) = sigma_0 * R^sigma_index
+  real(double_precision), parameter :: sigma_0 = 1700 ! the surface density at (R=1AU) [g/cm^2]
+  real(double_precision), parameter :: sigma_index = 0.5! the slope of the surface density power law (alpha in the paper)
+  real(double_precision), parameter :: sigma_0_num = sigma_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Numerical Units]
+  
+  ! Here we define the power law for temperature T(R) = temperature_0 * R^temperature_index
+  real(double_precision), parameter :: temperature_0 = 150 ! the temperature at (R=1AU) [K]
+  real(double_precision), parameter :: temperature_index = 1.! the slope of the temperature power law (beta in the paper)
+  
+  !prefactors
+  real(double_precision) :: x_s_prefactor
+  real(double_precision) :: chi_p_prefactor
+  
+  real(double_precision) :: torque_lindblad ! prefactor for the lindblad torque
+  real(double_precision) :: torque_hs_baro ! barotropic part of the horseshoe drag
+  real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
+  
   real(double_precision) :: corotation_torque(7)
   real(double_precision), dimension(4) :: list_chi_p = (/ 1e-5, 2e-6, 1e-6, 1e-7/)
   !------------------------------------------------------------------------------
@@ -121,6 +113,16 @@ program test_mfo_user
   real(double_precision), parameter :: p_nu_step = (p_nu_max/p_nu_min) ** (1/(nb_points-1.d0))
 
   integer :: i,j ! for loops
+  
+  
+    !------------------------------------------------------------------------------
+    x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
+
+  chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
+  
+  torque_lindblad = -2.5d0 - 1.7d0 * temperature_index + 0.1d0 * sigma_index
+  torque_hs_baro = 1.1d0 * (3.d0/2.d0 - sigma_index)
+  torque_c_lin_baro = 0.7d0 * (3.d0/2.d0 - sigma_index)
   !------------------------------------------------------------------------------
   
     ! WE CALCULATE PROPERTIES OF THE PLANETS
