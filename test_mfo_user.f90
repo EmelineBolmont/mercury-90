@@ -8,29 +8,29 @@ program test_mfo_user
   
   ! Units are mass in solar mass, length in AU and time in day
   
-  real(double_precision) :: stellar_mass, mass, position(3), velocity(3)
+!~   real(double_precision) :: stellar_mass, mass, position(3), velocity(3)
   call unitary_tests()
 !~   call test_gamma_eff()
 
-  position(:) = 0.d0
-  velocity(:) = 0.d0
-  
-  ! stellar mass
-  stellar_mass = 1.d0
-  
-  ! planet mass
-  mass = 1.26d-5
-  
-  ! planet semi major axis
-  position(1) = 1.d0
-  
-  velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
-  
-  ! we define the planet mass, radius and velocity, considering that we set a semi major axis and a mass. 
-  ! Position will be only on one component (x), the same goes for velocity (y)
-  
-  
-  call test_corotation_torque(stellar_mass, mass, position, velocity)
+!~   position(:) = 0.d0
+!~   velocity(:) = 0.d0
+!~   
+!~   ! stellar mass
+!~   stellar_mass = 1.d0
+!~   
+!~   ! planet mass
+!~   mass = 1.26d-5
+!~   
+!~   ! planet semi major axis
+!~   position(1) = 1.d0
+!~   
+!~   velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+!~   
+!~   ! we define the planet mass, radius and velocity, considering that we set a semi major axis and a mass. 
+!~   ! Position will be only on one component (x), the same goes for velocity (y)
+!~   
+!~   
+!~   call test_corotation_torque(stellar_mass, mass, position, velocity)
   
 
   
