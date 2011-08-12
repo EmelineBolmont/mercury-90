@@ -2,7 +2,6 @@ module physical_constant
   use types_numeriques
 
 implicit none
-save
 !------------------------------------------------------------------------------
 
 ! Constants:

@@ -9,7 +9,6 @@ module mercury_globals
   use mercury_constant
 
   implicit none
-  save
   
   integer, dimension(8) :: opt = (/0,1,1,2,0,1,0,0/) ! Default options (can be overwritten later in the code) for mercury.
   
