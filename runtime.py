@@ -4,8 +4,8 @@
 # Of course, everything is not tested, but it is planed to test as many things as possible
 
 __author__ = "Christophe Cossou <cossou@obs.u-bordeaux1.fr>"
-__date__ = "25 Juillet 2011"
-__version__ = "$Revision: 1.2.1 $"
+__date__ = "16 Août 2011"
+__version__ = "$Revision: 1.2.2 $"
 __credits__ = """We run a test simulation several times using original binairies and new binaries in order to compare their running time."""
 
 from make import *
