@@ -114,7 +114,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     
     torque = torque_ref * (lindblad_torque + corotation_torque)
       ! We calculate the angular momentum, that is, the z-composant. We assume that the x and y composant are negligible (to be tested)
-    angular_momentum = mass(planet) * (position(1,planet) * velocity(2,planet) - position(2,planet) * velocity(1,planet))
+    angular_momentum = (mass(planet) / K2) * (position(1,planet) * velocity(2,planet) - position(2,planet) * velocity(1,planet))
   !~   angular_momentum_x = mass(planet) * (position(2,planet) * velocity(3,planet) - position(3,planet) * velocity(2,planet))
   !~   angular_momentum_y = mass(planet) * (position(3,planet) * velocity(1,planet) - position(1,planet) * velocity(3,planet))
     
