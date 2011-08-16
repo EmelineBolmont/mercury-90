@@ -57,14 +57,14 @@ module user_module
 ! If using with the conservative Bulirsch-Stoer algorithm MAL_BS2, the
 ! force should not be a function of the velocities.
 
-! Code Units are in AU, days and solar mass.
+! Code Units are in AU, days and solar mass * K2 (mass are in solar mass, but multiplied by K2 earlier in the code).
 
 ! N.B. All coordinates and velocities must be with respect to central body
 ! ===
 !------------------------------------------------------------------------------
 
 subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acceleration)
-!  mass      = mass (in solar masses)
+!  mass      = mass (in solar masses * K2)
 !  position     = coordinates (x,y,z) with respect to the central body [AU]
 !  velocity     = velocities (vx,vy,vz) with respect to the central body [AU/day]
 !  n_bodies  = current number of bodies (INCLUDING the central object)
@@ -97,6 +97,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision) :: torque_ref ! a ref torque that depends on the properties of the planet [Ms.AU^2]
   real(double_precision) :: time_mig ! The migration timescale for the planet [day]
   real(double_precision) :: angular_momentum ! the angular momentum of the planet [Ms.AU^2.day^-1]
+  
+  logical, save :: FirstCall = .True.
+  
 
   !------------------------------------------------------------------------------
   ! Setup
@@ -121,14 +124,28 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     acceleration(2,planet) = - velocity(2,planet) / time_mig
     acceleration(3,planet) = - velocity(3,planet) / time_mig
     
+    
   end do
   
   
   !------------------------------------------------------------------------------
   
-
+!~   if (FirstCall) then
+!~     FirstCall = .False.
+!~     write (*,*) 'time=', time
+!~     write (*,*) 'jcen=', jcen
+!~     write (*,*) 'mass=', mass
+!~     write (*,*) 'position=', position
+!~     write (*,*) 'velocity=', velocity
+!~     write (*,*) '--------------------'
+!~     write (*,*) 'time_mig=', time_mig
+!~     write (*,*) 'angular_momentum=', angular_momentum
+!~     write (*,*) 'torque=', torque
+!~     write (*,*) 'acceleration=', acceleration
+!~   end if
   !------------------------------------------------------------------------------
-  
+!~   write (*,*) 'x_s_prefactor=', x_s_prefactor
+!~ write (*,*) 'torque=',torque
   return
 end subroutine mfo_user
 
@@ -136,8 +153,12 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
 ! function that return the total torque exerted by the disk on the planet 
 !
 ! Parameter:
-! mass : an array will all the masses (including the central one as the first element [solar mass]
-! radius_p : the distance between the central body and each planet
+! stellar_mass : the mass of the central star in [solar mass * K2]
+! mass : the planet mass in [solar mass * K2]
+! position(3) : position of the planet relatively to the central star [AU]
+! velocity(3) : velocity of the planet relatively to the central star [AU/day]
+
+
   use orbital_elements, only : mco_x2a
   implicit none
   real(double_precision), intent(in) :: stellar_mass, mass, position(3), velocity(3)
@@ -183,7 +204,7 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
 
   
   ! WE CALCULATE PROPERTIES OF THE PLANETS
-  gm = K2 * (stellar_mass + mass)
+  gm = (stellar_mass + mass)
   ! We get semi_major_axis, radius_p and vel_squared
   call mco_x2a (gm,position(1), position(2), position(3), velocity(1),velocity(2), velocity(3),semi_major_axis,radius_p,vel_squared)
   
@@ -251,6 +272,12 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
   corotation_torque = (1.d0 / gamma_eff) * torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
     + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
     + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi)))
+  
+!~   write (*,*) lindblad_torque, corotation_torque, Gamma_0
+!~   write (*,*) 'stellar_mass=',stellar_mass
+!~   write (*,*) 'mass=',mass
+!~   write (*,*) 'position=',position
+!~   write (*,*) 'velocity=',velocity
 
   return
 end subroutine get_corotation_torque
@@ -575,7 +602,7 @@ end subroutine init_globals
     velocity(:) = 0.d0
     
     ! stellar mass
-    stellar_mass = 1.d0
+    stellar_mass = 1.d0 * K2
     
     call init_globals(stellar_mass)
     
@@ -602,10 +629,10 @@ end subroutine init_globals
       
       
       do j=1,nb_mass
-        mass = mass_min + mass_step * (j - 1.d0)
+        mass = (mass_min + mass_step * (j - 1.d0)) * K2
         
         ! We generate cartesian coordinate for the given mass and semi major axis
-        velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+        velocity(2) = sqrt((stellar_mass + mass) / position(1))
         
         call get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, lindblad_torque, torque_ref)
         
@@ -613,11 +640,11 @@ end subroutine init_globals
         total_torque_units = torque_ref * total_torque
         
                 
-        write(10,*) a, mass / EARTH_MASS, corotation_torque
-        write(11,*) a, mass / EARTH_MASS, total_torque
-        write(12,*) a, mass / EARTH_MASS, total_torque_units
-        write(13,*) a, mass / EARTH_MASS, lindblad_torque
-        write(14,*) a, mass / EARTH_MASS, torque_ref
+        write(10,*) a, mass / (EARTH_MASS*K2), corotation_torque
+        write(11,*) a, mass / (EARTH_MASS*K2), total_torque
+        write(12,*) a, mass / (EARTH_MASS*K2), total_torque_units
+        write(13,*) a, mass / (EARTH_MASS*K2), lindblad_torque
+        write(14,*) a, mass / (EARTH_MASS*K2), torque_ref
         
       end do
       
@@ -678,8 +705,8 @@ end subroutine init_globals
       write(j,*) 'set mxtics 5'
       write(j,*) 'set mytics 5'
       write(j,*) 'set grid xtics ytics mxtics mytics linetype -1, linetype 0'
-    write(j,*) 'set xrange [', a_min, ':', a_max, ']'
-    write(j,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+      write(j,*) 'set xrange [', a_min, ':', a_max, ']'
+      write(j,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     end do
 
     write(10,*) "splot 'test_corotation_torque.dat' with pm3d notitle"
@@ -705,7 +732,7 @@ end subroutine init_globals
     end do
     
     do j=11,12
-      write(j,*) '!rm contour.dat'!to delete the temporary file
+      write(j,*) '!rm contour.dat' ! to delete the temporary file
     end do
     
     close(10)
@@ -741,7 +768,7 @@ end subroutine init_globals
     velocity(:) = 0.d0
     
     ! stellar mass
-    stellar_mass = 1.d0
+    stellar_mass = 1.d0 * K2
     
     call init_globals(stellar_mass)
     
@@ -760,10 +787,10 @@ end subroutine init_globals
     
     
     do j=1,nb_mass
-      mass = (mass_min + mass_step * (j - 1.d0)) * EARTH_MASS
+      mass = (mass_min + mass_step * (j - 1.d0)) * EARTH_MASS  * K2
       
       ! We generate cartesian coordinate for the given mass and semi major axis
-      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      velocity(2) = sqrt((stellar_mass + mass) / position(1))
       
       call get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, lindblad_torque, torque_ref)
       
@@ -773,9 +800,9 @@ end subroutine init_globals
       corotation_torque_units = torque_ref * corotation_torque
       total_torque_units = torque_ref * total_torque      
               
-      write(10,*) mass / EARTH_MASS, corotation_torque, lindblad_torque, total_torque
-      write(11,*) mass / EARTH_MASS, torque_ref
-      write(12,*) mass / EARTH_MASS, corotation_torque_units, lindblad_torque_units, total_torque_units
+      write(10,*) mass / (EARTH_MASS * K2), corotation_torque, lindblad_torque, total_torque
+      write(11,*) mass / (EARTH_MASS * K2), torque_ref
+      write(12,*) mass / (EARTH_MASS * K2), corotation_torque_units, lindblad_torque_units, total_torque_units
     end do
     
     close(10)
@@ -850,7 +877,7 @@ end subroutine init_globals
     real(double_precision), parameter :: a_max = 60. ! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision), parameter :: mass = 20. * EARTH_MASS
+    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: lindblad_torque_units, corotation_torque_units, total_torque_units
@@ -862,7 +889,7 @@ end subroutine init_globals
     velocity(:) = 0.d0
     
     ! stellar mass
-    stellar_mass = 1.d0
+    stellar_mass = 1.d0 * K2
     
     call init_globals(stellar_mass)
     
@@ -914,7 +941,7 @@ end subroutine init_globals
     do j=10,12
       write(j,*) 'set terminal wxt enhanced'
       write(j,*) 'set xlabel "semi major axis a (in AU)"'
-      write(j,*) 'set title "for planet mass =',mass / EARTH_MASS,' m_{earth}"'
+      write(j,*) 'set title "for planet mass =',mass / (EARTH_MASS * K2),' m_{earth}"'
     end do
     
     write(10,*) 'set ylabel "torque [{/Symbol G}_0]"'
@@ -1018,7 +1045,7 @@ subroutine paardekooper_corotation(stellar_mass, mass, position, velocity)
   
   
   ! WE CALCULATE PROPERTIES OF THE PLANETS
-  gm = K2 * (stellar_mass + mass)
+  gm = (stellar_mass + mass)
   ! We get semi_major_axis, radius_p and vel_squared
   call mco_x2a (gm,position(1), position(2), position(3), velocity(1),velocity(2), velocity(3),semi_major_axis,radius_p,vel_squared)
   
@@ -1132,16 +1159,16 @@ end subroutine paardekooper_corotation
     velocity(:) = 0.d0
     
     ! stellar mass
-    stellar_mass = 1.d0
+    stellar_mass = 1.d0 * K2
     
-    mass = 1.26d-5
+    mass = 1.26d-5  * K2
     
     call init_globals(stellar_mass)
     
     a = 1.d0
     position(1) = a
     
-    velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+    velocity(2) = sqrt((stellar_mass + mass) / position(1))
     
     call paardekooper_corotation(stellar_mass, mass, position, velocity)
     
