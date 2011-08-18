@@ -130,7 +130,8 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
 
   
   ! Input/Output
-  real(double_precision) :: gm,q,e,i,p,n,l,x,y,z,u,v,w
+  real(double_precision),intent(in) :: gm,x,y,z,u,v,w
+  real(double_precision),intent(out) :: q,e,i,p,n,l
   
   ! Local
   real(double_precision) :: hx,hy,hz,h2,h,v2,r,rv,s,true
@@ -217,6 +218,82 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   
   return
 end subroutine mco_x2el
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+!      MCO_X2AE.FOR    (17 august 2011)
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+! Author: C. Cossou
+
+! Calculates Keplerian orbital elements and motion properties given relative coordinates and
+! velocities, and GM = G times the sum of the masses.
+
+! The elements are: a = semi major axis (in AU)
+!                   e = eccentricity
+!                   i = inclination (in rad)
+!                   r = the orbital distance of the planet from the star [AU]
+!                   v2 = the norm of the velocity squared [AU^2/day^2]
+!                   h = the angular momentum? [I don't know where the mass is]
+!                   
+
+!------------------------------------------------------------------------------
+
+subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
+  
+  use physical_constant
+  use mercury_constant
+
+  implicit none
+
+  
+  ! Input/Output
+  real(double_precision),intent(in) :: gm,x,y,z,u,v,w
+  real(double_precision),intent(out) :: a,e,i,r,v2,h
+  
+  ! Local
+  real(double_precision) :: hx,hy,hz,h2,rv,s
+  real(double_precision) :: ci,temp
+  
+  !------------------------------------------------------------------------------
+  
+  hx = y * w  -  z * v
+  hy = z * u  -  x * w
+  hz = x * v  -  y * u
+  h2 = hx*hx + hy*hy + hz*hz
+  v2 = u * u  +  v * v  +  w * w
+  rv = x * u  +  y * v  +  z * w
+  r = sqrt(x*x + y*y + z*z)
+  h = sqrt(h2)
+  s = h2 / gm
+  
+  ! semi major axis
+  a  = gm * r / (2.d0 * gm  -  r * v2)
+  
+  ! Inclination and node
+  ci = hz / h
+  if (abs(ci).lt.1) then
+     i = acos (ci)
+  else
+     if (ci.gt.0) i = 0.d0
+     if (ci.lt.0) i = PI
+  end if
+  
+  ! Eccentricity and perihelion distance
+  temp = 1.d0  +  s * (v2 / gm  -  2.d0 / r)
+  if (temp.le.0) then
+     e = 0.d0
+  else
+     e = sqrt (temp)
+  end if
+
+  
+  
+  !------------------------------------------------------------------------------
+  
+  return
+end subroutine mco_x2ae
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

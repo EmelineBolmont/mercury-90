@@ -31,14 +31,35 @@ module user_module
   real(double_precision), parameter :: temperature_0 = 510. ! the temperature at (R=1AU) [K]
   real(double_precision), parameter :: temperature_index = 1.0! the negativeslope of the temperature power law (beta in the paper)
   
+  real(double_precision), parameter :: Q_e = 0.1d0 ! normalisation factor for the timescale of eccentricity damping
+  
   !prefactors
-  real(double_precision) :: x_s_prefactor
-  real(double_precision) :: chi_p_prefactor
-  real(double_precision) :: scaleheight_prefactor
-  real(double_precision) :: lindblad_prefactor
+  real(double_precision) :: x_s_prefactor ! prefactor for the half width of the corotation region
+  real(double_precision) :: chi_p_prefactor ! prefactor for the thermal diffusivity
+  real(double_precision) :: scaleheight_prefactor ! prefactor for the scaleheight
+  real(double_precision) :: lindblad_prefactor ! prefactor for the lindblad torque
+  real(double_precision) :: migration_acc_prefactor ! prefactor for the migration acceleration
+  real(double_precision) :: eccentricity_acc_prefactor ! prefactor for the eccentricity acceleration
   
   real(double_precision) :: torque_hs_baro ! barotropic part of the horseshoe drag
   real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
+  
+  ! Properties of the current planet
+  real(double_precision) :: angular_momentum_p ! the angular momentum of the planet [Ms.AU^2.day^-1]
+  real(double_precision) :: radius_p ! the radial position of the planet [AU]
+  real(double_precision) :: velocity_p ! the norm of the speed [AU/day]
+  real(double_precision) :: omega_p ! the angular rotation [day-1]
+  real(double_precision) :: semi_major_axis ! semi major axis of the planet [AU]
+  real(double_precision) :: eccentricity ! the eccentricity of the planet
+  real(double_precision) :: inclination ! the inclination of the planet [rad]
+  
+  ! Properties of the disk at the location of the planet
+  real(double_precision) :: sigma_p ! the surface density of the gas disk at the planet location [MSUN.AU^-2]
+  real(double_precision) :: scaleheight_p ! the scaleheight of the disk at the location of the planet [AU]
+  real(double_precision) :: aspect_ratio_p ! the aspect_ratio of the gas disk at the location of the planet [no dim]
+  real(double_precision) :: chi_p ! the thermal diffusion coefficient at the location of the planet [AU^2.day^-1]
+  real(double_precision) :: nu_p ! the viscosity of the disk at the location of the planet [AU^2.day^-1]
+  real(double_precision) :: temperature_p ! the temperature of the disk at the location of the planet [K]
   
   contains
 
@@ -64,12 +85,12 @@ module user_module
 !------------------------------------------------------------------------------
 
 subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acceleration)
-!  mass      = mass (in solar masses * K2)
-!  position     = coordinates (x,y,z) with respect to the central body [AU]
-!  velocity     = velocities (vx,vy,vz) with respect to the central body [AU/day]
-!  n_bodies  = current number of bodies (INCLUDING the central object)
+!  mass          = mass (in solar masses * K2)
+!  position      = coordinates (x,y,z) with respect to the central body [AU]
+!  velocity      = velocities (vx,vy,vz) with respect to the central body [AU/day]
+!  n_bodies      = current number of bodies (INCLUDING the central object)
 !  n_big_bodies  =    "       "    " big bodies (ones that perturb everything else)
-!  time  = current epoch [days]
+!  time          = current epoch [days]
 
   use physical_constant
   use mercury_constant  
@@ -96,34 +117,82 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision) :: lindblad_torque ! the lindblad torque exerted by the disk on the planet in unit of torque_ref [No dim]
   real(double_precision) :: torque_ref ! a ref torque that depends on the properties of the planet [Ms.AU^2]
   real(double_precision) :: time_mig ! The migration timescale for the planet [day]
-  real(double_precision) :: angular_momentum ! the angular momentum of the planet [Ms.AU^2.day^-1]
+  real(double_precision) :: time_wave ! A timescale for the planet that I don't understand for the moment [day]
+  real(double_precision) :: time_ecc ! The eccentricity damping timescale for the planet [day]
+  real(double_precision) :: time_inc ! The inclination damping timescale for the planet [day]
   
+  !local temporary parameters
   logical, save :: FirstCall = .True.
+  real(double_precision) :: e_h ! the ratio between the eccentricity and the aspect ratio for a given planet [no dim]
+  real(double_precision) :: i_h ! the ratio between the inclination and the aspect ratio for a given planet [no dim]
   
+  real(double_precision), dimension(3) :: migration_acceleration
+  real(double_precision), dimension(3) :: eccentricity_acceleration
+  real(double_precision) :: inclination_acceleration_z
+
 
   !------------------------------------------------------------------------------
   ! Setup
   acceleration(:,:) = 0.d0
+!~   eccentricity_acceleration(:) = 0.d0 8might activate this when I turn eccentricity damping off
   !------------------------------------------------------------------------------
-  call init_globals(mass(1))
+  call init_globals(stellar_mass=mass(1))
   
   
   do planet=2,n_big_bodies
-    call get_corotation_torque(mass(1), mass(planet), position(3,planet), velocity(3,planet),&
-         corotation_torque, lindblad_torque, torque_ref)
     
+    ! we store in global parameters various properties of the planet
+    call get_planet_properties(stellar_mass=mass(1), mass=mass(planet), & ! input
+    position=position(1:3, planet), velocity=velocity(1:3,planet)) ! input
+  
+    !------------------------------------------------------------------------------
+    ! Calculation of the acceleration due to migration
+    call get_corotation_torque(mass(1), mass(planet), & ! input
+    corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+
     torque = torque_ref * (lindblad_torque + corotation_torque)
-      ! We calculate the angular momentum, that is, the z-composant. We assume that the x and y composant are negligible (to be tested)
-    angular_momentum = (mass(planet) / K2) * (position(1,planet) * velocity(2,planet) - position(2,planet) * velocity(1,planet))
-  !~   angular_momentum_x = mass(planet) * (position(2,planet) * velocity(3,planet) - position(3,planet) * velocity(2,planet))
-  !~   angular_momentum_y = mass(planet) * (position(3,planet) * velocity(1,planet) - position(1,planet) * velocity(3,planet))
     
-    time_mig = 0.5d0 * angular_momentum / torque
+    time_mig = 0.5d0 * angular_momentum_p / torque
     
-    acceleration(1,planet) = - velocity(1,planet) / time_mig
-    acceleration(2,planet) = - velocity(2,planet) / time_mig
-    acceleration(3,planet) = - velocity(3,planet) / time_mig
+    migration_acc_prefactor = -1.d0 / time_mig
     
+    migration_acceleration(1) = migration_acc_prefactor * velocity(1,planet)
+    migration_acceleration(2) = migration_acc_prefactor * velocity(2,planet)
+    migration_acceleration(3) = migration_acc_prefactor * velocity(3,planet)
+    !------------------------------------------------------------------------------
+    ! prefactor calculation for eccentricity and inclination damping
+    e_h = eccentricity / aspect_ratio_p
+    i_h = inclination / aspect_ratio_p
+    time_wave = mass(1)**2 * aspect_ratio_p**4 / (mass(planet) * K2 * sigma_p * semi_major_axis**2 * omega_p)
+    
+    !------------------------------------------------------------------------------
+    ! Calculation of the acceleration due to eccentricity damping
+    
+!~     time_ecc = time_ecc_prefactor * aspect_ratio_p**4 / (mass(planet) * omega_p * sigma_p * semi_major_axis**2) * &
+!~                (1.d0 + 0.25d0 * (eccentricity / aspect_ratio_p)**3)
+    time_ecc = time_wave / 0.780d0 * (1.d0 - 0.14d0 * e_h**2 + 0.06 * e_h**3 + 0.18 * (e_h * i_h)**2)
+    
+    eccentricity_acc_prefactor = -2.d0 * (position(1,planet) * velocity(1,planet) + position(2,planet) * velocity(2,planet) + &
+    position(3,planet) * velocity(3,planet)) / (radius_p**2 * time_ecc)
+    
+    eccentricity_acceleration(1) = eccentricity_acc_prefactor * position(1,planet)
+    eccentricity_acceleration(2) = eccentricity_acc_prefactor * position(2,planet)
+    eccentricity_acceleration(3) = eccentricity_acc_prefactor * position(3,planet)
+    
+    !------------------------------------------------------------------------------
+    
+    ! Calculation of the acceleration due to the inclination damping
+    
+    time_inc = time_wave / 0.544d0 * (1.d0 - 0.30d0 * i_h**2 + 0.24 * i_h**3 + 0.14 * e_h**2 * i_h)
+    
+    inclination_acceleration_z = - velocity(3,planet) / time_inc
+    
+    !------------------------------------------------------------------------------
+    ! Calculation of the total acceleration on the planet
+    
+    acceleration(1,planet) = migration_acceleration(1) + eccentricity_acceleration(1)
+    acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
+    acceleration(3,planet) = migration_acceleration(3) + eccentricity_acceleration(3) + inclination_acceleration_z
     
   end do
   
@@ -149,9 +218,11 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   return
 end subroutine mfo_user
 
-subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, lindblad_torque, Gamma_0)
-! function that return the total torque exerted by the disk on the planet 
-!
+subroutine get_planet_properties(stellar_mass, mass, position, velocity)
+
+! subroutine that return numerous properties of the planet and its environment given its mass, position and velocity
+! Note that some parameters are global and accessed directly by the subroutine
+
 ! Parameter:
 ! stellar_mass : the mass of the central star in [solar mass * K2]
 ! mass : the planet mass in [solar mass * K2]
@@ -159,61 +230,33 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
 ! velocity(3) : velocity of the planet relatively to the central star [AU/day]
 
 
-  use orbital_elements, only : mco_x2a
+  use orbital_elements, only : mco_x2ae
+  
   implicit none
-  real(double_precision), intent(in) :: stellar_mass, mass, position(3), velocity(3)
+  real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
+  real(double_precision), intent(in) :: mass ! the mass of the planet [Msun * K2]
+  real(double_precision), dimension(3), intent(in) :: position ! Cartesian position of the planet [AU]
+  real(double_precision), dimension(3), intent(in) :: velocity ! Cartesian velocity of the planet [AU/day]
   
-  real(double_precision), intent(out) :: corotation_torque
-  real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
-  real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
-
-
-  !Local
-  
-  ! Meaningless parameters (intermediate constant and so on that doesn't mean anything physically)
-  real(double_precision) :: Q_p ! parameter for gamma_eff (equation (45) of Paardekooper, Baruteau, 2010 II. Effects of diffusion)
-  real(double_precision) :: k_p ! parameter for p_nu and p_chi for example  !!! This is not 'k' from equation (15)!
-  real(double_precision) :: gm ! parameter to calculate the semi major axis. passed to mco_x2a
-  real(double_precision) :: lindblad_parameter ! intermediate of calculation for the lindblad torque. 
-  
-  ! Properties of the planet
-  real(double_precision) :: radius_p ! the radial position of the planet [AU]
-  real(double_precision) :: velocity_p, vel_squared ! the norm of the speed [AU/day] and the velocity squared.
-  real(double_precision) :: omega_p ! the angular rotation [day-1]
-  real(double_precision) :: semi_major_axis ! semi major axis of the planet [AU]
-  
-  !Properties of the disk at the location of the planet
-
-  real(double_precision) :: sigma_p ! the surface density of the gas disk at the planet location [MSUN.AU^-2]
+  ! Local
+  real(double_precision) :: gm ! sum of mass (since mass are multiplied implicitely by K2)
+  real(double_precision) :: h_p ! the angular momentum given by the calculation of orbital elements. i.e without the mass in it.
+  real(double_precision) :: velocity2_p ! the norm of the velocity squared [AU^2 day^-2]
   real(double_precision) :: bulk_density_p ! the bulk_density of the disk at the location of the planet [MSUN.AU^-3]
-  real(double_precision) :: scaleheight_p ! the scaleheight of the disk at the location of the planet [AU]
-  real(double_precision) :: aspect_ratio_p ! the aspect_ratio of the gas disk at the location of the planet [no dim]
-  real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
-  real(double_precision) :: zeta_eff ! effective entropy index depending on gamma_eff [no dim]
-  real(double_precision) :: chi_p ! the thermal diffusion coefficient at the location of the planet [AU^2.day^-1]
-  real(double_precision) :: nu_p ! the viscosity of the disk at the location of the planet [AU^2.day^-1]
   real(double_precision) :: opacity_p ! the opacity of the disk at the location of the planet [?]
-  real(double_precision) :: temperature_p ! the temperature of the disk at the location of the planet [K]
-  real(double_precision) :: p_nu ! parameter for saturation due to viscosity at the location of the planet [no dim]
-  real(double_precision) :: p_chi ! parameter for saturation due to thermal diffusion at the location of the planet [no dim]
-  real(double_precision) :: gamma_eff ! effective adiabatic index depending on several parameters [no dim]
-  
-  !Torques (some depends of the planet)
-  real(double_precision) :: torque_hs_ent ! entropy related part of the horseshoe drag
-  real(double_precision) :: torque_c_lin_ent ! entropy related part of the linear corotation torque
 
-  
-  ! WE CALCULATE PROPERTIES OF THE PLANETS
-  gm = (stellar_mass + mass)
-  ! We get semi_major_axis, radius_p and vel_squared
-  call mco_x2a (gm,position(1), position(2), position(3), velocity(1),velocity(2), velocity(3),semi_major_axis,radius_p,vel_squared)
+  gm = stellar_mass + mass
+  call mco_x2ae(gm,position(1),position(2),position(3),velocity(1),velocity(2),velocity(3),&
+                semi_major_axis,eccentricity,inclination,radius_p,velocity2_p,h_p)
   
   
   !------------------------------------------------------------------------------
-  sigma_p = sigma_0_num / radius_p ** sigma_index ! [N.U.]
+  sigma_p = sigma_0_num / radius_p ** sigma_index ! [Msun/AU^3]
   temperature_p = temperature_0 / radius_p**temperature_index ! [K]
   
-  velocity_p = sqrt(vel_squared)
+  ! We calculate the angular momentum
+  angular_momentum_p = (mass / K2) * h_p  
+  velocity_p = sqrt(velocity2_p) ! [AU/day]
   omega_p = sqrt(gm / (semi_major_axis * semi_major_axis * semi_major_axis)) ! [day-1]
   
   !------------------------------------------------------------------------------
@@ -230,12 +273,51 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
   !------------------------------------------------------------------------------
   opacity_p = get_opacity(temperature_p, bulk_density_p)
   
+  chi_p = 1.d-5 * radius_p**2 * omega_p 
+!~   chi_p = chi_p_prefactor * temperature_p**4 / (opacity_p * sigma_p**2 * omega_p**2)
+
+
+  
+end subroutine get_planet_properties
+
+subroutine get_corotation_torque(stellar_mass, mass, corotation_torque, lindblad_torque, Gamma_0)
+! function that return the total torque exerted by the disk on the planet 
+!
+
+  implicit none
+  real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
+  ! Properties of the planet
+  real(double_precision), intent(in) :: mass ! the mass of the planet [Msun * K2]
+  
+  
+  real(double_precision), intent(out) :: corotation_torque
+  real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
+  real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
+
+
+  !Local
+  
+  ! Meaningless parameters (intermediate constant and so on that doesn't mean anything physically)
+  real(double_precision) :: Q_p ! parameter for gamma_eff (equation (45) of Paardekooper, Baruteau, 2010 II. Effects of diffusion)
+  real(double_precision) :: k_p ! parameter for p_nu and p_chi for example  !!! This is not 'k' from equation (15)!
+  real(double_precision) :: lindblad_parameter ! intermediate of calculation for the lindblad torque. 
+  
+
+  
+  !Properties of the disk at the location of the planet
+  real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
+  real(double_precision) :: zeta_eff ! effective entropy index depending on gamma_eff [no dim]
+  real(double_precision) :: p_nu ! parameter for saturation due to viscosity at the location of the planet [no dim]
+  real(double_precision) :: p_chi ! parameter for saturation due to thermal diffusion at the location of the planet [no dim]
+  real(double_precision) :: gamma_eff ! effective adiabatic index depending on several parameters [no dim]
+  
+  !Torques (some depends of the planet)
+  real(double_precision) :: torque_hs_ent ! entropy related part of the horseshoe drag
+  real(double_precision) :: torque_c_lin_ent ! entropy related part of the linear corotation torque
+  
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * aspect_ratio_p))**2 * sigma_p * radius_p**4 * omega_p**2
-  
-  chi_p = 1.d-5 * radius_p**2 * omega_p 
-!~   chi_p = chi_p_prefactor * temperature_p**4 / (opacity_p * sigma_p**2 * omega_p**2)
   
   !------------------------------------------------------------------------------
   ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
@@ -304,7 +386,7 @@ subroutine init_globals(stellar_mass)
     
   !~   lindblad_prefactor = -(2.3d0 + 0.4d0 * temperature_index - 0.1d0 * sigma_index) ! masset & casoli 2010
     lindblad_prefactor = -(2.5d0 + 1.7d0 * temperature_index - 0.1d0 * sigma_index) ! paardekooper, baruteau & kley 2010
-    
+        
     torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
     torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
     
@@ -634,7 +716,10 @@ end subroutine init_globals
         ! We generate cartesian coordinate for the given mass and semi major axis
         velocity(2) = sqrt((stellar_mass + mass) / position(1))
         
-        call get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, lindblad_torque, torque_ref)
+        ! we store in global parameters various properties of the planet
+        call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3)) ! input
+        
+        call get_corotation_torque(stellar_mass, mass, corotation_torque, lindblad_torque, torque_ref)
         
         total_torque = lindblad_torque + corotation_torque
         total_torque_units = torque_ref * total_torque
@@ -792,7 +877,10 @@ end subroutine init_globals
       ! We generate cartesian coordinate for the given mass and semi major axis
       velocity(2) = sqrt((stellar_mass + mass) / position(1))
       
-      call get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, lindblad_torque, torque_ref)
+      ! we store in global parameters various properties of the planet
+      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3)) ! input
+      
+      call get_corotation_torque(stellar_mass, mass, corotation_torque, lindblad_torque, torque_ref)
       
       total_torque = lindblad_torque + corotation_torque
 
@@ -915,7 +1003,10 @@ end subroutine init_globals
       ! We generate cartesian coordinate for the given mass and semi major axis
       velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
       
-      call get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, lindblad_torque, torque_ref)
+      ! we store in global parameters various properties of the planet
+      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3)) ! input
+      
+      call get_corotation_torque(stellar_mass, mass, corotation_torque, lindblad_torque, torque_ref)
       
       total_torque = lindblad_torque + corotation_torque
       
@@ -997,36 +1088,17 @@ subroutine paardekooper_corotation(stellar_mass, mass, position, velocity)
   use orbital_elements, only : mco_x2a
   implicit none
   real(double_precision), intent(in) :: stellar_mass, mass, position(3), velocity(3)
-  
-  real(double_precision) :: corotation_torque(4)
-  real(double_precision) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
-  real(double_precision) :: gamma_eff ! effective adiabatic index depending on several parameters [no dim]
 
   !Local
   
   ! Meaningless parameters (intermediate constant and so on that doesn't mean anything physically)
   real(double_precision) :: Q_p ! parameter for gamma_eff (equation (45) of Paardekooper, Baruteau, 2010 II. Effects of diffusion)
   real(double_precision) :: k_p ! parameter for p_nu and p_chi for example  !!! This is not 'k' from equation (15)!
-  real(double_precision) :: gm ! parameter to calculate the semi major axis. passed to mco_x2a
-  
-  ! Properties of the planet
-  real(double_precision) :: radius_p ! the radial position of the planet [AU]
-  real(double_precision) :: velocity_p, vel_squared ! the norm of the speed [AU/day] and the velocity squared.
-  real(double_precision) :: omega_p ! the angular rotation [day-1]
-  real(double_precision) :: semi_major_axis ! semi major axis of the planet [AU]
   
   !Properties of the disk at the location of the planet
 
-  real(double_precision) :: sigma_p ! the surface density of the gas disk at the planet location [MSUN.AU^-2]
-  real(double_precision) :: bulk_density_p ! the bulk_density of the disk at the location of the planet [MSUN.AU^-3]
-  real(double_precision) :: scaleheight_p ! the scaleheight of the disk at the location of the planet [AU]
-  real(double_precision) :: aspect_ratio_p ! the aspect_ratio of the gas disk at the location of the planet [no dim]
   real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
   real(double_precision) :: zeta_eff ! effective entropy index depending on gamma_eff [no dim]
-  real(double_precision) :: chi_p ! the thermal diffusion coefficient at the location of the planet [AU^2.day^-1]
-  real(double_precision) :: nu_p ! the viscosity of the disk at the location of the planet [AU^2.day^-1]
-  real(double_precision) :: opacity_p ! the opacity of the disk at the location of the planet [?]
-  real(double_precision) :: temperature_p ! the temperature of the disk at the location of the planet [K]
   real(double_precision) :: p_nu ! parameter for saturation due to viscosity at the location of the planet [no dim]
   real(double_precision) :: p_chi ! parameter for saturation due to thermal diffusion at the location of the planet [no dim]
   
@@ -1040,34 +1112,16 @@ subroutine paardekooper_corotation(stellar_mass, mass, position, velocity)
   real(double_precision), parameter :: p_nu_step = (p_nu_max/p_nu_min) ** (1/(nb_points-1.d0))
   
   real(double_precision), parameter, dimension(4) :: list_chi = (/1.d-5, 2.d-6, 1.d-6, 1.d-7/)
+  real(double_precision) :: corotation_torque(4)
+  real(double_precision) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
+  real(double_precision) :: gamma_eff ! effective adiabatic index depending on several parameters [no dim]
   
   integer :: i,j ! for loops
   
   
-  ! WE CALCULATE PROPERTIES OF THE PLANETS
-  gm = (stellar_mass + mass)
-  ! We get semi_major_axis, radius_p and vel_squared
-  call mco_x2a (gm,position(1), position(2), position(3), velocity(1),velocity(2), velocity(3),semi_major_axis,radius_p,vel_squared)
-  
-  
-  !------------------------------------------------------------------------------
-  sigma_p = sigma_0_num / radius_p ** sigma_index ! [N.U.]
-  temperature_p = temperature_0 / radius_p**temperature_index ! [K]
-  
-  velocity_p = sqrt(vel_squared)
-  omega_p = sqrt(gm / (semi_major_axis * semi_major_axis * semi_major_axis)) ! [day-1]
-  
-  !------------------------------------------------------------------------------
-  ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
-  scaleheight_p = scaleheight_prefactor * sqrt(temperature_p) / omega_p
-  !------------------------------------------------------------------------------
-!~   nu_p = 1.d-15 * AU**2 / DAY!alpha * omega_p * scaleheight_p**2 ! [AU^2.day-1]
-  aspect_ratio_p = scaleheight_p / radius_p
-!~     write(*,'(e12.4)') nu_p * AU**2 / DAY 
-  !------------------------------------------------------------------------------
-  bulk_density_p = 0.5d0 * sigma_p / scaleheight_p
-  !------------------------------------------------------------------------------
-  opacity_p = get_opacity(temperature_p, bulk_density_p)
+  ! we store in global parameters various properties of the planet
+    call get_planet_properties(stellar_mass=stellar_mass, mass=mass, & ! input
+    position=position(1:3), velocity=velocity(1:3)) ! input
   
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
@@ -1080,7 +1134,6 @@ subroutine paardekooper_corotation(stellar_mass, mass, position, velocity)
   do i=1,nb_points
     do j=1,4 ! loop on chi
       chi_p = list_chi(j) * radius_p**2 * omega_p
-    !~   chi_p = 1.d-5 * radius_p**2 * omega_p!chi_p_prefactor * temperature_p**4 / (opacity_p * sigma_p**2 * omega_p**2)
       
       !------------------------------------------------------------------------------
       ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
@@ -1165,7 +1218,7 @@ end subroutine paardekooper_corotation
     
     call init_globals(stellar_mass)
     
-    a = 1.d0
+    a = 5.d0
     position(1) = a
     
     velocity(2) = sqrt((stellar_mass + mass) / position(1))
