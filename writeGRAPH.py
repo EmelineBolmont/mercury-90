@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Script that run a mercury simulation and test if the outputs and binaries have correct behaviour. 
-# Of course, everything is not tested, but it is planed to test as many things as possible
+# Script that generate a .svg file for each binaries of mercury that display the tree of modules used
 
 __author__ = "Christophe Cossou <cossou@obs.u-bordeaux1.fr>"
-__date__ = "22 Juillet 2011"
-__version__ = "$Revision: 2.6.1 $"
-__credits__ = """We run a test simulation and erase all the files created after the tests. The simulations files are thought to be 
-in a "simu_test" subdirectory of the directory were are the sources (and binaries) of mercury (and this script)"""
+__date__ = "19 août 2011"
+__version__ = "$Revision: 2.6.2 $"
 
 from make import sourceFile,lister
 
