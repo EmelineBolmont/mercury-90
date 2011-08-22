@@ -131,15 +131,47 @@ program mercury
 
   implicit none
   
-  integer :: j,nbod,nbig,stat(NMAX)
+  integer :: j,nbod,nbig
   integer :: opflag,ngflag,ndump,nfun
   integer :: error
+
+  real(double_precision) :: cefac,time,h0,tol,en(3),am(3),rcen,jcen(3)
+
+!~   integer, dimension(:), allocatable :: stat ! (NMAX)
+!~   real(double_precision), dimension(:), allocatable :: m,rho,rceh,epoch ! (NMAX)
+!~   real(double_precision), dimension(:,:), allocatable :: xh,vh,s ! (3,NMAX)
+!~   real(double_precision), dimension(:,:), allocatable :: ngf ! (4,NMAX)
+!~   character(len=8), dimension(:), allocatable :: id ! (NMAX)
+!~   
+  integer :: stat(NMAX)
   real(double_precision) :: m(NMAX),xh(3,NMAX),vh(3,NMAX),s(3,NMAX),rho(NMAX)
-  real(double_precision) :: rceh(NMAX),epoch(NMAX),ngf(4,NMAX),rcen,jcen(3)
-  real(double_precision) :: cefac,time,h0,tol,en(3),am(3)
+  real(double_precision) :: rceh(NMAX),epoch(NMAX),ngf(4,NMAX)
   character(len=8) :: id(NMAX)
   
   !------------------------------------------------------------------------------
+!~   write (*,*) 'nbig=',nbig, 'nbod=',nbod
+  ! We get the number of big bodies and the total number of bodies before reading effectively the parameter files
+!~   call getNumberOfBodies(nb_big_bodies=nbig, nb_bodies=nbod)
+  ! open(15, file='test.in', status='replace')
+   
+  ! close(15)
+!~   nbig=10
+!~   nbod=16
+!~   write (*,*) 'nbig=',nbig, 'nbod=',nbod
+!~   nbod = NMAX
+!~ 
+!~ 
+!~   allocate(stat(nbod))
+!~   allocate(m(nbod))
+!~   allocate(rho(nbod))
+!~   allocate(rceh(nbod))
+!~   allocate(epoch(nbod))
+!~   allocate(xh(3,nbod))
+!~   allocate(vh(3,nbod))
+!~   allocate(s(3,nbod))
+!~   allocate(ngf(4,nbod))
+!~   allocate(id(nbod))
+!TODO gérer les erreurs une fois les premiers tests effectués
   
   ! Get initial conditions and integration parameters
   call mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,id,&
@@ -211,6 +243,107 @@ program mercury
   
   contains
   
+subroutine getNumberOfBodies(nb_big_bodies, nb_bodies)
+! subroutine that return the number of bodies and the number of big bodies
+!
+! Return
+! nb_bodies : the total number of bodies, including the central object
+! nb_big_bodies : the number of big bodies
+
+  implicit none
+
+  integer, intent(out) :: nb_bodies, nb_big_bodies
+  
+  
+  
+  ! Local
+  integer :: j,k,lim(2,10),nsub, error
+  logical test
+  character(len=80) :: infile(3),filename,c80
+  character(len=150) :: string
+  real(double_precision), dimension(9) :: dummy ! variable to read the value and have the right position in the file without storing the values
+
+  do j = 1, 80
+     filename(j:j) = ' '
+  end do
+  do j = 1, 3
+     infile(j)   = filename
+  end do  
+  
+  ! Read in filenames and check for duplicate filenames
+  inquire (file='files.in', exist=test)
+  if (.not.test) write(*,*) 'Error: the file "files.in" does not exist'
+  open (15, file='files.in', status='old')
+  
+  ! Input files
+  do j = 1, 3
+     read (15,'(a150)') string
+     call mio_spl (150,string,nsub,lim)
+     infile(j)(1:(lim(2,1)-lim(1,1)+1)) = string(lim(1,1):lim(2,1))
+     do k = 1, j - 1
+        if (infile(j).eq.infile(k)) write(*,*) 'Error: dans "files.in", certains fichiers sont identiques'
+     end do
+  end do
+  close (15)
+  
+  !--------------------------------------------------------
+
+  !  READ  IN  DATA  FOR  BIG  AND  SMALL  BODIES
+  
+  nb_bodies = 1
+  do j = 1, 2
+     if (j.eq.2) nb_big_bodies = nb_bodies
+     
+     ! Check if the file containing data for Big bodies exists, and open it
+     filename = infile(j)
+     inquire (file=infile(j), exist=test)
+     if (.not.test) write (*,*) filename, 'does not exist'
+     open (11, file=infile(j), status='old', iostat=error)
+     if (error /= 0) then
+        write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(filename)
+        stop
+     end if
+     
+     ! Read data style
+     do
+      read (11,'(a150)') string
+      if (string(1:1).ne.')') exit
+    end do
+     
+     ! Read epoch of Big bodies
+     if (j.eq.1) then
+      do
+        read (11,'(a150)') string
+        if (string(1:1).ne.')') exit
+      end do
+     end if
+     
+     ! Read information for each object
+     do
+      read (11,'(a)',iostat=error) string
+      if (error /= 0) exit
+      
+      if (string(1:1).eq.')') cycle
+    
+     
+     nb_bodies = nb_bodies + 1
+     
+     
+    ! we skip the line(s) that contains informations of the current planet
+     do
+       read (11,'(a150)') string
+       if (string(1:1).ne.')') exit
+     end do 
+     backspace(11)
+     read (11,*) dummy
+     
+     
+     end do
+    close (11)
+  end do
+
+end subroutine getNumberOfBodies
+  
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 !      MIO_IN.FOR    (ErikSoft   4 May 2001)
@@ -260,15 +393,15 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   character(len=3), dimension(60), parameter :: alg = (/'MVS','Mvs','mvs','mvs','mvs',&
       'BS ','Bs ','bs ','Bul', 'bul',&
       'BS2','Bs2','bs2','Bu2','bu2',&
-       'RAD','Rad','rad','RA ', 'ra ',&
-       'xxx','xxx','xxx','xxx','xxx',&
-       'xxx','xxx','xxx','xxx', 'xxx',&
-       'xxx','xxx','xxx','xxx','xxx',&
-       'xxx','xxx','xxx','xxx', 'xxx',&
-       'TES','Tes','tes','Tst','tst',&
-       'HYB','Hyb','hyb','HY ', 'hy ',&
-       'CLO','Clo','clo','CB ','cb ',&
-       'WID','Wid','wid','WB ', 'wb '/)
+      'RAD','Rad','rad','RA ', 'ra ',&
+      'xxx','xxx','xxx','xxx','xxx',&
+      'xxx','xxx','xxx','xxx', 'xxx',&
+      'xxx','xxx','xxx','xxx','xxx',&
+      'xxx','xxx','xxx','xxx', 'xxx',&
+      'TES','Tes','tes','Tst','tst',&
+      'HYB','Hyb','hyb','HY ', 'hy ',&
+      'CLO','Clo','clo','CB ','cb ',&
+      'WID','Wid','wid','WB ', 'wb '/)
   
   !------------------------------------------------------------------------------
     

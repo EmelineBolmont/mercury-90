@@ -15,23 +15,26 @@ module user_module
   
   public :: mfo_user, unitary_tests ! unitary_tests must be used only to test function, you should not use it out of the debug phase
   
-  real(double_precision), parameter :: b_over_h = 0.4 ! the smoothing length for the planet's potential
-  real(double_precision), parameter :: adiabatic_index = 1.4 ! the adiabatic index for the gas equation of state
-  real(double_precision), parameter :: mean_molecular_weight = 2.35 ! the mean molecular weight in mass of a proton
+  !------------------------------------------------------------------------------
+  ! Default values for parameters that are to be read in the parameter file 'disk.in'
+  real(double_precision) :: b_over_h = 0.4 ! the smoothing length for the planet's potential
+  real(double_precision) :: adiabatic_index = 1.4 ! the adiabatic index for the gas equation of state
+  real(double_precision) :: mean_molecular_weight = 2.35 ! the mean molecular weight in mass of a proton
   
   ! Here we define the power law for surface density sigma(R) = sigma_0 * R^(-sigma_index)
-  real(double_precision), parameter :: sigma_0 = 1700 ! the surface density at (R=1AU) [g/cm^2]
-  real(double_precision), parameter :: sigma_index = 0.5! the negative slope of the surface density power law (alpha in the paper)
-  real(double_precision), parameter :: sigma_0_num = sigma_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
+  real(double_precision) :: sigma_0 = 1700 ! the surface density at (R=1AU) [g/cm^2]
+  real(double_precision) :: sigma_index = 0.5! the negative slope of the surface density power law (alpha in the paper)
+  real(double_precision) :: sigma_0_num ! the surface density at (R=1AU) [Msun/AU^2]
   
   ! Here we define the power law for viscosity viscosity(R) = alpha * c_s * H
-  real(double_precision), parameter :: alpha = 0.005 ! alpha parameter for an alpha prescription of the viscosity [No dim]
+  real(double_precision) :: alpha = 0.005 ! alpha parameter for an alpha prescription of the viscosity [No dim]
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
-  real(double_precision), parameter :: temperature_0 = 510. ! the temperature at (R=1AU) [K]
-  real(double_precision), parameter :: temperature_index = 1.0! the negativeslope of the temperature power law (beta in the paper)
-    
-  !prefactors
+  real(double_precision) :: temperature_0 = 510. ! the temperature at (R=1AU) [K]
+  real(double_precision) :: temperature_index = 1.0! the negativeslope of the temperature power law (beta in the paper)
+  
+  !------------------------------------------------------------------------------
+  ! prefactors
   real(double_precision) :: x_s_prefactor ! prefactor for the half width of the corotation region
   real(double_precision) :: chi_p_prefactor ! prefactor for the thermal diffusivity
   real(double_precision) :: scaleheight_prefactor ! prefactor for the scaleheight
@@ -42,6 +45,7 @@ module user_module
   real(double_precision) :: torque_hs_baro ! barotropic part of the horseshoe drag
   real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
   
+  !------------------------------------------------------------------------------
   ! We define a new type for the properties of the planet
   type PlanetProperties
     ! Properties of the planet
@@ -223,6 +227,106 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   return
 end subroutine mfo_user
 
+subroutine get_parameter_value(line, isParameter, id, value)
+! subroutine that try to split the line in two part, given a separator value (set in parameter of the subroutine)
+! The routine return 3 values : 
+!
+! Return
+! isParameter : is a boolean to say whether or not there is a parameter on this line. i.e if there is an occurence of the separator in the input line
+! id : a string that contain the name of the parameter
+! value : a string that contains the velue(s) associated with the parameter name
+
+  implicit none
+  
+  ! Input
+  character(len=80), intent(in) :: line
+  
+  ! Output
+  logical, intent(out) :: isParameter
+  character(len=80), intent(out) :: id, value
+  
+  ! Local
+  character(len=1), parameter :: sep = '=' ! the separator of a parameter line
+
+  integer :: sep_position ! an integer to get the position of the separator
+
+  !------------------------------------------------------------------------------
+
+  sep_position = index(line, sep)
+  
+  if (sep_position.ne.0) then
+    isParameter = .true.
+    id = line(1:sep_position-1)
+    value = line(sep_position+1:)
+  else
+    isParameter = .false.
+  end if
+
+end subroutine get_parameter_value
+
+subroutine read_disk_properties()
+! subroutine that read the 'disk.in' file to retrieve disk properties. Default value exist, if a parameter is not defined
+
+  implicit none
+  
+  character(len=80) :: line
+  character(len=1) :: comment_character = '!' ! character that will indicate that the reste of the line is a comment
+  integer :: comment_position ! the index of the comment character on the line. If zero, there is none on the current string
+  integer :: error ! to store the state of a read instruction
+  
+  logical :: isParameter
+  character(len=80) :: identificator, value
+  !------------------------------------------------------------------------------
+
+  open(10, file='disk.in', status='old')
+  
+  do
+    read(10, '(a80)', iostat=error), line
+    if (error /= 0) exit
+      
+    ! We get only what is on the left of an eventual comment parameter
+      comment_position = index(line, comment_character)
+    
+    ! If there are comments on the current line, we get rid of them
+    if (comment_position.ne.0) then
+      line = line(1:comment_position - 1)
+    end if
+    
+    call get_parameter_value(line, isParameter, identificator, value)
+      
+    if (isParameter) then
+      select case(identificator)
+      case('b/h')
+        read(value, *) b_over_h
+      
+      case('adiabatic_index')
+        read(value, *) adiabatic_index
+        
+      case('mean_molecular_weight')
+        read(value, *) mean_molecular_weight
+        
+      case('surface_density')
+        read(value, *) sigma_0, sigma_index
+
+      case('temperature')
+        read(value, *) temperature_0, temperature_index
+        
+      case('alpha')
+        read(value, *) alpha
+        
+      case default
+        write(*,*) 'Warning: An unknown parameter has been found'
+        write(*,*) "identificator='", trim(identificator), "' ; value(s)='", trim(value),"'"
+      end select
+    end if
+  end do
+  
+  close(10)
+  
+  sigma_0_num = sigma_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
+  
+end subroutine read_disk_properties
+
 subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 
 ! subroutine that return numerous properties of the planet and its environment given its mass, position and velocity
@@ -380,6 +484,9 @@ subroutine init_globals(stellar_mass)
   
   if (FirstCall) then
     FirstCall = .False.
+    
+    call read_disk_properties()
+    
     x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
 
     chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
