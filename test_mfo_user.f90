@@ -14,9 +14,9 @@ program test_mfo_user
   
   integer :: nbod, nbig
   
-  call getNumberOfBodies(nb_big_bodies=nbig, nb_bodies=nbod)
-  write (*,*) 'nbig=',nbig, 'nbod=',nbod
-!~   call unitary_tests()
+!~   call getNumberOfBodies(nb_big_bodies=nbig, nb_bodies=nbod)
+!~   write (*,*) 'nbig=',nbig, 'nbod=',nbod
+  call unitary_tests()
 !~   call test_gamma_eff()
   
 
