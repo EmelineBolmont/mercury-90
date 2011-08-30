@@ -268,8 +268,8 @@ subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
   h = sqrt(h2)
   s = h2 / gm
   
-  ! semi major axis
-  a  = gm * r / (2.d0 * gm  -  r * v2)
+
+
   
   ! Inclination and node
   ci = hz / h
@@ -288,8 +288,19 @@ subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
      e = sqrt (temp)
   end if
 
-  
-  
+  ! semi major axis
+  !a  = gm * r / (2.d0 * gm - r * v2) ! this was the formulae given in the mco_x2a but problems occurs sometimes
+  if (e.lt.1.d0) then
+    a = s / (1.d0 - e*e)
+  else
+    a = s / (e*e - 1.d0)
+  end if
+!~   
+!~   if (e.lt.1.d0) then
+!~     a = gm * r / (2.d0 * gm - r * v2)
+!~   else
+!~     a = gm * r / (r * v2 - 2.d0 * gm)
+!~   end if
   !------------------------------------------------------------------------------
   
   return
