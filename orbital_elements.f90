@@ -290,17 +290,18 @@ subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
 
   ! semi major axis
   !a  = gm * r / (2.d0 * gm - r * v2) ! this was the formulae given in the mco_x2a but problems occurs sometimes
+  a = s / (1.d0 - e*e)
 !~   if (e.lt.1.d0) then ! This one seems not to be accurate when e vary a lot. 
 !~     a = s / (1.d0 - e*e)
 !~   else
 !~     a = s / (e*e - 1.d0)
 !~   end if
-  
-  if (e.lt.1.d0) then
-    a = gm * r / (2.d0 * gm - r * v2)
-  else
-    a = gm * r / (r * v2 - 2.d0 * gm)
-  end if
+!~   
+!~   if (e.lt.1.d0) then
+!~     a = gm * r / (2.d0 * gm - r * v2)
+!~   else
+!~     a = gm * r / (r * v2 - 2.d0 * gm)
+!~   end if
   !------------------------------------------------------------------------------
   
   return
