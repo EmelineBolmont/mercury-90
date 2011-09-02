@@ -1,32 +1,9 @@
-Révision 50 : programme en allocation statique, fonctionnel, modulaire
+Le dossier "unitary_tests" doit exister pour que les tests unitaires puissent se faire. En effet, c'est là que sont stockés les fichiers de données et les fichiers gnuplot qui permettent de tracer les courbes. 
 
+Le dossier mercury_original contient les fichiers de mercury en version f77 fournis par chambers sur son site internet
 
+Le dossier simu_test est utilisé par le script tests_mercury.py pour comparer les binaires originaux et nouveaux.
 
+Le dossier test peut trainer parfois et me sert à lancer des simulations à la main pour tester des choses en particulier. 
 
- This tar file contains all the files necessary to compile
- and run the Mercury N-body integrator package, version 6.2. 
- The following files should be present:
-
- big.in
- close.in
- close6.for
- element.in
- element6.for
- files.in
- mercury.inc
- mercury6.man
- mercury6_2.for
- message.in
- param.in
- small.in
- swift.inc
-
- Start by looking at the manual contained in mercury6.man
-
- mercury6_2.for contains the source code for the integrator.
- element6.for contains source code for a programme to turn
-   compressed output from mercury into coordinates or orbital
-   elements for each object.
- close6.for contains source code for a programme to provide
-   details on close encounters during an integration.
 

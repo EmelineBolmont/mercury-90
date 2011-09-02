@@ -266,23 +266,23 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   !~     acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
   !~     acceleration(3,planet) = migration_acceleration(3) + inclination_acceleration_z
 
-!~       if (counter.gt.807934) then
-      if ((counter.gt.78400).and.(counter.lt.78500)) then
-!~       if (isnan(acceleration(1,planet))) then
-        open(15, file="leak.out", status="old", access="append")
-        write(15,*) counter, time, planet, mass(planet)
-        write(15,*) 'position:', position(1,planet), position(2,planet), position(3,planet)
-        write(15,*) 'velocity:', velocity(1,planet), velocity(2,planet), velocity(3,planet)
-        write(15,*) 'acceleration:', acceleration(1,planet), acceleration(2,planet), acceleration(3,planet)
-        write(15,*) 'times:', time_mig, time_ecc, time_inc
-        write(15,*) 'torques:', torque, lindblad_torque, corotation_torque
-        write(15,*) 'angular momentum:', p_prop%angular_momentum, 'radius:', p_prop%radius, 'velocity:', p_prop%velocity
-        write(15,*) 'omega:', p_prop%omega, 'semi_major_axis:', p_prop%semi_major_axis, 'eccentricity:', p_prop%eccentricity
-        write(15,*) 'inclination:', p_prop%inclination, 'sigma:', p_prop%sigma, 'scaleheight:', p_prop%scaleheight
-        write(15,*) 'aspect_ratio:', p_prop%aspect_ratio, 'chi:', p_prop%chi, 'nu:', p_prop%nu
-        write(15,*) 'temperature:', p_prop%temperature, 'bulk_density:', p_prop%bulk_density, 'opacity:', p_prop%opacity
-        close(15)
-      end if
+!~ !      if (counter.gt.807934) then
+!~      if ((counter.gt.78400).and.(counter.lt.78500)) then
+!~ !       if (isnan(acceleration(1,planet))) then
+!~         open(15, file="leak.out", status="old", access="append")
+!~         write(15,*) counter, time, planet, mass(planet)
+!~         write(15,*) 'position:', position(1,planet), position(2,planet), position(3,planet)
+!~         write(15,*) 'velocity:', velocity(1,planet), velocity(2,planet), velocity(3,planet)
+!~         write(15,*) 'acceleration:', acceleration(1,planet), acceleration(2,planet), acceleration(3,planet)
+!~         write(15,*) 'times:', time_mig, time_ecc, time_inc
+!~         write(15,*) 'torques:', torque, lindblad_torque, corotation_torque
+!~         write(15,*) 'angular momentum:', p_prop%angular_momentum, 'radius:', p_prop%radius, 'velocity:', p_prop%velocity
+!~         write(15,*) 'omega:', p_prop%omega, 'semi_major_axis:', p_prop%semi_major_axis, 'eccentricity:', p_prop%eccentricity
+!~         write(15,*) 'inclination:', p_prop%inclination, 'sigma:', p_prop%sigma, 'scaleheight:', p_prop%scaleheight
+!~         write(15,*) 'aspect_ratio:', p_prop%aspect_ratio, 'chi:', p_prop%chi, 'nu:', p_prop%nu
+!~         write(15,*) 'temperature:', p_prop%temperature, 'bulk_density:', p_prop%bulk_density, 'opacity:', p_prop%opacity
+!~         close(15)
+!~       end if
     end if
   end do
   
@@ -427,6 +427,11 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 ! mass : the planet mass in [solar mass * K2]
 ! position(3) : position of the planet relatively to the central star [AU]
 ! velocity(3) : velocity of the planet relatively to the central star [AU/day]
+
+! return : 
+! An object of type 'PlanetProperties'. 
+
+! BEWARE : the angular velocity is calculated from the radius of the planet and NOT from his semi major axis.
 
 
   use orbital_elements, only : mco_x2ae
@@ -759,12 +764,14 @@ end subroutine init_globals
     
     implicit none
     
-    call test_functions_FGK()
-    call test_get_opacity()
-    call test_torques()
-    call test_torques_fixed_a()
-    call test_torques_fixed_m()
-    call test_paardekooper_corotation()
+!~     call test_functions_FGK()
+!~     call test_get_opacity()
+!~     call test_torques()
+!~     call test_torques_fixed_a()
+!~     call test_torques_fixed_m()
+!~     call test_paardekooper_corotation()
+    call test_function_zero_temperature()
+    call test_temperature_profile()
     
   end subroutine unitary_tests
 
@@ -787,7 +794,7 @@ end subroutine init_globals
     
     
     ! We open the file where we want to write the outputs
-    open(10, file='test_functions_FGK.dat')
+    open(10, file='unitary_tests/test_functions_FGK.dat')
     write(10,*) "Correspond to the figure 2 of II. Effects of diffusion"
     write(10,*) '# p ; F(p) ; G(p) ; K(p)'
     
@@ -803,7 +810,7 @@ end subroutine init_globals
     
     close(10)
     
-    open(10, file="functions_FGK.gnuplot")
+    open(10, file="unitary_tests/functions_FGK.gnuplot")
 
     write(10,*) 'set xlabel "p"'
     write(10,*) 'set ylabel "function"'
@@ -843,7 +850,7 @@ end subroutine init_globals
     integer :: i,j ! for loops
     
     ! We open the file where we want to write the outputs
-    open(10, file='test_opacity.dat')
+    open(10, file='unitary_tests/test_opacity.dat')
     write(10,*) "Correspond to the figure 9a of Bell & Lin 1994"
     write(10,*) '# Temperature (K) ; Opacity for bulk density from 1e-5 to 1e-9 by power of ten'
     
@@ -858,7 +865,7 @@ end subroutine init_globals
     end do
     close(10)
     
-    open(10, file="opacity.gnuplot")
+    open(10, file="unitary_tests/opacity.gnuplot")
     write(10,*) 'set terminal wxt enhanced'
     write(10,*) 'set xlabel "Temperature T"'
     write(10,*) 'set ylabel "Opacity {/Symbol k}"'
@@ -914,11 +921,11 @@ end subroutine init_globals
     call init_globals(stellar_mass)
     
     ! We open the file where we want to write the outputs
-    open(10, file='test_corotation_torque.dat')
-    open(11, file='test_total_torque.dat')
-    open(12, file='test_total_torque_units.dat')
-    open(13, file='test_lindblad_torque.dat')
-    open(14, file='test_ref_torque.dat')
+    open(10, file='unitary_tests/test_corotation_torque.dat')
+    open(11, file='unitary_tests/test_total_torque.dat')
+    open(12, file='unitary_tests/test_total_torque_units.dat')
+    open(13, file='unitary_tests/test_lindblad_torque.dat')
+    open(14, file='unitary_tests/test_ref_torque.dat')
     
     
     write(10,*) '# semi major axis (AU) ; mass in earth mass ; corotation torque (no dim)'
@@ -969,11 +976,11 @@ end subroutine init_globals
     close(14)
     
     
-    open(10, file="corotation_torque.gnuplot")
-    open(11, file="total_torque.gnuplot")
-    open(12, file="total_torque_units.gnuplot")
-    open(13, file="lindblad_torque.gnuplot")
-    open(14, file="ref_torque.gnuplot")
+    open(10, file="unitary_tests/corotation_torque.gnuplot")
+    open(11, file="unitary_tests/total_torque.gnuplot")
+    open(12, file="unitary_tests/total_torque_units.gnuplot")
+    open(13, file="unitary_tests/lindblad_torque.gnuplot")
+    open(14, file="unitary_tests/ref_torque.gnuplot")
     
     
     ! --------------------------------------------
@@ -1084,10 +1091,10 @@ end subroutine init_globals
     call init_globals(stellar_mass)
     
     ! We open the file where we want to write the outputs
-    open(10, file='test_torques_fixed_a.dat')
-    open(11, file='test_ref_torque_fixed_a.dat')
-    open(12, file='test_torques_fixed_a_units.dat')
-    open(13, file='test_specific_torque_fixed_a.dat')
+    open(10, file='unitary_tests/test_torques_fixed_a.dat')
+    open(11, file='unitary_tests/test_ref_torque_fixed_a.dat')
+    open(12, file='unitary_tests/test_torques_fixed_a_units.dat')
+    open(13, file='unitary_tests/test_specific_torque_fixed_a.dat')
     
     write(10,*) '# mass in earth mass ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
     write(11,*) '# mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
@@ -1129,10 +1136,10 @@ end subroutine init_globals
     close(13)
     
     
-    open(10, file="torques_fixed_a.gnuplot")
-    open(11, file="ref_torque_fixed_a.gnuplot")
-    open(12, file="torques_fixed_a_units.gnuplot")
-    open(13, file="specific_torque_fixed_a.gnuplot")
+    open(10, file="unitary_tests/torques_fixed_a.gnuplot")
+    open(11, file="unitary_tests/ref_torque_fixed_a.gnuplot")
+    open(12, file="unitary_tests/torques_fixed_a_units.gnuplot")
+    open(13, file="unitary_tests/specific_torque_fixed_a.gnuplot")
 
     
     do j=10,13
@@ -1222,9 +1229,9 @@ end subroutine init_globals
     call init_globals(stellar_mass)
     
     ! We open the file where we want to write the outputs
-    open(10, file='test_torques_fixed_m.dat')
-    open(11, file='test_ref_torque_fixed_m.dat')
-    open(12, file='test_torques_fixed_m_units.dat')
+    open(10, file='unitary_tests/test_torques_fixed_m.dat')
+    open(11, file='unitary_tests/test_ref_torque_fixed_m.dat')
+    open(12, file='unitary_tests/test_torques_fixed_m_units.dat')
     
     write(10,*) '# a in AU ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
     write(11,*) '# a in AU ; reference torque in M_s.AU^2.day^{-2}'
@@ -1266,9 +1273,9 @@ end subroutine init_globals
     close(12)
     
     
-    open(10, file="torques_fixed_m.gnuplot")
-    open(11, file="ref_torque_fixed_m.gnuplot")
-    open(12, file="torques_fixed_m_units.gnuplot")
+    open(10, file="unitary_tests/torques_fixed_m.gnuplot")
+    open(11, file="unitary_tests/ref_torque_fixed_m.gnuplot")
+    open(12, file="unitary_tests/torques_fixed_m_units.gnuplot")
     
     do j=10,12
       write(j,*) 'set terminal wxt enhanced'
@@ -1320,6 +1327,195 @@ end subroutine init_globals
     
   end subroutine test_torques_fixed_m
   
+  subroutine test_temperature_profile()
+! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
+! A gnuplot file and a data file are created to display the temperature profile.
+! TODO calculer aussi l'exposant local du profil de température
+
+    implicit none
+    
+    integer, parameter :: nb_a = 4
+    real(double_precision), parameter :: a_min = 1 ! in AU
+    real(double_precision), parameter :: a_max = 60. ! in AU
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    
+    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
+    
+    real(double_precision) :: a
+    real(double_precision) :: stellar_mass, position(3), velocity(3), temperature, exponant
+    type(PlanetProperties) :: p_prop
+    
+    integer :: i,j ! for loops
+    
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    ! stellar mass
+    stellar_mass = 1.d0 * K2
+    
+    call init_globals(stellar_mass)
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='unitary_tests/test_temperature_profile.dat')
+    open(11, file='unitary_tests/test_temperature_index.dat')
+    
+    write(10,*) '# a in AU ; temperature (in K)'
+    write(11,*) '# a in AU ; temperature index (not implemented for the moment)'
+    
+    ! We generate cartesian coordinate for the given semi major axis
+    position(1) = a
+    
+    
+    do j=1,nb_a
+      a = (a_min + a_step * (j - 1.d0))
+      ! We generate cartesian coordinate for the given semi major axis
+      position(1) = a
+      
+      ! We generate cartesian coordinate for the given mass and semi major axis
+      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      
+      ! we store in global parameters various properties of the planet
+      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+       p_prop=p_prop) ! Output
+      
+      temperature = zero_finding_zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop)
+      
+      exponant = 0.
+      
+      write(10,*) a, temperature
+      write(11,*) a, exponant
+    end do
+    
+    close(10)
+    close(11)
+    
+    open(10, file="unitary_tests/temperature_profile.gnuplot")
+    open(11, file="unitary_tests/temperature_index.gnuplot")
+    
+    do j=10,11
+      write(j,*) 'set terminal wxt enhanced'
+      write(j,*) 'set xlabel "semi major axis a (in AU)"'
+      write(j,*) 'set nokey'
+    end do
+    
+    write(10,*) 'set ylabel "Temperature [K]"'
+    
+    write(11,*) 'set ylabel "Temperature law index"'
+    
+    do j=10,11
+      write(j,*) 'set grid'
+      write(j,*) 'set xrange [', a_min, ':', a_max, ']'
+    end do
+
+    write(10,*) "plot 'test_temperature_profile.dat' using 1:2 with lines notitle"
+    
+    write(11,*) "plot 'test_temperature_index.dat' using 1:2 with lines notitle"
+    
+
+    
+    do j=10,11
+      write(j,*) "#pause -1 # wait until a carriage return is hit"
+      write(j,*) "set terminal pdfcairo enhanced"
+    end do
+    
+    write(10,*) "set output 'temperature_profile.pdf'"
+    write(11,*) "set output 'temperature_index.pdf'"
+    
+    do j=10,11
+      write(j,*) "replot # pour générer le fichier d'output"
+    end do
+    
+    close(10)
+    close(11)
+  
+  end subroutine test_temperature_profile
+
+  subroutine test_function_zero_temperature
+  ! subroutine that test the function 'zero_finding_temperature'
+  
+  ! Return:
+  !  a data file and an associated gnuplot file.
+    implicit none
+    
+    real(double_precision) :: temperature
+    
+    real(double_precision), parameter :: T_min = 0.
+    real(double_precision), parameter :: T_max = 1000.
+    integer, parameter :: nb_points = 2000
+!~     real(double_precision), parameter :: T_step = (T_max/T_min) ** (1/(nb_points-1.d0))
+    real(double_precision), parameter :: T_step = (T_max - T_min) / (nb_points - 1.d0)
+    
+    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
+    
+    real(double_precision) :: zero_function ! value that we want to output
+    
+    integer :: i,j ! for loops
+    real(double_precision) :: stellar_mass, position(3), velocity(3)
+    type(PlanetProperties) :: p_prop
+    real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
+
+  !------------------------------------------------------------------------------
+
+
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    ! stellar mass
+    stellar_mass = 1.d0 * K2
+    
+    call init_globals(stellar_mass)
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='unitary_tests/test_function_zero_temperature.dat')
+    
+    ! We generate cartesian coordinate for the given semi major axis
+    position(1) = 10.d0
+    
+    ! We generate cartesian coordinate for the given mass and semi major axis
+    velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+    
+    ! we store in global parameters various properties of the planet
+    call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+     p_prop=p_prop) ! Output
+    
+    ! We calculate this value outside the function because we only have to do this once per step (per radial position)
+    prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 16.d0)
+    
+    write(10,*) '# properties of the disk at the location of the planet hat influence the value of the temperature'
+    write(10,*) '# radial position of the planet (in AU) :', p_prop%radius
+    write(10,*) '# viscosity :', p_prop%nu
+    write(10,*) '# surface density :', p_prop%sigma
+    write(10,*) '# bulk density :', p_prop%bulk_density
+    write(10,*) '# angular velocity :', P_prop%omega
+    write(10,*) '# Temperature (K) ; value of the function. The right temperature is when the function is 0'
+    
+    do i=1, nb_points
+!~       temperature = T_min * T_step ** (i-1)
+      temperature = (T_min + T_step * (i - 1.d0))
+      
+      zero_function = zero_finding_temperature(temperature=temperature, rho=p_prop%bulk_density, &
+                                               omega=p_prop%omega, prefactor=prefactor)
+      
+      write(10,*) temperature, zero_function
+    end do
+    close(10)
+    
+    open(10, file="unitary_tests/function_zero_temperature.gnuplot")
+    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) 'set xlabel "Temperature T"'
+    write(10,*) 'set ylabel "zero function"'
+    write(10,*) 'set grid'
+    write(10,*) 'set xrange [', T_min, ':', T_max, ']'
+    write(10,*) "plot 'test_function_zero_temperature.dat' using 1:2 with lines notitle"
+    write(10,*) "#pause -1 # wait until a carriage return is hit"
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) "set output 'function_zero_temperature.pdf'"
+    write(10,*) "replot # pour gÃ©nÃ©rer le fichier d'output"  
+    
+    close(10)
+    
+  end subroutine test_function_zero_temperature
+  
 subroutine paardekooper_corotation(stellar_mass, mass, position, velocity)
 ! function that return the total torque exerted by the disk on the planet 
 !
@@ -1370,7 +1566,7 @@ subroutine paardekooper_corotation(stellar_mass, mass, position, velocity)
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
   
-  open(10, file='test_paardekooper_figure6.dat')
+  open(10, file='unitary_tests/test_paardekooper_figure6.dat')
   write(10,*) "Correspond to the figure 6 of Paardekooper 2010"
   write(10,*) '# p_nu ; corotation torque for chi=(1e-5, 2e-6, 1e-6, 1e-7)'
   
@@ -1416,7 +1612,7 @@ subroutine paardekooper_corotation(stellar_mass, mass, position, velocity)
   end do
   close(10)
   
-  open(10, file="paardekooper_figure6.gnuplot")
+  open(10, file="unitary_tests/paardekooper_figure6.gnuplot")
   write(10,*) 'set terminal wxt enhanced'
   write(10,*) 'set xlabel "p_{/Symbol n}"'
   write(10,*) 'set ylabel "{/Symbol G}_c/{/Symbol G}_0"'
@@ -1469,6 +1665,161 @@ end subroutine paardekooper_corotation
     call paardekooper_corotation(stellar_mass, mass, position, velocity)
     
   end subroutine test_paardekooper_corotation
+
+function zero_finding_zbrent(x_min, x_max, tolerance, p_prop)
+! Using Brent's method, find the root of a function 'func' known to lie between 'x_min' and 'x_max'. 
+! The root, returned as 'zero_finding_zbrent', will be refined until its accuray is 'tolerance'. 
+
+! Parameters :
+! ITMAX : maximum allowed number of iterations
+! EPS : machine floating-point precision.
+
+! Output
+real(double_precision) :: zero_finding_zbrent
+
+! Input 
+real(double_precision), intent(in) :: tolerance, x_min, x_max
+type(PlanetProperties), intent(in) :: p_prop ! various properties of a planet
+
+! Parameters
+real(double_precision), parameter :: EPS=3.e-8
+integer, parameter :: ITMAX=100
+
+! Locals
+integer :: iter
+real(double_precision) :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,xm
+real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
+
+!------------------------------------------------------------------------------
+
+! We calculate this value outside the function because we only have to do this once per step (per radial position)
+prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 16.d0)
+
+a=x_min
+b=x_max
+fa=zero_finding_temperature(temperature=a, rho=p_prop%bulk_density, omega=p_prop%omega, prefactor=prefactor)
+fb=zero_finding_temperature(temperature=b, rho=p_prop%bulk_density, omega=p_prop%omega, prefactor=prefactor)
+
+if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
+  write(*,*) 'root must be bracketed for zbrent'
+  write(*,*) '  T_min =', x_min, 'f(T_min) =',fa
+  write(*,*) '  T_max =', x_max, 'f(T_max) =',fb
+  write(*,*) 'properties of the disk at the location of the planet hat influence the value of the temperature'
+  write(*,*) '  radial position of the planet (in AU) :', p_prop%radius
+  write(*,*) '  viscosity :', p_prop%nu
+  write(*,*) '  surface density :', p_prop%sigma
+  write(*,*) '  bulk density :', p_prop%bulk_density
+  write(*,*) '  angular velocity :', P_prop%omega
+  stop
+endif
+
+c=b
+fc=fb
+do iter=1,ITMAX
+  if (((fb.gt.0.).and.(fc.gt.0.)).or.((fb.lt.0.).and.(fc.lt.0.))) then
+    ! rename a, b, c and adjust bouding interval d.
+    c=a
+    fc=fa
+    d=b-a
+    e=d
+  endif
+  
+  if (abs(fc).lt.abs(fb)) then
+    a=b
+    b=c
+    c=a
+    fa=fb
+    fb=fc
+    fc=fa
+  endif
+  
+  ! convergence check
+  tol1=2.*EPS*abs(b)+0.5*tolerance
+  xm=.5*(c-b)
+  
+  if(abs(xm).le.tol1 .or. fb.eq.0.)then
+    zero_finding_zbrent=b
+    return
+  endif
+  
+  if(abs(e).ge.tol1 .and. abs(fa).gt.abs(fb)) then
+    ! attempt inverse quadratic interpolation
+    s=fb/fa
+    if(a.eq.c) then
+      p=2.*xm*s
+      q=1.-s
+    else
+      q=fa/fc
+      r=fb/fc
+      p=s*(2.*xm*q*(q-r)-(b-a)*(r-1.))
+      q=(q-1.)*(r-1.)*(s-1.)
+    endif
+    
+    if(p.gt.0.) q=-q ! check whether in bounds
+    p=abs(p)
+    if(2.*p .lt. min(3.*xm*q-abs(tol1*q),abs(e*q))) then
+      ! accept interpolation
+      e=d
+      d=p/q
+    else
+      ! interpolation failed, use bisection
+      d=xm
+      e=d
+    endif
+  else
+    ! bound decreasing too slowly, use bisection
+    d=xm
+    e=d
+  endif
+  
+  ! move last best guest to a
+  a=b
+  fa=fb
+  
+  ! evaluate new trial root
+  if(abs(d) .gt. tol1) then
+    b=b+d
+  else
+    b=b+sign(tol1,xm)
+  endif
+  
+  fb=zero_finding_temperature(temperature=b, rho=p_prop%bulk_density, omega=p_prop%omega, prefactor=prefactor)
+end do
+write(*,*) 'Warning: zbrent exceeding maximum iterations'
+zero_finding_zbrent=b
+return
+end function zero_finding_zbrent
+
+function zero_finding_temperature(temperature, rho, omega, prefactor)
+! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
+! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
+! We also use the opacity given in Bell & lin 1994. 
+
+! REMARKS : The scaleheight of the disk is determined directly in the function, because it depends on the temperature
+
+
+! Output
+real(double_precision) :: zero_finding_temperature ! the value of the function
+
+! Input
+real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
+real(double_precision), intent(in) :: rho ! the bulk density at a given position (in MS/AU**3)
+real(double_precision), intent(in) :: omega ! the angular velocity of the disk at a given position
+real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 16.d0)
+
+! Local
+real(double_precision) :: optical_depth ! the optical depth at a given position
+
+!------------------------------------------------------------------------------
+
+optical_depth = get_opacity(temperature, rho) * rho * scaleheight_prefactor * sqrt(temperature) / omega
+
+! 1.7320508075688772d0 = sqrt(3)
+zero_finding_temperature = SIGMA_STEFAN * temperature**4 + prefactor * &
+                           (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1 / (optical_depth))
+return
+end function zero_finding_temperature
+
 
 end module user_module
 
