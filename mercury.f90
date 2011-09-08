@@ -143,11 +143,6 @@ program mercury
   real(double_precision), dimension(:,:), allocatable :: ngf ! (4,NMAX)
   character(len=8), dimension(:), allocatable :: id ! (NMAX)
   
-!~   integer :: stat(NMAX)
-!~   real(double_precision) :: m(NMAX),xh(3,NMAX),vh(3,NMAX),s(3,NMAX),rho(NMAX)
-!~   real(double_precision) :: rceh(NMAX),epoch(NMAX),ngf(4,NMAX)
-!~   character(len=8) :: id(NMAX)
-  
   !------------------------------------------------------------------------------
 
 ! We get the number of big bodies and the total number of bodies before reading effectively the parameter files
@@ -328,9 +323,9 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   integer :: nbod,nbig,opflag,ngflag
   integer :: ndump,nfun
   real(double_precision) :: time,h0,tol,rcen,jcen(3)
-  real(double_precision) :: en(3),am(3),m(NMAX),x(3,NMAX),v(3,NMAX),s(3,NMAX)
-  real(double_precision) :: rho(NMAX),rceh(NMAX),epoch(NMAX),ngf(4,NMAX),cefac
-  character(len=8) :: id(NMAX)
+  real(double_precision) :: en(3),am(3),m(nb_bodies_initial),x(3,nb_bodies_initial),v(3,nb_bodies_initial),s(3,nb_bodies_initial)
+  real(double_precision) :: rho(nb_bodies_initial),rceh(nb_bodies_initial),epoch(nb_bodies_initial),ngf(4,nb_bodies_initial),cefac
+  character(len=8) :: id(nb_bodies_initial)
   
   ! Local
   integer :: j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
@@ -606,7 +601,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
      
      ! Determine the name of the object
      nbod = nbod + 1
-     if (nbod.gt.NMAX) call mio_err (23,mem(81),lmem(81),mem(90),lmem(90),' ',1,mem(82),lmem(82))
+     if (nbod.gt.nb_bodies_initial) call mio_err (23,mem(81),lmem(81),mem(90),lmem(90),' ',1,mem(82),lmem(82))
      
      if ((lim(2,1)-lim(1,1)).gt.7) then
         write (23,'(/,3a)') mem(121)(1:lmem(121)),mem(122)(1:lmem(122)),string( lim(1,1):lim(2,1) )
@@ -938,12 +933,12 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
   ! Local
   integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
-  integer :: dtflag,ejflag,nowflag,stopflag,nstored,ce(NMAX)
-  integer :: nclo,iclo(CMAX),jclo(CMAX),nce,ice(NMAX),jce(NMAX)
+  integer :: dtflag,ejflag,nowflag,stopflag,nstored,ce(nb_bodies_initial)
+  integer :: nclo,iclo(CMAX),jclo(CMAX),nce,ice(nb_bodies_initial),jce(nb_bodies_initial)
   real(double_precision) :: tmp0,h,hdid,tout,tdump,tfun,tlog,tsmall
-  real(double_precision) :: thit(CMAX),dhit(CMAX),thit1,x0(3,NMAX),v0(3,NMAX)
-  real(double_precision) :: rce(NMAX),rphys(NMAX),rcrit(NMAX),a(NMAX)
-  real(double_precision) :: dclo(CMAX),tclo(CMAX),epoch(NMAX)
+  real(double_precision) :: thit(CMAX),dhit(CMAX),thit1,x0(3,nb_bodies_initial),v0(3,nb_bodies_initial)
+  real(double_precision) :: rce(nb_bodies_initial),rphys(nb_bodies_initial),rcrit(nb_bodies_initial),a(nb_bodies_initial)
+  real(double_precision) :: dclo(CMAX),tclo(CMAX),epoch(nb_bodies_initial)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
   external onestep
   
@@ -1174,8 +1169,8 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   ! Local
   integer :: i,j,k,n,itmp,nclo,nhit,jhit(CMAX),iclo(CMAX),jclo(CMAX)
   integer :: dtflag,ejflag,stopflag,colflag,nstored
-  real(double_precision) :: x(3,NMAX),v(3,NMAX),xh0(3,NMAX),vh0(3,NMAX)
-  real(double_precision) :: rce(NMAX),rphys(NMAX),rcrit(NMAX),epoch(NMAX)
+  real(double_precision) :: x(3,nb_bodies_initial),v(3,nb_bodies_initial),xh0(3,nb_bodies_initial),vh0(3,nb_bodies_initial)
+  real(double_precision) :: rce(nb_bodies_initial),rphys(nb_bodies_initial),rcrit(nb_bodies_initial),epoch(nb_bodies_initial)
   real(double_precision) :: hby2,tout,tmp0,tdump,tfun,tlog
   real(double_precision) :: dclo(CMAX),tclo(CMAX),dhit(CMAX),thit(CMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX),a(NMAX)
@@ -1224,8 +1219,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
         ! Convert to heliocentric coordinates and output data for all bodies
         call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
         call mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfile(1))
-        call mio_ce (time,rcen,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
-             nstored,0)
+        call mio_ce (time,rcen,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,nstored,0)
         tmp0 = tstop - tout
         tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
         
@@ -1233,8 +1227,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
         do j = 2, nbod
            epoch(j) = time
         end do
-        call mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,&
-             stat,id,ngf,epoch,opflag)
+        call mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,id,ngf,epoch,opflag)
         tdump = time
      end if
      
@@ -1447,11 +1440,11 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   character(len=8) :: id(nbod)
   
   ! Local
-  integer :: j,k,l,nsml,nsofar,indx(NMAX),itemp,jtemp(NMAX)
-  integer :: raflag,nce,ice(NMAX),jce(NMAX)
-  real(double_precision) :: temp,epsml(NMAX),rtemp(NMAX)
-  real(double_precision) :: h,hdid,tsmall,rphys(NMAX),rcrit(NMAX)
-  character(len=8) :: ctemp(NMAX)
+  integer :: j,k,l,nsml,nsofar,indx(nb_bodies_initial),itemp,jtemp(nb_bodies_initial)
+  integer :: raflag,nce,ice(nb_bodies_initial),jce(nb_bodies_initial)
+  real(double_precision) :: temp,epsml(nb_bodies_initial),rtemp(nb_bodies_initial)
+  real(double_precision) :: h,hdid,tsmall,rphys(nb_bodies_initial),rcrit(nb_bodies_initial)
+  character(len=8) :: ctemp(nb_bodies_initial)
   
   !------------------------------------------------------------------------------
   

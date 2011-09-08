@@ -33,19 +33,17 @@ program element
   implicit none
 
 
-  integer :: itmp,i,j,k,l,iback(NMAX),precision,lenin
+  integer :: itmp,i,j,k,l,precision,lenin
   integer :: nmaster,nopen,nwait,nbig,nsml,nbod,nsub,lim(2,100)
   integer :: year,month,timestyle,line_num,lenhead
   integer :: nchar,centre,allflag,firstflag,ninfile,nel,iel(22)
-  integer :: nbod1,nbig1!,unit(NMAX),code(NMAX),master_unit(NMAX)
+  integer :: nbod1,nbig1
   real(double_precision) :: time,teval,t0,t1,tprevious,rcen,rfac,rhocgs,temp
-  real(double_precision) :: mcen,jcen(3), s(3)!,el(22,NMAX),is(NMAX),ns(NMAX),a(NMAX)
+  real(double_precision) :: mcen,jcen(3), s(3)
   real(double_precision) :: fr,theta,phi,fv,vtheta,vphi,gm
-!~   real(double_precision) :: x(3,NMAX),v(3,NMAX),xh(3,NMAX),vh(3,NMAX),m(NMAX)
   logical test
   character(len=250) :: string,fout,header,infile(50)
-  character(len=80) :: cc!,c(NMAX)
-!~   character(len=8) :: master_id(NMAX),id(NMAX)
+  character(len=80) :: cc
   character(len=5) :: fin
   character(len=1) :: check,style,type,c1
   character(len=2) :: c2
@@ -55,7 +53,7 @@ program element
   real(double_precision), dimension(1,1) :: ngf
   
   integer :: error ! to store error when we allocate
-  integer, dimension(:), allocatable :: unit, master_unit, code ! (NMAX)
+  integer, dimension(:), allocatable :: unit, master_unit, code, iback ! (NMAX)
   character(len=80), dimension(:), allocatable :: c ! (NMAX)
   character(len=8), dimension(:), allocatable :: master_id, id ! (NMAX)
   real(double_precision), dimension(:), allocatable :: m, a, ns, is ! (NMAX)
@@ -83,6 +81,12 @@ program element
     write(*,*) 'Error: failed to allocate "code" array'
   end if
   code(1:nb_bodies_initial) = 0
+  
+  allocate(iback(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "iback" array'
+  end if
+  iback(1:nb_bodies_initial) = 0
   
   allocate(c(nb_bodies_initial), stat=error)
   if (error.ne.0) then
@@ -397,7 +401,7 @@ program element
         m(1) = mcen * K2
         do j = 1, nbod
            code(j) = int(.5d0 + mio_c2re(c(j)(1:8), 0.d0,11239424.d0, 3))
-           if (code(j).gt.NMAX) then
+           if (code(j).gt.nb_bodies_initial) then
               write (*,'(/,2a)') mem(81)(1:lmem(81)),  mem(90)(1:lmem(90))
               stop
            end if
