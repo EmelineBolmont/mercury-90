@@ -137,41 +137,94 @@ program mercury
 
   real(double_precision) :: cefac,time,h0,tol,en(3),am(3),rcen,jcen(3)
 
-!~   integer, dimension(:), allocatable :: stat ! (NMAX)
-!~   real(double_precision), dimension(:), allocatable :: m,rho,rceh,epoch ! (NMAX)
-!~   real(double_precision), dimension(:,:), allocatable :: xh,vh,s ! (3,NMAX)
-!~   real(double_precision), dimension(:,:), allocatable :: ngf ! (4,NMAX)
-!~   character(len=8), dimension(:), allocatable :: id ! (NMAX)
-!~   
-  integer :: stat(NMAX)
-  real(double_precision) :: m(NMAX),xh(3,NMAX),vh(3,NMAX),s(3,NMAX),rho(NMAX)
-  real(double_precision) :: rceh(NMAX),epoch(NMAX),ngf(4,NMAX)
-  character(len=8) :: id(NMAX)
+  integer, dimension(:), allocatable :: stat ! (NMAX)
+  real(double_precision), dimension(:), allocatable :: m,rho,rceh,epoch ! (NMAX)
+  real(double_precision), dimension(:,:), allocatable :: xh,vh,s ! (3,NMAX)
+  real(double_precision), dimension(:,:), allocatable :: ngf ! (4,NMAX)
+  character(len=8), dimension(:), allocatable :: id ! (NMAX)
+  
+!~   integer :: stat(NMAX)
+!~   real(double_precision) :: m(NMAX),xh(3,NMAX),vh(3,NMAX),s(3,NMAX),rho(NMAX)
+!~   real(double_precision) :: rceh(NMAX),epoch(NMAX),ngf(4,NMAX)
+!~   character(len=8) :: id(NMAX)
   
   !------------------------------------------------------------------------------
-!~   write (*,*) 'nbig=',nbig, 'nbod=',nbod
-  ! We get the number of big bodies and the total number of bodies before reading effectively the parameter files
-!~   call getNumberOfBodies(nb_big_bodies=nbig, nb_bodies=nbod)
-  ! open(15, file='test.in', status='replace')
-   
-  ! close(15)
-!~   nbig=10
-!~   nbod=16
-!~   write (*,*) 'nbig=',nbig, 'nbod=',nbod
-!~   nbod = NMAX
+
+! We get the number of big bodies and the total number of bodies before reading effectively the parameter files
+  call getNumberOfBodies(nb_big_bodies=nbig, nb_bodies=nb_bodies_initial)
 !~ 
 !~ 
-!~   allocate(stat(nbod))
-!~   allocate(m(nbod))
-!~   allocate(rho(nbod))
-!~   allocate(rceh(nbod))
-!~   allocate(epoch(nbod))
-!~   allocate(xh(3,nbod))
-!~   allocate(vh(3,nbod))
-!~   allocate(s(3,nbod))
-!~   allocate(ngf(4,nbod))
-!~   allocate(id(nbod))
-!TODO gérer les erreurs une fois les premiers tests effectués
+  ! We allocate and initialize arrays now that we know their sizes
+  allocate(stat(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "stat" array'
+  end if
+  stat(1:nb_bodies_initial) = 0
+  
+  allocate(m(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "m" array'
+  end if
+
+  m(1:nb_bodies_initial) = 0.d0
+  
+  allocate(rho(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "rho" array'
+  end if
+  rho(1:nb_bodies_initial) = 0.d0
+  
+  allocate(rceh(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "rceh" array'
+  end if
+  rceh(1:nb_bodies_initial) = 0.d0
+  
+  allocate(epoch(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "epoch" array'
+  end if
+  epoch(1:nb_bodies_initial) = 0.d0
+  
+  allocate(xh(3,nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "xh" array'
+  end if
+  xh(1:3,1:nb_bodies_initial) = 0.d0
+  
+  allocate(vh(3,nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "vh" array'
+  end if
+  vh(1:3,1:nb_bodies_initial) = 0.d0
+  
+  allocate(s(3,nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "s" array'
+  end if
+  s(1:3,1:nb_bodies_initial) = 0.d0
+  
+  allocate(ngf(4,nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "ngf" array'
+  end if
+  ngf(1:4,1:nb_bodies_initial) = 0.d0
+  
+  allocate(id(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "id" array'
+  end if
+  id(1:nb_bodies_initial) = ''
+  
+  ! We allocate private variables of several modules 
+  ! (since we want to 'save' them, we cannot have a dynamic array). 
+  ! To avoid testing the allocation at each timestep, we allocate them 
+  ! in a sort of initialisation subroutine. Module that need to have 
+  ! initialisation will have a subroutine with "allocate" in their name.
+  call allocate_hy(nb_bodies=nb_bodies_initial)
+  
+  
+!------------------------------------------------------------------------------
   
   ! Get initial conditions and integration parameters
   call mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,id,&

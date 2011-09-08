@@ -65,6 +65,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   
   use physical_constant
   use mercury_constant
+  use mercury_globals
 
   implicit none
 
@@ -79,14 +80,16 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   
   ! Local
   integer :: nv,niter,j,k,n
-  real(double_precision) :: x(3*NMAX),v(3*NMAX),a(3*NMAX),a1(3*NMAX)
-  real(double_precision) :: g(7,3*NMAX),b(7,3*NMAX),e(7,3*NMAX)
-  real(double_precision) :: c(21),d(21),r(28),s(9)
+  real(double_precision) :: x(3*nb_bodies_initial),v(3*nb_bodies_initial),a(3*nb_bodies_initial),a1(3*nb_bodies_initial)
+  real(double_precision) :: g(7,3*nb_bodies_initial)
+  real(double_precision) :: s(9)
   real(double_precision) :: q,q2,q3,q4,q5,q6,q7,temp,gk
+  
+  real(double_precision), save :: c(21),d(21),r(28)
+  real(double_precision), save :: b(7,3*NMAX),e(7,3*NMAX)
   
   !------------------------------------------------------------------------------
   
-  save c,d,r,b,e
   
   ! If this is first call to the subroutine, set values of the constant arrays
   ! (R = R21, R31, R32, R41, R42, R43 in Everhart's paper.)
