@@ -16,9 +16,50 @@ module algo_mvs
   
   private
   
-  public :: mdt_mvs, mco_h2mvs, mco_mvs2h, mco_h2j
+  ! values that need to be saved in mdt_mvs
+  real(double_precision), dimension(:,:), allocatable :: a, xj, angf, ausr ! (3,NMAX)
+  real(double_precision), dimension(:), allocatable :: gm ! (NMAX)
+  
+  public :: mdt_mvs, mco_h2mvs, mco_mvs2h, mco_h2j, allocate_mvs
   
   contains
+  
+subroutine allocate_mvs(nb_bodies)
+! subroutine that allocate various private variable of the module to avoid testing at each timestep
+!
+! Parameters :
+! nb_bodies : number of bodies, that is, the size of the arrays
+
+  implicit none
+  
+  integer, intent(in) :: nb_bodies
+  
+  if (.not. allocated(a)) then
+    allocate(a(3,nb_bodies))
+    a(1:3,1:nb_bodies) = 0.d0
+  end if
+  
+  if (.not. allocated(angf)) then
+    allocate(angf(3,nb_bodies))
+    angf(1:3,1:nb_bodies) = 0.d0
+  end if
+  
+  if (.not. allocated(ausr)) then
+    allocate(ausr(3,nb_bodies))
+    ausr(1:3,1:nb_bodies) = 0.d0
+  end if
+  
+  if (.not. allocated(xj)) then
+    allocate(xj(3,nb_bodies))
+    xj(1:3,1:nb_bodies) = 0.d0
+  end if
+  
+  if (.not. allocated(gm)) then
+    allocate(gm(nb_bodies))
+    gm(1:nb_bodies) = 0.d0
+  end if
+  
+end subroutine allocate_mvs
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -326,10 +367,6 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   real(double_precision) :: vj(3,nb_bodies_initial)
   real(double_precision) :: hby2,thit1,temp
   real(double_precision) :: msofar,minside,x0(3,nb_bodies_initial),v0(3,nb_bodies_initial),dhit(CMAX),thit(CMAX)
-  
-  
-  real(double_precision), save :: a(3,NMAX),xj(3,NMAX),gm(NMAX)
-  real(double_precision), save :: angf(3,NMAX),ausr(3,NMAX)
   
   !------------------------------------------------------------------------------
   

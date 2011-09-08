@@ -42,7 +42,8 @@ module algo_bs2
 subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,nce,ice,jce,force)
   use physical_constant
   use mercury_constant
-
+  use mercury_globals
+  
   implicit none
   
   ! Input/Output
@@ -61,8 +62,9 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   ! Local
   integer :: j,j1,k,n
   real(double_precision) :: tmp0,tmp1,tmp2,errmax,tol2,h,h2(12),hby2,h2by2
-  real(double_precision) :: xend(3,NMAX),b(3,NMAX),c(3,NMAX)
-  real(double_precision) :: a(3,NMAX),a0(3,NMAX),d(6,NMAX,12),xscal(NMAX),vscal(NMAX)
+  real(double_precision) :: xend(3,nb_bodies_initial),b(3,nb_bodies_initial),c(3,nb_bodies_initial)
+  real(double_precision) :: a(3,nb_bodies_initial),a0(3,nb_bodies_initial),d(6,nb_bodies_initial,12)
+  real(double_precision) :: xscal(nb_bodies_initial),vscal(nb_bodies_initial)
   
   !------------------------------------------------------------------------------
   

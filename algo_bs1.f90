@@ -38,6 +38,7 @@ module algo_bs1
 subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,nce,ice,jce,force)
   use physical_constant
   use mercury_constant
+  use mercury_globals
 
   implicit none
   
@@ -57,8 +58,9 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   ! Local
   integer :: j, j1, k, n
   real(double_precision) :: tmp0,tmp1,tmp2,errmax,tol2,h,hx2,h2(8)
-  real(double_precision) :: x(3,NMAX),v(3,NMAX),xend(3,NMAX),vend(3,NMAX)
-  real(double_precision) :: a(3,NMAX),a0(3,NMAX),d(6,NMAX,8),xscal(NMAX),vscal(NMAX)
+  real(double_precision) :: x(3,nb_bodies_initial),v(3,nb_bodies_initial),xend(3,nb_bodies_initial),vend(3,nb_bodies_initial)
+  real(double_precision) :: a(3,nb_bodies_initial),a0(3,nb_bodies_initial),d(6,nb_bodies_initial,8)
+  real(double_precision) :: xscal(nb_bodies_initial),vscal(nb_bodies_initial)
   
   !------------------------------------------------------------------------------
   

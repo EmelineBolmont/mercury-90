@@ -16,6 +16,7 @@ module algo_hybrid
   
   private
   
+  ! Values that need to be saved in mdt_hy
   real(double_precision) :: hrec
   real(double_precision), dimension(:,:), allocatable :: angf, ausr, a ! (3,NMAX)
   
@@ -35,14 +36,17 @@ subroutine allocate_hy(nb_bodies)
   
   if (.not. allocated(a)) then
     allocate(a(3,nb_bodies))
+    a(1:3,1:nb_bodies) = 0.d0
   end if
   
   if (.not. allocated(angf)) then
     allocate(angf(3,nb_bodies))
+    angf(1:3,1:nb_bodies) = 0.d0
   end if
   
   if (.not. allocated(ausr)) then
     allocate(ausr(3,nb_bodies))
+    ausr(1:3,1:nb_bodies) = 0.d0
   end if
   
 end subroutine allocate_hy
@@ -91,9 +95,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   integer :: j,nce,ice(nbod),jce(nbod),ce(nbod),iflag
   real(double_precision) :: hby2,x0(3,nbod),v0(3,nbod),mvsum(3),temp
   
-  
-!~   real(double_precision), save :: angf(3,NMAX), ausr(3,NMAX), hrec, a(3,NMAX)
-  
+    
   !------------------------------------------------------------------------------
   
   

@@ -37,15 +37,15 @@ program element
   integer :: nmaster,nopen,nwait,nbig,nsml,nbod,nsub,lim(2,100)
   integer :: year,month,timestyle,line_num,lenhead
   integer :: nchar,centre,allflag,firstflag,ninfile,nel,iel(22)
-  integer :: nbod1,nbig1,unit(NMAX),code(NMAX),master_unit(NMAX)
+  integer :: nbod1,nbig1!,unit(NMAX),code(NMAX),master_unit(NMAX)
   real(double_precision) :: time,teval,t0,t1,tprevious,rcen,rfac,rhocgs,temp
-  real(double_precision) :: mcen,jcen(3),el(22,NMAX),s(3),is(NMAX),ns(NMAX),a(NMAX)
+  real(double_precision) :: mcen,jcen(3), s(3)!,el(22,NMAX),is(NMAX),ns(NMAX),a(NMAX)
   real(double_precision) :: fr,theta,phi,fv,vtheta,vphi,gm
-  real(double_precision) :: x(3,NMAX),v(3,NMAX),xh(3,NMAX),vh(3,NMAX),m(NMAX)
+!~   real(double_precision) :: x(3,NMAX),v(3,NMAX),xh(3,NMAX),vh(3,NMAX),m(NMAX)
   logical test
   character(len=250) :: string,fout,header,infile(50)
-  character(len=80) :: cc,c(NMAX)
-  character(len=8) :: master_id(NMAX),id(NMAX)
+  character(len=80) :: cc!,c(NMAX)
+!~   character(len=8) :: master_id(NMAX),id(NMAX)
   character(len=5) :: fin
   character(len=1) :: check,style,type,c1
   character(len=2) :: c2
@@ -53,9 +53,111 @@ program element
   ! fake variables to be able to use mco_iden
   integer :: ngflag
   real(double_precision), dimension(1,1) :: ngf
+  
+  integer :: error ! to store error when we allocate
+  integer, dimension(:), allocatable :: unit, master_unit, code ! (NMAX)
+  character(len=80), dimension(:), allocatable :: c ! (NMAX)
+  character(len=8), dimension(:), allocatable :: master_id, id ! (NMAX)
+  real(double_precision), dimension(:), allocatable :: m, a, ns, is ! (NMAX)
+  real(double_precision), dimension(:,:), allocatable :: el ! (22,NMAX)
+  real(double_precision), dimension(:,:), allocatable :: x, v, xh, vh ! (3,NMAX)
 
   !------------------------------------------------------------------------------
-
+  call getNumberOfBodies(nb_big_bodies=nbig, nb_bodies=nb_bodies_initial)
+  
+    ! We allocate and initialize arrays now that we know their sizes
+  allocate(unit(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "unit" array'
+  end if
+  unit(1:nb_bodies_initial) = 0
+  
+  allocate(master_unit(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "master_unit" array'
+  end if
+  master_unit(1:nb_bodies_initial) = 0
+  
+  allocate(code(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "code" array'
+  end if
+  code(1:nb_bodies_initial) = 0
+  
+  allocate(c(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "c" array'
+  end if
+  c(1:nb_bodies_initial) = ''
+  
+  allocate(master_id(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "master_id" array'
+  end if
+  master_id(1:nb_bodies_initial) = ''
+  
+  allocate(id(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "id" array'
+  end if
+  id(1:nb_bodies_initial) = ''
+  
+  allocate(m(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "m" array'
+  end if
+  m(1:nb_bodies_initial) = 0.d0
+  
+  allocate(a(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "a" array'
+  end if
+  a(1:nb_bodies_initial) = 0.d0
+  
+  allocate(ns(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "ns" array'
+  end if
+  ns(1:nb_bodies_initial) = 0.d0
+  
+  allocate(is(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "is" array'
+  end if
+  is(1:nb_bodies_initial) = 0.d0
+  
+  allocate(el(22,nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "el" array'
+  end if
+  el(1:22,1:nb_bodies_initial) = 0.d0
+  
+  allocate(x(3,nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "x" array'
+  end if
+  x(1:3,1:nb_bodies_initial) = 0.d0
+  
+  allocate(v(3,nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "v" array'
+  end if
+  v(1:3,1:nb_bodies_initial) = 0.d0
+  
+  allocate(vh(3,nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "vh" array'
+  end if
+  vh(1:3,1:nb_bodies_initial) = 0.d0
+  
+  allocate(xh(3,nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "xh" array'
+  end if
+  xh(1:3,1:nb_bodies_initial) = 0.d0
+  
+  
+  !------------------------------------------------------------------------------
   allflag = 0
   tprevious = 0.d0
   rhocgs = AU * AU * AU * K2 / MSUN
