@@ -725,6 +725,145 @@ end subroutine init_globals
     real(double_precision) :: get_opacity
     
     ! Local
+    real(double_precision) :: opacity_1, opacity_2, opacity_3, opacity_4, opacity_5, opacity_6, opacity_7
+    real(double_precision) :: bulk_density ! [g/cm^3] (in physical units needed for the expression of the opacity)
+    real(double_precision), parameter :: num_to_phys_bulk_density = MSUN / AU**3
+    real(double_precision), parameter :: phys_to_num_opacity = MSUN / AU**2
+    
+    ! transition between the various regimes
+    real(double_precision), parameter :: trans12 = 166.81d0
+    real(double_precision), parameter :: trans23 = 202.677d0
+    real(double_precision) :: trans34
+    real(double_precision) :: trans45
+    real(double_precision) :: trans56
+    real(double_precision) :: trans67
+    
+    ! values for smoothing
+    real(double_precision) :: smooth_low_bound, smooth_high_bound
+    real(double_precision), parameter :: smooth = 3.d0
+
+    ! we convert the bulk_density from numerical units(AU, MS, DAY) to physical units (CGS)
+    bulk_density = num_to_phys_bulk_density * num_bulk_density
+    
+    
+    ! We get the transition point between the various regimes
+    trans34 = 2286.787d0 * bulk_density**(2.d0/49.d0)
+    trans45 = 2029.764d0 * bulk_density**(1.d0/81.d0)
+    trans56 = 10000.d0 * bulk_density**(1.d0/21.d0)
+    trans67 = 30000.d0 * bulk_density**(4.d0/75.d0)
+    
+    if (temperature.le.trans12) then ! regime 1
+      opacity_1 = 2d-4 * temperature * temperature
+      opacity_2 = 2.d16 / temperature**7.d0
+      smooth_high_bound = hersant_smoothing(temperature, trans12, smooth)
+      get_opacity = (1.d0 - smooth_high_bound) * opacity_1 + smooth_high_bound * opacity_2
+    elseif ((temperature.gt.trans12).and.(temperature.le.trans23)) then ! regime 2
+      opacity_1 = 2d-4 * temperature * temperature
+      opacity_2 = 2.d16 / temperature**7.d0
+      opacity_3 = 0.1d0 * sqrt(temperature)
+      smooth_low_bound = hersant_smoothing(temperature, trans12, smooth)
+      smooth_high_bound = hersant_smoothing(temperature, trans23, smooth)
+      
+      get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_1 + &
+      smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_2 + smooth_low_bound * smooth_high_bound * opacity_3
+      
+    elseif ((temperature.gt.trans23).and.(temperature.le.trans34)) then ! regime 3
+      opacity_2 = 2.d16 / temperature**7.d0
+      opacity_3 = 0.1d0 * sqrt(temperature)
+      opacity_4 = 2.d81 * bulk_density / temperature**24.d0
+      
+      smooth_low_bound = hersant_smoothing(temperature, trans23, smooth)
+      smooth_high_bound = hersant_smoothing(temperature, trans34, smooth)
+      
+      get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_2 + &
+      smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_3 + smooth_low_bound * smooth_high_bound * opacity_4
+    elseif ((temperature.gt.trans34).and.(temperature.le.trans45)) then ! regime 4
+      opacity_3 = 0.1d0 * sqrt(temperature)
+      opacity_4 = 2.d81 * bulk_density / temperature**24.d0
+      opacity_5 = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
+      smooth_low_bound = hersant_smoothing(temperature, trans34, smooth)
+      smooth_high_bound = hersant_smoothing(temperature, trans45, smooth)
+      
+      get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_3 + &
+      smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_4 + smooth_low_bound * smooth_high_bound * opacity_5
+    elseif ((temperature.gt.trans45).and.(temperature.le.trans56)) then ! regime 5
+      opacity_4 = 2.d81 * bulk_density / temperature**24.d0
+      opacity_5 = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
+      opacity_6 = 1.d-36 * bulk_density**THIRD * temperature**10
+      smooth_low_bound = hersant_smoothing(temperature, trans45, smooth)
+      smooth_high_bound = hersant_smoothing(temperature, trans56, smooth)
+      
+      get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_4 + &
+      smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_5 + smooth_low_bound * smooth_high_bound * opacity_6
+    elseif ((temperature.gt.trans56).and.(temperature.le.trans67)) then ! regime 6
+      opacity_5 = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
+      opacity_6 = 1.d-36 * bulk_density**THIRD * temperature**10
+      opacity_7 = 1.5d20 * bulk_density / temperature**2.5d0
+      smooth_low_bound = hersant_smoothing(temperature, trans56, smooth)
+      smooth_high_bound = hersant_smoothing(temperature, trans67, smooth)
+      
+      get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_5 + &
+      smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_6 + smooth_low_bound * smooth_high_bound * opacity_7
+    else ! regime 7
+      opacity_6 = 1.d-36 * bulk_density**THIRD * temperature**10
+      opacity_7 = 1.5d20 * bulk_density / temperature**2.5d0
+      smooth_low_bound = hersant_smoothing(temperature, trans67, smooth)
+      
+      get_opacity = (1.d0 - smooth_low_bound) * opacity_6 + smooth_low_bound * opacity_7
+    endif
+    
+    ! we change the opacity from physical units to numerical units
+    get_opacity = phys_to_num_opacity * get_opacity
+    
+    !------------------------------------------------------------------------------
+
+    return
+  end function get_opacity
+  
+  function hersant_smoothing(temperature, transition, smoothing_length)
+  ! this function, based on a hyperbolic tangent is here to smooth a function at a given transition point. 
+  ! It was elaborated to smooth opacity law in function of temperature. 
+  ! The transition is thus a transition temperature between two regimes, and the smoothing_length gives an order of the length to smooth between the two regimes
+  
+  ! The temperature is only the absciss value. In short, the function is like this : 
+  ! H(T) = 0.5 * (1 + th((T-T0)/Delta))
+  ! where T0 is the transition point, T the temperature and Delta the smoothing length. 
+  
+  ! We use this smoothing function like this, for a function f, defined by pieces with f=f1 if T<T0 and f=f2 if T>T0 : 
+  ! f = (1 - H(T)) * f1(T) + H(T) * f2(T)
+  ! REMARK : Delta is to be set regarding the shape you want to have, not too long, not too short. 
+  !
+  ! Parameter : 
+  ! temperature : the value of the absciss
+  ! transition : the value of the absciss where the change of regime occurs
+  ! smoothing_length : the caracteristic length where the smoothing occur. By decreasing this parameter, the smoothing will be steeper.
+  
+    implicit none
+    
+    ! Inputs
+    real(double_precision), intent(in) :: temperature, transition, smoothing_length
+    
+    ! Output
+    real(double_precision) :: hersant_smoothing
+    
+    !------------------------------------------------------------------------------
+    
+    hersant_smoothing = 0.5d0 * (1.d0 + tanh((temperature - transition) / smoothing_length))
+    
+  end function hersant_smoothing
+  
+  function get_opacity_non_smoothed(temperature, num_bulk_density)
+  ! subroutine that return the opacity of the disk at the location of the planet given various parameters
+    implicit none
+    
+    ! Inputs 
+    real(double_precision), intent(in) :: temperature & ! temperature of the disk [K]
+                                          , num_bulk_density ! bulk density of the gas disk [MSUN/AU^3] (in numerical units)
+    
+    ! Output
+    real(double_precision) :: get_opacity_non_smoothed
+    
+    ! Local
     real(double_precision) :: temp34, temp45, temp56, temp67
     real(double_precision) :: bulk_density ! [g/cm^3] (in physical units needed for the expression of the opacity)
     real(double_precision), parameter :: num_to_phys_bulk_density = MSUN / AU**3
@@ -741,28 +880,28 @@ end subroutine init_globals
     temp67 = 30000.d0 * bulk_density**(4.d0/75.d0)
     
     if (temperature.le.166.81d0) then ! regime 1
-      get_opacity = 2d-4 * temperature * temperature
+      get_opacity_non_smoothed = 2d-4 * temperature * temperature
     elseif ((temperature.gt.166.81d0).and.(temperature.le.202.677d0)) then ! regime 2
-      get_opacity = 2.d16 / temperature**7.d0
+      get_opacity_non_smoothed = 2.d16 / temperature**7.d0
     elseif ((temperature.gt.202.677d0).and.(temperature.le.temp34)) then ! regime 3
-      get_opacity = 0.1d0 * sqrt(temperature)
+      get_opacity_non_smoothed = 0.1d0 * sqrt(temperature)
     elseif ((temperature.gt.temp34).and.(temperature.le.temp45)) then ! regime 4
-      get_opacity = 2.d81 * bulk_density / temperature**24.d0
+      get_opacity_non_smoothed = 2.d81 * bulk_density / temperature**24.d0
     elseif ((temperature.gt.temp45).and.(temperature.le.temp56)) then ! regime 5
-      get_opacity = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
+      get_opacity_non_smoothed = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
     elseif ((temperature.gt.temp56).and.(temperature.le.temp67)) then ! regime 6
-      get_opacity = 1.d-36 * bulk_density**THIRD * temperature**10
+      get_opacity_non_smoothed = 1.d-36 * bulk_density**THIRD * temperature**10
     else ! regime 7
-      get_opacity = 1.5d20 * bulk_density / temperature**2.5d0
+      get_opacity_non_smoothed = 1.5d20 * bulk_density / temperature**2.5d0
     endif
     
     ! we change the opacity from physical units to numerical units
-    get_opacity = phys_to_num_opacity * get_opacity
+    get_opacity_non_smoothed = phys_to_num_opacity * get_opacity_non_smoothed
     
     !------------------------------------------------------------------------------
 
     return
-  end function get_opacity
+  end function get_opacity_non_smoothed
 
   subroutine unitary_tests()
     ! public subroutine to test various function and subroutine of the module user_module. 
@@ -777,6 +916,7 @@ end subroutine init_globals
     
     implicit none
     
+    call test_hersant_smoothing()
     call test_functions_FGK()
     call test_get_opacity()
     call test_torques()
@@ -861,12 +1001,9 @@ end subroutine init_globals
 
     
     
-    do j=10,11
-      write(j,*) "replot # pour générer le fichier d'output"
-    end do
+    write(10,*) "replot # pour générer le fichier d'output"
     
     close(10)
-    close(11)
   
   end subroutine test_temperature_interpolation
 
@@ -981,6 +1118,58 @@ end subroutine init_globals
     close(10)
     
   end subroutine test_get_opacity
+  
+  subroutine test_hersant_smoothing()
+  
+  implicit none
+  
+
+  
+  integer, parameter :: nb_T = 100
+  real(double_precision), parameter :: T_min = 1.d0
+  real(double_precision), parameter :: T_max = 300.d0
+  real(double_precision), parameter :: T_step = (T_max - T_min) / (nb_T - 1.d0)
+  
+  integer :: i
+  real(double_precision) :: y(3), smooth(3)
+  real(double_precision) :: temperature, transition
+  
+  transition = 150.d0
+  
+  smooth(1) = 1.d0
+  smooth(2) = 5d0
+  smooth(3) = 10d0
+  
+  open(10, file='unitary_tests/test_hersant_smoothing.dat')
+  write(10,*) "Correspond to the figure 2 of II. Effects of diffusion"
+  write(10,*) '# T ; smooth=1 ;smooth=5 ; smooth=10'
+  
+  do i=1, nb_T ! loop on the position
+    temperature = T_min + T_step * (i-1)
+    
+    y(1) = hersant_smoothing(temperature, transition, smooth(1))
+    y(2) = hersant_smoothing(temperature, transition, smooth(2))
+    y(3) = hersant_smoothing(temperature, transition, smooth(3))
+    
+    write(10,*) temperature, y
+  end do
+  close(10)
+  
+  open(10, file="unitary_tests/hersant_smoothing.gnuplot")
+
+  write(10,*) 'set xlabel "T"'
+  write(10,*) 'set ylabel "function"'
+  write(10,*) 'plot "test_hersant_smoothing.dat" using 1:2 with lines title "smooth=1",\'
+  write(10,*) "     '' using 1:3 with lines title 'smooth=5',\"
+  write(10,*) "     '' using 1:4 with lines title 'smooth=10'"
+  write(10,*) '#pause -1 # wait until a carriage return is hit'
+  write(10,*) 'set terminal pdfcairo enhanced'
+  write(10,*) 'set output "hersant_smoothing.pdf"'
+  write(10,*) 'replot' 
+  
+  close(10)
+    
+  end subroutine test_hersant_smoothing
   
   subroutine test_torques
   ! subroutine that test the function 'get_corotation_torque'
@@ -1440,16 +1629,6 @@ end subroutine init_globals
     real(double_precision), intent(out), dimension(nb_a) :: ln_x, ln_y, idx
     
     real(double_precision) :: a_step ! step between values of 'a'.   
-!~ ! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
-!~ ! A gnuplot file and a data file are created to display the temperature profile.
-!~ ! TODO calculer aussi l'exposant local du profil de température
-!~ 
-!~     implicit none
-!~     
-!~     integer, parameter :: nb_a = 400
-!~     real(double_precision), parameter :: a_min = 1 ! in AU
-!~     real(double_precision), parameter :: a_max = 60. ! in AU
-!~     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
     real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
     
