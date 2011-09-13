@@ -8,7 +8,6 @@ module user_module
 !*************************************************************
   use types_numeriques
   use physical_constant
-
   implicit none
   
   private
@@ -36,7 +35,9 @@ module user_module
 !~   real(double_precision) :: temperature_index = 1.6! the negativeslope of the temperature power law (beta in the paper)
   real(double_precision) :: radius_min = 1.d0
   real(double_precision) :: radius_max = 60.d0
-  integer :: nb_a_sample = 400 ! number of points for the sample of radius of the temperature profile
+  integer :: nb_a_sample = 1000 ! number of points for the sample of radius of the temperature profile
+  
+  
   !------------------------------------------------------------------------------
   ! prefactors
   real(double_precision) :: x_s_prefactor ! prefactor for the half width of the corotation region
@@ -75,6 +76,15 @@ module user_module
     real(double_precision) :: temperature_index ! the negative temperature index of the disk at the location of the planet [no dim] 
   end type PlanetProperties
 
+  type StellarProperties
+    ! properties of a star
+    real(double_precision) :: mass ! the mass of the star [in MSUN * K2]
+    real(double_precision) :: radius ! the radius [in UA]
+    real(double_precision) :: temperature ! the surface temperature of the star [in K]
+  end type StellarProperties
+  
+  ! We define properties of the central star
+  type(StellarProperties) :: star = StellarProperties(1.d0*K2, 0.00464912633d0, 5778.d0)
   
   contains
 
@@ -416,6 +426,9 @@ subroutine read_disk_properties()
         case('alpha')
           read(value, *) alpha
           
+        case('star')
+          read(value, *) star%mass, star%radius, star%temperature 
+          
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
           write(*,*) "identificator='", trim(identificator), "' ; value(s)='", trim(value),"'"
@@ -594,7 +607,11 @@ subroutine init_globals(stellar_mass)
   if (FirstCall) then
     FirstCall = .False.
     
+    star%mass = stellar_mass
+    
     call read_disk_properties()
+    
+    
     
     allocate(temp_profile_y(nb_a_sample))
     allocate(temp_profile_x(nb_a_sample))
@@ -712,7 +729,7 @@ end subroutine init_globals
     
     return
   end function get_K
-
+  
   function get_opacity(temperature, num_bulk_density)
   ! subroutine that return the opacity of the disk at the location of the planet given various parameters
     implicit none
@@ -723,145 +740,6 @@ end subroutine init_globals
     
     ! Output
     real(double_precision) :: get_opacity
-    
-    ! Local
-    real(double_precision) :: opacity_1, opacity_2, opacity_3, opacity_4, opacity_5, opacity_6, opacity_7
-    real(double_precision) :: bulk_density ! [g/cm^3] (in physical units needed for the expression of the opacity)
-    real(double_precision), parameter :: num_to_phys_bulk_density = MSUN / AU**3
-    real(double_precision), parameter :: phys_to_num_opacity = MSUN / AU**2
-    
-    ! transition between the various regimes
-    real(double_precision), parameter :: trans12 = 166.81d0
-    real(double_precision), parameter :: trans23 = 202.677d0
-    real(double_precision) :: trans34
-    real(double_precision) :: trans45
-    real(double_precision) :: trans56
-    real(double_precision) :: trans67
-    
-    ! values for smoothing
-    real(double_precision) :: smooth_low_bound, smooth_high_bound
-    real(double_precision), parameter :: smooth = 3.d0
-
-    ! we convert the bulk_density from numerical units(AU, MS, DAY) to physical units (CGS)
-    bulk_density = num_to_phys_bulk_density * num_bulk_density
-    
-    
-    ! We get the transition point between the various regimes
-    trans34 = 2286.787d0 * bulk_density**(2.d0/49.d0)
-    trans45 = 2029.764d0 * bulk_density**(1.d0/81.d0)
-    trans56 = 10000.d0 * bulk_density**(1.d0/21.d0)
-    trans67 = 30000.d0 * bulk_density**(4.d0/75.d0)
-    
-    if (temperature.le.trans12) then ! regime 1
-      opacity_1 = 2d-4 * temperature * temperature
-      opacity_2 = 2.d16 / temperature**7.d0
-      smooth_high_bound = hersant_smoothing(temperature, trans12, smooth)
-      get_opacity = (1.d0 - smooth_high_bound) * opacity_1 + smooth_high_bound * opacity_2
-    elseif ((temperature.gt.trans12).and.(temperature.le.trans23)) then ! regime 2
-      opacity_1 = 2d-4 * temperature * temperature
-      opacity_2 = 2.d16 / temperature**7.d0
-      opacity_3 = 0.1d0 * sqrt(temperature)
-      smooth_low_bound = hersant_smoothing(temperature, trans12, smooth)
-      smooth_high_bound = hersant_smoothing(temperature, trans23, smooth)
-      
-      get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_1 + &
-      smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_2 + smooth_low_bound * smooth_high_bound * opacity_3
-      
-    elseif ((temperature.gt.trans23).and.(temperature.le.trans34)) then ! regime 3
-      opacity_2 = 2.d16 / temperature**7.d0
-      opacity_3 = 0.1d0 * sqrt(temperature)
-      opacity_4 = 2.d81 * bulk_density / temperature**24.d0
-      
-      smooth_low_bound = hersant_smoothing(temperature, trans23, smooth)
-      smooth_high_bound = hersant_smoothing(temperature, trans34, smooth)
-      
-      get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_2 + &
-      smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_3 + smooth_low_bound * smooth_high_bound * opacity_4
-    elseif ((temperature.gt.trans34).and.(temperature.le.trans45)) then ! regime 4
-      opacity_3 = 0.1d0 * sqrt(temperature)
-      opacity_4 = 2.d81 * bulk_density / temperature**24.d0
-      opacity_5 = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
-      smooth_low_bound = hersant_smoothing(temperature, trans34, smooth)
-      smooth_high_bound = hersant_smoothing(temperature, trans45, smooth)
-      
-      get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_3 + &
-      smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_4 + smooth_low_bound * smooth_high_bound * opacity_5
-    elseif ((temperature.gt.trans45).and.(temperature.le.trans56)) then ! regime 5
-      opacity_4 = 2.d81 * bulk_density / temperature**24.d0
-      opacity_5 = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
-      opacity_6 = 1.d-36 * bulk_density**THIRD * temperature**10
-      smooth_low_bound = hersant_smoothing(temperature, trans45, smooth)
-      smooth_high_bound = hersant_smoothing(temperature, trans56, smooth)
-      
-      get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_4 + &
-      smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_5 + smooth_low_bound * smooth_high_bound * opacity_6
-    elseif ((temperature.gt.trans56).and.(temperature.le.trans67)) then ! regime 6
-      opacity_5 = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
-      opacity_6 = 1.d-36 * bulk_density**THIRD * temperature**10
-      opacity_7 = 1.5d20 * bulk_density / temperature**2.5d0
-      smooth_low_bound = hersant_smoothing(temperature, trans56, smooth)
-      smooth_high_bound = hersant_smoothing(temperature, trans67, smooth)
-      
-      get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_5 + &
-      smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_6 + smooth_low_bound * smooth_high_bound * opacity_7
-    else ! regime 7
-      opacity_6 = 1.d-36 * bulk_density**THIRD * temperature**10
-      opacity_7 = 1.5d20 * bulk_density / temperature**2.5d0
-      smooth_low_bound = hersant_smoothing(temperature, trans67, smooth)
-      
-      get_opacity = (1.d0 - smooth_low_bound) * opacity_6 + smooth_low_bound * opacity_7
-    endif
-    
-    ! we change the opacity from physical units to numerical units
-    get_opacity = phys_to_num_opacity * get_opacity
-    
-    !------------------------------------------------------------------------------
-
-    return
-  end function get_opacity
-  
-  function hersant_smoothing(temperature, transition, smoothing_length)
-  ! this function, based on a hyperbolic tangent is here to smooth a function at a given transition point. 
-  ! It was elaborated to smooth opacity law in function of temperature. 
-  ! The transition is thus a transition temperature between two regimes, and the smoothing_length gives an order of the length to smooth between the two regimes
-  
-  ! The temperature is only the absciss value. In short, the function is like this : 
-  ! H(T) = 0.5 * (1 + th((T-T0)/Delta))
-  ! where T0 is the transition point, T the temperature and Delta the smoothing length. 
-  
-  ! We use this smoothing function like this, for a function f, defined by pieces with f=f1 if T<T0 and f=f2 if T>T0 : 
-  ! f = (1 - H(T)) * f1(T) + H(T) * f2(T)
-  ! REMARK : Delta is to be set regarding the shape you want to have, not too long, not too short. 
-  !
-  ! Parameter : 
-  ! temperature : the value of the absciss
-  ! transition : the value of the absciss where the change of regime occurs
-  ! smoothing_length : the caracteristic length where the smoothing occur. By decreasing this parameter, the smoothing will be steeper.
-  
-    implicit none
-    
-    ! Inputs
-    real(double_precision), intent(in) :: temperature, transition, smoothing_length
-    
-    ! Output
-    real(double_precision) :: hersant_smoothing
-    
-    !------------------------------------------------------------------------------
-    
-    hersant_smoothing = 0.5d0 * (1.d0 + tanh((temperature - transition) / smoothing_length))
-    
-  end function hersant_smoothing
-  
-  function get_opacity_non_smoothed(temperature, num_bulk_density)
-  ! subroutine that return the opacity of the disk at the location of the planet given various parameters
-    implicit none
-    
-    ! Inputs 
-    real(double_precision), intent(in) :: temperature & ! temperature of the disk [K]
-                                          , num_bulk_density ! bulk density of the gas disk [MSUN/AU^3] (in numerical units)
-    
-    ! Output
-    real(double_precision) :: get_opacity_non_smoothed
     
     ! Local
     real(double_precision) :: temp34, temp45, temp56, temp67
@@ -880,28 +758,28 @@ end subroutine init_globals
     temp67 = 30000.d0 * bulk_density**(4.d0/75.d0)
     
     if (temperature.le.166.81d0) then ! regime 1
-      get_opacity_non_smoothed = 2d-4 * temperature * temperature
+      get_opacity = 2d-4 * temperature * temperature
     elseif ((temperature.gt.166.81d0).and.(temperature.le.202.677d0)) then ! regime 2
-      get_opacity_non_smoothed = 2.d16 / temperature**7.d0
+      get_opacity = 2.d16 / temperature**7.d0
     elseif ((temperature.gt.202.677d0).and.(temperature.le.temp34)) then ! regime 3
-      get_opacity_non_smoothed = 0.1d0 * sqrt(temperature)
+      get_opacity = 0.1d0 * sqrt(temperature)
     elseif ((temperature.gt.temp34).and.(temperature.le.temp45)) then ! regime 4
-      get_opacity_non_smoothed = 2.d81 * bulk_density / temperature**24.d0
+      get_opacity = 2.d81 * bulk_density / temperature**24.d0
     elseif ((temperature.gt.temp45).and.(temperature.le.temp56)) then ! regime 5
-      get_opacity_non_smoothed = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
+      get_opacity = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
     elseif ((temperature.gt.temp56).and.(temperature.le.temp67)) then ! regime 6
-      get_opacity_non_smoothed = 1.d-36 * bulk_density**THIRD * temperature**10
+      get_opacity = 1.d-36 * bulk_density**THIRD * temperature**10
     else ! regime 7
-      get_opacity_non_smoothed = 1.5d20 * bulk_density / temperature**2.5d0
+      get_opacity = 1.5d20 * bulk_density / temperature**2.5d0
     endif
     
     ! we change the opacity from physical units to numerical units
-    get_opacity_non_smoothed = phys_to_num_opacity * get_opacity_non_smoothed
+    get_opacity = phys_to_num_opacity * get_opacity
     
     !------------------------------------------------------------------------------
 
     return
-  end function get_opacity_non_smoothed
+  end function get_opacity
 
   subroutine unitary_tests()
     ! public subroutine to test various function and subroutine of the module user_module. 
@@ -915,16 +793,15 @@ end subroutine init_globals
     ! _ get_F
     
     implicit none
-    
-    call test_hersant_smoothing()
-    call test_functions_FGK()
-    call test_get_opacity()
-    call test_torques()
-    call test_torques_fixed_a()
-    call test_torques_fixed_m()
     call test_function_zero_temperature()
-    call test_temperature_profile()
-    call test_temperature_interpolation()
+!~     call test_funcv()
+!~     call test_functions_FGK()
+!~     call test_get_opacity()
+!~     call test_torques()
+!~     call test_torques_fixed_a()
+!~     call test_torques_fixed_m()
+!~     call test_temperature_profile()
+!~     call test_temperature_interpolation()
     
   end subroutine unitary_tests
   
@@ -1118,58 +995,6 @@ end subroutine init_globals
     close(10)
     
   end subroutine test_get_opacity
-  
-  subroutine test_hersant_smoothing()
-  
-  implicit none
-  
-
-  
-  integer, parameter :: nb_T = 100
-  real(double_precision), parameter :: T_min = 1.d0
-  real(double_precision), parameter :: T_max = 300.d0
-  real(double_precision), parameter :: T_step = (T_max - T_min) / (nb_T - 1.d0)
-  
-  integer :: i
-  real(double_precision) :: y(3), smooth(3)
-  real(double_precision) :: temperature, transition
-  
-  transition = 150.d0
-  
-  smooth(1) = 1.d0
-  smooth(2) = 5d0
-  smooth(3) = 10d0
-  
-  open(10, file='unitary_tests/test_hersant_smoothing.dat')
-  write(10,*) "Correspond to the figure 2 of II. Effects of diffusion"
-  write(10,*) '# T ; smooth=1 ;smooth=5 ; smooth=10'
-  
-  do i=1, nb_T ! loop on the position
-    temperature = T_min + T_step * (i-1)
-    
-    y(1) = hersant_smoothing(temperature, transition, smooth(1))
-    y(2) = hersant_smoothing(temperature, transition, smooth(2))
-    y(3) = hersant_smoothing(temperature, transition, smooth(3))
-    
-    write(10,*) temperature, y
-  end do
-  close(10)
-  
-  open(10, file="unitary_tests/hersant_smoothing.gnuplot")
-
-  write(10,*) 'set xlabel "T"'
-  write(10,*) 'set ylabel "function"'
-  write(10,*) 'plot "test_hersant_smoothing.dat" using 1:2 with lines title "smooth=1",\'
-  write(10,*) "     '' using 1:3 with lines title 'smooth=5',\"
-  write(10,*) "     '' using 1:4 with lines title 'smooth=10'"
-  write(10,*) '#pause -1 # wait until a carriage return is hit'
-  write(10,*) 'set terminal pdfcairo enhanced'
-  write(10,*) 'set output "hersant_smoothing.pdf"'
-  write(10,*) 'replot' 
-  
-  close(10)
-    
-  end subroutine test_hersant_smoothing
   
   subroutine test_torques
   ! subroutine that test the function 'get_corotation_torque'
@@ -1632,11 +1457,17 @@ end subroutine init_globals
     
     real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
     
+    real(double_precision), parameter :: T_min = 1.d-5
+    real(double_precision), parameter :: T_max = 1.05d3
+    
     real(double_precision) :: a
     real(double_precision) :: stellar_mass, position(3), velocity(3), temperature, exponant
     type(PlanetProperties) :: p_prop
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
     real(double_precision) :: a_old, temperature_old 
+!~     real(double_precision) :: solution(2)
+!~     real(double_precision) :: t0,t_idx
+!~     logical :: check
     
     integer :: i,j ! for loops
         
@@ -1653,7 +1484,7 @@ end subroutine init_globals
     
     write(10,*) '# a in AU ; temperature (in K) ; exponant ; log(a) ; log(T)'
     
-    a = 0.9d0 * a_min
+    a = a_min - a_step
     ! We generate cartesian coordinate for the given semi major axis
     position(1) = a
     
@@ -1664,10 +1495,18 @@ end subroutine init_globals
     ! we store in global parameters various properties of the planet
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
-     
     
-    temperature = zero_finding_zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop)
-    
+    ! we make a first guess of the solution
+!~     t0 = 1196.d0
+!~     t_idx = 1.065d0
+
+!~     solution(1) = t0 / a**t_idx
+!~     solution(2) = - t_idx * t0 / a**(t_idx-1.d0)
+!~     check=.True.
+!~     
+    temperature = zero_finding_zbrent(x_min=T_min, x_max=T_max, tolerance=1d-4, p_prop=p_prop, a_old=0.d0, t_old=0.d0)
+!~     call newt(solution(1:2), check, p_prop=p_prop)
+!~     temperature = solution(1)
 
     do j=1,nb_a
       a_old = a
@@ -1686,7 +1525,13 @@ end subroutine init_globals
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
-      temperature = zero_finding_zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop)
+      ! we make a first guess of the solution
+!~       solution(1) = t0 / a**t_idx
+!~       solution(2) = - t_idx * t0 / a**(t_idx-1.d0)
+!~       check=.True.
+      temperature = zero_finding_zbrent(x_min=T_min, x_max=T_max, tolerance=1d-4, p_prop=p_prop, a_old=a_old, t_old=temperature_old)
+!~       call newt(solution(1:2), check, p_prop=p_prop)
+!~       temperature = solution(1)
       
       idx(j) = - (log(temperature) - log(temperature_old)) / (log(a) - log(a_old))
       
@@ -1762,92 +1607,7 @@ end subroutine init_globals
   
   end subroutine test_temperature_profile
 
-  subroutine test_function_zero_temperature
-  ! subroutine that test the function 'zero_finding_temperature'
-  
-  ! Return:
-  !  a data file and an associated gnuplot file.
-    implicit none
-    
-    real(double_precision) :: temperature
-    
-    real(double_precision), parameter :: T_min = 0.
-    real(double_precision), parameter :: T_max = 1000.
-    integer, parameter :: nb_points = 2000
-!~     real(double_precision), parameter :: T_step = (T_max/T_min) ** (1/(nb_points-1.d0))
-    real(double_precision), parameter :: T_step = (T_max - T_min) / (nb_points - 1.d0)
-    
-    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
-    
-    real(double_precision) :: zero_function ! value that we want to output
-    
-    integer :: i,j ! for loops
-    real(double_precision) :: stellar_mass, position(3), velocity(3)
-    type(PlanetProperties) :: p_prop
-    real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
-
-  !------------------------------------------------------------------------------
-
-
-    position(:) = 0.d0
-    velocity(:) = 0.d0
-    
-    ! stellar mass
-    stellar_mass = 1.d0 * K2
-    
-    call init_globals(stellar_mass)
-    
-    ! We open the file where we want to write the outputs
-    open(10, file='unitary_tests/test_function_zero_temperature.dat')
-    
-    ! We generate cartesian coordinate for the given semi major axis
-    position(1) = 10.d0
-    
-    ! We generate cartesian coordinate for the given mass and semi major axis
-    velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
-    
-    ! we store in global parameters various properties of the planet
-    call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
-     p_prop=p_prop) ! Output
-    
-    ! We calculate this value outside the function because we only have to do this once per step (per radial position)
-    prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 16.d0)
-    
-    write(10,*) '# properties of the disk at the location of the planet hat influence the value of the temperature'
-    write(10,*) '# radial position of the planet (in AU) :', p_prop%radius
-    write(10,*) '# viscosity :', p_prop%nu
-    write(10,*) '# surface density :', p_prop%sigma
-    write(10,*) '# angular velocity :', P_prop%omega
-    write(10,*) '# Temperature (K) ; value of the function. The right temperature is when the function is 0'
-    
-    do i=1, nb_points
-!~       temperature = T_min * T_step ** (i-1)
-      temperature = (T_min + T_step * (i - 1.d0))
-      
-      zero_function = zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, &
-                                               omega=p_prop%omega, prefactor=prefactor)
-      
-      write(10,*) temperature, zero_function
-    end do
-    close(10)
-    
-    open(10, file="unitary_tests/function_zero_temperature.gnuplot")
-    write(10,*) 'set terminal wxt enhanced'
-    write(10,*) 'set xlabel "Temperature T"'
-    write(10,*) 'set ylabel "zero function"'
-    write(10,*) 'set grid'
-    write(10,*) 'set xrange [', T_min, ':', T_max, ']'
-    write(10,*) "plot 'test_function_zero_temperature.dat' using 1:2 with lines notitle"
-    write(10,*) "#pause -1 # wait until a carriage return is hit"
-    write(10,*) "set terminal pdfcairo enhanced"
-    write(10,*) "set output 'function_zero_temperature.pdf'"
-    write(10,*) "replot # pour gÃ©nÃ©rer le fichier d'output"  
-    
-    close(10)
-    
-  end subroutine test_function_zero_temperature
-
-function zero_finding_zbrent(x_min, x_max, tolerance, p_prop)
+function zero_finding_zbrent(x_min, x_max, tolerance, p_prop, a_old, t_old)
 ! Using Brent's method, find the root of a function 'func' known to lie between 'x_min' and 'x_max'. 
 ! The root, returned as 'zero_finding_zbrent', will be refined until its accuray is 'tolerance'. 
 
@@ -1863,6 +1623,7 @@ real(double_precision) :: zero_finding_zbrent
 ! Input 
 real(double_precision), intent(in) :: tolerance, x_min, x_max
 type(PlanetProperties), intent(in) :: p_prop ! various properties of a planet
+real(double_precision), intent(in) :: a_old, t_old ! old values to help calculate the local numerical derivate of the temperature
 
 ! Parameters
 ! the routine zbrent works best when PES is exactly the machine precision. 
@@ -1874,7 +1635,7 @@ integer, parameter :: ITMAX=100
 ! Locals
 integer :: iter
 real(double_precision) :: a, b, c, d, e, fa, fb, fc, p, q, r, s, tol1, xm
-real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
+real(double_precision) :: viscous_heating ! prefactor for the calculation of the function of the temperature whose zeros are searched
 
 if (isnan(p_prop%sigma)) then
   write(*,*) 'Error: the surface density is equal to NaN when we want to calculate the temperature profile'
@@ -1895,12 +1656,12 @@ end if
 !------------------------------------------------------------------------------
 
 ! We calculate this value outside the function because we only have to do this once per step (per radial position)
-prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 16.d0)
+viscous_heating = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 4.d0)
 
 a = x_min
 b = x_max
-fa = zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
-fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
+fa = zero_finding_temperature(temperature=a, p_prop=p_prop, viscous_heating=viscous_heating, a_old=a_old, T_old=T_old)
+fb = zero_finding_temperature(temperature=b, p_prop=p_prop, viscous_heating=viscous_heating, a_old=a_old, T_old=T_old)
 
 if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
   write(*,*) 'root must be bracketed for zbrent'
@@ -1911,6 +1672,8 @@ if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
   write(*,*) '  viscosity :', p_prop%nu
   write(*,*) '  surface density :', p_prop%sigma
   write(*,*) '  angular velocity :', P_prop%omega
+  write(*,*) '  T_old :', T_old
+  write(*,*) '  a_old :', a_old
   stop
 endif
 
@@ -1980,14 +1743,14 @@ do iter=1,ITMAX
   ! evaluate new trial root
   b = b + merge(d, sign(tol1,xm), abs(d) .gt. tol1)
   
-  fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
+  fb = zero_finding_temperature(temperature=b, p_prop=p_prop, viscous_heating=viscous_heating, a_old=a_old, T_old=T_old)
 end do
 write(*,*) 'Warning: zbrent exceeding maximum iterations'
 zero_finding_zbrent=b
 return
 end function zero_finding_zbrent
 
-function zero_finding_temperature(temperature, sigma, omega, prefactor)
+function zero_finding_temperature(temperature, p_prop, viscous_heating, a_old, T_old)
 ! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
 ! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
 ! We also use the opacity given in Bell & lin 1994. 
@@ -2000,24 +1763,286 @@ real(double_precision) :: zero_finding_temperature ! the value of the function
 
 ! Input
 real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
-real(double_precision), intent(in) :: sigma ! the surface density at a given position (in MS/AU**2)
-real(double_precision), intent(in) :: omega ! the angular velocity of the disk at a given position
-real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 16.d0)
+type(PlanetProperties), intent(in) :: p_prop ! properties of a planet. Beware, some are not defined because we search only the temperature profile.
+real(double_precision), intent(in) :: viscous_heating ! = - (9.d0 * nu * sigma * omega**2 / 4.d0)
+real(double_precision), intent(in) :: a_old, T_old ! old values to calculate the numerical local derivative of the temperature profile.
 
 ! Local
 real(double_precision) :: optical_depth ! the optical depth at a given position
 real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
 real(double_precision) :: rho ! the bulk density of the disk at a given position
+real(double_precision) :: alpha, irradiation, dT_dr, sqrt_T_r ! to calculate the factor caused by the stellar irradiation
 !------------------------------------------------------------------------------
-scaleheight = scaleheight_prefactor * sqrt(temperature) / omega
-rho = 0.5d0 * sigma / scaleheight
+scaleheight = scaleheight_prefactor * sqrt(temperature) / p_prop%omega
+rho = 0.5d0 * p_prop%sigma / scaleheight
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
 
-! 1.7320508075688772d0 = sqrt(3)
-zero_finding_temperature = SIGMA_STEFAN * temperature**4 + prefactor * &
-                           (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1 / (optical_depth))
+if (T_old.ne.0.d0) then
+  dT_dr = (temperature - T_old) / (p_prop%radius - a_old)
+else
+  dT_dr = 0.d0
+end if
+
+sqrt_T_r = sqrt(temperature / p_prop%radius)
+
+alpha = 0.4d0 * (star%radius / p_prop%radius) + 0.5d0 * scaleheight_prefactor / sqrt(star%mass) * p_prop%radius * &
+(dT_dr / sqrt_T_r + sqrt_T_r)
+irradiation = -0.5d0 * alpha * (star%radius / p_prop%radius)**2 * SIGMA_STEFAN * star%temperature**4
+! 0.4330127018922193 = sqrt(3)/4
+! 0.1875 = 3/16
+zero_finding_temperature = SIGMA_STEFAN * temperature**4 / (0.1875d0 * optical_depth  + 0.4330127018922193d0 + 0.25d0 / &
+                           optical_depth) + viscous_heating + irradiation
+                           
 return
 end function zero_finding_temperature
+
+subroutine test_function_zero_temperature()
+  ! subroutine that test the function 'zero_finding_temperature'
+  
+  ! Return:
+  !  a data file and an associated gnuplot file.
+    implicit none
+    
+    real(double_precision) :: temperature
+    
+    real(double_precision), parameter :: T_min = 1.d-5
+    real(double_precision), parameter :: T_max = 1.05d3
+    integer, parameter :: nb_points = 2000
+!~     real(double_precision), parameter :: T_step = (T_max/T_min) ** (1/(nb_points-1.d0))
+    real(double_precision), parameter :: T_step = (T_max - T_min) / (nb_points - 1.d0)
+    
+    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
+    
+    real(double_precision) :: zero_function ! value that we want to output
+    
+    integer :: i,j ! for loops
+    real(double_precision) :: stellar_mass, position(3), velocity(3)
+    type(PlanetProperties) :: p_prop
+    real(double_precision) :: viscous_heating ! prefactor for the calculation of the function of the temperature whose zeros are searched
+    real(double_precision) :: a_old, T_old
+  !------------------------------------------------------------------------------
+
+
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    ! stellar mass
+    stellar_mass = 1.d0 * K2
+    
+    call init_globals(stellar_mass)
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='unitary_tests/test_function_zero_temperature.dat')
+    
+    ! We generate cartesian coordinate for the given semi major axis
+    position(1) = 1.d0
+    
+    ! We generate cartesian coordinate for the given mass and semi major axis
+    velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+    
+    ! we store in global parameters various properties of the planet
+    call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+     p_prop=p_prop) ! Output
+    
+    ! We calculate this value outside the function because we only have to do this once per step (per radial position)
+    viscous_heating = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 16.d0)
+    
+    write(10,*) '# properties of the disk at the location of the planet hat influence the value of the temperature'
+    write(10,*) '# radial position of the planet (in AU) :', p_prop%radius
+    write(10,*) '# viscosity :', p_prop%nu
+    write(10,*) '# surface density :', p_prop%sigma
+    write(10,*) '# angular velocity :', P_prop%omega
+    write(10,*) '# Temperature (K) ; value of the function. The right temperature is when the function is 0'
+    
+    a_old = 0.85213032581453629d0
+    T_old = 1028.7063516878607d0
+    do i=1, nb_points
+!~       temperature = T_min * T_step ** (i-1)
+      temperature = (T_min + T_step * (i - 1.d0))
+      
+      zero_function = zero_finding_temperature(temperature=temperature, p_prop=p_prop, viscous_heating=viscous_heating, &
+                                               a_old=a_old, T_old=T_old)
+      
+      write(10,*) temperature, zero_function
+    end do
+    close(10)
+    
+    open(10, file="unitary_tests/function_zero_temperature.gnuplot")
+    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) 'set xlabel "Temperature T"'
+    write(10,*) 'set ylabel "zero function"'
+    write(10,*) 'set grid'
+    write(10,*) 'set xrange [', T_min, ':', T_max, ']'
+    write(10,*) "plot 'test_function_zero_temperature.dat' using 1:2 with lines notitle"
+    write(10,*) "pause -1 # wait until a carriage return is hit"
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) "set output 'function_zero_temperature.pdf'"
+    write(10,*) "replot # pour gÃ©nÃ©rer le fichier d'output"  
+    
+    close(10)
+    
+  end subroutine test_function_zero_temperature
+
+  subroutine test_funcv()
+  ! subroutine that test the function 'zero_finding_temperature'
+  
+  ! Return:
+  !  a data file and an associated gnuplot file.
+    implicit none
+    
+    real(double_precision) :: temperature, dT_dr
+    
+    real(double_precision), parameter :: T_min = 0.1
+    real(double_precision), parameter :: T_max = 1000.
+    integer, parameter :: nb_T = 400
+!~     real(double_precision), parameter :: T_step = (T_max/T_min) ** (1/(nb_points-1.d0))
+    real(double_precision), parameter :: T_step = (T_max - T_min) / (nb_T - 1.d0)
+    
+    real(double_precision), parameter :: dT_min = -100.
+    real(double_precision), parameter :: dT_max = 100.
+    integer, parameter :: nb_dT = 400
+!~     real(double_precision), parameter :: T_step = (T_max/T_min) ** (1/(nb_points-1.d0))
+    real(double_precision), parameter :: dT_step = (dT_max - dT_min) / (nb_dT - 1.d0)
+    
+    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
+    
+    real(double_precision) :: zero_function ! value that we want to output
+    
+    integer :: i,j ! for loops
+    real(double_precision) :: stellar_mass, position(3), velocity(3)
+    type(PlanetProperties) :: p_prop
+    real(double_precision) :: x(2),solution(2) ! prefactor for the calculation of the function of the temperature whose zeros are searched
+  !------------------------------------------------------------------------------
+
+
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+
+    
+    ! stellar mass
+    stellar_mass = 1.d0 * K2
+    
+    call init_globals(stellar_mass)
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='unitary_tests/test_funcv.dat')
+    
+    ! We generate cartesian coordinate for the given semi major axis
+    position(1) = 5.d0
+    
+    ! We generate cartesian coordinate for the given mass and semi major axis
+    velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+    
+    ! we store in global parameters various properties of the planet
+    call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+     p_prop=p_prop) ! Output
+    
+    
+    write(10,*) '# properties of the disk at the location of the planet hat influence the value of the temperature'
+    write(10,*) '# radial position of the planet (in AU) :', p_prop%radius
+    write(10,*) '# viscosity :', p_prop%nu
+    write(10,*) '# surface density :', p_prop%sigma
+    write(10,*) '# angular velocity :', P_prop%omega
+    write(10,*) '# Temperature (K) ; dT/dr ; value of the function. The right temperature is when the function is 0'
+    
+    do i=1, nb_T
+      temperature = (T_min + T_step * (i - 1.d0))
+      x(1) = temperature
+      do j=1,nb_dT
+!~       temperature = T_min * T_step ** (i-1)
+        dT_dr = (dT_min + dT_step * (j - 1.d0))
+        x(2) = dT_dr
+        
+        call funcv(x, solution, p_prop)
+
+        write(10,*) temperature, dT_dr, solution(1)
+      end do
+      write(10,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
+    end do
+    close(10)
+    
+    open(10, file="unitary_tests/funcv.gnuplot")
+    ! --------------------------------------------
+    ! Part for contour for only a part of the plots. We want an isoline for zero torque
+
+    write(10,*) 'set contour base; set cntrparam levels discret 0.'
+    write(10,*) 'unset surface'
+    write(10,*) 'set table "contour.dat"'
+    write(10,*) 'set dgrid3d 30,30,10'
+    
+    write(10,*) "splot 'test_funcv.dat'"
+    
+    write(10,*) 'unset table'
+    write(10,*) '# Draw the plot'
+    write(10,*) 'reset'
+
+    ! --------------------------------------------
+    
+
+    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) 'set xlabel "Temperature T"'
+    write(10,*) 'set ylabel "dT/dr"'
+    write(10,*) 'set grid'
+    write(10,*) 'set xrange [', T_min, ':', T_max, ']'
+    write(10,*) 'set yrange [', dT_min, ':', dT_max, ']'
+    write(10,*) 'set pm3d map'
+    write(10,*) "splot 'test_funcv.dat' notitle, 'contour.dat' with line linetype -1 title 'f=0'"
+    write(10,*) "#pause -1 # wait until a carriage return is hit"
+    write(10,*) "set terminal pngcairo enhanced"
+    write(10,*) "set output 'funcv.png'"
+    write(10,*) "replot # pour gÃ©nÃ©rer le fichier d'output"  
+    
+    close(10)
+    
+  end subroutine test_funcv
+
+subroutine funcv(x, f, p_prop)!, a_old, T_old)
+! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
+! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
+! We also use the opacity given in Bell & lin 1994. 
+
+! REMARKS : The scaleheight of the disk is determined directly in the function, because it depends on the temperature
+
+implicit none
+
+! Output
+real(double_precision), intent(out) :: f(2) ! the value of the function
+
+! Input
+
+real(double_precision), intent(in) :: x(2) ! the temperature and derivative at a given position (in K)
+
+type(PlanetProperties), intent(in) :: p_prop ! properties of a planet. Beware, some are not defined because we search only the temperature profile.
+!~ real(double_precision), intent(in) :: a_old, T_old ! old values to calculate the numerical local derivative of the temperature profile.
+! Local
+real(double_precision) :: optical_depth ! the optical depth at a given position
+real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
+real(double_precision) :: rho ! the bulk density of the disk at a given position
+real(double_precision) :: viscous_heating ! = - (9.d0 * nu * sigma * omega**2 / 4.d0)
+real(double_precision) :: alpha, irradiation ! to calculate the factor caused by the stellar irradiation
+real(double_precision) :: temperature
+real(double_precision) :: dT_dr !  the derivative of the temperature
+
+!------------------------------------------------------------------------------
+temperature = x(1)
+dT_dr = x(2)
+
+scaleheight = scaleheight_prefactor * sqrt(temperature) / p_prop%omega
+rho = 0.5d0 * p_prop%sigma / scaleheight
+optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
+
+viscous_heating = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 4.d0)
+
+alpha = 0.4d0 * (star%radius / p_prop%radius) + 0.5d0 * scaleheight_prefactor / sqrt(star%mass) * (p_prop%radius**1.5d0 * &
+        dT_dr / sqrt(temperature) + sqrt(temperature * p_prop%radius))
+irradiation = -0.5d0 * alpha * (star%radius / p_prop%radius)**2 * SIGMA_STEFAN * star%temperature**4
+! 0.4330127018922193 = sqrt(3)/4
+! 0.1875 = 3/16
+f(1) = SIGMA_STEFAN * temperature**4 / (0.1875d0 * optical_depth  + 0.4330127018922193d0 + 0.25d0 / &
+                           optical_depth) + viscous_heating + irradiation
+f(2) = f(1)
+return
+end subroutine funcv
 
 subroutine get_temperature(ln_x, ln_y, idx, radius, temperature, temperature_index)
 ! subroutine that interpolate a value of the temperature at a given radius with input arrays of radius (x) and temperature (y)
@@ -2099,6 +2124,284 @@ subroutine print_planet_properties(p_prop)
   write (*,*) 'temperature :', p_prop%temperature 
   write (*,*) 'temperature_index:', p_prop%temperature_index
 end subroutine print_planet_properties
+
+SUBROUTINE newt(x,check, p_prop)
+integer, parameter :: n=2
+INTEGER :: nn,NP,MAXITS
+LOGICAL :: check
+real(double_precision) :: x(n),fvec,TOLF,TOLMIN,TOLX,STPMX
+PARAMETER (NP=40,MAXITS=200,TOLF=1.e-4,TOLMIN=1.e-6,TOLX=1.e-7,STPMX=100.)
+type(PlanetProperties), intent(in) :: p_prop ! properties of a planet. Beware, some are not defined because we search only the temperature profile.
+
+COMMON /newtv/ fvec(NP),nn
+SAVE /newtv/
+!U    USES fdjac,fmin,lnsrch,lubksb,ludcmp
+INTEGER i,its,j,indx(NP)
+real(double_precision) :: d,den,f,fold,stpmax,sum,temp,test,fjac(NP,NP),g(NP),p(NP),xold(NP)
+nn=n
+f=fmin(x, p_prop)
+test=0.
+do i=1,n
+  if(abs(fvec(i)).gt.test)test=abs(fvec(i))
+end do
+if(test.lt..01*TOLF)return
+sum=0.
+do i=1,n
+  sum=sum+x(i)**2
+end do
+stpmax=STPMX*max(sqrt(sum),float(n))
+do its=1,MAXITS
+  call fdjac(n,x,fvec,NP,fjac, p_prop)
+  do i=1,n
+    sum=0.
+    do j=1,n
+      sum=sum+fjac(j,i)*fvec(j)
+    end do
+    g(i)=sum
+  end do
+  do i=1,n
+    xold(i)=x(i)
+  end do
+  fold=f
+  do i=1,n
+    p(i)=-fvec(i)
+  end do
+  call ludcmp(fjac,n,NP,indx,d)
+  call lubksb(fjac,n,NP,indx,p)
+  call lnsrch(n,xold,fold,g,p,x,f,stpmax,check,fmin, p_prop)
+  test=0.
+  do i=1,n
+    if(abs(fvec(i)).gt.test)test=abs(fvec(i))
+  end do
+  if(test.lt.TOLF)then
+    check=.false.
+    return
+  endif
+  if(check)then
+    test=0.
+    den=max(f,.5*n)
+    do i=1,n
+      temp=abs(g(i))*max(abs(x(i)),1.)/den
+      if(temp.gt.test)test=temp
+    end do
+    if(test.lt.TOLMIN)then
+      check=.true.
+    else
+      check=.false.
+    endif
+    return
+  endif
+  test=0.
+  do i=1,n
+    temp=(abs(x(i)-xold(i)))/max(abs(x(i)),1.)
+    if(temp.gt.test)test=temp
+  end do
+  if(test.lt.TOLX)return
+end do
+write(*,*) 'MAXITS exceeded in newt'
+END SUBROUTINE newt
+
+FUNCTION fmin(x, p_prop)
+INTEGER n,NP
+real(double_precision) :: fmin,x(*),fvec
+PARAMETER (NP=40)
+type(PlanetProperties), intent(in) :: p_prop ! properties of a planet. Beware, some are not defined because we search only the temperature profile.
+COMMON /newtv/ fvec(NP),n
+SAVE /newtv/
+!U    USES funcv
+INTEGER i
+real(double_precision) :: sum
+call funcv(x,fvec, p_prop)
+sum=0.
+do i=1,n
+  sum=sum+fvec(i)**2
+end do
+fmin=0.5*sum
+return
+END FUNCTION fmin
+
+SUBROUTINE fdjac(n,x,fvec,np,df, p_prop)
+INTEGER :: n,np
+real(double_precision) :: df(np,np),fvec(n),x(n)
+integer, parameter :: NMAX=40
+real(double_precision), parameter :: EPS=1.e-4
+type(PlanetProperties), intent(in) :: p_prop ! properties of a planet. Beware, some are not defined because we search only the temperature profile.
+!U    USES funcv
+INTEGER :: i,j
+real(double_precision) :: h,temp,f(NMAX)
+do j=1,n
+  temp=x(j)
+  h=EPS*abs(temp)
+  if(h.eq.0.)h=EPS
+  x(j)=temp+h
+  h=x(j)-temp
+  call funcv(x,f, p_prop)
+  x(j)=temp
+  do i=1,n
+    df(i,j)=(f(i)-fvec(i))/h
+  end do
+end do
+return
+END SUBROUTINE fdjac
+
+SUBROUTINE lnsrch(n,xold,fold,g,p,x,f,stpmax,check,func, p_prop)
+INTEGER :: n
+LOGICAL :: check
+real(double_precision) :: f,fold,stpmax,g(n),p(n),x(n),xold(n),func
+real(double_precision), parameter :: ALF=1.e-4
+real(double_precision), parameter :: TOLX=1.e-7
+type(PlanetProperties), intent(in) :: p_prop ! properties of a planet. Beware, some are not defined because we search only the temperature profile.
+EXTERNAL func
+!U    USES func
+INTEGER :: i
+real(double_precision) :: a,alam,alam2,alamin,b,disc,f2,fold2,rhs1,rhs2,slope,sum,temp,test,tmplam
+check=.false.
+sum=0.
+do i=1,n
+  sum=sum+p(i)*p(i)
+end do
+sum=sqrt(sum)
+if(sum.gt.stpmax)then
+  do i=1,n
+    p(i)=p(i)*stpmax/sum
+  end do
+endif
+slope=0.
+do i=1,n
+  slope=slope+g(i)*p(i)
+end do
+test=0.
+do i=1,n
+  temp=abs(p(i))/max(abs(xold(i)),1.)
+  if(temp.gt.test)test=temp
+end do
+alamin=TOLX/test
+alam=1.
+1     continue
+  do i=1,n
+    x(i)=xold(i)+alam*p(i)
+  end do
+  f=func(x)
+  if(alam.lt.alamin)then
+    do i=1,n
+      x(i)=xold(i)
+    end do
+    check=.true.
+    return
+  else if(f.le.fold+ALF*alam*slope)then
+    return
+  else
+    if(alam.eq.1.)then
+      tmplam=-slope/(2.*(f-fold-slope))
+    else
+      rhs1=f-fold-alam*slope
+      rhs2=f2-fold2-alam2*slope
+      a=(rhs1/alam**2-rhs2/alam2**2)/(alam-alam2)
+      b=(-alam2*rhs1/alam**2+alam*rhs2/alam2**2)/(alam-alam2)
+      if(a.eq.0.)then
+        tmplam=-slope/(2.*b)
+      else
+        disc=b*b-3.*a*slope
+        tmplam=(-b+sqrt(disc))/(3.*a)
+      endif
+      if(tmplam.gt..5*alam)tmplam=.5*alam
+    endif
+  endif
+  alam2=alam
+  f2=f
+  fold2=fold
+  alam=max(tmplam,.1*alam)
+goto 1
+END SUBROUTINE lnsrch
+
+SUBROUTINE lubksb(a,n,np,indx,b)
+INTEGER n,np,indx(n)
+real(double_precision) :: a(np,np),b(n)
+INTEGER i,ii,j,ll
+real(double_precision) :: sum
+ii=0
+do i=1,n
+  ll=indx(i)
+  sum=b(ll)
+  b(ll)=b(i)
+  if (ii.ne.0)then
+    do j=ii,i-1
+      sum=sum-a(i,j)*b(j)
+    end do
+  else if (sum.ne.0.) then
+    ii=i
+  endif
+  b(i)=sum
+end do
+do i=n,1,-1
+  sum=b(i)
+  do j=i+1,n
+    sum=sum-a(i,j)*b(j)
+  end do
+  b(i)=sum/a(i,i)
+end do
+return
+END SUBROUTINE lubksb
+
+SUBROUTINE ludcmp(a,n,np,indx,d)
+INTEGER n,np,indx(n),NMAX
+real(double_precision) :: d,a(np,np),TINY
+PARAMETER (NMAX=500,TINY=1.0e-20)
+INTEGER i,imax,j,k
+real(double_precision) :: aamax,dum,sum,vv(NMAX)
+d=1.
+do i=1,n
+  aamax=0.
+  do j=1,n
+    if (abs(a(i,j)).gt.aamax) aamax=abs(a(i,j))
+  end do
+  if (aamax.eq.0.) then
+    write(*,*) 'singular matrix in ludcmp'
+    stop
+  end if
+  vv(i)=1./aamax
+end do
+do j=1,n
+  do i=1,j-1
+    sum=a(i,j)
+    do k=1,i-1
+      sum=sum-a(i,k)*a(k,j)
+    end do
+    a(i,j)=sum
+  end do
+  aamax=0.
+  do i=j,n
+    sum=a(i,j)
+    do k=1,j-1
+      sum=sum-a(i,k)*a(k,j)
+    end do
+    a(i,j)=sum
+    dum=vv(i)*abs(sum)
+    if (dum.ge.aamax) then
+      imax=i
+      aamax=dum
+    endif
+  end do
+  if (j.ne.imax)then
+    do k=1,n
+      dum=a(imax,k)
+      a(imax,k)=a(j,k)
+      a(j,k)=dum
+    end do
+    d=-d
+    vv(imax)=vv(j)
+  endif
+  indx(j)=imax
+  if(a(j,j).eq.0.)a(j,j)=TINY
+  if(j.ne.n)then
+    dum=1./a(j,j)
+    do i=j+1,n
+      a(i,j)=a(i,j)*dum
+    end do
+  endif
+end do
+return
+END SUBROUTINE ludcmp
 
 end module user_module
 
