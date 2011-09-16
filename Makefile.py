@@ -9,8 +9,10 @@ clean(["o", "mod"])
 
 sourceFile.setCompilator("gfortran")
 
-#~ sourceFile.setCompilingOptions("-O3 -march=native -pipe")
-sourceFile.setCompilingOptions("")
+sourceFile.setCompilingOptions("-O3 -march=native -pipe")
+#~ sourceFile.setCompilingOptions("")
+
+# pour tester les bornes des tableaux : -fbounds-check (il faut ensuite faire tourner le programme, des tests sont effectués au cours de l'exécution)
 
 sources_filename = lister("*.f90")
 
