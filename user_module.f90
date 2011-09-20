@@ -38,8 +38,8 @@ module user_module
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
   real(double_precision) :: radius_min = 1.d0
-  real(double_precision) :: radius_max = 60.d0
-  integer :: nb_a_sample = 400 ! number of points for the sample of radius of the temperature profile
+  real(double_precision) :: radius_max = 100.d0
+  integer :: nb_a_sample = 1000 ! number of points for the sample of radius of the temperature profile
   !------------------------------------------------------------------------------
   ! prefactors
   real(double_precision) :: x_s_prefactor ! prefactor for the half width of the corotation region
@@ -56,6 +56,8 @@ module user_module
   real(double_precision), dimension(:), allocatable :: temp_profile_y ! values of the temperature in log() for each value of the 'a' sample
   real(double_precision), dimension(:), allocatable :: temp_profile_x ! values of 'a' in log()
   real(double_precision), dimension(:), allocatable :: temp_profile_index ! values of the local negative slope of the temperature profile
+  real(double_precision), dimension(:), allocatable :: chi_profile ! thermal diffusivity
+  real(double_precision), dimension(:), allocatable :: tau_profile ! optical depth 
   
   ! We define a new type for the properties of the planet
   type PlanetProperties
@@ -392,8 +394,9 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   !------------------------------------------------------------------------------
   p_prop%sigma = sigma_0_num / p_prop%radius ** sigma_index ! [Msun/AU^3]
 !~   call print_planet_properties(p_prop)
-  call get_temperature(ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, radius=p_prop%radius, & ! Input
-                       temperature=p_prop%temperature, temperature_index=p_prop%temperature_index) ! Output
+  call get_temperature(ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, chi_prof=chi_profile, & ! Input
+                       radius=p_prop%radius, & ! Input
+                       temperature=p_prop%temperature, temperature_index=p_prop%temperature_index, chi=p_prop%chi) ! Output
   
   ! We calculate the angular momentum
   p_prop%angular_momentum = (mass / K2) * h_p  
@@ -413,9 +416,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
   
   !------------------------------------------------------------------------------
-  p_prop%chi = 1.d-5 * p_prop%radius**2 * p_prop%omega 
-!~   p_prop%opacity = get_opacity(p_prop%temperature, 0.5d0 * p_prop%sigma / p_prop%scaleheight)
-!~   p_prop%chi = chi_p_prefactor * p_prop%temperature**4 / (p_prop%opacity * p_prop%sigma**2 * p_prop%omega**2)
+!~   p_prop%chi = 1.d-5 * p_prop%radius**2 * p_prop%omega ! comment if you want to use the thermal diffusivity calculated from the temperature profile
   
 end subroutine get_planet_properties
 
@@ -521,13 +522,17 @@ subroutine init_globals(stellar_mass)
     allocate(temp_profile_y(nb_a_sample))
     allocate(temp_profile_x(nb_a_sample))
     allocate(temp_profile_index(nb_a_sample))
+    allocate(chi_profile(nb_a_sample))
+    allocate(tau_profile(nb_a_sample))
     temp_profile_x(1:nb_a_sample) = 0.d0
     temp_profile_y(1:nb_a_sample) = 0.d0
     temp_profile_index(1:nb_a_sample) = 0.d0
+    chi_profile(1:nb_a_sample) = 0.d0
+    tau_profile(1:nb_a_sample) = 0.d0
     
     x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
 
-    chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
+!~     chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
     
     ! AU is in cm, so we must turn into meter before doing the conversion
     ! division of k_B by m_H is done separately for exponant and value to have more precision
@@ -539,7 +544,8 @@ subroutine init_globals(stellar_mass)
     
     ! we get the temperature profile.
     call calculate_temperature_profile(a_min=radius_min, a_max=radius_max, nb_a=nb_a_sample, & ! Input
-                                       ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index) ! Output
+                                       ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, & ! Output
+                                       tau=tau_profile, chi=chi_profile) ! Output
     
     ! we store in a .dat file the temperature profile
     call store_temperature_profile()
@@ -548,7 +554,7 @@ subroutine init_globals(stellar_mass)
 !~     write(*,*) 'Warning: le couple de corotation a été désactivé'
 !~     write(*,*) 'Warning: h est fixé à 0.05'
     write(*,*) 'Warning: nu est fixé à la main à 10^15'
-    write(*,*) 'Warning: chi est fixé à la main à 10^-6'
+    write(*,*) 'Warning: chi est fixé à la main à 10^-5'
   endif
   
 end subroutine init_globals
@@ -639,59 +645,6 @@ end subroutine init_globals
     return
   end function get_K
   
-  subroutine smoothing(array, nb_smoothing, smoothed_array)
-  ! routine that smooth values of array by a progressive mean value centered on the current value. 
-  !
-  ! Parameters:
-  ! array : the array to smooth. Will also be the output array
-  ! nb_smoothing : the number of points for smoothing (in practice, this number will be the first odd number greater or equal than nb_smoothing)
-  implicit none
-  
-  ! Input/Output
-  real(double_precision), dimension(:), intent(in) :: array
-  integer, intent(in) :: nb_smoothing
-  real(double_precision), dimension(:), intent(out) :: smoothed_array
-  ! Local
-  
-  real(double_precision) :: tmp
-  integer, dimension(size(array)) :: istart, iend
-  integer :: nb_points
-  
-  !For loops
-  integer :: i,j
-  
-  nb_points = size(array)
-  
-  ! we define normal value of starting and ending point for the calculation of the smoothed (mean) value
-  do i=1, nb_points
-    istart(i) = i - nb_smoothing / 2
-    iend(i) = i + nb_smoothing / 2
-  end do
-  
-  ! we correct theses numbers for boundary values where there are no left or right points for the smoothing. Hence, the 
-  ! smoothing is over a lower number of points that decrease until half the total number of points required for a smoothing. 
-  where (istart.lt.1)
-    istart = 1
-  end where
-  
-  ! the same goes for higher index that doesn't exist as well.
-  where (iend.gt.nb_points)
-    iend = nb_points
-  end where
-  
-  do i=1, nb_points
-  tmp = 0.d0
-    do j=istart(i), iend(i)
-    ! we do the sum of smoothing points
-    tmp = tmp + array(j)
-    end do
-  ! and divide by their number.
-  smoothed_array(i) = tmp / (1.d0 * (iend(i) - istart(i) + 1))
-  end do
-  
-  
-  end subroutine smoothing
-  
   function get_opacity(temperature, num_bulk_density)
   ! subroutine that return the opacity of the disk at the location of the planet given various parameters
     implicit none
@@ -765,6 +718,8 @@ end subroutine init_globals
     call test_function_zero_temperature()
     call test_temperature_profile()
     call test_temperature_interpolation()
+    call test_optical_depth_profile()
+    call test_thermal_diffusivity_profile()
     
   end subroutine unitary_tests
   
@@ -969,13 +924,13 @@ end subroutine init_globals
     implicit none
     
     integer, parameter :: nb_mass = 100
-    real(double_precision), parameter :: mass_min = 1. * EARTH_MASS
+    real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
     real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     
     integer, parameter :: nb_points = 200
     real(double_precision), parameter :: a_min = 0.01
-    real(double_precision), parameter :: a_max = 50.
+    real(double_precision), parameter :: a_max = 100.
     ! step for log sampling
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
     
@@ -1399,7 +1354,7 @@ end subroutine init_globals
     
   end subroutine test_torques_fixed_m
   
-  subroutine calculate_temperature_profile(a_min, a_max, nb_a, ln_x, ln_y, idx)
+  subroutine calculate_temperature_profile(a_min, a_max, nb_a, ln_x, ln_y, idx, tau, chi)
 ! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
 ! 
 ! Parameters 
@@ -1414,7 +1369,7 @@ end subroutine init_globals
     real(double_precision), intent(in) :: a_min! in AU
     real(double_precision), intent(in) :: a_max! in AU
     
-    real(double_precision), intent(out), dimension(nb_a) :: ln_x, ln_y, idx
+    real(double_precision), intent(out), dimension(nb_a) :: ln_x, ln_y, idx, tau, chi
     
     real(double_precision) :: a_step ! step between values of 'a'.   
     
@@ -1424,7 +1379,7 @@ end subroutine init_globals
     real(double_precision) :: stellar_mass, position(3), velocity(3), temperature, exponant
     type(PlanetProperties) :: p_prop
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
-    real(double_precision) :: a_old, temperature_old 
+    real(double_precision) :: a_old, temperature_old, tmp
     integer :: nb_smoothing ! number of neighboor value needed around a point to calculate the smoothed value
     
     integer :: i,j ! for loops
@@ -1449,8 +1404,9 @@ end subroutine init_globals
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
      
-    
-    temperature = zero_finding_zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop)
+    call zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop, & ! Input
+                            temperature=temperature, optical_depth=tmp) ! Output
+!~     temperature = zero_finding_zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop)
     
 
     do j=1,nb_a
@@ -1467,18 +1423,16 @@ end subroutine init_globals
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
-      temperature = zero_finding_zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop)
+      call zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop, & ! Input
+                              temperature=temperature, optical_depth=tau(j)) ! Output
+!~       temperature = zero_finding_zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop)
       
       idx(j) = - (log(temperature) - log(temperature_old)) / (log(a) - log(a_old))
-      
+      chi(j) = 1.5d0 * p_prop%nu * adiabatic_index * (adiabatic_index - 1.d0) * (1.5d0 + sqrt(3.d0) / tau(j) + 1 / tau(j)**2)
       ln_x(j) = log(a)
       ln_y(j) = log(temperature)
       
     end do
-    
-    ! We want to smooth on a length, and here we calculate the number of points we need for the smoothing to be in that length
-    nb_smoothing = int(0.5 / a_step) 
-    call smoothing(idx, nb_smoothing, idx)
     
   end subroutine calculate_temperature_profile
   
@@ -1491,9 +1445,9 @@ end subroutine init_globals
   
   ! We open the file where we want to write the outputs
   open(10, file='temperature_profile.dat', status='replace')
-  write(10,*) '# a in AU ; temperature (in K) ; exponant ; log(a) ; log(T)'
+  write(10,*) '# a in AU ; temperature (in K) ; exponant ; chi (thermal diffusivity) ; tau (optical depth)'
   do j=1,nb_a_sample
-    write(10,*) exp(temp_profile_x(j)), exp(temp_profile_y(j)), temp_profile_index(j), temp_profile_x(j), temp_profile_y(j)
+    write(10,*) exp(temp_profile_x(j)), exp(temp_profile_y(j)), temp_profile_index(j), tau_profile(j), chi_profile(j)!, temp_profile_x(j), temp_profile_y(j)
   end do
   
   close(10)
@@ -1535,9 +1489,9 @@ end subroutine init_globals
       write(j,*) 'cd ".."'
     end do
 
-    write(10,*) "plot 'temperature_profile.dat' using (exp($4)):(exp($5)) with lines notitle"
+    write(10,*) "plot 'temperature_profile.dat' using 1:2 with lines notitle"
     
-    write(11,*) "plot 'temperature_profile.dat' using (exp($4)):3 with lines notitle"
+    write(11,*) "plot 'temperature_profile.dat' using 1:3 with lines notitle"
     
 
     
@@ -1560,6 +1514,96 @@ end subroutine init_globals
     close(11)
   
   end subroutine test_temperature_profile
+  
+  subroutine test_optical_depth_profile()
+! Subroutine that test the finding of the optical depth profile and store a plot of the temperature profile of the disk
+! A gnuplot file and a data file are created to display the temperature profile.
+
+    implicit none
+    
+    real(double_precision) :: stellar_mass
+    
+    integer :: j ! for loops
+    
+    ! stellar mass
+    stellar_mass = 1.d0 * K2
+    
+    call init_globals(stellar_mass)
+    
+    open(10, file="unitary_tests/optical_depth_profile.gnuplot")
+    
+
+    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set nokey'
+
+    
+    write(10,*) 'set ylabel "Optical depth {/Symbol t}"'
+        
+    write(10,*) 'set grid'
+    write(10,*) 'cd ".."'
+
+
+    write(10,*) "plot 'temperature_profile.dat' using 1:4 with lines notitle"
+
+    
+    write(10,*) "#pause -1 # wait until a carriage return is hit"
+    write(10,*) "set terminal pdfcairo enhanced"
+    
+    write(10,*) '!rm "unitary_tests/optical_depth_profile.pdf"'
+    write(10,*) "set output 'unitary_tests/optical_depth_profile.pdf'"
+    
+    
+    write(10,*) "replot # to generate the output file"
+    
+    close(10)
+  
+  end subroutine test_optical_depth_profile
+  
+  subroutine test_thermal_diffusivity_profile()
+! Subroutine that test the finding of the optical depth profile and store a plot of the temperature profile of the disk
+! A gnuplot file and a data file are created to display the temperature profile.
+
+    implicit none
+    
+    real(double_precision) :: stellar_mass
+    
+    integer :: j ! for loops
+    
+    ! stellar mass
+    stellar_mass = 1.d0 * K2
+    
+    call init_globals(stellar_mass)
+    
+    open(10, file="unitary_tests/thermal_diffusivity_profile.gnuplot")
+    
+
+    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set nokey'
+
+    
+    write(10,*) 'set ylabel "Thermal diffusivity {/Symbol c} [AU^2/day]"'
+        
+    write(10,*) 'set grid'
+    write(10,*) 'cd ".."'
+
+
+    write(10,*) "plot 'temperature_profile.dat' using 1:5 with lines notitle"
+
+    
+    write(10,*) "#pause -1 # wait until a carriage return is hit"
+    write(10,*) "set terminal pdfcairo enhanced"
+    
+    write(10,*) '!rm "unitary_tests/thermal_diffusivity_profile.pdf"'
+    write(10,*) "set output 'unitary_tests/thermal_diffusivity_profile.pdf'"
+    
+    
+    write(10,*) "replot # to generate the output file"
+    
+    close(10)
+  
+  end subroutine test_thermal_diffusivity_profile
 
   subroutine test_function_zero_temperature
   ! subroutine that test the function 'zero_finding_temperature'
@@ -1578,7 +1622,7 @@ end subroutine init_globals
     
     real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
     
-    real(double_precision) :: zero_function ! value that we want to output
+    real(double_precision) :: zero_function, tmp ! value that we want to output and a dummy argument 'tmp'
     
     integer :: i,j ! for loops
     real(double_precision) :: stellar_mass, position(3), velocity(3)
@@ -1623,8 +1667,10 @@ end subroutine init_globals
 !~       temperature = T_min * T_step ** (i-1)
       temperature = (T_min + T_step * (i - 1.d0))
       
-      zero_function = zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, &
-                                               omega=p_prop%omega, prefactor=prefactor)
+      call zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor,& ! Input
+                              funcv=zero_function, optical_depth=tmp) ! Output
+!~       zero_function = zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, &
+!~                                                omega=p_prop%omega, prefactor=prefactor)
       
       write(10,*) temperature, zero_function
     end do
@@ -1646,7 +1692,7 @@ end subroutine init_globals
     
   end subroutine test_function_zero_temperature
 
-function zero_finding_zbrent(x_min, x_max, tolerance, p_prop)
+subroutine zbrent(x_min, x_max, tolerance, p_prop, temperature, optical_depth)
 ! Using Brent's method, find the root of a function 'func' known to lie between 'x_min' and 'x_max'. 
 ! The root, returned as 'zero_finding_zbrent', will be refined until its accuray is 'tolerance'. 
 
@@ -1657,7 +1703,8 @@ function zero_finding_zbrent(x_min, x_max, tolerance, p_prop)
 ! REMARK : This function is based on the zbrent function in fortran 90 of numerical recipes
 
 ! Output
-real(double_precision) :: zero_finding_zbrent
+real(double_precision), intent(out) :: temperature
+real(double_precision), intent(out) :: optical_depth
 
 ! Input 
 real(double_precision), intent(in) :: tolerance, x_min, x_max
@@ -1674,6 +1721,7 @@ integer, parameter :: ITMAX=100
 integer :: iter
 real(double_precision) :: a, b, c, d, e, fa, fb, fc, p, q, r, s, tol1, xm
 real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
+real(double_precision) :: tau_a, tau_b
 
 if (isnan(p_prop%sigma)) then
   write(*,*) 'Error: the surface density is equal to NaN when we want to calculate the temperature profile'
@@ -1698,8 +1746,12 @@ prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 16.d0)
 
 a = x_min
 b = x_max
-fa = zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
-fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
+call zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor,& ! Input
+                              funcv=fa, optical_depth=tau_a) ! Output
+call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor,& ! Input
+                              funcv=fb, optical_depth=tau_b) ! Output
+!~ fa = zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
+!~ fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
 
 if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
   write(*,*) 'root must be bracketed for zbrent'
@@ -1738,7 +1790,8 @@ do iter=1,ITMAX
   xm = .5 * (c - b)
   
   if (abs(xm).le.tol1 .or. fb.eq.0.) then
-    zero_finding_zbrent = b
+    temperature = b
+    optical_depth = tau_b
     return
   endif
   
@@ -1779,14 +1832,16 @@ do iter=1,ITMAX
   ! evaluate new trial root
   b = b + merge(d, sign(tol1,xm), abs(d) .gt. tol1)
   
-  fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
+  call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor,& ! Input
+                                funcv=fb, optical_depth=tau_b) ! Output
 end do
 write(*,*) 'Warning: zbrent exceeding maximum iterations'
-zero_finding_zbrent=b
+temperature = b
+optical_depth = tau_b
 return
-end function zero_finding_zbrent
+end subroutine zbrent
 
-function zero_finding_temperature(temperature, sigma, omega, prefactor)
+subroutine zero_finding_temperature(temperature, sigma, omega, prefactor, funcv, optical_depth)
 ! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
 ! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
 ! We also use the opacity given in Bell & lin 1994. 
@@ -1795,7 +1850,8 @@ function zero_finding_temperature(temperature, sigma, omega, prefactor)
 
 
 ! Output
-real(double_precision) :: zero_finding_temperature ! the value of the function
+real(double_precision), intent(out) :: funcv ! the value of the function
+real(double_precision), intent(out) :: optical_depth ! the optical depth at a given position
 
 ! Input
 real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
@@ -1804,7 +1860,6 @@ real(double_precision), intent(in) :: omega ! the angular velocity of the disk a
 real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 16.d0)
 
 ! Local
-real(double_precision) :: optical_depth ! the optical depth at a given position
 real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
 real(double_precision) :: rho ! the bulk density of the disk at a given position
 !------------------------------------------------------------------------------
@@ -1813,12 +1868,12 @@ rho = 0.5d0 * sigma / scaleheight
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
 
 ! 1.7320508075688772d0 = sqrt(3)
-zero_finding_temperature = SIGMA_STEFAN * temperature**4 + prefactor * &
+funcv = SIGMA_STEFAN * temperature**4 + prefactor * &
                            (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1 / (optical_depth))
 return
-end function zero_finding_temperature
+end subroutine zero_finding_temperature
 
-subroutine get_temperature(ln_x, ln_y, idx, radius, temperature, temperature_index)
+subroutine get_temperature(ln_x, ln_y, idx, chi_prof, radius, temperature, temperature_index, chi)
 ! subroutine that interpolate a value of the temperature at a given radius with input arrays of radius (x) and temperature (y)
 
 ! Warning : 
@@ -1832,11 +1887,12 @@ subroutine get_temperature(ln_x, ln_y, idx, radius, temperature, temperature_ind
 ! Return : 
 ! temperature : the temperature (in K) at the radius 'radius'
 
-real(double_precision), dimension(nb_a_sample), intent(in) :: ln_x, ln_y, idx
+real(double_precision), dimension(nb_a_sample), intent(in) :: ln_x, ln_y, idx, chi_prof
 real(double_precision), intent(in) :: radius
 
 real(double_precision), intent(out) :: temperature
 real(double_precision), intent(out) :: temperature_index
+real(double_precision), intent(out) :: chi
 
 ! Local
 real(double_precision) :: radius_step ! the step between each radial values in the 'x' array
@@ -1862,12 +1918,15 @@ if ((radius .ge. x_min) .and. (radius .lt. x_max)) then
 
   temperature = exp(ln_y2 + (ln_y1 - ln_y2) * (log(radius) - ln_x2) / (ln_x1 - ln_x2))
   temperature_index = idx(closest_low_id) ! for the temperature index, no interpolation.
+  chi = chi_prof(closest_low_id)
 else if (radius .lt. x_min) then
   temperature = exp(ln_y(1))
   temperature_index = idx(1)
+  chi = chi_prof(1)
 else if (radius .gt. x_max) then
   temperature = exp(ln_y(id_max))
   temperature_index = idx(id_max)
+  chi = chi_prof(id_max)
 end if
 
 
