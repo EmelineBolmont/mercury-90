@@ -33,8 +33,8 @@ module user_module
   real(double_precision) :: sigma_index = 0.5! the negative slope of the surface density power law (alpha in the paper)
   real(double_precision) :: sigma_0_num ! the surface density at (R=1AU) [Msun/AU^2]
   
-  ! Here we define the power law for viscosity viscosity(R) = alpha * c_s * H
-  real(double_precision) :: alpha = 0.005 ! alpha parameter for an alpha prescription of the viscosity [No dim]
+  ! Here we define the constant value of the viscosity of the disk
+  real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s]
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
   real(double_precision) :: radius_min = 1.d0
@@ -228,19 +228,15 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
       acceleration(3,planet) = migration_acceleration(3) + eccentricity_acceleration(3) + inclination_acceleration_z
 
-!~       if (time.gt.30429600) then
-!~         open(10, file='leak.out', status="old", access="append")
-!~         write(10,*) time, planet, time_mig, time_ecc, time_inc
-!~         close(10)
+      if (time.gt.313506725) then
+        open(10, file='leak.out', status="old", access="append")
+        write(10,*) time, planet, p_prop%eccentricity, p_prop%inclination
+        close(10)
 !~         write(*,*)
 !~         call print_planet_properties(p_prop)
-!~       end if
+      end if
     end if
   end do
-  
-!~   open(15, file="migration_time.out", status="old", access="append")
-!~   write(15,*) time, time_mig, time_ecc, time_inc
-!~   close(15)
   
   !------------------------------------------------------------------------------
   return
@@ -337,8 +333,8 @@ subroutine read_disk_properties()
         case('sample')
           read(value, *) nb_a_sample
           
-        case('alpha')
-          read(value, *) alpha
+        case('viscosity')
+          read(value, *) viscosity
           
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
@@ -410,7 +406,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 
   !------------------------------------------------------------------------------
 !~   p_prop%nu = alpha * p_prop%omega * p_prop%scaleheight**2 ! [AU^2.day-1]
-  p_prop%nu = 1.d15 * DAY / AU**2
+  p_prop%nu = viscosity * DAY / AU**2
 
   p_prop%aspect_ratio = p_prop%scaleheight / p_prop%radius
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
@@ -511,13 +507,9 @@ subroutine init_globals(stellar_mass)
     FirstCall = .False.
     
     call read_disk_properties()
-    
-!~     open(10, file='migration_time.out', status='replace')
-!~     write(10,*) 'time, time_mig, time_ecc, time_inc'
-!~     close(10)
 
-!~     open(10, file='leak.out', status='replace')
-!~     close(10)
+    open(10, file='leak.out', status='replace')
+    close(10)
 
     allocate(temp_profile_y(nb_a_sample))
     allocate(temp_profile_x(nb_a_sample))
@@ -554,7 +546,7 @@ subroutine init_globals(stellar_mass)
 !~     write(*,*) 'Warning: le couple de corotation a été désactivé'
 !~     write(*,*) 'Warning: h est fixé à 0.05'
     write(*,*) 'Warning: nu est fixé à la main à 10^15'
-    write(*,*) 'Warning: chi est fixé à la main à 10^-5'
+!~     write(*,*) 'Warning: chi est fixé à la main à 10^-5'
   endif
   
 end subroutine init_globals
@@ -925,7 +917,7 @@ end subroutine init_globals
     
     integer, parameter :: nb_mass = 100
     real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 20. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     
     integer, parameter :: nb_points = 200
@@ -1017,7 +1009,7 @@ end subroutine init_globals
       write(j,*) 'set contour base; set cntrparam levels discret 0.'
       write(j,*) 'unset surface'
       write(j,*) 'set table "contour.dat"'
-      write(j,*) 'set dgrid3d 30,30,10'
+      write(j,*) 'set dgrid3d 30,30,20'
     end do
     
     write(11,*) "splot 'test_total_torque.dat'"
@@ -1868,7 +1860,7 @@ rho = 0.5d0 * sigma / scaleheight
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
 
 ! 1.7320508075688772d0 = sqrt(3)
-funcv = SIGMA_STEFAN * temperature**4 + prefactor * &
+funcv = 2.d0 * SIGMA_STEFAN * temperature**4 + prefactor * &
                            (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1 / (optical_depth))
 return
 end subroutine zero_finding_temperature
