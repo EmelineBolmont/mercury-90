@@ -7,9 +7,11 @@ from make import *
 # We clean undesirable files. Indeed, we will compile everything everytime.
 clean(["o", "mod"])
 
-sourceFile.setCompilator("gfortran")
-
-sourceFile.setCompilingOptions("-O3 -march=native -pipe")
+sourceFile.setCompilator("ifort")
+sourceFile.setCompilingOptions("-check all")
+#~ 
+#~ sourceFile.setCompilator("gfortran")
+#~ sourceFile.setCompilingOptions("-fbounds-check -O0")#-O3 -march=native -pipe")
 #~ sourceFile.setCompilingOptions("")
 
 # pour tester les bornes des tableaux : -fbounds-check (il faut ensuite faire tourner le programme, des tests sont effectués au cours de l'exécution)

@@ -305,6 +305,7 @@ subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
 !~   end if
   !------------------------------------------------------------------------------
   
+!~   write(*,*) a, e, i, r, v2, h
   return
 end subroutine mco_x2ae
 
