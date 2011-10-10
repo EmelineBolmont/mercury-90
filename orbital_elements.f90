@@ -237,8 +237,7 @@ end subroutine mco_x2el
 !                   v2 = the norm of the velocity squared [AU^2/day^2]
 !                   h = the angular momentum? [I don't know where the mass is]
 !                   
-! REMARKS : the orbital parameters, especially the eccentricity and the semi major axis are not retrieved correctly when I set 
-! manually the position and the velocity (i.e only position(1) and velocity(2), the rest to 0), I don't know why.
+
 !------------------------------------------------------------------------------
 
 subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)

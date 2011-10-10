@@ -10,7 +10,6 @@ module mercury_globals
 
   implicit none
   
-  integer :: nb_bodies_initial ! number of bodies when we start the simulation. Used for local variables in several modules. 
   integer, dimension(8) :: opt = (/0,1,1,2,0,1,0,0/) ! Default options (can be overwritten later in the code) for mercury.
   
   character(len=80), dimension(NMESS) :: mem ! Various messages and strings used by mercury

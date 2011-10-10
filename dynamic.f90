@@ -48,7 +48,7 @@ subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,
   integer :: j
   real(double_precision) :: rcen2,a,q,u0,uhit,m0,mhit,mm,r0,mcen
   real(double_precision) :: hx,hy,hz,h2,p,rr0,rr1,rv0,rv1,temp,e,v2
-  real(double_precision) :: xu0(3,nb_bodies_initial),xu1(3,nb_bodies_initial),vu0(3,nb_bodies_initial),vu1(3,nb_bodies_initial)
+  real(double_precision) :: xu0(3,NMAX),xu1(3,NMAX),vu0(3,NMAX),vu1(3,NMAX)
   
   !------------------------------------------------------------------------------
   
@@ -391,7 +391,7 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   character(len=80) :: outfile
   
   ! Local
-  integer :: j, k, l, nbigelim, elim(nb_bodies_initial+1)
+  integer :: j, k, l, nbigelim, elim(NMAX+1)
   integer :: error
   
   !------------------------------------------------------------------------------
@@ -487,14 +487,14 @@ subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
 
   
   ! Input/Output
-  integer :: i0,nbod,nbig,ce(nbod),nce,ice(nb_bodies_initial),jce(nb_bodies_initial)
+  integer :: i0,nbod,nbig,ce(nbod),nce,ice(NMAX),jce(NMAX)
   real(double_precision) :: x0(3,nbod),v0(3,nbod),x1(3,nbod),v1(3,nbod),h,rcrit(nbod)
   
   ! Local
   integer :: i,j
   real(double_precision) :: d0,d1,d0t,d1t,d2min,temp,tmin,rc,rc2
   real(double_precision) :: dx0,dy0,dz0,du0,dv0,dw0,dx1,dy1,dz1,du1,dv1,dw1
-  real(double_precision) :: xmin(nb_bodies_initial),xmax(nb_bodies_initial),ymin(nb_bodies_initial),ymax(nb_bodies_initial)
+  real(double_precision) :: xmin(NMAX),xmax(NMAX),ymin(NMAX),ymax(NMAX)
   
   !------------------------------------------------------------------------------
   
@@ -618,7 +618,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   integer :: i,j, error
   real(double_precision) :: d0,d1,d0t,d1t,hm1,tmp0,tmp1
   real(double_precision) :: dx0,dy0,dz0,du0,dv0,dw0,dx1,dy1,dz1,du1,dv1,dw1
-  real(double_precision) :: xmin(nb_bodies_initial),xmax(nb_bodies_initial),ymin(nb_bodies_initial),ymax(nb_bodies_initial)
+  real(double_precision) :: xmin(NMAX),xmax(NMAX),ymin(NMAX),ymax(NMAX)
   real(double_precision) :: d2min,d2ce,d2near,d2hit,temp,tmin
   
   !------------------------------------------------------------------------------
@@ -671,17 +671,11 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
            d2ce   = d2ce  * d2ce
            d2hit  = d2hit * d2hit
            d2near = d2hit * 4.d0
-           !if (abs(time - 2452983.63D0) <= 10.D0 .and. (i == 3 .or. j == 3)) then
-           !  print *, 'clo', time, i, j, d2min,d2ce,d0t,h,d1t,d2hit
-           !end if
            
            ! If the minimum separation qualifies as an encounter or if a collision
            ! is in progress, store details
            if ((d2min.le.d2ce.and.d0t*h.le.0.and.d1t*h.ge.0).or.(d2min.le.d2hit)) then
               nclo = nclo + 1
-              !if (i == 3 .or. j == 3) then
-               ! print *, 'clo', time, nclo, i, j
-              !end if
               if (nclo.gt.CMAX) then
                  open (23,file=outfile,status='old',access='append',iostat=error)
                  if (error /= 0) then

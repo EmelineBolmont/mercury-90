@@ -116,8 +116,8 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   
   ! Local
   integer :: j, error
-  real(double_precision) :: a(nb_bodies_initial),hill(nb_bodies_initial),temp,amin,vmax,k_2,rhocgs,rcen_2
-  character(len=80) :: header,c(nb_bodies_initial)
+  real(double_precision) :: a(NMAX),hill(NMAX),temp,amin,vmax,k_2,rhocgs,rcen_2
+  character(len=80) :: header,c(NMAX)
   
   !------------------------------------------------------------------------------
   
@@ -215,8 +215,8 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   
   ! Local
   integer :: j,k,iflag,itmp(8)
-  real(double_precision) :: x(3,nb_bodies_initial),v(3,nb_bodies_initial),temp,dx,dy,dz,r2,tmp,ke,pe,l(3)
-  real(double_precision) :: r_1,r_2,r_4,r_6,u2,u4,u6,tmp2(4,nb_bodies_initial)
+  real(double_precision) :: x(3,NMAX),v(3,NMAX),temp,dx,dy,dz,r2,tmp,ke,pe,l(3)
+  real(double_precision) :: r_1,r_2,r_4,r_6,u2,u4,u6,tmp2(4,NMAX)
   
   !------------------------------------------------------------------------------
   
@@ -319,12 +319,12 @@ subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
   integer,intent(in) :: nbod,nbig
   real(double_precision),intent(in) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod)
   
-  real(double_precision),intent(out) :: jac(nbod)
+  real(double_precision),intent(out) :: jac(NMAX)
   
   ! Local
   integer :: j,itmp(8),iflag
-  real(double_precision) :: x(3,nb_bodies_initial),v(3,nb_bodies_initial),temp,dx,dy,dz,r,d,a2,n
-  real(double_precision) :: tmp2(4,nb_bodies_initial)
+  real(double_precision) :: x(3,NMAX),v(3,NMAX),temp,dx,dy,dz,r,d,a2,n
+  real(double_precision) :: tmp2(4,NMAX)
   
   !------------------------------------------------------------------------------
   

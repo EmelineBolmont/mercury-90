@@ -137,90 +137,41 @@ program mercury
 
   real(double_precision) :: cefac,time,h0,tol,en(3),am(3),rcen,jcen(3)
 
-  integer, dimension(:), allocatable :: stat ! (NMAX)
-  real(double_precision), dimension(:), allocatable :: m,rho,rceh,epoch ! (NMAX)
-  real(double_precision), dimension(:,:), allocatable :: xh,vh,s ! (3,NMAX)
-  real(double_precision), dimension(:,:), allocatable :: ngf ! (4,NMAX)
-  character(len=8), dimension(:), allocatable :: id ! (NMAX)
+!~   integer, dimension(:), allocatable :: stat ! (NMAX)
+!~   real(double_precision), dimension(:), allocatable :: m,rho,rceh,epoch ! (NMAX)
+!~   real(double_precision), dimension(:,:), allocatable :: xh,vh,s ! (3,NMAX)
+!~   real(double_precision), dimension(:,:), allocatable :: ngf ! (4,NMAX)
+!~   character(len=8), dimension(:), allocatable :: id ! (NMAX)
+!~   
+  integer :: stat(NMAX)
+  real(double_precision) :: m(NMAX),xh(3,NMAX),vh(3,NMAX),s(3,NMAX),rho(NMAX)
+  real(double_precision) :: rceh(NMAX),epoch(NMAX),ngf(4,NMAX)
+  character(len=8) :: id(NMAX)
   
   !------------------------------------------------------------------------------
-
-! We get the number of big bodies and the total number of bodies before reading effectively the parameter files
-  call getNumberOfBodies(nb_big_bodies=nbig, nb_bodies=nb_bodies_initial)
+!~   write (*,*) 'nbig=',nbig, 'nbod=',nbod
+  ! We get the number of big bodies and the total number of bodies before reading effectively the parameter files
+!~   call getNumberOfBodies(nb_big_bodies=nbig, nb_bodies=nbod)
+  ! open(15, file='test.in', status='replace')
+   
+  ! close(15)
+!~   nbig=10
+!~   nbod=16
+!~   write (*,*) 'nbig=',nbig, 'nbod=',nbod
+!~   nbod = NMAX
 !~ 
 !~ 
-  ! We allocate and initialize arrays now that we know their sizes
-  allocate(stat(nb_bodies_initial), stat=error)
-  if (error.ne.0) then
-    write(*,*) 'Error: failed to allocate "stat" array'
-  end if
-  stat(1:nb_bodies_initial) = 0
-  
-  allocate(m(nb_bodies_initial), stat=error)
-  if (error.ne.0) then
-    write(*,*) 'Error: failed to allocate "m" array'
-  end if
-
-  m(1:nb_bodies_initial) = 0.d0
-  
-  allocate(rho(nb_bodies_initial), stat=error)
-  if (error.ne.0) then
-    write(*,*) 'Error: failed to allocate "rho" array'
-  end if
-  rho(1:nb_bodies_initial) = 0.d0
-  
-  allocate(rceh(nb_bodies_initial), stat=error)
-  if (error.ne.0) then
-    write(*,*) 'Error: failed to allocate "rceh" array'
-  end if
-  rceh(1:nb_bodies_initial) = 0.d0
-  
-  allocate(epoch(nb_bodies_initial), stat=error)
-  if (error.ne.0) then
-    write(*,*) 'Error: failed to allocate "epoch" array'
-  end if
-  epoch(1:nb_bodies_initial) = 0.d0
-  
-  allocate(xh(3,nb_bodies_initial), stat=error)
-  if (error.ne.0) then
-    write(*,*) 'Error: failed to allocate "xh" array'
-  end if
-  xh(1:3,1:nb_bodies_initial) = 0.d0
-  
-  allocate(vh(3,nb_bodies_initial), stat=error)
-  if (error.ne.0) then
-    write(*,*) 'Error: failed to allocate "vh" array'
-  end if
-  vh(1:3,1:nb_bodies_initial) = 0.d0
-  
-  allocate(s(3,nb_bodies_initial), stat=error)
-  if (error.ne.0) then
-    write(*,*) 'Error: failed to allocate "s" array'
-  end if
-  s(1:3,1:nb_bodies_initial) = 0.d0
-  
-  allocate(ngf(4,nb_bodies_initial), stat=error)
-  if (error.ne.0) then
-    write(*,*) 'Error: failed to allocate "ngf" array'
-  end if
-  ngf(1:4,1:nb_bodies_initial) = 0.d0
-  
-  allocate(id(nb_bodies_initial), stat=error)
-  if (error.ne.0) then
-    write(*,*) 'Error: failed to allocate "id" array'
-  end if
-  id(1:nb_bodies_initial) = ''
-  
-  ! We allocate private variables of several modules 
-  ! (since we want to 'save' them, we cannot have a dynamic array). 
-  ! To avoid testing the allocation at each timestep, we allocate them 
-  ! in a sort of initialisation subroutine. Module that need to have 
-  ! initialisation will have a subroutine with "allocate" in their name.
-  call allocate_hy(nb_bodies=nb_bodies_initial)
-  call allocate_mvs(nb_bodies=nb_bodies_initial)
-  call allocate_radau(nb_bodies=nb_bodies_initial)
-  
-!------------------------------------------------------------------------------
+!~   allocate(stat(nbod))
+!~   allocate(m(nbod))
+!~   allocate(rho(nbod))
+!~   allocate(rceh(nbod))
+!~   allocate(epoch(nbod))
+!~   allocate(xh(3,nbod))
+!~   allocate(vh(3,nbod))
+!~   allocate(s(3,nbod))
+!~   allocate(ngf(4,nbod))
+!~   allocate(id(nbod))
+!TODO gérer les erreurs une fois les premiers tests effectués
   
   ! Get initial conditions and integration parameters
   call mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,id,&
@@ -292,6 +243,107 @@ program mercury
   
   contains
   
+subroutine getNumberOfBodies(nb_big_bodies, nb_bodies)
+! subroutine that return the number of bodies and the number of big bodies
+!
+! Return
+! nb_bodies : the total number of bodies, including the central object
+! nb_big_bodies : the number of big bodies
+
+  implicit none
+
+  integer, intent(out) :: nb_bodies, nb_big_bodies
+  
+  
+  
+  ! Local
+  integer :: j,k,lim(2,10),nsub, error
+  logical test
+  character(len=80) :: infile(3),filename,c80
+  character(len=150) :: string
+  real(double_precision), dimension(9) :: dummy ! variable to read the value and have the right position in the file without storing the values
+
+  do j = 1, 80
+     filename(j:j) = ' '
+  end do
+  do j = 1, 3
+     infile(j)   = filename
+  end do  
+  
+  ! Read in filenames and check for duplicate filenames
+  inquire (file='files.in', exist=test)
+  if (.not.test) write(*,*) 'Error: the file "files.in" does not exist'
+  open (15, file='files.in', status='old')
+  
+  ! Input files
+  do j = 1, 3
+     read (15,'(a150)') string
+     call mio_spl (150,string,nsub,lim)
+     infile(j)(1:(lim(2,1)-lim(1,1)+1)) = string(lim(1,1):lim(2,1))
+     do k = 1, j - 1
+        if (infile(j).eq.infile(k)) write(*,*) 'Error: dans "files.in", certains fichiers sont identiques'
+     end do
+  end do
+  close (15)
+  
+  !--------------------------------------------------------
+
+  !  READ  IN  DATA  FOR  BIG  AND  SMALL  BODIES
+  
+  nb_bodies = 1
+  do j = 1, 2
+     if (j.eq.2) nb_big_bodies = nb_bodies
+     
+     ! Check if the file containing data for Big bodies exists, and open it
+     filename = infile(j)
+     inquire (file=infile(j), exist=test)
+     if (.not.test) write (*,*) filename, 'does not exist'
+     open (11, file=infile(j), status='old', iostat=error)
+     if (error /= 0) then
+        write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(filename)
+        stop
+     end if
+     
+     ! Read data style
+     do
+      read (11,'(a150)') string
+      if (string(1:1).ne.')') exit
+    end do
+     
+     ! Read epoch of Big bodies
+     if (j.eq.1) then
+      do
+        read (11,'(a150)') string
+        if (string(1:1).ne.')') exit
+      end do
+     end if
+     
+     ! Read information for each object
+     do
+      read (11,'(a)',iostat=error) string
+      if (error /= 0) exit
+      
+      if (string(1:1).eq.')') cycle
+    
+     
+     nb_bodies = nb_bodies + 1
+     
+     
+    ! we skip the line(s) that contains informations of the current planet
+     do
+       read (11,'(a150)') string
+       if (string(1:1).ne.')') exit
+     end do 
+     backspace(11)
+     read (11,*) dummy
+     
+     
+     end do
+    close (11)
+  end do
+
+end subroutine getNumberOfBodies
+  
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 !      MIO_IN.FOR    (ErikSoft   4 May 2001)
@@ -323,9 +375,9 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   integer :: nbod,nbig,opflag,ngflag
   integer :: ndump,nfun
   real(double_precision) :: time,h0,tol,rcen,jcen(3)
-  real(double_precision) :: en(3),am(3),m(nb_bodies_initial),x(3,nb_bodies_initial),v(3,nb_bodies_initial),s(3,nb_bodies_initial)
-  real(double_precision) :: rho(nb_bodies_initial),rceh(nb_bodies_initial),epoch(nb_bodies_initial),ngf(4,nb_bodies_initial),cefac
-  character(len=8) :: id(nb_bodies_initial)
+  real(double_precision) :: en(3),am(3),m(NMAX),x(3,NMAX),v(3,NMAX),s(3,NMAX)
+  real(double_precision) :: rho(NMAX),rceh(NMAX),epoch(NMAX),ngf(4,NMAX),cefac
+  character(len=8) :: id(NMAX)
   
   ! Local
   integer :: j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
@@ -601,7 +653,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
      
      ! Determine the name of the object
      nbod = nbod + 1
-     if (nbod.gt.nb_bodies_initial) call mio_err (23,mem(81),lmem(81),mem(90),lmem(90),' ',1,mem(82),lmem(82))
+     if (nbod.gt.NMAX) call mio_err (23,mem(81),lmem(81),mem(90),lmem(90),' ',1,mem(82),lmem(82))
      
      if ((lim(2,1)-lim(1,1)).gt.7) then
         write (23,'(/,3a)') mem(121)(1:lmem(121)),mem(122)(1:lmem(122)),string( lim(1,1):lim(2,1) )
@@ -933,12 +985,12 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
   ! Local
   integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
-  integer :: dtflag,ejflag,nowflag,stopflag,nstored,ce(nb_bodies_initial)
-  integer :: nclo,iclo(CMAX),jclo(CMAX),nce,ice(nb_bodies_initial),jce(nb_bodies_initial)
+  integer :: dtflag,ejflag,nowflag,stopflag,nstored,ce(NMAX)
+  integer :: nclo,iclo(CMAX),jclo(CMAX),nce,ice(NMAX),jce(NMAX)
   real(double_precision) :: tmp0,h,hdid,tout,tdump,tfun,tlog,tsmall
-  real(double_precision) :: thit(CMAX),dhit(CMAX),thit1,x0(3,nb_bodies_initial),v0(3,nb_bodies_initial)
-  real(double_precision) :: rce(nb_bodies_initial),rphys(nb_bodies_initial),rcrit(nb_bodies_initial),a(nb_bodies_initial)
-  real(double_precision) :: dclo(CMAX),tclo(CMAX),epoch(nb_bodies_initial)
+  real(double_precision) :: thit(CMAX),dhit(CMAX),thit1,x0(3,NMAX),v0(3,NMAX)
+  real(double_precision) :: rce(NMAX),rphys(NMAX),rcrit(NMAX),a(NMAX)
+  real(double_precision) :: dclo(CMAX),tclo(CMAX),epoch(NMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
   external onestep
   
@@ -1169,8 +1221,8 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   ! Local
   integer :: i,j,k,n,itmp,nclo,nhit,jhit(CMAX),iclo(CMAX),jclo(CMAX)
   integer :: dtflag,ejflag,stopflag,colflag,nstored
-  real(double_precision) :: x(3,nb_bodies_initial),v(3,nb_bodies_initial),xh0(3,nb_bodies_initial),vh0(3,nb_bodies_initial)
-  real(double_precision) :: rce(nb_bodies_initial),rphys(nb_bodies_initial),rcrit(nb_bodies_initial),epoch(nb_bodies_initial)
+  real(double_precision) :: x(3,NMAX),v(3,NMAX),xh0(3,NMAX),vh0(3,NMAX)
+  real(double_precision) :: rce(NMAX),rphys(NMAX),rcrit(NMAX),epoch(NMAX)
   real(double_precision) :: hby2,tout,tmp0,tdump,tfun,tlog
   real(double_precision) :: dclo(CMAX),tclo(CMAX),dhit(CMAX),thit(CMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX),a(NMAX)
@@ -1219,7 +1271,8 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
         ! Convert to heliocentric coordinates and output data for all bodies
         call bcoord (time,jcen,nbod,nbig,h0,m,x,v,xh,vh,ngf,ngflag)
         call mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfile(1))
-        call mio_ce (time,rcen,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,nstored,0)
+        call mio_ce (time,rcen,nbod,nbig,m,stat,id,0,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,&
+             nstored,0)
         tmp0 = tstop - tout
         tout = tout + sign( min( abs(tmp0), abs(dtout) ), tmp0 )
         
@@ -1227,7 +1280,8 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
         do j = 2, nbod
            epoch(j) = time
         end do
-        call mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,id,ngf,epoch,opflag)
+        call mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,&
+             stat,id,ngf,epoch,opflag)
         tdump = time
      end if
      
@@ -1440,11 +1494,11 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   character(len=8) :: id(nbod)
   
   ! Local
-  integer :: j,k,l,nsml,nsofar,indx(nb_bodies_initial),itemp,jtemp(nb_bodies_initial)
-  integer :: raflag,nce,ice(nb_bodies_initial),jce(nb_bodies_initial)
-  real(double_precision) :: temp,epsml(nb_bodies_initial),rtemp(nb_bodies_initial)
-  real(double_precision) :: h,hdid,tsmall,rphys(nb_bodies_initial),rcrit(nb_bodies_initial)
-  character(len=8) :: ctemp(nb_bodies_initial)
+  integer :: j,k,l,nsml,nsofar,indx(NMAX),itemp,jtemp(NMAX)
+  integer :: raflag,nce,ice(NMAX),jce(NMAX)
+  real(double_precision) :: temp,epsml(NMAX),rtemp(NMAX)
+  real(double_precision) :: h,hdid,tsmall,rphys(NMAX),rcrit(NMAX)
+  character(len=8) :: ctemp(NMAX)
   
   !------------------------------------------------------------------------------
   

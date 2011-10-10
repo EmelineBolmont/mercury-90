@@ -16,50 +16,9 @@ module algo_mvs
   
   private
   
-  ! values that need to be saved in mdt_mvs
-  real(double_precision), dimension(:,:), allocatable :: a, xj, angf, ausr ! (3,NMAX)
-  real(double_precision), dimension(:), allocatable :: gm ! (NMAX)
-  
-  public :: mdt_mvs, mco_h2mvs, mco_mvs2h, mco_h2j, allocate_mvs
+  public :: mdt_mvs, mco_h2mvs, mco_mvs2h, mco_h2j
   
   contains
-  
-subroutine allocate_mvs(nb_bodies)
-! subroutine that allocate various private variable of the module to avoid testing at each timestep
-!
-! Parameters :
-! nb_bodies : number of bodies, that is, the size of the arrays
-
-  implicit none
-  
-  integer, intent(in) :: nb_bodies
-  
-  if (.not. allocated(a)) then
-    allocate(a(3,nb_bodies))
-    a(1:3,1:nb_bodies) = 0.d0
-  end if
-  
-  if (.not. allocated(angf)) then
-    allocate(angf(3,nb_bodies))
-    angf(1:3,1:nb_bodies) = 0.d0
-  end if
-  
-  if (.not. allocated(ausr)) then
-    allocate(ausr(3,nb_bodies))
-    ausr(1:3,1:nb_bodies) = 0.d0
-  end if
-  
-  if (.not. allocated(xj)) then
-    allocate(xj(3,nb_bodies))
-    xj(1:3,1:nb_bodies) = 0.d0
-  end if
-  
-  if (.not. allocated(gm)) then
-    allocate(gm(nb_bodies))
-    gm(1:nb_bodies) = 0.d0
-  end if
-  
-end subroutine allocate_mvs
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -90,10 +49,9 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   real(double_precision) :: v(3,nbod),ngf(4,nbod)
   
   ! Local
-  integer :: j,k,iflag,stat(nb_bodies_initial)
-  real(double_precision) :: minside,msofar,gm(nb_bodies_initial)
-  real(double_precision) :: a(3,nb_bodies_initial),xj(3,nb_bodies_initial),vj(3,nb_bodies_initial)
-  real(double_precision) :: ha(2),hb(2),rt10,angf(3,nb_bodies_initial),ausr(3,nb_bodies_initial)
+  integer :: j,k,iflag,stat(NMAX)
+  real(double_precision) :: minside,msofar,gm(NMAX),a(3,NMAX),xj(3,NMAX),vj(3,NMAX)
+  real(double_precision) :: ha(2),hb(2),rt10,angf(3,NMAX),ausr(3,NMAX)
   
   !------------------------------------------------------------------------------
   
@@ -220,10 +178,9 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   real(double_precision) :: vh(3,nbod),ngf(4,nbod)
   
   ! Local
-  integer :: j,k,iflag,stat(nb_bodies_initial)
-  real(double_precision) :: minside,msofar,gm(nb_bodies_initial)
-  real(double_precision) :: a(3,nb_bodies_initial),xj(3,nb_bodies_initial),vj(3,nb_bodies_initial)
-  real(double_precision) :: ha(2),hb(2),rt10,angf(3,nb_bodies_initial),ausr(3,nb_bodies_initial)
+  integer :: j,k,iflag,stat(NMAX)
+  real(double_precision) :: minside,msofar,gm(NMAX),a(3,NMAX),xj(3,NMAX),vj(3,NMAX)
+  real(double_precision) :: ha(2),hb(2),rt10,angf(3,NMAX),ausr(3,NMAX)
   
   !------------------------------------------------------------------------------
   
@@ -271,7 +228,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
      
      ! If required, apply non-gravitational and user-defined forces
      if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,xh,vh,ausr)
-     if ((ngflag.eq.1).or.(ngflag.eq.3)) call mfo_ngf (nbod,xh,vh,angf,ngf)
+     if (ngflag.eq.1.or.ngflag.eq.3) call mfo_ngf (nbod,xh,vh,angf,ngf)
      
      do j = 2, nbod
         vh(1,j) = vh(1,j)  -  hb(k) * (angf(1,j) + ausr(1,j) + a(1,j))
@@ -364,12 +321,13 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   
   ! Local
   integer :: j,iflag,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),nowflag
-  real(double_precision) :: vj(3,nb_bodies_initial)
-  real(double_precision) :: hby2,thit1,temp
-  real(double_precision) :: msofar,minside,x0(3,nb_bodies_initial),v0(3,nb_bodies_initial),dhit(CMAX),thit(CMAX)
+  real(double_precision) :: xj(3,NMAX),vj(3,NMAX),a(3,NMAX),gm(NMAX),hby2,thit1,temp
+  real(double_precision) :: msofar,minside,x0(3,NMAX),v0(3,NMAX),dhit(CMAX),thit(CMAX)
+  real(double_precision) :: angf(3,NMAX),ausr(3,NMAX)
   
   !------------------------------------------------------------------------------
   
+  save a, xj, gm, angf, ausr
   hby2 = .5d0 * h0
   nclo = 0
   
@@ -474,8 +432,7 @@ subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   ! Local
   integer :: i,j,k,k1
   real(double_precision) :: fac0,fac1,fac12,fac2,minside,dx,dy,dz,s_1,s2,s_3,faci,facj
-  real(double_precision), dimension(3) :: a0,a0tp
-  real(double_precision), dimension(3,nb_bodies_initial) :: a1,a2,a3,aobl
+  real(double_precision) :: a0(3),a0tp(3),a1(3,NMAX),a2(3,NMAX),a3(3,NMAX),aobl(3,NMAX)
   real(double_precision) :: r,r2,r3,rj,rj2,rj3,q,q2,q3,q4,q5,q6,q7,acen(3)
   
   !------------------------------------------------------------------------------

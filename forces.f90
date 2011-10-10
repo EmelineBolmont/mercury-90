@@ -52,7 +52,7 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   
   ! Local
   integer :: j
-  real(double_precision) :: acor(3,nb_bodies_initial),acen(3)
+  real(double_precision) :: acor(3,NMAX),acen(3)
   
   !------------------------------------------------------------------------------
   
@@ -148,7 +148,7 @@ subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   
   ! Local
   integer :: i, j
-  real(double_precision) :: sx, sy, sz, dx, dy, dz, tmp1, tmp2, s_1, s2, s_3, r3(nb_bodies_initial)
+  real(double_precision) :: sx, sy, sz, dx, dy, dz, tmp1, tmp2, s_1, s2, s_3, r3(NMAX)
   
   !------------------------------------------------------------------------------
   

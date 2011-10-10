@@ -184,7 +184,7 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   
   ! Local
   integer :: idp,i,j,k,len,j1,j2
-  real(double_precision) :: rhocgs,k_2,rcen_2,rcen_4,rcen_6,x0(3,nb_bodies_initial),v0(3,nb_bodies_initial)
+  real(double_precision) :: rhocgs,k_2,rcen_2,rcen_4,rcen_6,x0(3,NMAX),v0(3,NMAX)
   character(len=150) :: c
   integer :: error
   
@@ -534,7 +534,7 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   ! Local
   integer :: k, len, nchar
   real(double_precision) :: rhocgs,k_2,rfac,rcen_2,fr,fv,theta,phi,vtheta,vphi
-  character(len=80) :: header,c(nb_bodies_initial)
+  character(len=80) :: header,c(NMAX)
   character(len=5) :: fout
   integer :: error
   
