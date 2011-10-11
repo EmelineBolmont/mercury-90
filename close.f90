@@ -31,22 +31,66 @@ program close
   integer :: nmaster,nopen,nwait,nbig,nsml,nsub,lim(2,100)
   integer :: year,month,timestyle,line_num,lenhead
   integer :: nchar,allflag,firstflag,ninfile
-  integer :: unit(NMAX),master_unit(NMAX)
   real(double_precision) :: time,t0,t1,rcen,rfac,dclo,mcen,jcen(3)
   real(double_precision) :: fr,theta,phi,fv,vtheta,vphi,gm
-  real(double_precision) :: x1(3),x2(3),v1(3),v2(3),m(NMAX)
+  real(double_precision) :: x1(3),x2(3),v1(3),v2(3)
   real(double_precision) :: a1,a2,e1,e2,i1,i2,p1,p2,n1,n2,l1,l2,q1,q2
   logical test
   character(len=250) :: string,fout,header,infile(50)
-  character(len=80) :: cc,c(NMAX)
-  character(len=8) :: master_id(NMAX),id(NMAX)
+  character(len=80) :: cc
   character(len=5) :: fin
   character(len=1) :: check,style,type,c1
   integer :: error
   
+  integer, dimension(:), allocatable :: unit, master_unit ! (NMAX)
+  character(len=80), dimension(:), allocatable :: c ! (NMAX)
+  character(len=8), dimension(:), allocatable :: master_id, id ! (NMAX)
+  real(double_precision), dimension(:), allocatable :: m ! (NMAX)
+    
   !------------------------------------------------------------------------------
   
-  allflag = 0
+  call getNumberOfBodies(nb_big_bodies=nbig, nb_bodies=nb_bodies_initial)
+  
+    ! We allocate and initialize arrays now that we know their sizes
+  allocate(unit(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "unit" array'
+  end if
+  unit(1:nb_bodies_initial) = 0
+  
+  allocate(master_unit(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "master_unit" array'
+  end if
+  master_unit(1:nb_bodies_initial) = 0
+  
+  allocate(c(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "c" array'
+  end if
+  c(1:nb_bodies_initial) = ''
+  
+  allocate(master_id(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "master_id" array'
+  end if
+  master_id(1:nb_bodies_initial) = ''
+  
+  allocate(id(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "id" array'
+  end if
+  id(1:nb_bodies_initial) = ''
+  
+  allocate(m(nb_bodies_initial), stat=error)
+  if (error.ne.0) then
+    write(*,*) 'Error: failed to allocate "m" array'
+  end if
+  m(1:nb_bodies_initial) = 0.d0
+  
+  !------------------------------------------------------------------------------
+  
+  allflag = 0  
   
   ! Read in output messages
   inquire (file='message.in', exist=test)
@@ -60,6 +104,7 @@ program close
      if (error /= 0) exit
   end do
   close (14)
+
   
   ! Open file containing parameters for this programme
   inquire (file='close.in', exist=test)
@@ -241,7 +286,7 @@ program close
         time = mio_c2fl (cc(1:8))
         iclo = int(.5d0 + mio_c2re(cc(9:16),  0.d0, 11239424.d0, 3))
         jclo = int(.5d0 + mio_c2re(cc(12:19), 0.d0, 11239424.d0, 3))
-        if (iclo.gt.NMAX.or.jclo.gt.NMAX) then
+        if (iclo.gt.nb_bodies_initial.or.jclo.gt.nb_bodies_initial) then
            write (*,'(/,2a)') mem(81)(1:lmem(81)),mem(90)(1:lmem(90))
            stop
         end if

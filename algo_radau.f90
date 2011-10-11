@@ -14,23 +14,48 @@ module algo_radau
   ! Gauss-Radau spacings for substeps within a sequence, for the 15th order 
   ! integrator. The sum of the H values should be 3.733333333333333
   
-real(double_precision), dimension(8), parameter :: h = (/ 0.d0,.0562625605369221d0,.1802406917368924d0,&
-  .3526247171131696d0,.5471536263305554d0,.7342101772154105d0,.8853209468390958d0,.9775206135612875d0/)
-  
-  ! Constant coefficients used in series expansions for X and V
-  !  XC: 1/2,  1/6,  1/12, 1/20, 1/30, 1/42, 1/56, 1/72
-  !  VC: 1/2,  1/3,  1/4,  1/5,  1/6,  1/7,  1/8
-real(double_precision), dimension(8), parameter :: xc = (/.5d0,.1666666666666667d0,.08333333333333333d0,.05d0,&
-    .03333333333333333d0,.02380952380952381d0,.01785714285714286d0,.01388888888888889d0/)
+  real(double_precision), dimension(8), parameter :: h = (/ 0.d0,.0562625605369221d0,.1802406917368924d0,&
+    .3526247171131696d0,.5471536263305554d0,.7342101772154105d0,.8853209468390958d0,.9775206135612875d0/)
     
-real(double_precision), dimension(7), parameter :: vc = (/.5d0,.3333333333333333d0,.25d0,.2d0,.1666666666666667d0,&
-      .1428571428571429d0,.125d0/)
+    ! Constant coefficients used in series expansions for X and V
+    !  XC: 1/2,  1/6,  1/12, 1/20, 1/30, 1/42, 1/56, 1/72
+    !  VC: 1/2,  1/3,  1/4,  1/5,  1/6,  1/7,  1/8
+  real(double_precision), dimension(8), parameter :: xc = (/.5d0,.1666666666666667d0,.08333333333333333d0,.05d0,&
+      .03333333333333333d0,.02380952380952381d0,.01785714285714286d0,.01388888888888889d0/)
+      
+  real(double_precision), dimension(7), parameter :: vc = (/.5d0,.3333333333333333d0,.25d0,.2d0,.1666666666666667d0,&
+        .1428571428571429d0,.125d0/)
 
+  ! values that need to be saved in mdt_ra15
+  real(double_precision) :: c(21),d(21),r(28)
+  real(double_precision), dimension(:,:), allocatable :: b, e !  (7,3*NMAX)
 
-  
-  public :: mdt_ra15
+  public :: mdt_ra15, allocate_radau
   
   contains
+
+subroutine allocate_radau(nb_bodies)
+! subroutine that allocate various private variable of the module to avoid testing at each timestep
+!
+! Parameters :
+! nb_bodies : number of bodies, that is, the size of the arrays
+
+  implicit none
+  
+  integer, intent(in) :: nb_bodies
+  
+  if (.not. allocated(b)) then
+    allocate(b(7,3*nb_bodies))
+    b(1:7,1:3*nb_bodies) = 0.d0
+  end if
+  
+  if (.not. allocated(e)) then
+    allocate(e(7,3*nb_bodies))
+    e(1:7,1:3*nb_bodies) = 0.d0
+  end if
+  
+  
+end subroutine allocate_radau
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -65,6 +90,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   
   use physical_constant
   use mercury_constant
+  use mercury_globals
 
   implicit none
 
@@ -79,14 +105,13 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   
   ! Local
   integer :: nv,niter,j,k,n
-  real(double_precision) :: x(3*NMAX),v(3*NMAX),a(3*NMAX),a1(3*NMAX)
-  real(double_precision) :: g(7,3*NMAX),b(7,3*NMAX),e(7,3*NMAX)
-  real(double_precision) :: c(21),d(21),r(28),s(9)
+  real(double_precision) :: x(3*nb_bodies_initial),v(3*nb_bodies_initial),a(3*nb_bodies_initial),a1(3*nb_bodies_initial)
+  real(double_precision) :: g(7,3*nb_bodies_initial)
+  real(double_precision) :: s(9)
   real(double_precision) :: q,q2,q3,q4,q5,q6,q7,temp,gk
   
   !------------------------------------------------------------------------------
   
-  save c,d,r,b,e
   
   ! If this is first call to the subroutine, set values of the constant arrays
   ! (R = R21, R31, R32, R41, R42, R43 in Everhart's paper.)

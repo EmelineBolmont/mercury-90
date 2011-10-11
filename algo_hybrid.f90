@@ -16,9 +16,40 @@ module algo_hybrid
   
   private
   
-  public :: mdt_hy, mco_h2dh, mco_dh2h
+  ! Values that need to be saved in mdt_hy
+  real(double_precision) :: hrec
+  real(double_precision), dimension(:,:), allocatable :: angf, ausr, a ! (3,NMAX)
+  
+  public :: mdt_hy, mco_h2dh, mco_dh2h, allocate_hy
   
   contains
+
+subroutine allocate_hy(nb_bodies)
+! subroutine that allocate various private variable of the module to avoid testing at each timestep
+!
+! Parameters :
+! nb_bodies : number of bodies, that is, the size of the arrays
+
+  implicit none
+  
+  integer, intent(in) :: nb_bodies
+  
+  if (.not. allocated(a)) then
+    allocate(a(3,nb_bodies))
+    a(1:3,1:nb_bodies) = 0.d0
+  end if
+  
+  if (.not. allocated(angf)) then
+    allocate(angf(3,nb_bodies))
+    angf(1:3,1:nb_bodies) = 0.d0
+  end if
+  
+  if (.not. allocated(ausr)) then
+    allocate(ausr(3,nb_bodies))
+    ausr(1:3,1:nb_bodies) = 0.d0
+  end if
+  
+end subroutine allocate_hy
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -61,13 +92,17 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   character(len=8), dimension(nbod) :: id
   
   ! Local
-  integer :: j,nce,ice(NMAX),jce(NMAX),ce(NMAX),iflag
-  real(double_precision) :: a(3,NMAX),hby2,hrec,x0(3,NMAX),v0(3,NMAX),mvsum(3),temp
-  real(double_precision) :: angf(3,NMAX),ausr(3,NMAX)
+!~   integer :: j,nce,ice(nbod),jce(nbod),ce(nbod),iflag
+!~   real(double_precision) :: hby2,x0(3,nbod),v0(3,nbod),mvsum(3),temp
+  integer :: j,nce,iflag
+  integer, dimension(nbod) :: ce ! is the planet in a close encounter?
+  integer, dimension(CMAX) :: ice, jce ! arrays for close encounters
+  real(double_precision) :: hby2,x0(3,nbod),v0(3,nbod),mvsum(3),temp
   
+    
   !------------------------------------------------------------------------------
   
-  save a, hrec, angf, ausr
+  
   hby2 = h0 * .5d0
   nclo = 0
   colflag = 0
@@ -208,7 +243,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
 
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig,nce,ice(nce),jce(nce),ngflag,ce(nbod)
+  integer,intent(in) :: nbod,nbig,nce,ice(CMAX),jce(CMAX),ngflag,ce(nbod)
   integer,intent(in) :: nclo
 
   real(double_precision),intent(in) :: time,h0,tol,elost,jcen(3),rcen
@@ -223,15 +258,15 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   external force
   
   ! Local
-  integer :: iback(NMAX),index(NMAX),ibs(NMAX),jbs(NMAX),nclo_old
-  integer :: i,j,k,nbs,nbsbig,statbs(NMAX)
+  integer :: iback(nb_bodies_initial),index(nb_bodies_initial),ibs(nb_bodies_initial),jbs(nb_bodies_initial),nclo_old
+  integer :: i,j,k,nbs,nbsbig,statbs(nb_bodies_initial)
   integer :: nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),nowflag,dtflag
   real(double_precision) :: tlocal,hlocal,hdid,tmp0
-  real(double_precision) :: mbs(NMAX),xbs(3,NMAX),vbs(3,NMAX),sbs(3,NMAX)
-  real(double_precision) :: rcritbs(NMAX),rcebs(NMAX),rphybs(NMAX)
-  real(double_precision) :: ngfbs(4,NMAX),x0(3,NMAX),v0(3,NMAX)
+  real(double_precision) :: mbs(nb_bodies_initial),xbs(3,nb_bodies_initial),vbs(3,nb_bodies_initial),sbs(3,nb_bodies_initial)
+  real(double_precision) :: rcritbs(nb_bodies_initial),rcebs(nb_bodies_initial),rphybs(nb_bodies_initial)
+  real(double_precision) :: ngfbs(4,nb_bodies_initial),x0(3,nb_bodies_initial),v0(3,nb_bodies_initial)
   real(double_precision) :: thit(CMAX),dhit(CMAX),thit1,temp
-  character(len=8) :: idbs(NMAX)
+  character(len=8) :: idbs(nb_bodies_initial)
   
   !------------------------------------------------------------------------------
   
@@ -585,7 +620,7 @@ subroutine mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
   
   ! Local
   integer :: k
-  real(double_precision) :: aobl(3,NMAX),acen(3)
+  real(double_precision) :: aobl(3,nb_bodies_initial),acen(3)
   
   !------------------------------------------------------------------------------
   
