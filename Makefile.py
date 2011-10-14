@@ -11,8 +11,7 @@ clean(["o", "mod"])
 #~ sourceFile.setCompilingOptions("-check all")
 
 sourceFile.setCompilator("gfortran")
-sourceFile.setCompilingOptions("-g -fbounds-check -Wuninitialized -O -ftrapv -fimplicit-none -fno-automatic")
-#~ sourceFile.setCompilingOptions("-O3 -march=native -pipe")
+sourceFile.setCompilingOptions("-O3 -march=native -pipe")
 #~ sourceFile.setCompilingOptions("")
 
 # pour tester les bornes des tableaux : -fbounds-check (il faut ensuite faire tourner le programme, des tests sont effectués au cours de l'exécution)
