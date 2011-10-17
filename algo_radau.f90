@@ -28,7 +28,7 @@ module algo_radau
 
   ! values that need to be saved in mdt_ra15
   real(double_precision) :: c(21),d(21),r(28)
-  real(double_precision), dimension(:,:), allocatable :: b, e !  (7,3*NMAX)
+  real(double_precision), dimension(:,:), allocatable :: b, e !  (7,3*Number of bodies)
 
   public :: mdt_ra15, allocate_radau
   

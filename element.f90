@@ -53,12 +53,12 @@ program element
   real(double_precision), dimension(1,1) :: ngf
   
   integer :: error ! to store error when we allocate
-  integer, dimension(:), allocatable :: unit, master_unit, code, iback ! (NMAX)
-  character(len=80), dimension(:), allocatable :: c ! (NMAX)
-  character(len=8), dimension(:), allocatable :: master_id, id ! (NMAX)
-  real(double_precision), dimension(:), allocatable :: m, a, ns, is ! (NMAX)
-  real(double_precision), dimension(:,:), allocatable :: el ! (22,NMAX)
-  real(double_precision), dimension(:,:), allocatable :: x, v, xh, vh ! (3,NMAX)
+  integer, dimension(:), allocatable :: unit, master_unit, code, iback ! (Number of bodies)
+  character(len=80), dimension(:), allocatable :: c ! (Number of bodies)
+  character(len=8), dimension(:), allocatable :: master_id, id ! (Number of bodies)
+  real(double_precision), dimension(:), allocatable :: m, a, ns, is ! (Number of bodies)
+  real(double_precision), dimension(:,:), allocatable :: el ! (22,Number of bodies)
+  real(double_precision), dimension(:,:), allocatable :: x, v, xh, vh ! (3,Number of bodies)
 
   !------------------------------------------------------------------------------
   call getNumberOfBodies(nb_big_bodies=nbig, nb_bodies=nb_bodies_initial)

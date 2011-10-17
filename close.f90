@@ -42,10 +42,10 @@ program close
   character(len=1) :: check,style,type,c1
   integer :: error
   
-  integer, dimension(:), allocatable :: unit, master_unit ! (NMAX)
-  character(len=80), dimension(:), allocatable :: c ! (NMAX)
-  character(len=8), dimension(:), allocatable :: master_id, id ! (NMAX)
-  real(double_precision), dimension(:), allocatable :: m ! (NMAX)
+  integer, dimension(:), allocatable :: unit, master_unit ! (Number of bodies)
+  character(len=80), dimension(:), allocatable :: c ! (Number of bodies)
+  character(len=8), dimension(:), allocatable :: master_id, id ! (Number of bodies)
+  real(double_precision), dimension(:), allocatable :: m ! (Number of bodies)
     
   !------------------------------------------------------------------------------
   

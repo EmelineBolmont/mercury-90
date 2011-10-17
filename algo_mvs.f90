@@ -17,8 +17,8 @@ module algo_mvs
   private
   
   ! values that need to be saved in mdt_mvs
-  real(double_precision), dimension(:,:), allocatable :: a, xj, angf, ausr ! (3,NMAX)
-  real(double_precision), dimension(:), allocatable :: gm ! (NMAX)
+  real(double_precision), dimension(:,:), allocatable :: a, xj, angf, ausr ! (3,Number of bodies)
+  real(double_precision), dimension(:), allocatable :: gm ! (Number of bodies)
   
   public :: mdt_mvs, mco_h2mvs, mco_mvs2h, mco_h2j, allocate_mvs
   

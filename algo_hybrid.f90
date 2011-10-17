@@ -18,7 +18,7 @@ module algo_hybrid
   
   ! Values that need to be saved in mdt_hy
   real(double_precision) :: hrec
-  real(double_precision), dimension(:,:), allocatable :: angf, ausr, a ! (3,NMAX)
+  real(double_precision), dimension(:,:), allocatable :: angf, ausr, a ! (3,Number of bodies)
   
   public :: mdt_hy, mco_h2dh, mco_dh2h, allocate_hy
   

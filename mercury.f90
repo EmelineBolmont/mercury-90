@@ -137,11 +137,11 @@ program mercury
 
   real(double_precision) :: cefac,time,h0,tol,en(3),am(3),rcen,jcen(3)
 
-  integer, dimension(:), allocatable :: stat ! (NMAX)
-  real(double_precision), dimension(:), allocatable :: m,rho,rceh,epoch ! (NMAX)
-  real(double_precision), dimension(:,:), allocatable :: xh,vh,s ! (3,NMAX)
-  real(double_precision), dimension(:,:), allocatable :: ngf ! (4,NMAX)
-  character(len=8), dimension(:), allocatable :: id ! (NMAX)
+  integer, dimension(:), allocatable :: stat ! (Number of bodies)
+  real(double_precision), dimension(:), allocatable :: m,rho,rceh,epoch ! (Number of bodies)
+  real(double_precision), dimension(:,:), allocatable :: xh,vh,s ! (3,Number of bodies)
+  real(double_precision), dimension(:,:), allocatable :: ngf ! (4,Number of bodies)
+  character(len=8), dimension(:), allocatable :: id ! (Number of bodies)
   
   !------------------------------------------------------------------------------
 
@@ -330,7 +330,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   ! Local
   integer :: j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
   real(double_precision) :: q,a,e,i,p,n,l,temp,tmp2,tmp3,rhocgs,t1,tmp4,tmp5,tmp6
-  !      real(double_precision) :: v0(3,NMAX),x0(3,NMAX)
+  !      real(double_precision) :: v0(3,Number of bodies),x0(3,Number of bodies)
   logical test,oldflag,flag1,flag2
   character(len=1) :: c1
   character(len=3) :: c3
@@ -1173,7 +1173,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision) :: rce(nb_bodies_initial),rphys(nb_bodies_initial),rcrit(nb_bodies_initial),epoch(nb_bodies_initial)
   real(double_precision) :: hby2,tout,tmp0,tdump,tfun,tlog
   real(double_precision) :: dclo(CMAX),tclo(CMAX),dhit(CMAX),thit(CMAX)
-  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX),a(NMAX)
+  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX),a(nb_bodies_initial)
   external onestep,coord,bcoord
   
   !------------------------------------------------------------------------------
