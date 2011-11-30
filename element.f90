@@ -563,7 +563,7 @@ program element
   ! Write values of a, e, i and m for surviving objects in an output file
   do j = 1, nbod
      k = code(iback(j))
-     write (10,213) id(k),el(1,k),el(2,k),el(3,k),el(18,k),el(20,k),  el(19,k)
+     write (10,213) id(k),el(1,k),el(2,k),el(3,k),el(18,k) / EARTH_MASS,el(20,k),  el(19,k)
   end do
 
   !------------------------------------------------------------------------------

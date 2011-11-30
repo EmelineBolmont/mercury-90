@@ -229,7 +229,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to migration
-      call get_corotation_torque(mass(1), mass(planet), p_prop, & ! input
+      call get_corotation_torque_mass_indep_CZ(mass(1), mass(planet), p_prop, & ! input
       corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
 
       torque = torque_ref * (lindblad_torque + corotation_torque)      
@@ -372,16 +372,16 @@ subroutine read_disk_properties()
         case('b/h')
           read(value, *) B_OVER_H
         
-        case('ADIABATIC_INDEX')
+        case('adiabatic_index')
           read(value, *) ADIABATIC_INDEX
           
-        case('MEAN_MOLECULAR_WEIGHT')
+        case('mean_molecular_weight')
           read(value, *) MEAN_MOLECULAR_WEIGHT
           
         case('surface_density')
           read(value, *) INITIAL_SIGMA_0, INITIAL_SIGMA_INDEX
 
-        case('temperature')
+        case('disk_edges')
           read(value, *) INNER_BOUNDARY_RADIUS, OUTER_BOUNDARY_RADIUS
         
         case('sample')
@@ -393,10 +393,10 @@ subroutine read_disk_properties()
         case('is_dissipation')
           read(value, *) IS_DISSIPATION
           
-        case('INNER_BOUNDARY_CONDITION')
+        case('inner_boundary_condition')
           read(value, *) INNER_BOUNDARY_CONDITION
         
-        case('OUTER_BOUNDARY_CONDITION')
+        case('outer_boundary_condition')
           read(value, *) OUTER_BOUNDARY_CONDITION
           
         case default
@@ -411,6 +411,7 @@ subroutine read_disk_properties()
     write (*,*) 'Warning: The file "disk.in" does not exist. Default values have been used'
   end if
   
+  ! Whether we modified or not 'INITIAL_SIGMA_0' we calculate the value in numerical units of the initial sigma_0 value.
   INITIAL_SIGMA_0_NUM = INITIAL_SIGMA_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
   
 end subroutine read_disk_properties
@@ -678,11 +679,13 @@ subroutine initial_density_profile()
   implicit none
   
   integer :: i ! for loops
-  write(*,*) 'Warning: the initial profil is linear for tests of viscous dissipation!'
+!~   write(*,*) 'Warning: the initial profil is linear for tests of viscous dissipation!'
+!~   do i=1,NB_SAMPLE_PROFILES
+!~     surface_density_profile(i)=log(INITIAL_SIGMA_0_NUM*(1-exp(distance_log_sample(i))/exp(distance_log_sample(NB_SAMPLE_PROFILES)))) ! linear decay of the surface density, for tests
+!~   end do
   
   do i=1,NB_SAMPLE_PROFILES
-    surface_density_profile(i)=log(INITIAL_SIGMA_0_NUM*(1-exp(distance_log_sample(i))/exp(distance_log_sample(NB_SAMPLE_PROFILES))))
-!~     surface_density_profile(i) = log(INITIAL_SIGMA_0_NUM * exp(distance_log_sample(i))**(-INITIAL_SIGMA_INDEX))
+    surface_density_profile(i) = log(INITIAL_SIGMA_0_NUM * exp(distance_log_sample(i))**(-INITIAL_SIGMA_INDEX))
     surface_density_index(i) = INITIAL_SIGMA_INDEX
   end do
 end subroutine initial_density_profile
@@ -1527,22 +1530,22 @@ end subroutine print_planet_properties
     call store_scaleheight_profile()
     
     ! Unitary tests
-!~     call test_functions_FGK()
-!~     call test_function_zero_temperature(stellar_mass)
-!~     call test_temperature_interpolation()
-!~     call test_density_interpolation()
-    call test_dissipation(stellar_mass)
+    call test_functions_FGK()
+    call test_function_zero_temperature(stellar_mass)
+    call test_temperature_interpolation()
+    call test_density_interpolation()
+!~     call test_dissipation(stellar_mass)
     
     ! Physical values and plots
-!~     call study_opacity_profile()
-!~     call study_torques(stellar_mass)
-!~     call study_torques_fixed_a(stellar_mass)
-!~     call study_torques_fixed_m(stellar_mass)
-!~     call study_temperature_profile(stellar_mass)
-!~     call study_optical_depth_profile(stellar_mass)
-!~     call study_thermal_diffusivity_profile(stellar_mass)
-!~     call study_scaleheight_profile()
-!~     
+    call study_opacity_profile()
+    call study_torques(stellar_mass)
+    call study_torques_fixed_a(stellar_mass)
+    call study_torques_fixed_m(stellar_mass)
+    call study_temperature_profile(stellar_mass)
+    call study_optical_depth_profile(stellar_mass)
+    call study_thermal_diffusivity_profile(stellar_mass)
+    call study_scaleheight_profile()
+    
 !~     call study_dissipation_of_the_disk(stellar_mass)
     
   end subroutine unitary_tests
@@ -2411,7 +2414,7 @@ end subroutine print_planet_properties
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
-      call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+      call get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
       
       total_torque = lindblad_torque + corotation_torque
       
@@ -2915,6 +2918,45 @@ end subroutine print_planet_properties
     close(13)
   
   end subroutine study_dissipation_of_the_disk
+  
+  ! %%% Local modifications of the code %%%
+subroutine get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0)
+! function that return the total torque exerted by the disk on the planet 
+!
+! Global parameters
+! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
+! X_S_PREFACTOR : prefactor for the half width of the corotation region
+
+  implicit none
+  real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
+  ! Properties of the planet
+  real(double_precision), intent(in) :: mass ! the mass of the planet [Msun * K2]
+  type(PlanetProperties), intent(in) :: p_prop ! various properties of the planet
+  
+  
+  real(double_precision), intent(out) :: corotation_torque
+  real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
+  real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
+  
+  ! Local
+  real(double_precision), parameter :: steepness = 1. !increase, in units of Gamma_0 of the torque per 10AU
+  real(double_precision), parameter :: position_of_CZ = 6. ! in AU
+  
+  !------------------------------------------------------------------------------
+  ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
+  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
+  
+  
+  lindblad_torque = 0.
+  
+  !------------------------------------------------------------------------------
+
+  corotation_torque = steepness * 0.1d0 * (position_of_CZ - p_prop%radius)
+  
+
+  return
+end subroutine get_corotation_torque_mass_indep_CZ
+
 end module user_module
   
 ! TODO utiliser la masse des objets pour ne pas faire le calcul si trop massif, il faut respecter le domaine de validité des formules des couples
