@@ -836,7 +836,7 @@ end subroutine initial_density_profile
   ! function that return the viscosity of the disk in [AU^2.day^-1]
   
   ! Global parameters
-  ! density : the viscosity of the disk in [cm^2/s]
+  ! viscosity : the viscosity of the disk in [cm^2/s]
   
   implicit none
   
@@ -1530,21 +1530,21 @@ end subroutine print_planet_properties
     call store_scaleheight_profile()
     
     ! Unitary tests
-    call test_functions_FGK()
-    call test_function_zero_temperature(stellar_mass)
-    call test_temperature_interpolation()
-    call test_density_interpolation()
-!~     call test_dissipation(stellar_mass)
-    
-    ! Physical values and plots
-    call study_opacity_profile()
-    call study_torques(stellar_mass)
-    call study_torques_fixed_a(stellar_mass)
-    call study_torques_fixed_m(stellar_mass)
-    call study_temperature_profile(stellar_mass)
-    call study_optical_depth_profile(stellar_mass)
-    call study_thermal_diffusivity_profile(stellar_mass)
-    call study_scaleheight_profile()
+!~     call test_functions_FGK()
+!~     call test_function_zero_temperature(stellar_mass)
+!~     call test_temperature_interpolation()
+!~     call test_density_interpolation()
+    call test_dissipation(stellar_mass)
+!~     
+!~     ! Physical values and plots
+!~     call study_opacity_profile()
+!~     call study_torques(stellar_mass)
+!~     call study_torques_fixed_a(stellar_mass)
+!~     call study_torques_fixed_m(stellar_mass)
+!~     call study_temperature_profile(stellar_mass)
+!~     call study_optical_depth_profile(stellar_mass)
+!~     call study_thermal_diffusivity_profile(stellar_mass)
+!~     call study_scaleheight_profile()
     
 !~     call study_dissipation_of_the_disk(stellar_mass)
     
@@ -1820,11 +1820,15 @@ end subroutine print_planet_properties
   ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
   ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
   ! surface_density_profile : values of the density in log() for each value of the 'a' sample
+  ! distance_log_sample : values of 'a' in log()
+  ! viscosity : the viscosity of the disk in [cm^2/s] /!\ This parameter is modified here (which must not be done otherwise)
   
     ! Return: (in the folder 'unitary_tests/dissipation' of the current working directory where the tests are launched)
   !  data files with the following paterns :
   !    surface_density*.dat : each file correspond to a data file of the surface density at one timestep (the number correspond to the index)
   ! IN ADDITION : There are 1 gnuplot scripts to generate the output files for the surface density.
+  
+  use bessel, only : bessik
   
   implicit none
   
@@ -1836,7 +1840,7 @@ end subroutine print_planet_properties
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
-    real(double_precision), parameter :: t_max = 1.d9 ! time in years
+    real(double_precision), parameter :: t_max = 1.d8 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer, parameter :: max_frames = 100 ! Parameter to have a control over the number of output frames. (I had near 80 000 once)
     integer :: nb_dissipation_per_step
@@ -1850,9 +1854,24 @@ end subroutine print_planet_properties
     character(len=80) :: output_density, output_time, time_format, purcent_format
     integer :: time_length ! the length of the displayed time, usefull for a nice display
     
+    ! For the definition of the diffusion function
+    real(double_precision) :: r_0 = 50.d0 ! position of the dirac function (in AU)
+    integer :: r_0i ! integer that correspond to the closest 'a' value from r_0
+    real(double_precision), parameter :: t_0 = 0.016 ! the time at which the diffusion begin. Because we test a dirac function that 
+                                               ! cannot be computed so we start after the beginning of the theoritical diffusion.
+    real(double_precision), parameter :: nu = 2.28e-6 ! the viscosity for the dissipation test with a dirac. (to compare with kley, 1999)
+    real(double_precision) :: t_nu ! the viscous spreading time
+    real(double_precision) :: sigma_prefactor ! the prefactor of the theoritical function for the spreading of the dirac function (taken from kley, 1999)
+    real(double_precision) :: tau ! dimensionless time
+    real(double_precision) :: x ! normalized radius
+    real(double_precision) :: Ix, Kx, Ixp, Kxp ! the value of the I_1/4 modified bessel function (Kx, Ixp, Kxp are not used here be the subroutine return them anyway)
+    
+    real(double_precision), dimension(5), parameter :: ref_tau = (/0.018, 0.044, 0.074, 0.120, 0.184/)
+    
     integer :: i,k ! for loops
     integer :: nb_time ! The total number of 't' values. 
     integer :: error ! to retrieve error, especially during allocations
+    real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total torque during the dissipation of the disk'
     
@@ -1860,14 +1879,56 @@ end subroutine print_planet_properties
     velocity(:) = 0.d0
     
     call system("rm unitary_tests/dissipation/*")
+    t_nu = r_0**2 / (12.d0 * nu)
+    sigma_prefactor = 1 / (PI * r_0**2)
+    
+    ! We search for the closest radial value from the desired R_0 value
+    do i=1, NB_SAMPLE_PROFILES-1
+      if ((exp(distance_log_sample(i)).lt.r_0).and.(exp(distance_log_sample(i+1)).ge.r_0)) then 
+        r_0i = i
+      end if
+    end do
+    if (.not.(((r_0i.gt.0).and.(r_0i.le.NB_SAMPLE_PROFILES)))) then
+      write(*,*) 'Error: the r_0 value is not in the radial profile sample'
+      write(*,*) r_0i
+    end if
+    
+    r_0 = exp(distance_log_sample(r_0i))
+    
+    ! We store reference profiles
+    write(filename_density_ref, '(a)') 'unitary_tests/dissipation/theoritical_dissipation.dat'
+    open(10, file=filename_density_ref)
+    write(10,*) '# radial length (no dim) ; profile for t=',ref_tau 
+    do i=1,100
+      x = 0.02 * i
+      
+      do k=1,5
+        tau = ref_tau(k)
+        call bessik(2*x/tau,0.25d0,Ix, Kx, Ixp, Kxp)
+    
+        tmp2(k) = sigma_prefactor / (tau * x**0.25d0) * exp(-(1.d0 + x**2) / tau) * Ix * MSUN / AU**2
+      end do
+      write(10,*) x, tmp2
+    end do
+    close(10)
 
     ! Before dissipating the disk, we erase the 'normal' density profile with a dirac one. 
-    surface_density_profile(1:NB_SAMPLE_PROFILES) = log(0.1)
-    surface_density_profile(int(sqrt(NB_SAMPLE_PROFILES**2/2.))) = log(100.)
+    tau = t_0
+
+    do i=1, NB_SAMPLE_PROFILES
+      x = exp(distance_log_sample(i))/r_0
+      call bessik(2*x/tau,0.25d0,Ix, Kx, Ixp, Kxp)
+      
+      tmp = sigma_prefactor / (tau * x**0.25d0) * exp(-(1.d0 + x**2) / tau) * Ix
+      surface_density_profile(i) = log(tmp)
+    end do
     
-    ! We store the initial profile of the surface density in a reference file.
-    write(filename_density_ref, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',0,'.dat'
-    call store_density_profile(filename=filename_density_ref)
+!~     surface_density_profile(1:NB_SAMPLE_PROFILES) = log(1.d-7)
+!~     surface_density_profile(r_0i) = log(1/(2*PI*r_0))
+    
+!~     ! We store the initial profile of the surface density in a reference file.
+!~     write(filename_density_ref, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',0,'.dat'
+!~     call store_density_profile(filename=filename_density_ref)
     
     ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
     density_min = exp(minval(surface_density_profile(1:NB_SAMPLE_PROFILES))) * MSUN / AU**2
@@ -1876,7 +1937,7 @@ end subroutine print_planet_properties
     ! We want to know the max size of the time display in order to have a nice display, with filled spaces in the final plots
     write(output_time, '(i0)') int(t_max, kind=8)
     time_length = len(trim(output_time))
-    write(time_format, *) '(i',time_length,'.',time_length,')'
+    write(time_format, *) '(f',time_length,'.3)'
     write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years")'
     
     !------------------------------------------------------------------------------
@@ -1885,7 +1946,7 @@ end subroutine print_planet_properties
     allocate(time(time_size), stat=error)
     time(1) = t_min * 365.25d0 ! days
     
-    dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0))
+    dissipation_timestep = 0.9d0 * X_SAMPLE_STEP**2 / (4 * nu)
     nb_dissipation_per_step = int((t_max - t_min) / (max_frames * dissipation_timestep))
     
     ! if the effective number of timestep is less than the max allowed, then we force to have at least one dissipation timestep 
@@ -1944,24 +2005,28 @@ end subroutine print_planet_properties
     
     !------------------------------------------------------------------------------
     ! Gnuplot script to output the frames of the density
-    write(filename_density_ref, '(a,i0.5,a)') 'surface_density',0,'.dat'
+    write(filename_density_ref, '(a)') 'theoritical_dissipation.dat'
     open(13, file="unitary_tests/dissipation/density.gnuplot")
     write(13,*) "set terminal pngcairo enhanced size 800, 600"
-    write(13,*) 'set xlabel "semi major axis (AU)"'
+    write(13,*) 'set xlabel "distance (adim)"'
     write(13,*) 'set ylabel "Surface density (g/cm^2)"'
     write(13,*) 'set grid'
-    write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'
+    write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS/r_0, ':', OUTER_BOUNDARY_RADIUS/r_0, ']'
     write(13,*) 'set yrange [', density_min, ':', density_max, ']'
     
     do k=1, nb_time
       write(filename_density, '(a,i0.5,a)') 'surface_density',k,'.dat'
       write(output_density, '(a,i0.5,a)') 'surface_density',k,'.png'
-      write(output_time, time_format) int(time(k)/365.25, kind=8)
+      write(output_time, time_format) (time(k)/t_nu) + t_0
       
       write(13,*) "set output '",trim(output_density),"'"
-      write(13,*) 'set title "T=', trim(output_time),' years"'
-      write(13,*) "plot '",trim(filename_density_ref),"' using 1:2 with lines linetype 0 linewidth 3 notitle, \"
-      write(13,*) "     '",trim(filename_density),"' using 1:2 with lines linetype 1 notitle"
+      write(13,*) 'set title "T=', trim(output_time),' (adim)"'
+      write(13,*) "plot '",trim(filename_density_ref),"' using 1:2 with lines title 'theo t=0.018', \"
+      write(13,*) " '",trim(filename_density_ref),"' using 1:3 with lines title 'theo t=0.044', \"
+      write(13,*) " '",trim(filename_density_ref),"' using 1:4 with lines title 'theo t=0.074', \"
+      write(13,*) " '",trim(filename_density_ref),"' using 1:5 with lines title 'theo t=0.120', \"
+      write(13,*) " '",trim(filename_density_ref),"' using 1:6 with lines title 'theo t=0.184', \"
+      write(13,*) " '",trim(filename_density),"' using ($1/",r_0,"):2 with lines linetype 0 linewidth 4 notitle"
       write(13,*) ""
     end do
     close(13)
@@ -2912,7 +2977,7 @@ end subroutine print_planet_properties
       write(13,*) "set output '",trim(output_density),"'"
       write(13,*) 'set title "T=', trim(output_time),' years"'
       write(13,*) "plot '",trim(filename_density_ref),"' using 1:2 with lines linetype 0 linewidth 3 notitle, \"
-      write(13,*) "     '",trim(filename_density),"' using 1:2 with lines  linetype 1 notitle"
+      write(13,*) "     '",trim(filename_density),"' using 1:2 with lines linetype 1 notitle"
       write(13,*) ""
     end do
     close(13)
