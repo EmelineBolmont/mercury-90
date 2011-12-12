@@ -151,7 +151,7 @@ for algo in ["BS", "BS2", "MVS", "RADAU", "HYBRID"]:
 	  os.rename(file, file+EXTENTION_ORIGINAL)
 
 	
-	print("Running new binaries with "+algo+"...")
+	autiwa.printCR("Running new binaries with "+algo+"...")
 
 	# We clean the .out files because we have not renamed them to .ori files
 	clean(["out"])
@@ -161,6 +161,8 @@ for algo in ["BS", "BS2", "MVS", "RADAU", "HYBRID"]:
 	(clo_new_stdout, clo_new_stderr) = run("../close")
 
 	(ele_new_stdout, ele_new_stderr) = run("../element")
+	print("Running new binaries with "+algo+"...ok")
+	
 	print("##########################################")
 
 
