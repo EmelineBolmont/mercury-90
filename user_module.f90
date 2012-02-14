@@ -47,7 +47,8 @@ module user_module
   real(double_precision) :: INITIAL_SIGMA_0 = 450 ! the surface density at (R=1AU) [g/cm^2]
   real(double_precision) :: INITIAL_SIGMA_INDEX = 0.5! the negative slope of the surface density power law (alpha in the paper)
   real(double_precision) :: INITIAL_SIGMA_0_NUM ! the surface density at (R=1AU) [Msun/AU^2]
-  logical :: IS_DISSIPATION = .True. ! boolean to tell if there is dissipation of the disk or not.
+  integer :: DISSIPATION_TYPE = 1 ! integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
+  real(double_precision) :: TAU_DISSIPATION = -1.d0 ! the characteristic time for the exponential decay of the surface density (in years)
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
   character(len=80) :: INNER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
   character(len=80) :: OUTER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
@@ -130,7 +131,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 !  time          = current epoch [days]
 
 ! Global parameters
-! IS_DISSIPATION : boolean to tell if there is dissipation of the disk or not.
+! DISSIPATION_TYPE : boolean to tell if there is dissipation of the disk or not.
 ! dissipation_timestep : the timestep between two computation of the disk [in days]
 ! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
   use physical_constant
@@ -189,14 +190,24 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   !------------------------------------------------------------------------------
   ! If it's time (depending on the timestep we want between each calculation of the disk properties)
   ! The first 'next_dissipation_step' is set to '-1' to force the calculation for the first timestep. In fact, the first timestep will be done fornothing, but we need this in order to have a clean code.
-  if (IS_DISSIPATION) then
+  if (DISSIPATION_TYPE.ne.0) then
     if (time.gt.next_dissipation_step) then
       dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
       ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
       next_dissipation_step = time + dissipation_timestep
       
       ! we get the density profile.
-      call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
+      select case(DISSIPATION_TYPE)
+        case(1)
+          call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
+        
+        case(2)
+          call exponential_decay_density_profile()
+          
+        case default
+          write(*,*) 'Warning: The dissipation rule cannot be found.'
+          write(*,*) 'Given value :',DISSIPATION_TYPE
+      end select
       
       ! we get the temperature profile.
       call calculate_temperature_profile()
@@ -333,7 +344,7 @@ subroutine read_disk_properties()
 ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
 ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
 ! viscosity : the viscosity of the disk in [cm^2/s]
-! IS_DISSIPATION : boolean to tell if there is dissipation of the disk or not.
+! DISSIPATION_TYPE : integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
 ! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
 ! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
 
@@ -390,8 +401,12 @@ subroutine read_disk_properties()
         case('viscosity')
           read(value, *) viscosity
           
-        case('is_dissipation')
-          read(value, *) IS_DISSIPATION
+        case('dissipation_type')
+          read(value, *) DISSIPATION_TYPE
+        
+        case('disk_exponential_decay')
+          read(value, *) TAU_DISSIPATION
+          DISSIPATION_TYPE = 2
           
         case('inner_boundary_condition')
           read(value, *) INNER_BOUNDARY_CONDITION
@@ -405,8 +420,19 @@ subroutine read_disk_properties()
         end select
       end if
     end do
-    
     close(10)
+    
+    ! problem if exponential decay timescale is set, but the dissipation_type is not exponentiel decay
+    if ((TAU_DISSIPATION.gt.0.d0).and.(DISSIPATION_TYPE.ne.2)) then
+      write(*,*) 'Warning: Exponential decay of surface density must exist only if Dissipation method is "exponential decay"'
+      DISSIPATION_TYPE = 2
+    end if
+    
+    ! problem is we want exponential decay of the surface density but we did not set the exponential decay timescale
+    if ((TAU_DISSIPATION.lt.0.d0).and.(DISSIPATION_TYPE.eq.2)) then
+      write(*,*) 'Error: since dissipation_type=2, "disk_exponential_decay" is expected to be set.'
+      stop
+    end if
   else
     write (*,*) 'Warning: The file "disk.in" does not exist. Default values have been used'
   end if
@@ -987,6 +1013,35 @@ end subroutine initial_density_profile
     
   end subroutine calculate_temperature_profile
   
+  subroutine exponential_decay_density_profile()
+! subroutine that calculate new surface density profile given the old one and a timestep for the exponential decay
+! 
+! Global Parameters 
+! dissipation_timestep : the timestep between two computation of the disk [in days]
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! surface_density_profile : values of the density in MSUN/AU^2 for each value of the 'a' sample
+! surface_density_index : values of the local negative slope of the surface density profile
+!
+! Goal
+! This routine will update the surface_density_index and surface_density_profile for the next timestep dissipation_timestep of the disk
+! With exponential decay, the index of the slope is not supposed to change, so the values are not modified for surface_density_index
+    use mercury_constant
+
+    implicit none
+    
+    ! Local values
+    integer :: i
+    
+    !------------------------------------------------------------------------------
+    
+    do i=1,NB_SAMPLE_PROFILES
+      surface_density_profile(i) = surface_density_profile(i) * exp(- dissipation_timestep / (TAU_DISSIPATION * 365.25d0))
+!~       surface_density_index(i) = - (log(surface_density_profile(i)) - log(surface_density_profile(i-1))) &
+!~                                   / (log(distance_sample(i)) - log(distance_sample(i-1)))
+    end do
+  
+  end subroutine exponential_decay_density_profile
+  
   subroutine dissipate_density_profile()
 ! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
 ! 
@@ -998,6 +1053,9 @@ end subroutine initial_density_profile
 ! x_sample : values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
 ! surface_density_profile : values of the density in MSUN/AU^2 for each value of the 'a' sample
 ! surface_density_index : values of the local negative slope of the surface density profile
+!
+! Goal
+! This routine will update the surface_density_index and surface_density_profile for the next timestep dissipation_timestep of the disk
 
     use mercury_constant
 
@@ -2839,7 +2897,17 @@ end subroutine print_planet_properties
       ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
       
       ! we get the density profile.
-      call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
+      select case(DISSIPATION_TYPE)
+        case(1)
+          call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
+        
+        case(2)
+          call exponential_decay_density_profile()
+          
+        case default
+          write(*,*) 'Warning: The dissipation rule cannot be found.'
+          write(*,*) 'Given value :',DISSIPATION_TYPE
+      end select
       
       if (k.eq.time_size) then
         ! If the limit of the array is reach, we copy the values in a temporary array, allocate with a double size, et paste the 
@@ -3009,7 +3077,7 @@ subroutine get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corot
   
   ! Local
   real(double_precision), parameter :: steepness = 1. !increase, in units of Gamma_0 of the torque per 10AU
-  real(double_precision), parameter :: position_of_CZ = 6. ! in AU
+  real(double_precision), parameter :: position_of_CZ = 8. ! in AU
   
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
