@@ -3373,7 +3373,7 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   real(double_precision), parameter :: m_max = 60. ! mass in earth mass
   
   ! position of the zero torque zone for the minimum and maximum mass
-  real(double_precision), parameter :: CZ_m_min = 2.  ! in AU
+  real(double_precision), parameter :: CZ_m_min = 4.  ! in AU
   real(double_precision), parameter :: CZ_m_max = 30. ! in AU
   
   ! coeff for the function that give the position of the convergence zone in function of mass
