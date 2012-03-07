@@ -17,6 +17,7 @@ import pdb # To debug
 import numpy as np # to calculate mean and standard deviation
 from time import time
 from mercury import * # In order to create a simulation via python
+import autiwa
 
 # We import all variables linked to original output files.
 #from original_files import *

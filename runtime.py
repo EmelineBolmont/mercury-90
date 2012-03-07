@@ -182,11 +182,10 @@ if (pourcent>0):
 else:
   clo_pourcent = " ("+str(round(pourcent*100.,2))+"%)"
 
-print("Binary\tOld\tNew")
-print("mercury\t("+str(round(t_merc_old,2))+" ± "+str(round(dt_merc_old,2))+") s\t("+str(round(t_merc_new,2))+" ± "+str(round(dt_merc_new,2))+") s "+merc_pourcent)
-print("element\t("+str(round(t_ele_old,2))+" ± "+str(round(dt_ele_old,2))+") s\t("+str(round(t_ele_new,2))+" ± "+str(round(dt_ele_new,2))+") s "+ele_pourcent)
-print("close\t("+str(round(t_clo_old,2))+" ± "+str(round(dt_clo_old,2))+") s\t("+str(round(t_clo_new,2))+" ± "+str(round(dt_clo_new,2))+") s "+clo_pourcent)
-
+print("Binary        Old             New")
+print("mercury ("+str(round(t_merc_old,2))+" ± "+str(round(dt_merc_old,2))+") s ("+str(round(t_merc_new,2))+" ± "+str(round(dt_merc_new,2))+") s "+merc_pourcent)
+print("element ("+str(round(t_ele_old,2))+" ± "+str(round(dt_ele_old,2))+") s ("+str(round(t_ele_new,2))+" ± "+str(round(dt_ele_new,2))+") s "+ele_pourcent)
+print("close   ("+str(round(t_clo_old,2))+" ± "+str(round(dt_clo_old,2))+") s ("+str(round(t_clo_new,2))+" ± "+str(round(dt_clo_new,2))+") s "+clo_pourcent)
 
 #~ #############################
 #~ # Executing time comparison #
