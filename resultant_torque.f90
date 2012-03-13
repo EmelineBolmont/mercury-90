@@ -7,12 +7,13 @@ program resultant_torque
   implicit none
   
   real(double_precision), dimension(:), allocatable :: semi_major_axis, eccentricity, inclination, mass
-  real(double_precision), dimension(:), allocatable :: single_torque_adim, ref_torque
-  real(double_precision) :: torque_sum, single_torque
-  integer :: nb_planets
+  real(double_precision), dimension(:), allocatable :: single_torque_adim, ref_torque, single_torque, merged_torque
+  real(double_precision) :: torque_sum, total_torque
+  integer :: nb_planets, i_start, i_stop
+  logical :: isChangeOfSign
   
   ! For loops
-  integer :: planet
+  integer :: planet, i
   !-------------------------------------------------------------------
   
   call initialization()
@@ -21,16 +22,46 @@ program resultant_torque
   nb_planets = size(mass)
   
   call calculate_torques(mass=mass, semi_major_axis=semi_major_axis, single_torque_adim=single_torque_adim, ref_torque=ref_torque)
+    
+  ! We calculate the single torque in numerical units for each planet (in AU, MSUN and DAYS)
+  allocate(single_torque(nb_planets))
+  single_torque(1:nb_planets) = single_torque_adim(1:nb_planets) * ref_torque(1:nb_planets)
   
-  write(*,*) single_torque_adim
+  allocate(merged_torque(nb_planets))
+  merged_torque(1:nb_planets) = 0.d0
   
-  torque_sum = 0
-  do planet=1, nb_planets
-    single_torque = single_torque_adim(planet) * ref_torque(planet)
-    write(*,*) single_torque, single_torque_adim(planet), mass(planet)
-    torque_sum = torque_sum + single_torque
+  i = 1
+  do while (i.le.nb_planets)
+    isChangeOfSign = .False.
+    total_torque = 0.
+    i_start = i
+    do while (.not.(isChangeOfSign.and.(single_torque(i_start)*single_torque(i).gt.0.)))
+      total_torque = total_torque + single_torque(i)
+      
+      if (single_torque(i_start)*single_torque(i).lt.0.) then
+        isChangeOfSign = .True.
+      end if
+      
+      i = i + 1
+      if (i.gt.nb_planets) then
+        exit
+      end if
+    end do
+  
+  i_stop = i - 1
+  
+  merged_torque(i_start:i_stop) = total_torque
   end do
-  write(*,*) torque_sum
+    
+  ! We write the file 'torque.out' that store informations of the torques of the planets
+  open(10, file='torque.out', status='replace')
+  write(10,'(a)') '   a     mass  Gamma_p    Gamma_0  Gamma_res'
+  do planet=1,nb_planets
+  write(10, '(f6.2, f6.1, 3es11.2e2)') semi_major_axis(planet), mass(planet), single_torque(planet), &
+                                       ref_torque(planet), merged_torque(planet)
+  end do
+  close(10)
+  
   
   contains
   
@@ -46,7 +77,6 @@ program resultant_torque
     ! We force the value to be interesting for our tests
     TORQUE_TYPE = 'mass_dependant' ! 'real', 'mass_independant', 'mass_dependant'
     
-    write(*,*) 'Initialisation'
     call init_globals(stellar_mass)
     ! Note that the initial density profile and temperature profile are calculated inside the 'init_globals' routine.
   
