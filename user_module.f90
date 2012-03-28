@@ -188,6 +188,10 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
           call get_corotation_torque_mass_dep_CZ(mass(1), mass(planet), p_prop, & ! input
           corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
           
+        case('manual')
+          call get_corotation_torque_manual(mass(1), mass(planet), p_prop, & ! input
+          corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+          
         case default
           write(*,*) 'Warning: The torque rule cannot be found.'
           write(*,*) 'Given value :', TORQUE_TYPE

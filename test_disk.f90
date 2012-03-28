@@ -32,11 +32,15 @@ program test_disk
     stellar_mass = 1.d0 * K2
     
     ! We force the value to be interesting for our tests
-    TORQUE_TYPE = 'mass_dependant' ! 'real', 'mass_independant', 'mass_dependant'
+    TORQUE_TYPE = 'manual' ! 'real', 'mass_independant', 'mass_dependant', 'manual'
+    
     
     write(*,*) 'Initialisation'
     call init_globals(stellar_mass)
     ! Note that the initial density profile and temperature profile are calculated inside the 'init_globals' routine.
+    
+    ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
+    call study_torques(stellar_mass)
     
     ! we store in a .dat file the temperature profile
     call store_temperature_profile(filename='temperature_profile.dat')
@@ -44,23 +48,25 @@ program test_disk
     call store_scaleheight_profile()
     
     ! Unitary tests
-!~     call test_functions_FGK()
-!~     call test_function_zero_temperature(stellar_mass)
-!~     call test_temperature_interpolation()
-!~     call test_density_interpolation()
+    call test_functions_FGK()
+    call test_function_zero_temperature(stellar_mass)
+    call test_temperature_interpolation()
+    call test_manual_torque_interpolation()
+    call test_density_interpolation()
+
+    
+    ! Physical values and plots
+    call study_opacity_profile()
+    call study_torques_fixed_a(stellar_mass)
+    call study_torques_fixed_m(stellar_mass)
+    call study_temperature_profile(stellar_mass)
+    call study_optical_depth_profile(stellar_mass)
+    call study_thermal_diffusivity_profile(stellar_mass)
+    call study_scaleheight_profile()
+    
+    ! Test dissipation
 !~     call test_viscous_dissipation()
 !~     call test_exponential_dissipation()
-!~     
-!~     ! Physical values and plots
-!~     call study_opacity_profile()
-    call study_torques(stellar_mass)
-!~     call study_torques_fixed_a(stellar_mass)
-!~     call study_torques_fixed_m(stellar_mass)
-!~     call study_temperature_profile(stellar_mass)
-!~     call study_optical_depth_profile(stellar_mass)
-!~     call study_thermal_diffusivity_profile(stellar_mass)
-!~     call study_scaleheight_profile()
-    
 !~     call study_dissipation_of_the_disk(stellar_mass)
     
   end subroutine unitary_tests
@@ -325,7 +331,74 @@ program test_disk
     close(10)
   
   end subroutine test_density_interpolation
+
+  subroutine test_manual_torque_interpolation()
   
+    implicit none
+    
+    integer, parameter :: nb_a = 1000
+    real(double_precision), parameter :: a_min = 0.d0 ! in AU
+    real(double_precision), parameter :: a_max = 100.d0! in AU
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    
+    real(double_precision) :: a, sigma, sigma_index
+    
+    integer :: i,j ! for loops
+    
+    write(*,*) 'Test of the manual torque profile interpolation'
+    
+    open(10, file='torque_profile.dat')
+    do i=1, 10
+      write(10, *) i * 1.d0, 2.d0 - i * 0.45d0
+    end do
+    do i=1, 10
+      write(10, *) 10 + i * 1.d0, -2.d0 + i * 0.45d0
+    end do
+    close(10)
+    
+    call read_torque_profile()
+    
+    open(10, file='unitary_tests/test_torque_interpolation.dat')
+    do j=1,NB_SAMPLE_PROFILES
+      
+      
+      write(10,*) distance_sample(j), torque_profile(j)
+    end do
+    close(10)
+    
+    ! We create associated gnuplot files
+    open(10, file="unitary_tests/torque_interpolation.gnuplot")
+    
+
+    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+
+    
+    write(10,*) 'set ylabel "torque [?]"'
+      
+    write(10,*) 'set grid'
+    write(10,*) 'set yrange [',minval(torque_profile)-1., ':', maxval(torque_profile)+1,']'
+
+    write(10,*) 'plot "test_torque_interpolation.dat" using 1:2 with lines linetype -1 title "Interpolated profile",\'
+    write(10,*) '     "../torque_profile.dat" using 1:2 with points linetype 1 pointtype 2 linewidth 3 title "Read Profile"'
+        
+
+    
+    write(10,*) "#pause -1 # wait until a carriage return is hit"
+    write(10,*) "set terminal pdfcairo enhanced"
+
+    
+    write(10,*) '!rm "torque_interpolation.pdf"'
+    write(10,*) "set output 'torque_interpolation.pdf'"
+
+    
+    
+    write(10,*) "replot # to generate the output file"
+    
+    close(10)
+  
+  end subroutine test_manual_torque_interpolation
+
   subroutine test_viscous_dissipation()
   ! function to test the viscous dissipation with a dirac function. 
   
@@ -1000,7 +1073,25 @@ program test_disk
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! input
        p_prop=p_prop) ! Output
        
-      call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+      !------------------------------------------------------------------------------
+      ! Calculation of the acceleration due to migration
+      select case(TORQUE_TYPE)
+        case('real') ! The normal torque profile, calculated form properties of the disk
+          call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        
+        case('mass_independant') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        
+        case('mass_dependant')
+          call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        
+        case('manual')
+          call get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+          
+        case default
+          write(*,*) 'Warning: The torque rule cannot be found.'
+          write(*,*) 'Given value :', TORQUE_TYPE
+      end select
       
       total_torque = lindblad_torque + corotation_torque
 
@@ -1137,7 +1228,25 @@ program test_disk
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
-      call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+      !------------------------------------------------------------------------------
+      ! Calculation of the acceleration due to migration
+      select case(TORQUE_TYPE)
+        case('real') ! The normal torque profile, calculated form properties of the disk
+          call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        
+        case('mass_independant') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        
+        case('mass_dependant')
+          call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        
+        case('manual')
+          call get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+          
+        case default
+          write(*,*) 'Warning: The torque rule cannot be found.'
+          write(*,*) 'Given value :', TORQUE_TYPE
+      end select
       
       total_torque = lindblad_torque + corotation_torque
       
@@ -1295,6 +1404,10 @@ program test_disk
           
           case('mass_dependant')
             call get_corotation_torque_mass_dep_CZ(stellar_mass, mass(j), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+          
+          case('manual')
+            call get_corotation_torque_manual(stellar_mass, mass(j), p_prop, & ! input
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
             
           case default
