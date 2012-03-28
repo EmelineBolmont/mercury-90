@@ -349,6 +349,9 @@ do while (.not.end_of_line)
   end if
 end do
 ! At the end of each single contour line, we output a blank line to separate them in the output file (usefull for GNUPLOT in particular)
+! We use a separation of two blanck lines for gnuplot because lines between each points will be displayed in addition if two lines have the same number of points. 
+! We can skip this feature with two blanck lines instead of one.
+write(10,*) ''
 write(10,*) ''
 close(10)
 
