@@ -233,14 +233,23 @@ program mercury
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
         stop
      end if
-     write (23,'(/,a)') mem(55)(1:lmem(55))
-     write (*,'(a)') mem(55)(1:lmem(55))
-     call mxx_sync (time,h0,tol,jcen,nbod,nbig,m,xh,vh,s,rho,rceh,stat,id,epoch,ngf,ngflag)
+     
+     ! We only synchronize if there are small bodies. 
+     if (nbod.ne.nbig) then
+       write (23,'(/,a)') mem(55)(1:lmem(55))
+       write (*,'(a)') mem(55)(1:lmem(55))
+       call mxx_sync (time,h0,tol,jcen,nbod,nbig,m,xh,vh,s,rho,rceh,stat,id,epoch,ngf,ngflag)
+     else
+       write (23,'(/,a)') "No need to synchronize epochs since we don't have small bodies"
+       write (*,'(a)') "No need to synchronize epochs since we don't have small bodies"
+     end if
+     
      write (23,'(/,a,/)') mem(56)(1:lmem(56))
      write (*,'(a)') mem(56)(1:lmem(56))
      opflag = -1
      close (23)
   end if
+  
   
   ! Main integration
   if (algor.eq.1) call mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,&
