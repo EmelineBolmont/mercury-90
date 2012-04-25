@@ -410,11 +410,11 @@ program element
            l = j + 1
            m(l) = el(18,code(j)) * K2
            fr     = mio_c2re (c(j)(4:11), 0.d0, rfac,  nchar)
-           theta  = mio_c2re (c(j)(4+  nchar:11+  nchar), 0.d0, PI,     nchar)
-           phi    = mio_c2re (c(j)(4+2*nchar:11+2*nchar), 0.d0, TWOPI,     nchar)
-           fv     = mio_c2re (c(j)(4+3*nchar:11+3*nchar), 0.d0, 1.d0,     nchar)
-           vtheta = mio_c2re (c(j)(4+4*nchar:11+4*nchar), 0.d0, PI,     nchar)
-           vphi   = mio_c2re (c(j)(4+5*nchar:11+5*nchar), 0.d0, TWOPI,     nchar)
+           theta  = mio_c2re (c(j)(4+  nchar:11+  nchar), 0.d0, PI, nchar)
+           phi    = mio_c2re (c(j)(4+2*nchar:11+2*nchar), 0.d0, TWOPI,  nchar)
+           fv     = mio_c2re (c(j)(4+3*nchar:11+3*nchar), 0.d0, 1.d0, nchar)
+           vtheta = mio_c2re (c(j)(4+4*nchar:11+4*nchar), 0.d0, PI, nchar)
+           vphi   = mio_c2re (c(j)(4+5*nchar:11+5*nchar), 0.d0, TWOPI, nchar)
            call mco_ov2x (rcen,m(1),m(l),fr,theta,phi,fv,vtheta,vphi,x(1,l),x(2,l),x(3,l),v(1,l),v(2,l),v(3,l))
            el(16,code(j)) = sqrt(x(1,l)*x(1,l) + x(2,l)*x(2,l)    + x(3,l)*x(3,l))
         end do
@@ -473,7 +473,7 @@ program element
         if (timestyle.eq.3) t1 = (time - t0) / 365.25d0
 
         ! If output is required at this epoch, write elements to appropriate files
-        if (firstflag.eq.0.or.abs(time-tprevious).ge.teval) then
+        if ((firstflag.eq.0).or.(abs(time-tprevious).ge.teval)) then
            firstflag = 1
            tprevious = time
 
