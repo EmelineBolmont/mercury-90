@@ -31,8 +31,8 @@ program test_disk
 
     stellar_mass = 1.d0 * K2
     
-    ! We force the value to be interesting for our tests
-    TORQUE_TYPE = 'real' ! 'real', 'mass_independant', 'mass_dependant', 'manual'
+!~     ! We force the value to be interesting for our tests
+!~     TORQUE_TYPE = 'real' ! 'real', 'mass_independant', 'mass_dependant', 'manual'
     
     
     write(*,*) 'Initialisation'
@@ -345,16 +345,25 @@ program test_disk
     
     integer :: i,j ! for loops
     
+    logical :: isDefined
+    character(len=80) :: filename
+    
     write(*,*) 'Test of the manual torque profile interpolation'
     
-    open(10, file='torque_profile.dat')
-    do i=1, 10
-      write(10, *) i * 1.d0, 2.d0 - i * 0.45d0
-    end do
-    do i=1, 10
-      write(10, *) 10 + i * 1.d0, -2.d0 + i * 0.45d0
-    end do
-    close(10)
+    filename = 'torque_profile.dat'
+    inquire(file=filename, exist=isDefined)
+    
+    ! If no manual torque profile exists, we create one
+    if (.not.isDefined) then
+      open(10, file=filename)
+      do i=1, 10
+        write(10, *) i * 1.d0, 2.d0 - i * 0.45d0
+      end do
+      do i=1, 10
+        write(10, *) 10 + i * 1.d0, -2.d0 + i * 0.45d0
+      end do
+      close(10)
+    end if
     
     call read_torque_profile()
     
@@ -1400,6 +1409,15 @@ program test_disk
          mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! Input
          p_prop=p_prop) ! Output
          
+!~         write(*,*) a(i),p_prop%semi_major_axis 
+!~         call print_planet_properties(p_prop) 
+!~         stop
+        ! If the semi major axis is not well determined, we display a warning and give the values
+        if (abs(a(i)-p_prop%semi_major_axis)/a(i).gt.1e-2) then
+          write(*,*) 'Warning: for manual a=',a(i), 'we get :'
+          call print_planet_properties(p_prop) 
+        end if
+         
         !------------------------------------------------------------------------------
         ! Calculation of the acceleration due to migration
         select case(TORQUE_TYPE)
@@ -1501,7 +1519,7 @@ program test_disk
     
     do j=10,14
       write(j,*) "#pause -1 # wait until a carriage return is hit"
-      write(j,*) "set terminal pngcairo enhanced size 1024, 768"
+      write(j,*) "set terminal pngcairo crop enhanced size 1200, 1000"
     end do
     
     write(10,*) "set output 'corotation_torque.png'"

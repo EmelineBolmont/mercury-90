@@ -15,6 +15,7 @@ import os, pdb, autiwa
 from simu_constantes import *
 import random
 import numpy as np
+import sys
 
 # Mass threshold
 MASS_THRESHOLD = 5 # Earth mass
@@ -39,8 +40,7 @@ resonances = ["4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 # On prépare les plots
 #######################
 
-# Extensions voulues pour les fichiers de sortie
-extensions = ['pdf', 'png', 'svg']
+OUTPUT_EXTENSION = "pdf" # default extension for outputs
 
 dossier_plot = "output"
 
@@ -65,6 +65,34 @@ dossier_suppr = ["output", "test", "reference_simu"]
 # (    '  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `    )
 #  `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .'
 #    `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'
+
+isLog = False # We set the false option before. Because if not, we will erase the 'true' with other option that are not log, and 
+# thus will lead to be in the else and put log to false.
+
+isProblem = False
+problem_message = "The script can take various arguments :" + "\n" + \
+"(no spaces between the key and the values, only separated by '=')" + "\n" + \
+" * help (display a little help message on HOW to use various options" + "\n" + \
+" * ext=pdf (The extension for the output files)"
+
+# We get arguments from the script
+for arg in sys.argv[1:]:
+	try:
+		(key, value) = arg.split("=")
+	except:
+		key = arg
+	if (key == 'ext'):
+		OUTPUT_EXTENSION = value
+	elif (key == 'help'):
+		isProblem = True
+	else:
+		print("the key '"+key+"' does not match")
+		isProblem = True
+
+if isProblem:
+	print(problem_message)
+	exit()
+
 
 # We go in each sub folder of the current working directory
 
@@ -208,7 +236,7 @@ for simu in liste_simu:
 		most_massive.append(tmp[-1])
 		second_massive.append(tmp[-2])
 
-		if (tmp[-1] > 35.):
+		if (tmp[-1] > 6. and tmp[-1] < 9.):
 			print("most massive :",tmp[-1],simu)
 		#~ if (final_nb_planets[-1] == 7):
 			#~ print("nb_planets :",final_nb_planets[-1],simu)
@@ -341,33 +369,32 @@ pl.plot(limits, limits, 'k--', label="equal mass")
 
 
 print("Storing plots")
-for ext in [".png", ".pdf"]:
-	pl.figure(1)
-	pl.savefig(nom_fichier_plot1+ext)
-	
-	pl.figure(2)
-	pl.savefig(nom_fichier_plot2+ext)
-	
-	pl.figure(3)
-	#~ pl.axis('tight')
-	ylims = list(pl.ylim())
-	xlims = list(pl.xlim([0.6, 1.4]))
-	for res in resonances:
-		#~ pdb.set_trace()
-		nb_period = map(float, res.split(":")) # We get the two integers value of the resonance.
-		ratio = nb_period[0] / nb_period[1]
-		pl.plot([ratio, ratio], ylims, 'k--')
-		pl.plot([1./ratio, 1./ratio], ylims, 'k--')
-		pl.text(ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
-		pl.text(1./ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
-	pl.savefig(nom_fichier_plot3+ext)
+pl.figure(1)
+pl.savefig(nom_fichier_plot1+"."+OUTPUT_EXTENSION)
 
-	pl.figure(4)
-	pl.savefig(nom_fichier_plot4+ext)
-	
-	pl.figure(5)
-	pl.legend()
-	pl.savefig(nom_fichier_plot5+ext)
+pl.figure(2)
+pl.savefig(nom_fichier_plot2+"."+OUTPUT_EXTENSION)
+
+pl.figure(3)
+#~ pl.axis('tight')
+ylims = list(pl.ylim())
+xlims = list(pl.xlim([0.6, 1.4]))
+for res in resonances:
+	#~ pdb.set_trace()
+	nb_period = map(float, res.split(":")) # We get the two integers value of the resonance.
+	ratio = nb_period[0] / nb_period[1]
+	pl.plot([ratio, ratio], ylims, 'k--')
+	pl.plot([1./ratio, 1./ratio], ylims, 'k--')
+	pl.text(ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
+	pl.text(1./ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
+pl.savefig(nom_fichier_plot3+"."+OUTPUT_EXTENSION)
+
+pl.figure(4)
+pl.savefig(nom_fichier_plot4+"."+OUTPUT_EXTENSION)
+
+pl.figure(5)
+pl.legend()
+pl.savefig(nom_fichier_plot5+"."+OUTPUT_EXTENSION)
 	
 pl.show()
 
