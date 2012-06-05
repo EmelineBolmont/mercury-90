@@ -577,4 +577,25 @@ subroutine getNumberOfBodies(nb_big_bodies, nb_bodies)
   end do
 
 end subroutine getNumberOfBodies
+
+subroutine get_polar_coordinates(x, y, z, radius, theta)
+! subroutine that change cartesian coordinates into polar coordinates
+  use physical_constant
+  
+  implicit none
+  
+  ! Inputs
+  real(double_precision), intent(in) :: x, y, z
+  
+  ! Outputs
+  real(double_precision), intent(out) :: radius, theta
+  
+  radius = sqrt(x * x + y * y + z * z)
+  
+  ! There will be problem if radius equal 0 because in this case, the angle can take any real value possible
+  
+  ! To obtain theta inside [0; 2 pi[ (source: wikipedia) -> The function atan2 do exactly this (inside [-pi ; pi[, but with a buit-in function
+  theta = atan2(y, x) + PI
+end subroutine get_polar_coordinates
+  
 end module utilities

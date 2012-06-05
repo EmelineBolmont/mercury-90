@@ -67,7 +67,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 ! dissipation_timestep : the timestep between two computation of the disk [in days]
 ! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
   use physical_constant
-  use mercury_constant  
+  use mercury_constant
+  use turbulence
 
   implicit none
 
@@ -105,6 +106,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   
   real(double_precision), dimension(3) :: migration_acceleration
   real(double_precision), dimension(3) :: eccentricity_acceleration
+  real(double_precision), dimension(3) :: turbulence_acceleration
   real(double_precision) :: inclination_acceleration_z
   real(double_precision), save :: next_dissipation_step = -1.d0 ! next time at which we will compute the thermal properties of the disk?
   
@@ -117,7 +119,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     acceleration(3,planet) = 0.d0
   end do
   
-  call init_globals(stellar_mass=mass(1))
+  call init_globals(stellar_mass=mass(1), time=time)
     
   !------------------------------------------------------------------------------
   ! If it's time (depending on the timestep we want between each calculation of the disk properties)
@@ -222,7 +224,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       
       
       !------------------------------------------------------------------------------
-      
       ! Calculation of the acceleration due to the inclination damping
       
       if (p_prop%inclination.gt.INCLINATION_CUTOFF) then
@@ -235,11 +236,25 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       end if
       
       !------------------------------------------------------------------------------
+      ! Calculation of the acceleration due to turbulence, if needed
+      turbulence_acceleration(1) = 0.d0
+      turbulence_acceleration(2) = 0.d0
+      turbulence_acceleration(3) = 0.d0
+      
+      if (isTurbulence) then
+        call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
+      end if
+      
+      !------------------------------------------------------------------------------
       ! Calculation of the total acceleration on the planet
       
-      acceleration(1,planet) = migration_acceleration(1) + eccentricity_acceleration(1)
-      acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
-      acceleration(3,planet) = migration_acceleration(3) + eccentricity_acceleration(3) + inclination_acceleration_z
+      acceleration(1,planet) = migration_acceleration(1) + turbulence_acceleration(1) + & 
+                               eccentricity_acceleration(1)
+      acceleration(2,planet) = migration_acceleration(2) + turbulence_acceleration(2) + & 
+                               eccentricity_acceleration(2)
+      acceleration(3,planet) = migration_acceleration(3) + turbulence_acceleration(3) + & 
+                               eccentricity_acceleration(3) + inclination_acceleration_z
+      
       
     end if
   end do

@@ -36,7 +36,7 @@ program test_disk
     
     
     write(*,*) 'Initialisation'
-    call init_globals(stellar_mass)
+    call init_globals(stellar_mass=stellar_mass, time=0.d0)
     ! Note that the initial density profile and temperature profile are calculated inside the 'init_globals' routine.
     
     ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
