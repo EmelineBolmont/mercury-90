@@ -137,7 +137,7 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   real(double_precision), dimension(3), intent(out) :: turbulence_acceleration ! The gravitational potential induced by the turbulence
   
   ! Locals
-  real(double_precision) :: delta_distance = 0.01 ! The infinitesimal distance used to compute the numerical derivation [AU]
+  real(double_precision) :: delta_distance = 0.001 ! The infinitesimal distance used to compute the numerical derivation [AU]
   real(double_precision) :: r_xp1, r_xm1, r_yp1, r_ym1
   real(double_precision) :: phi_xp1, phi_xm1, phi_yp1, phi_ym1
   real(double_precision), dimension(3) :: shifted_position
@@ -232,39 +232,32 @@ subroutine get_turbulence_potential(time, p_prop, position, full_gravitational_p
 
 full_gravitational_potential = 0.0d0
 
-! la on calcule le potentiel turbulent, on fait la smme de tous les
-! modes en tenant compte de leur evolution teporemlle
+! here we calculate the turbulent potential by calculating the potential of each mode, taking into account their dissipation through time.
 do k=1,nb_modes
-  relative_time = time - turbulence_mode(k)%t_init ! c'est le temps relatif au temps d 'origine du mode
+  relative_time = time - turbulence_mode(k)%t_init ! time expressed with respect to the creation time of the mode.
   
   ! If needed, we replace an old mode by a new one
   if (relative_time.ge.turbulence_mode(k)%lifetime) then
-	call init_mode(time, turbulence_mode(k))
-	relative_time = 0.d0
+		call init_mode(time, turbulence_mode(k))
+		relative_time = 0.d0
   end if
 
   if (turbulence_mode(k)%wavenumber.gt.wavenumber_cutoff) then
-	single_potential = 0.0d0
+		single_potential = 0.0d0
   else
 
-	single_potential =  turbulence_mode(k)%chi * & 
+		single_potential =  turbulence_mode(k)%chi * & 
 					   exp(-(radius_planet - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
 					   cos(turbulence_mode(k)%wavenumber * theta_planet - &
 					   turbulence_mode(k)%phi - p_prop%omega * relative_time) * &
 					   sin(pi * relative_time / turbulence_mode(k)%lifetime) ! expression 14 of pierens et al.
 
-	full_gravitational_potential = full_gravitational_potential + single_potential
+		full_gravitational_potential = full_gravitational_potential + single_potential
   endif
 enddo
 
 ! We apply at the end the prefactor of the gravitational potential
 full_gravitational_potential = turbulent_forcing * p_prop%radius**2 * p_prop%omega**2 * full_gravitational_potential
-
-! TODO il faut que je mette ls expressions pour l'acceleration
-! turbulente, aec deux termes, en cosinus et sinus. Parc que je derive
-! directement dans le code pour avoir l'acceleration qui derive du
-! potentiel turbulence. Til faut que je fasse aussi la conversion de
-! cylindrique a cartesien, j'ai le formules sur le bloc.
 
 end subroutine get_turbulence_potential
 
@@ -296,11 +289,11 @@ SUBROUTINE normal(x)
 
   r = 1.5d0
   do while ((r.gt.1.d0).OR.(r.eq.0.d0))
-	call random_number(v1)
-	call random_number(v2)
-	v11 = 2.d0 * v1 - 1.d0
-	v22 = 2.d0 * v2 - 1.d0
-	r = v11**2 + v22**2
+		call random_number(v1)
+		call random_number(v2)
+		v11 = 2.d0 * v1 - 1.d0
+		v22 = 2.d0 * v2 - 1.d0
+		r = v11**2 + v22**2
   enddo
   
   x = v11 * dsqrt(-2.d0 * dlog(r) / r)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # script to test various pieces of python code
-# Version 1.6
+# Version 2.0
 
 from mercury_utilities import * # module that contain utilities to help create a planetary system. 
 import simulations_utilities    # module that contain utilities to help launch simulations
@@ -11,9 +11,11 @@ import subprocess               # to launch 'runjob'
 from constants import *         # Several constants, including mass of planets and so on. All constants are in CAPSLOCK
 import random
 import shutil                   # In particular to copy a file with .copy2()
+import sys                      # To enable parameters in the script (in particular)
 
 FOLDER_PREFIX = "simu" # the prefix for each sub simulation folder
 SUB_FOLDER_LOG = "random_parameters.in" # the name of the log file where we will store meta simulation information to keep a trace.
+toLaunch = True # Do we launch the simulation once the files are created?
 
 #-------------------------------------------------------------------------------
 # MANUAL : 
@@ -177,7 +179,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 			elif (key == "viscosity"):
 				viscosity = float(value)
 			elif (key == "turbulent_forcing"):
-				viscosity = float(value)
+				turbulent_forcing = float(value)
 			elif (key == "b/h"):
 				b_h = eval(value)
 			elif (key == "dissipation_type"):
@@ -227,7 +229,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	PARAMETERS += "Here are the parameters used to generate the simulation.\n"
 	PARAMETERS += "----------------------------------\nMercury Parameters\n\n"
 	PARAMETERS += "epoch = "+str(epoch/365.25)+" years\n"
-	PARAMETERS += "integration time = "+str(integration_time/365.25)+" years\n"
+	PARAMETERS += "integration time = %.2e years\n" % (integration_time/365.25)
 	PARAMETERS += "number of outputs = "+str(nb_outputs)+"\n"
 	PARAMETERS += "user force = "+str(user_force)+"\n"
 	PARAMETERS += "----------------------------------\nPlanetary System Parameters\n\n"
@@ -245,6 +247,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	PARAMETERS += "sample = "+str(sample)+"\n"
 	PARAMETERS += "adiabatic_index = "+str(adiabatic_index)+"\n"
 	PARAMETERS += "viscosity = "+str(viscosity)+" cm^2/s\n"
+	PARAMETERS += "turbulent forcing = "+str(turbulent_forcing)+"\n"
 	PARAMETERS += "b/h = "+str(b_h)+"\n"
 	PARAMETERS += "dissipation_type = "+str(dissipation_type)+"\n"
 	if (dissipation_type == 2):
@@ -393,8 +396,43 @@ def generation_simulation_parameters():
 	# We reset the counters for planet names
 	mercury.Body.resetCounter()
 
-#-------------------------------------------------------------------------------
-# Beginning of the code
+#    .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-. 
+#  .'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `.
+# (    .     .-.     .-.     .-.     .-.     .-.     .-.     .-.     .    )
+#  `.   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   .'
+#    )    )                                                       (    (
+#  ,'   ,'                                                         `.   `.
+# (    (                     DEBUT DU PROGRAMME                     )    )
+#  `.   `.                                                         .'   .' 
+#    )    )                                                       (    (
+#  ,'   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   `.
+# (    '  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `    )
+#  `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .'
+#    `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'
+
+isProblem = False
+problem_message = "The script can take various arguments :" + "\n" + \
+"(no spaces between the key and the values, only separated by '=')" + "\n" + \
+" * help (display a little help message on HOW to use various options" + "\n" + \
+" * norun (will create the various folders and file, but will not run the simulation)"
+
+# We get arguments from the script
+for arg in sys.argv[1:]:
+	try:
+		(key, value) = arg.split("=")
+	except:
+		key = arg
+	if (key == 'norun'):
+		toLaunch = False
+	elif (key == 'help'):
+		isProblem = True
+	else:
+		print("the key '"+key+"' does not match")
+		isProblem = True
+
+if isProblem:
+	print(problem_message)
+	exit()
 
 # We try to read parameters from the file
 readParameterFile("meta_simulation.in")
@@ -455,9 +493,10 @@ for index_simu in range(starting_index, starting_index+NB_SIMULATIONS):
 	#~ simulations_utilities.writeRunjobPBS("simulation.sh") # For avakas
 	
 	# We launch the job
-	print("We launch the job in "+folder_name)
-	job = subprocess.Popen("./runjob", shell=True)
-	returncode = job.wait()
+	if toLaunch:
+		print("We launch the job in "+folder_name)
+		job = subprocess.Popen("./runjob", shell=True)
+		returncode = job.wait()
 	
 	
 	# We get back in the parent directory
