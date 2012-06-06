@@ -47,6 +47,7 @@ module disk_properties
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s]
   logical :: isTurbulence = .False. ! if there is turbulence or not inside the disk
   real(double_precision) :: TURBULENT_FORCING = 1.d-5 ! the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
+  ! the value of the turbulent forcing gamma is related to the alpha parameter of the viscosity prescription by : alpha = 120 (gamma / h)^2 where h is the aspect ratio
   
   !------------------------------------------------------------------------------
   ! Values for manual torque profiles (mass dependant or independant for instance)
@@ -80,6 +81,7 @@ module disk_properties
     real(double_precision) :: semi_major_axis ! semi major axis of the planet [AU]
     real(double_precision) :: eccentricity ! the eccentricity of the planet
     real(double_precision) :: inclination ! the inclination of the planet [rad]
+    real(double_precision) :: mass ! the mass of the planet [Msun * K2]
     
     ! Properties of the disk at the location of the planet
     real(double_precision) :: sigma ! the surface density of the gas disk at the planet location [MSUN.AU^-2]
@@ -103,20 +105,21 @@ subroutine print_planet_properties(p_prop)
   implicit none
   type(PlanetProperties), intent(in) :: p_prop
   
-  write (*,*) 'angular_momentum :', p_prop%angular_momentum 
-  write (*,*) 'radius :', p_prop%radius 
-  write (*,*) 'velocity :', p_prop%velocity 
-  write (*,*) 'omega :', p_prop%omega 
-  write (*,*) 'semi_major_axis :', p_prop%semi_major_axis 
+  write (*,*) 'angular_momentum :', p_prop%angular_momentum, ' [Ms.AU^2.day^-1]'
+  write (*,*) 'radius :', p_prop%radius, ' [AU]'
+  write (*,*) 'velocity :', p_prop%velocity , ' [AU/day]'
+  write (*,*) 'omega :', p_prop%omega , ' [day-1]'
+  write (*,*) 'mass :', p_prop%mass, ' [Msun * K2]' 
+  write (*,*) 'semi_major_axis :', p_prop%semi_major_axis, ' [AU]'
   write (*,*) 'eccentricity :', p_prop%eccentricity 
-  write (*,*) 'inclination :', p_prop%inclination 
-  write (*,*) 'sigma :', p_prop%sigma 
+  write (*,*) 'inclination :', p_prop%inclination, ' [rad]'
+  write (*,*) 'sigma :', p_prop%sigma , ' [Msun.AU^-2]'
   write (*,*) 'sigma_index :', p_prop%sigma_index
-  write (*,*) 'scaleheight :', p_prop%scaleheight 
+  write (*,*) 'scaleheight :', p_prop%scaleheight , ' [AU]'
   write (*,*) 'aspect_ratio :', p_prop%aspect_ratio 
-  write (*,*) 'chi :', p_prop%chi 
-  write (*,*) 'nu :', p_prop%nu
-  write (*,*) 'temperature :', p_prop%temperature 
+  write (*,*) 'chi :', p_prop%chi , ' [AU^2.day^-1]'
+  write (*,*) 'nu :', p_prop%nu, ' [AU^2.day^-1]'
+  write (*,*) 'temperature :', p_prop%temperature , ' [K]'
   write (*,*) 'temperature_index:', p_prop%temperature_index
 end subroutine print_planet_properties
 
