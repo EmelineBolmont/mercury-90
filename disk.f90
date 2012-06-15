@@ -867,7 +867,7 @@ end subroutine initial_density_profile
                             temperature=temperature, optical_depth=tau_profile(1)) ! Output    
 
     temperature_profile(1) = temperature
-    chi_profile(1) = 1.5d0 * p_prop%nu * ADIABATIC_INDEX * (ADIABATIC_INDEX - 1.d0) * &
+    chi_profile(1) = 0.75d0 * p_prop%nu * ADIABATIC_INDEX * (ADIABATIC_INDEX - 1.d0) * &
                       (1.5d0 + sqrt(3.d0) / tau_profile(1) + 1 / tau_profile(1)**2)
     do j=2,NB_SAMPLE_PROFILES
       a_old = a
