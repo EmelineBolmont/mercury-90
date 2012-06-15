@@ -237,7 +237,7 @@ for simu in liste_simu:
 		second_massive.append(tmp[-2])
 
 		if (tmp[-1] > 6. and tmp[-1] < 9.):
-			print("most massive :",tmp[-1],simu)
+			print("most massive = %.1f in %s:" % (tmp[-1],simu))
 		#~ if (final_nb_planets[-1] == 7):
 			#~ print("nb_planets :",final_nb_planets[-1],simu)
 		#~ if (max(e_system) > 0.8):

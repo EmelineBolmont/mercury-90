@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# v0.1
+# v0.2
 # Pour lire des fichiers de simulations, récupérer les caractéristiques
 # des planètes qu'il reste en fin de simulation et les écrire dans un 
 # seul fichier que le script "analyse_simu" va lire
@@ -58,7 +58,7 @@ tableau.close()
 pl.figure(1)
 pl.clf()
 # On crée des sous plots. Pour subplot(231), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
-pl.subplot(211)
+ax1 = pl.subplot(211)
 pl.plot(a, T)
 
 pl.xlabel(unicode("a [UA]",'utf-8'))
@@ -66,7 +66,7 @@ pl.ylabel(unicode("Temperature [K]",'utf-8'))
 #~ pl.legend()
 pl.grid(True)
 
-pl.subplot(212)
+pl.subplot(212, sharex=ax1)
 pl.plot(a, index)
 
 pl.xlabel(unicode("a [UA]",'utf-8'))

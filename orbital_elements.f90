@@ -290,8 +290,8 @@ subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
   end if
 
   ! semi major axis
-  !a  = gm * r / (2.d0 * gm - r * v2) ! this was the formulae given in the mco_x2a but problems occurs sometimes
-  a = s / (1.d0 - e*e)
+  a  = gm * r / (2.d0 * gm - r * v2) ! this was the formulae given in the mco_x2a but problems occurs sometimes
+!~   a = s / (1.d0 - e*e)
   
   ! In case of collision or any situation where orbits are no longer keplerian, we don't want to get negative values of 'a'. 
   ! Instead, we will use the instantaneous position as semi major axis.
@@ -312,6 +312,9 @@ subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
 !~   end if
   !------------------------------------------------------------------------------
   
+!~   if (e.gt.0.99) then
+!~     write(*,*) a, e, i, r, v2, h
+!~   end if
 !~   write(*,*) a, e, i, r, v2, h
   return
 end subroutine mco_x2ae
