@@ -6,11 +6,13 @@
 # (You launch the script in the folder of the mercury simulation)
 
 from math import *
-import pylab as pl
 import os, pdb, autiwa
 import numpy as np
 from constants import MT, MS, RADTODEG
 import sys # to be able to retrieve arguments of the script
+import pylab as pl
+#~ import matplotlib.pyplot as pl
+from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 
 
 ###############################################
@@ -19,6 +21,7 @@ import sys # to be able to retrieve arguments of the script
 
 isLog = False # We set the false option before. Because if not, we will erase the 'true' with other option that are not log, and 
 # thus will lead to be in the else and put log to false.
+OUTPUT_EXTENSION = 'pdf' # default value
 
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
@@ -166,56 +169,77 @@ colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
 # on trace les plots
 
-pl.figure(1)
+fig = pl.figure(1)
 pl.clf()
+fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
 # On crée des sous plots. Pour subplot(311), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
-ax1 = pl.subplot(221)
+plot_a = fig.add_subplot(221)
 for planet in range(nb_planete):
 	if isLog:
-		pl.semilogx(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-		pl.semilogx(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-		pl.semilogx(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
+		plot_a.semilogx(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		plot_a.semilogx(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
+		plot_a.semilogx(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
 	else:
-		pl.plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-		pl.plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-		pl.plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
+		plot_a.plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		plot_a.plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
+		plot_a.plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
 
 pl.xlabel(unicode("time [years]",'utf-8'))
-pl.ylabel(unicode("a [UA]",'utf-8'))
+pl.ylabel(unicode("a [AU]",'utf-8'))
+#~ myyfmt = ScalarFormatter(useOffset=True)
+#~ myyfmt._set_offset(1e9)
+#~ myxfmt = ticker.ScalarFormatter()
+#~ myxfmt.set_scientific(True)
+#~ myxfmt.set_powerlimits((-3, 3)) 
+
 #~ pl.legend()
 pl.grid(True)
 
-pl.subplot(222, sharex=ax1)
+plot_e = fig.add_subplot(222, sharex=plot_a)
 for planet in range(nb_planete):
 	if isLog:
-		pl.semilogx(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		plot_e.semilogx(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 	else:
-		pl.plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		plot_e.plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 pl.xlabel(unicode("time [years]",'utf-8'))
 pl.ylabel(unicode("eccentricity",'utf-8'))
 pl.grid(True)
 
-pl.subplot(223, sharex=ax1)
+plot_m = fig.add_subplot(223, sharex=plot_a)
 for planet in range(nb_planete):
 	if isLog:
-		pl.semilogx(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		plot_m.semilogx(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 	else:
-		pl.plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		plot_m.plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 pl.xlabel(unicode("time [years]",'utf-8'))
 pl.ylabel(unicode("mass [Earths]",'utf-8'))
 pl.grid(True)
 
-pl.subplot(224, sharex=ax1)
+plot_I = fig.add_subplot(224, sharex=plot_a)
 for planet in range(nb_planete):
 	if isLog:
-		pl.semilogx(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		plot_I.semilogx(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 	else:
-		pl.plot(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		plot_I.plot(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 pl.xlabel(unicode("time [years]",'utf-8'))
 pl.ylabel(unicode("Inclination [degrees]",'utf-8'))
 pl.grid(True)
 
-
+myyfmt = ScalarFormatter(useOffset=True, useMathText=True)
+#~ myyfmt._set_offset(1e5)
+myyfmt.set_scientific(True)
+myyfmt.set_powerlimits((-2, 3)) 
+#~ myyfmt._set_offset(1e9)
+myxfmt = ScalarFormatter(useOffset=True, useMathText=True)
+myxfmt._set_offset(1e5)
+myxfmt.set_scientific(True)
+myxfmt.set_powerlimits((-3, 3)) 
+#~ myxfmt = FormatStrFormatter('%0.0e')
+#~ pdb.set_trace()
+#~ plot_a.xaxis.set_major_formatter(FormatStrFormatter('%0.0e'))
+plot_a.xaxis.set_major_formatter(myxfmt)
+plot_I.yaxis.set_major_formatter(myyfmt)
+plot_e.yaxis.set_major_formatter(myyfmt)
 
 #~ dossier_output = "output"
 #~ system("mkdir dossier_output")
@@ -224,7 +248,7 @@ pl.grid(True)
 pl.figure(1)
 nom_fichier_plot = "evolution_planete"
 #~ pl.savefig(nom_fichier_plot+'.svg', format='svg')
-pl.savefig(nom_fichier_plot+'.pdf', format='pdf')
+pl.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()
 

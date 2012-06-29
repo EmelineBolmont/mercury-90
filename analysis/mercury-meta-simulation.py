@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # script to test various pieces of python code
-# Version 2.0
+# Version 2.1
 
 from mercury_utilities import * # module that contain utilities to help create a planetary system. 
 import simulations_utilities    # module that contain utilities to help launch simulations
@@ -83,6 +83,7 @@ outer_boundary_condition = 'open'
 torque_type = 'real'
 torque_file = 'torque_profile.dat'
 torque_profile_steepness = None
+saturation_torque = None
 indep_cz = None
 mass_dep_m_min = None
 mass_dep_m_max = None
@@ -112,7 +113,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	global sigma_0, adiabatic_index, viscosity, b_h, torque_type
 	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
 	global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
-	global turbulent_forcing
+	global turbulent_forcing, saturation_torque
 	global PARAMETERS
 	
 	
@@ -196,6 +197,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 				torque_type = value
 			elif (key == "torque_profile_steepness"):
 				torque_profile_steepness = float(value)
+			elif (key == "saturation_torque"):
+				saturation_torque = float(value)
 			elif (key == "indep_cz"):
 				indep_cz = float(value)
 			elif (key == "mass_dep_m_min"):
@@ -256,6 +259,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	PARAMETERS += "outer_boundary_condition = "+str(outer_boundary_condition)+"\n"
 	PARAMETERS += "torque_type = "+str(torque_type)+"\n"
 	PARAMETERS += "torque_profile_steepness = "+str(torque_profile_steepness)+"\n"
+	PARAMETERS += "saturation_torque = "+str(saturation_torque)+"\n"
 	PARAMETERS += "indep_cz = "+str(indep_cz )+"\n"
 	PARAMETERS += "mass_dep_m_min = "+str(mass_dep_m_min )+"\n"
 	PARAMETERS += "mass_dep_m_max = "+str(mass_dep_m_max )+"\n"
@@ -378,6 +382,7 @@ def generation_simulation_parameters():
 		              disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
 		              inner_boundary_condition=inner_boundary_condition, outer_boundary_condition=outer_boundary_condition,
 	                torque_profile_steepness=torque_profile_steepness, indep_cz=indep_cz, mass_dep_m_min=mass_dep_m_min, 
+	                saturation_torque=saturation_torque,
 	                mass_dep_m_max=mass_dep_m_max, mass_dep_cz_m_min=mass_dep_cz_m_min, mass_dep_cz_m_max=mass_dep_cz_m_max)
 		diskin.write()
 		

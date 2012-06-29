@@ -46,13 +46,13 @@ subroutine print_turbulencemode_properties(mode)
   implicit none
   type(TurbulenceMode), intent(in) :: mode
   
-  write (*,*) 'radius position of the mode :', mode%r 
-  write (*,*) 'angular position of the mode :', mode%phi 
-  write (*,*) 'wavenumber :', mode%wavenumber
-  write (*,*) 'time of creation of the mode :', mode%t_init
-  write (*,*) 'lifetime of the mode :', mode%lifetime
-  write (*,*) 'chi :', mode%chi 
-  write (*,*) 'radial extent :', mode%radial_extent 
+  write(*,*) 'radius position of the mode :', mode%r 
+  write(*,*) 'angular position of the mode :', mode%phi 
+  write(*,*) 'wavenumber :', mode%wavenumber
+  write(*,*) 'time of creation of the mode :', mode%t_init
+  write(*,*) 'lifetime of the mode :', mode%lifetime
+  write(*,*) 'chi :', mode%chi 
+  write(*,*) 'radial extent :', mode%radial_extent 
 
 end subroutine print_turbulencemode_properties
 
@@ -137,67 +137,71 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   real(double_precision), dimension(3), intent(out) :: turbulence_acceleration ! The gravitational potential induced by the turbulence
   
   ! Locals
-  real(double_precision) :: delta_distance = 0.001 ! The infinitesimal distance used to compute the numerical derivation [AU]
+  real(double_precision), parameter :: delta_distance = 0.001 ! The infinitesimal distance used to compute the numerical derivation [AU]
+  real(double_precision), parameter :: acc_prefactor = - (64.d0 / (MSUN * PI * PI)) * 0.5d0 / delta_distance ! the prefactor used to calculate the acceleration
   real(double_precision) :: r_xp1, r_xm1, r_yp1, r_ym1
   real(double_precision) :: phi_xp1, phi_xm1, phi_yp1, phi_ym1
   real(double_precision), dimension(3) :: shifted_position
-  integer :: k ! for loops
   real(double_precision) :: single_prefactor ! common prefactor for a given mode, for each position
-  real(double_precision) :: acc_prefactor ! the prefactor used to calculate the acceleration
+  real(double_precision) :: planet_prefactor ! prefactor including properties of the planet that must be calculated each time.
   real(double_precision) :: tmp
   real(double_precision) :: potential_xp1, potential_xm1, potential_yp1, potential_ym1
   real(double_precision) :: relative_time ! the current time, with respect to the creation time of a given mode
+  integer :: k ! for loops  
+  
   !------------------------------------------------------------------------------  
   
   ! initialisation
   ! You must call once the subroutine "init_turbulence", in the global code or whatever
 
-	potential_xp1 = 0.d0
-	potential_xm1 = 0.d0
-	potential_yp1 = 0.d0
-	potential_ym1 = 0.d0
-	
-	call get_polar_coordinates(position(1) + delta_distance, position(2), position(3), r_xp1, phi_xp1)
-	call get_polar_coordinates(position(1) - delta_distance, position(2), position(3), r_xm1, phi_xm1)
-	call get_polar_coordinates(position(1), position(2) + delta_distance, position(3), r_yp1, phi_yp1)
-	call get_polar_coordinates(position(1), position(2) - delta_distance, position(3), r_ym1, phi_ym1)
+  potential_xp1 = 0.d0
+  potential_xm1 = 0.d0
+  potential_yp1 = 0.d0
+  potential_ym1 = 0.d0
+  
+  call get_polar_coordinates(position(1) + delta_distance, position(2), position(3), r_xp1, phi_xp1)
+  call get_polar_coordinates(position(1) - delta_distance, position(2), position(3), r_xm1, phi_xm1)
+  call get_polar_coordinates(position(1), position(2) + delta_distance, position(3), r_yp1, phi_yp1)
+  call get_polar_coordinates(position(1), position(2) - delta_distance, position(3), r_ym1, phi_ym1)
 ! This radius must be used instead of p_prop%radius because p_prop is the same during the calculation of the derivative
 
-	! la on calcule le potentiel turbulent, on fait la smme de tous les
-	! modes en tenant compte de leur evolution teporemlle
-	do k=1,nb_modes
-		relative_time = time - turbulence_mode(k)%t_init ! c'est le temps relatif au temps d 'origine du mode
-		
-		! If needed, we replace an old mode by a new one
-		if (relative_time.ge.turbulence_mode(k)%lifetime) then
-			call init_mode(time, turbulence_mode(k))
-			relative_time = 0.d0
-		end if
-
-		if (turbulence_mode(k)%wavenumber.le.wavenumber_cutoff) then
-			single_prefactor = turbulence_mode(k)%chi * sin(PI * relative_time / turbulence_mode(k)%lifetime)
-			tmp = turbulence_mode(k)%phi - p_prop%omega * relative_time
-
-potential_xp1 = potential_xp1 + single_prefactor * &
-				 exp(-(r_xp1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
-				 cos(turbulence_mode(k)%wavenumber * phi_xp1 - tmp)
-potential_xm1 = potential_xm1 + single_prefactor * &
-				 exp(-(r_xm1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
-				 cos(turbulence_mode(k)%wavenumber * phi_xm1 - tmp)
-potential_yp1 = potential_yp1 + single_prefactor * &
-				 exp(-(r_yp1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
-				 cos(turbulence_mode(k)%wavenumber * phi_yp1 - tmp)
-potential_ym1 = potential_ym1 + single_prefactor * &
-				 exp(-(r_ym1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
-				 cos(turbulence_mode(k)%wavenumber * phi_ym1 - tmp)
-		endif
-	enddo
-
-	! We apply at the end the prefactor of the gravitational potential
-	acc_prefactor = - 0.5d0 / delta_distance * turbulent_forcing * p_prop%radius**2 * p_prop%omega**2
+  ! la on calcule le potentiel turbulent, on fait la smme de tous les
+  ! modes en tenant compte de leur evolution teporemlle
+  do k=1,nb_modes
+	relative_time = time - turbulence_mode(k)%t_init ! c'est le temps relatif au temps d 'origine du mode
 	
-	turbulence_acceleration(1) = acc_prefactor * (potential_xp1 - potential_xm1) ! The acceleration in one direction equal minus the gradient of the potential
-  turbulence_acceleration(2) = acc_prefactor * (potential_yp1 - potential_ym1) 
+	! If needed, we replace an old mode by a new one
+	if (relative_time.ge.turbulence_mode(k)%lifetime) then
+	  call init_mode(time, turbulence_mode(k))
+	  relative_time = 0.d0
+	end if
+
+	if (turbulence_mode(k)%wavenumber.le.wavenumber_cutoff) then
+	  single_prefactor = turbulence_mode(k)%chi * sin(PI * relative_time / turbulence_mode(k)%lifetime)
+	  tmp = turbulence_mode(k)%phi - p_prop%omega * relative_time
+
+	  potential_xp1 = potential_xp1 + single_prefactor * &
+					   exp(-(r_xp1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
+					   cos(turbulence_mode(k)%wavenumber * phi_xp1 - tmp)
+	  potential_xm1 = potential_xm1 + single_prefactor * &
+					   exp(-(r_xm1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
+					   cos(turbulence_mode(k)%wavenumber * phi_xm1 - tmp)
+	  potential_yp1 = potential_yp1 + single_prefactor * &
+					   exp(-(r_yp1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
+					   cos(turbulence_mode(k)%wavenumber * phi_yp1 - tmp)
+	  potential_ym1 = potential_ym1 + single_prefactor * &
+					   exp(-(r_ym1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
+					   cos(turbulence_mode(k)%wavenumber * phi_ym1 - tmp)
+	endif
+  enddo
+
+  ! We apply at the end the prefactor of the gravitational potential
+  planet_prefactor = acc_prefactor * turbulent_forcing * p_prop%radius**4 * p_prop%omega**2 * p_prop%sigma
+  
+  ! To get the turbulence acceleration, we use (4), (5) and (6) of (ogihara, 2007). Some constant calculation is putted in a 
+  ! prefactor, some other calculation that depend upon the planet are calculed in another prefactor
+  turbulence_acceleration(1) = planet_prefactor * (potential_xp1 - potential_xm1) ! The acceleration in one direction equal minus the gradient of the potential
+  turbulence_acceleration(2) = planet_prefactor * (potential_yp1 - potential_ym1) 
   turbulence_acceleration(3) = 0.d0
 
 end subroutine get_turbulence_acceleration

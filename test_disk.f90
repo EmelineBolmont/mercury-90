@@ -31,13 +31,12 @@ program test_disk
 
     stellar_mass = 1.d0 * K2 ! [Msun * K2]
     
-!~     ! We force the value to be interesting for our tests
-!~     TORQUE_TYPE = 'real' ! 'real', 'mass_independant', 'mass_dependant', 'manual'
-    
-    
     write(*,*) 'Initialisation'
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
     ! Note that the initial density profile and temperature profile are calculated inside the 'init_globals' routine.
+    
+!~     ! We force the value to be interesting for our tests
+!~     TORQUE_TYPE = 'arctan_indep' ! 'real', 'linear_indep', 'arctan_indep', 'mass_dependant', 'manual'
     
     ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
     call study_torques(stellar_mass)
@@ -54,6 +53,7 @@ program test_disk
     call test_manual_torque_interpolation()
     call test_density_interpolation()
     call test_retrieval_of_orbital_elements(stellar_mass)
+    call test_turbulence()
 
     
     ! Physical values and plots
@@ -879,6 +879,133 @@ program test_disk
     close(13)
   
   end subroutine test_exponential_dissipation
+  
+  subroutine test_turbulence()
+  
+  use turbulence
+  use utilities, only : get_polar_coordinates
+  
+  implicit none
+  
+  integer, parameter :: nb_points = 10000 ! the time through which we compute the turbulence
+  integer, parameter :: nb_bins = 1000 ! the number of bins for the histogram of the turbulence torque
+  
+  real(double_precision) :: initial_time = 0.d0
+  type(PlanetProperties) :: p_prop ! various properties of a planet
+  real(double_precision) :: radius_planet
+  real(double_precision) :: theta_planet
+  real(double_precision), dimension(3) :: turbulence_acceleration
+  real(double_precision), dimension(3) :: position
+  real(double_precision), dimension(3) :: velocity
+  real(double_precision) :: time ! in days
+  real(double_precision), dimension(nb_points) :: turbulence_torque
+  
+  ! planet parameters
+  real(double_precision), parameter :: a = 4. ! in AU
+  real(double_precision), parameter :: mass = 15. * EARTH_MASS * K2 ! in [Msun * K2]
+  real(double_precision), parameter :: stellar_mass = 1. * K2 ! in [Msun * K2]
+  real(double_precision) :: delta_t = 365.25d0 * a**1.5d0 ! the timestep in days between two calculation of the turbulence torque. Must be greater than the coherence time of the turbulence to make the test of the turbulence usefull
+
+  
+  ! histogram temp values
+  real(double_precision) :: delta_bin, max_value, min_value
+  real(double_precision), dimension(nb_bins) :: bin_x_values, bin_y_values
+  integer :: index_bin
+
+  integer :: i ! For loops
+  
+  call init_turbulence(initial_time)
+  
+  !------------------------------------------------------------------------------
+  position(1:3) = 0.d0
+  velocity(1:3) = 0.d0
+  
+  position(1) = a
+
+  ! We generate cartesian coordinate for the given mass and semi major axis
+  velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+  
+  ! we store in global parameters various properties of the planet
+  call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+   p_prop=p_prop) ! Output
+  
+  call get_polar_coordinates(position(1), position(2), position(3), radius_planet, theta_planet) 
+  ! This radius must be used instead of p_prop%radius because p_prop is the same during the calculation of the derivative
+  
+  do i=1, nb_points
+    time = initial_time + i * delta_t
+    
+    call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
+    turbulence_torque(i) = - sin(theta_planet) * turbulence_acceleration(1) + cos(theta_planet) * turbulence_acceleration(2)
+    
+  end do
+  
+  ! Line only used for TESTS !!! To be erased afterwards
+!~   turbulence_torque( 1) = 3.5
+!~   turbulence_torque( 2) = 0.
+!~   turbulence_torque( 3) = 4.
+!~   turbulence_torque( 4) = 2.1
+!~   turbulence_torque( 5) = 2.9
+!~   turbulence_torque( 6) = 2.5
+!~   turbulence_torque( 7) = 3.1
+!~   turbulence_torque( 8) = 3.0
+!~   turbulence_torque( 9) = 2.2
+!~   turbulence_torque(10) = 2.3
+  ! Je dois avoir
+!~   0.5 0.1
+!~   1.5 0
+!~   2.5 0.7
+!~   3.5 0.2
+  
+
+!~   ! We initialize the values of the counting array
+!~   bin_y_values(1:nb_bins) = 0
+!~   
+!~ 
+!~   ! From the list of values, we get the values for the histogram
+!~   max_value = maxval(turbulence_torque(1:nb_points))
+!~   min_value = minval(turbulence_torque(1:nb_points))
+!~   
+!~   delta_bin = (max_value - min_value) / float(nb_bins)
+!~   
+!~   do i=1,nb_bins
+!~     bin_x_values(i) = min_value + (i-0.5d0) * delta_bin
+!~   end do
+!~     
+!~   do i=1, nb_points
+!~     ! if the value is exactly equal to max_value, we force the index to be nb_bins
+!~     index_bin = min(floor((turbulence_torque(i) - min_value) / delta_bin)+1, nb_bins)
+!~     
+!~     ! With floor, we get the immediate integer below the value. Since the index start at 1, we add 1 to the value, because the 
+!~     ! calculation will get from 0 to the number of bins. Thus, for the max value, we will get nb_bins +1, which is not possible. 
+!~     ! As a consequence, we take the lower value between the index and nb_bins, to ensure that for the max value, we get an index 
+!~     ! of nb_bins.
+!~     
+!~     bin_y_values(index_bin) = bin_y_values(index_bin) + 1
+!~   end do
+!~ 
+!~   ! We normalize the histogram
+!~   bin_y_values(1:nb_bins) = bin_y_values(1:nb_bins) / float(nb_points)
+  
+  open(10, file="unitary_tests/test_turbulence_torque.dat")
+  do i=1, nb_points
+!~     write(10,*) bin_x_values(i), bin_y_values(i)
+    write(10,*) turbulence_torque(i)
+  end do
+  close(10)
+  
+  open(10, file="unitary_tests/turbulence_torque.gnuplot")
+  write(10,*) 'set xlabel "torque"'
+  write(10,*) 'set ylabel "density of probability"'
+  write(10,*) 'plot "test_turbulence_torque.dat" using 1:2 with boxes'
+  write(10,*) '#pause -1 # wait until a carriage return is hit'
+  write(10,*) 'set terminal pdfcairo enhanced'
+  write(10,*) 'set output "turbulence_torque.pdf"'
+  write(10,*) 'replot'
+  close(10)
+  
+  end subroutine test_turbulence
+  
 
 ! %%% Physical behaviour %%%
   subroutine study_temperature_profile(stellar_mass)
@@ -1195,8 +1322,12 @@ program test_disk
         case('real') ! The normal torque profile, calculated form properties of the disk
           call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
         
-        case('mass_independant') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+        case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        
+        case('arctan_indep') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_arctan_indep(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
         
         case('mass_dependant')
           call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
@@ -1304,7 +1435,7 @@ program test_disk
     real(double_precision), parameter :: a_max = 60. ! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision), parameter :: mass = 6. * EARTH_MASS * K2
+    real(double_precision), parameter :: mass = 15. * EARTH_MASS * K2
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: lindblad_torque_units, corotation_torque_units, total_torque_units
@@ -1350,8 +1481,12 @@ program test_disk
         case('real') ! The normal torque profile, calculated form properties of the disk
           call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
         
-        case('mass_independant') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+        case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        
+        case('arctan_indep') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_arctan_indep(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
         
         case('mass_dependant')
           call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
@@ -1421,7 +1556,7 @@ program test_disk
     
     write(10,*) "set output 'torques_fixed_m.pdf'"
     write(11,*) "set output 'ref_torque_fixed_m.pdf'"
-    write(12,*) "set output 'gamma_eff_fixed_m.pdf'"
+    write(12,*) "set output 'torques_fixed_m_units.pdf'"
     
     do j=10,12
       write(j,*) "replot # to generate the output file"
@@ -1532,8 +1667,13 @@ program test_disk
             call get_corotation_torque(stellar_mass, mass(j), p_prop, & ! input
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
           
-          case('mass_independant') ! a defined torque profile to get a mass independant convergence zone
-            call get_corotation_torque_mass_indep_CZ(stellar_mass, mass(j), p_prop, & ! input
+          ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+          case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
+            call get_corotation_torque_linear_indep(stellar_mass, mass(j), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+          
+          case('arctan_indep') ! a defined torque profile to get a mass independant convergence zone
+            call get_corotation_torque_arctan_indep(stellar_mass, mass(j), p_prop, & ! input
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
           
           case('mass_dependant')

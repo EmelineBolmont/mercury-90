@@ -168,13 +168,13 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       position=position(1:3, planet), velocity=velocity(1:3,planet),& ! input
       p_prop=p_prop) ! Output
       
-      if (p_prop%eccentricity.lt.1.d0) then
+      if ((p_prop%eccentricity.lt.1.d0).and.(p_prop%semi_major_axis.gt.0.3d0)) then
         !------------------------------------------------------------------------------
         ! prefactor calculation for eccentricity and inclination damping
         e_h = p_prop%eccentricity / p_prop%aspect_ratio
         i_h = p_prop%inclination / p_prop%aspect_ratio
         time_wave = mass(1)**2 * p_prop%aspect_ratio**4 / (mass(planet) * K2 * p_prop%sigma * &
-                    p_prop%semi_major_axis**2 * p_prop%omega)
+                    p_prop%semi_major_axis**2 * p_prop%omega) ! (cresswell, 2008)
 
         !------------------------------------------------------------------------------
         ! Calculation of the acceleration due to migration
@@ -183,8 +183,13 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             call get_corotation_torque(mass(1), mass(planet), p_prop, & ! input
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
           
-          case('mass_independant') ! a defined torque profile to get a mass independant convergence zone
-            call get_corotation_torque_mass_indep_CZ(mass(1), mass(planet), p_prop, & ! input
+          ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+          case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
+            call get_corotation_torque_linear_indep(mass(1), mass(planet), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+          
+          case('arctan_indep') ! a defined torque profile to get a mass independant convergence zone
+            call get_corotation_torque_arctan_indep(mass(1), mass(planet), p_prop, & ! input
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
           
           case('mass_dependant')
@@ -257,12 +262,13 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
                                  eccentricity_acceleration(3) + inclination_acceleration_z
         
         
-!~         if (time.gt.4109624) then
-!~           write(*,*) ""
-!~           write(*,*) "time=", time
-!~           write(*,*) "x = ", position(1:3, planet)
-!~           write(*,*) "v = ", velocity(1:3, planet)
-!~           call print_planet_properties(p_prop)
+!~         if (time.gt.8.948e5) then
+!~ !          call print_planet_properties(p_prop)
+!~           call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
+!~                        time_mig, migration_acceleration, time_ecc, eccentricity_acceleration)
+!~         end if
+!~         if (time.gt.1e6) then
+!~           stop
 !~         end if
       end if
     end if
@@ -271,6 +277,55 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   !------------------------------------------------------------------------------
   return
 end subroutine mfo_user
+
+subroutine debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
+                       time_mig, migration_acceleration, time_ecc, eccentricity_acceleration)
+! subroutine that print informations helpfull to debug, such as migration timescales, accelerations and so on
+
+implicit none
+  integer, intent(in) :: n_bodies
+  real(double_precision),intent(in) :: time, position(3,n_bodies),velocity(3,n_bodies)
+  real(double_precision),intent(in) :: acceleration(3,n_bodies)
+  integer, intent(in) :: planet
+  
+  real(double_precision), intent(in) :: time_mig ! The migration timescale for the planet [day]
+  real(double_precision), intent(in) :: time_ecc ! The eccentricity damping timescale for the planet [day]
+  
+  
+  real(double_precision), dimension(3), intent(in) :: migration_acceleration
+  real(double_precision), dimension(3), intent(in) :: eccentricity_acceleration
+
+! Local
+character(len=80) :: output_format
+character(len=80) :: single_format = 'es10.3e2'
+
+!------------------------------------------------------------------------------
+write(output_format, *) '(a,',trim(single_format),'," ",a,',trim(single_format),'," ",a,',trim(single_format),')'
+
+write(*,'(a)') '################################'
+write(*,'(a, f10.2, a)') 'time = ', time, ' days'
+write(*,'(a)') '################################'
+write(*,output_format) ' x = ', position(1, planet), ' y = ', position(2, planet), ' z = ', position(3, planet)
+write(*,output_format) 'vx = ', velocity(1, planet), 'vy = ', velocity(2, planet), 'vz = ', velocity(3, planet)
+write(*,output_format) 'ax = ', acceleration(1, planet), 'ay = ', acceleration(2, planet), 'az = ', acceleration(3, planet)
+write(*,'(a)') '------------------------------------'
+write(*,'(a)') '|            Migration             |'
+write(*,'(a)') '------------------------------------'
+write(*,'(a,es10.3e2,a)') 'migration timescale =', time_mig, ' days'
+write(*,output_format) 'amx = ', migration_acceleration(1), &
+                       'amy = ', migration_acceleration(2), &
+                       'amz = ', migration_acceleration(3)
+write(*,'(a)') '------------------------------------'
+write(*,'(a)') '|       Eccentricity damping       |'
+write(*,'(a)') '------------------------------------'
+write(*,'(a,es10.3e2,a)') 'Eccentricity timescale = ', time_ecc, ' days'
+write(*,output_format) 'aex = ', eccentricity_acceleration(1), &
+                       'aey = ', eccentricity_acceleration(2), &
+                       'aez = ', eccentricity_acceleration(3)
+write(*,'(a)') '____________________________________'
+
+
+end subroutine debug_infos
 
 
 end module user_module

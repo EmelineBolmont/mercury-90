@@ -228,7 +228,7 @@ subplot_index = nb_plots_x * 100 + nb_plots_y * 10
 pl.suptitle("resonance "+str(inner_period_nb)+":"+str(outer_period_nb)+" between "+inner_planet+" and "+outer_planet)
 
 subplot_index += 1
-pl.subplot(subplot_index)
+ax1 = pl.subplot(subplot_index)
 pl.plot(t, (a_outer / a_inner)**1.5)
 pl.xlabel(unicode("time [years]",'utf-8'))
 pl.ylabel(unicode("period ratio",'utf-8'))
@@ -236,7 +236,7 @@ pl.ylabel(unicode("period ratio",'utf-8'))
 pl.grid(True)
 
 subplot_index += 1
-pl.subplot(subplot_index)
+pl.subplot(subplot_index, sharex=ax1)
 pl.plot(t, delta_longitude)
 pl.xlabel(unicode("time [years]",'utf-8'))
 pl.ylabel(unicode("w2 - w1",'utf-8'))
@@ -245,7 +245,7 @@ pl.grid(True)
 
 for i in range(q+1):
   subplot_index += 1
-  pl.subplot(subplot_index)
+  pl.subplot(subplot_index, sharex=ax1)
   pl.plot(t, phi[i])
   pl.xlabel(unicode("time [years]",'utf-8'))
   pl.ylabel(unicode("φ"+str(i),'utf-8'))
