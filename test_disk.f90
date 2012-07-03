@@ -887,8 +887,8 @@ program test_disk
   
   implicit none
   
-  integer, parameter :: nb_points = 10000 ! the time through which we compute the turbulence
-  integer, parameter :: nb_bins = 100 ! the number of bins for the histogram of the turbulence torque
+  integer, parameter :: nb_points = 100000 ! the time through which we compute the turbulence
+  integer, parameter :: nb_bins = 200 ! the number of bins for the histogram of the turbulence torque
   
   real(double_precision) :: initial_time = 0.d0
   type(PlanetProperties) :: p_prop ! various properties of a planet
@@ -938,7 +938,7 @@ program test_disk
     
     call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
     turbulence_torque(i) = (- sin(theta_planet) * turbulence_acceleration(1) + cos(theta_planet) * turbulence_acceleration(2)) * &
-                          DAY**2 / AU
+                          DAY**2 / AU**2 * a
 !~     turbulence_torque(i) = turbulence_acceleration(2)
     
     write(10,*) time, turbulence_torque(i)
@@ -983,8 +983,13 @@ program test_disk
   open(10, file="unitary_tests/turbulence_torque.gnuplot")
   write(10,*) 'set xlabel "torque"'
   write(10,*) 'set ylabel "density of probability"'
-  write(10,*) 'plot "turbulence_torque.hist" using 1:2 with boxes'
+  write(10,*) 'f(x) = c * exp(-(a*(x-mean)/sigma)**2)'
+  write(10,*) 'a=1e60 ; c=1. ; sigma = 1. ; mean=0.'
+  write(10,*) 'fit f(x) "turbulence_torque.hist" using 1:2 via a,c,sigma'
+  write(10,*) 'plot f(x) with lines title "gaussian fit", \'
+  write(10,*) '"turbulence_torque.hist" using 1:2 with boxes title "turbulence torque"'
   write(10,*) '#pause -1 # wait until a carriage return is hit'
+  write(10,*) 'show variables'
   write(10,*) 'set terminal pdfcairo enhanced'
   write(10,*) 'set output "turbulence_torque.pdf"'
   write(10,*) 'replot'
