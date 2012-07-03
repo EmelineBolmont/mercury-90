@@ -5,7 +5,7 @@ module utilities
 !** and things that are perfectly separated from mercury particuliar
 !** behaviour
 !**
-!** Version 1.0 - june 2011
+!** Version 1.1 - juillet 2012
 !*************************************************************
   use types_numeriques
 
@@ -515,7 +515,7 @@ subroutine getNumberOfBodies(nb_big_bodies, nb_bodies)
      call mio_spl (150,string,nsub,lim)
      infile(j)(1:(lim(2,1)-lim(1,1)+1)) = string(lim(1,1):lim(2,1))
      do k = 1, j - 1
-        if (infile(j).eq.infile(k)) write(*,*) 'Error: dans "files.in", certains fichiers sont identiques'
+        if (infile(j).eq.infile(k)) write(*,*) 'Error: In "files.in", Some files are identical.'
      end do
   end do
   close (15)
@@ -595,7 +595,13 @@ subroutine get_polar_coordinates(x, y, z, radius, theta)
   ! There will be problem if radius equal 0 because in this case, the angle can take any real value possible
   
   ! To obtain theta inside [0; 2 pi[ (source: wikipedia) -> The function atan2 do exactly this (inside [-pi ; pi[, but with a buit-in function
-  theta = atan2(y, x) + PI
+  theta = atan2(y, x)
+  
+  ! We want the output between 0 and 2*PI
+  if (theta.lt.0.) then
+    theta = theta + TWOPI
+  endif
+  
 end subroutine get_polar_coordinates
   
 end module utilities
