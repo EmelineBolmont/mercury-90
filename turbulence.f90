@@ -122,12 +122,20 @@ subroutine init_turbulence(time)
   
   do i=1, nb_modes
 	call init_mode(time, turbulence_mode(i))
-!~ 	call print_turbulencemode_properties(turbulence_mode(i))
   end do
-!~   stop
+  
 end subroutine init_turbulence
 
 subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
+! Routine that return the acceleration feeled by the planet described by p_prop and position due to turbulence.
+! 
+! Global Parameter
+! TURBULENT_FORCING : the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
+!                     the value of the turbulent forcing gamma is related to the alpha parameter of 
+!                     the viscosity prescription by : alpha = 120 (gamma / h)^2 where h is the aspect ratio
+
+
+
   use utilities, only : get_polar_coordinates
 
   implicit none
@@ -141,7 +149,7 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   real(double_precision), dimension(3), intent(out) :: turbulence_acceleration ! The gravitational potential induced by the turbulence
   
   ! Locals
-  real(double_precision), parameter :: acc_prefactor = (64.d0 / (MSUN * PI * PI)) ! the prefactor used to calculate the acceleration
+  real(double_precision), parameter :: acc_prefactor = (64.d0 / (K2 * PI * PI)) ! the prefactor used to calculate the acceleration
   real(double_precision) :: r, phi ! polar coordinates of the planet
   real(double_precision), dimension(3) :: shifted_position
   real(double_precision) :: single_prefactor ! common prefactor for a given mode, for each position
@@ -191,7 +199,7 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   enddo
 
   ! We apply at the end the prefactor of the gravitational potential
-  planet_prefactor = acc_prefactor * turbulent_forcing * p_prop%radius**3 * p_prop%omega**2 * p_prop%sigma
+  planet_prefactor = acc_prefactor * TURBULENT_FORCING * p_prop%radius**3 * p_prop%omega**2 * p_prop%sigma
   
   force_radius = planet_prefactor * sum_element_r
   force_theta  = planet_prefactor * sum_element_theta
@@ -241,21 +249,21 @@ do k=1,nb_modes
   
   ! If needed, we replace an old mode by a new one
   if (relative_time.ge.turbulence_mode(k)%lifetime) then
-		call init_mode(time, turbulence_mode(k))
-		relative_time = 0.d0
+	call init_mode(time, turbulence_mode(k))
+	relative_time = 0.d0
   end if
 
   if (turbulence_mode(k)%wavenumber.gt.wavenumber_cutoff) then
-		single_potential = 0.0d0
+	single_potential = 0.0d0
   else
 
-		single_potential =  turbulence_mode(k)%chi * & 
-					   exp(-(radius_planet - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
-					   cos(turbulence_mode(k)%wavenumber * theta_planet - &
-					   turbulence_mode(k)%phi - p_prop%omega * relative_time) * &
-					   sin(pi * relative_time / turbulence_mode(k)%lifetime) ! expression 14 of pierens et al.
+	single_potential =  turbulence_mode(k)%chi * & 
+				   exp(-(radius_planet - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
+				   cos(turbulence_mode(k)%wavenumber * theta_planet - &
+				   turbulence_mode(k)%phi - p_prop%omega * relative_time) * &
+				   sin(pi * relative_time / turbulence_mode(k)%lifetime) ! expression 14 of pierens et al.
 
-		full_gravitational_potential = full_gravitational_potential + single_potential
+	full_gravitational_potential = full_gravitational_potential + single_potential
   endif
 enddo
 
@@ -292,11 +300,11 @@ SUBROUTINE normal(x)
 
   r = 1.5d0
   do while ((r.gt.1.d0).OR.(r.eq.0.d0))
-		call random_number(v1)
-		call random_number(v2)
-		v11 = 2.d0 * v1 - 1.d0
-		v22 = 2.d0 * v2 - 1.d0
-		r = v11**2 + v22**2
+	call random_number(v1)
+	call random_number(v2)
+	v11 = 2.d0 * v1 - 1.d0
+	v22 = 2.d0 * v2 - 1.d0
+	r = v11**2 + v22**2
   enddo
   
   x = v11 * dsqrt(-2.d0 * dlog(r) / r)

@@ -89,7 +89,7 @@ mass_dep_m_min = None
 mass_dep_m_max = None
 mass_dep_cz_m_min = None
 mass_dep_cz_m_max = None
-turbulent_forcing = None
+is_turbulence = None
 
 #-------------------------------------------------------------------------------
 # Definition of functions
@@ -113,7 +113,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	global sigma_0, adiabatic_index, viscosity, b_h, torque_type
 	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
 	global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
-	global turbulent_forcing, saturation_torque
+	global is_turbulence, saturation_torque
 	global PARAMETERS
 	
 	
@@ -179,8 +179,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 				adiabatic_index = float(value)
 			elif (key == "viscosity"):
 				viscosity = float(value)
-			elif (key == "turbulent_forcing"):
-				turbulent_forcing = float(value)
+			elif (key == "is_turbulence"):
+				is_turbulence = int(value)
 			elif (key == "b/h"):
 				b_h = eval(value)
 			elif (key == "dissipation_type"):
@@ -250,7 +250,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	PARAMETERS += "sample = "+str(sample)+"\n"
 	PARAMETERS += "adiabatic_index = "+str(adiabatic_index)+"\n"
 	PARAMETERS += "viscosity = "+str(viscosity)+" cm^2/s\n"
-	PARAMETERS += "turbulent forcing = "+str(turbulent_forcing)+"\n"
+	PARAMETERS += "is_turbulence = "+str(is_turbulence)+"\n"
 	PARAMETERS += "b/h = "+str(b_h)+"\n"
 	PARAMETERS += "dissipation_type = "+str(dissipation_type)+"\n"
 	if (dissipation_type == 2):
@@ -378,7 +378,7 @@ def generation_simulation_parameters():
 	if (user_force == "yes"):
 		diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=(sigma_0, 0.5), 
 		              disk_edges=(1., 100.), viscosity=viscosity, sample=sample, dissipation_type=dissipation_type, 
-		              turbulent_forcing=turbulent_forcing, 
+		              is_turbulence=is_turbulence, 
 		              disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
 		              inner_boundary_condition=inner_boundary_condition, outer_boundary_condition=outer_boundary_condition,
 	                torque_profile_steepness=torque_profile_steepness, indep_cz=indep_cz, mass_dep_m_min=mass_dep_m_min, 

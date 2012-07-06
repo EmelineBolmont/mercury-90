@@ -603,5 +603,56 @@ subroutine get_polar_coordinates(x, y, z, radius, theta)
   endif
   
 end subroutine get_polar_coordinates
+
+function get_mean(vector)
+! function that calculate the mean value of a one dimensional array
+
+implicit none
+
+! Input
+real(double_precision), intent(in), dimension(:) :: vector
+
+! Output
+real(double_precision) :: get_mean
+!--------------------------------------------------------
+
+get_mean = sum(vector) / size(vector)
+
+end function get_mean
+
+function get_stdev(vector)
+! function that calculate the standard deviation of a set of value given as a one dimensional array
+
+implicit none
+
+! Input
+real(double_precision), intent(in), dimension(:) :: vector
+
+! Output
+real(double_precision) :: get_stdev
+!--------------------------------------------------------
+
+get_stdev = sqrt(sum((vector - get_mean(vector))**2) / size(vector))
+
+end function get_stdev
+
+function vect_product( x, y )
+  ! Return the vectoriel product of two vectors
+  implicit none
+
+  ! The function - output :
+  real(double_precision), dimension(3) :: vect_product
+
+  ! Inputs :
+  real(double_precision), dimension(3), intent(in) :: x, y
+!--------------------------------------------------------
+
+  vect_product(1) = x(2) * y(3) - x(3) * y(2)
+  vect_product(2) = x(3) * y(1) - x(1) * y(3)
+  vect_product(3) = x(1) * y(2) - x(2) * y(1)
+
+
+
+end function vect_product
   
 end module utilities

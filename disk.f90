@@ -114,7 +114,7 @@ subroutine read_disk_properties()
 ! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
 ! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
 ! TURBULENT_FORCING : the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
-! isTurbulence : a boolean to tell if there is turbulence or not
+! IS_TURBULENCE : a boolean to tell if there is turbulence or not
 
 
   implicit none
@@ -123,6 +123,7 @@ subroutine read_disk_properties()
   character(len=1), parameter :: comment_character = '!' ! character that will indicate that the rest of the line is a comment
   integer :: comment_position ! the index of the comment character on the line. If zero, there is none on the current string
   integer :: error ! to store the state of a read instruction
+  integer :: boolean ! integer value used to define a logical value (a bit complicated to define directly a boolean)
   
   logical :: isParameter, isDefined
   character(len=80) :: identificator, value
@@ -208,9 +209,16 @@ subroutine read_disk_properties()
         case('mass_dep_cz_m_max')
           read(value, *) MASS_DEP_CZ_M_MAX
          
-        case('turbulent_forcing')
-          read(value, *) TURBULENT_FORCING
-          isTurbulence = .True.
+        case('is_turbulence')
+          read(value, *) boolean
+          if (boolean.eq.1) then
+						IS_TURBULENCE = .True.
+          else if (boolean.eq.0) then
+						IS_TURBULENCE = .False.
+          else
+						write(*,*) "Warning: An unknown value for identificator='", trim(identificator), " has been found'"
+						write(*,*) "         value(s)='", trim(value),"'"
+					end if
 
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
@@ -269,11 +277,11 @@ subroutine write_disk_properties()
   write(10,'(a,f4.2)') 'adiabatic index = ', ADIABATIC_INDEX
   write(10,'(a,f4.2)') 'mean molecular weight = ', MEAN_MOLECULAR_WEIGHT
   write(10,'(a,es10.1e2,a)') 'viscosity = ', viscosity, ' (cm^2/s)'
-  if (isTurbulence) then
-    write(10,'(a,l)') 'is turbulence = ', isTurbulence
-    write(10,'(a,es10.1e2,a)') 'turbulence_forcing = ', TURBULENT_FORCING, ' (adim)'
+  write(10,'(a,l)') 'is turbulence (T:True;F:False) = ', IS_TURBULENCE
+  if (IS_TURBULENCE) then
+    write(10,'(a,es10.1e2,a)') '  turbulence_forcing = ', TURBULENT_FORCING, ' (adim)'
   else
-    write(10,'(a)') 'No turbulence'
+    write(10,'(a)') '  No turbulence'
   end if
   write(10,'(a,f6.1,a,f4.2 ,a)') 'initial surface density = ',INITIAL_SIGMA_0, ' * R^(-',INITIAL_SIGMA_INDEX,') (g/cm^2)'
   write(10,*) ''
@@ -283,7 +291,7 @@ subroutine write_disk_properties()
   write(10,'(a)') 'Possible values : &
   0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile'
   write(10,'(a,i1)') 'dissipation of the disk = ',DISSIPATION_TYPE
-select case(DISSIPATION_TYPE)
+	select case(DISSIPATION_TYPE)
 		case(0) 
 			write(10,'(a)') '  0 : no dissipation of the density profile.'
 		
@@ -580,8 +588,6 @@ subroutine init_globals(stellar_mass, time)
     FirstCall = .False.
     
     call read_disk_properties()
-    ! we write all the values used by user_module, those given by the user, and the default ones, in 'disk.out' file
-    call write_disk_properties() 
     
     allocate(distance_sample(NB_SAMPLE_PROFILES))
     distance_sample(1:NB_SAMPLE_PROFILES) = 0.d0
@@ -642,9 +648,14 @@ subroutine init_globals(stellar_mass, time)
       call read_torque_profile()
     end if
     
-    if (isTurbulence) then
+    if (IS_TURBULENCE) then
       call init_turbulence(time)
     end if
+    ! We initialize the value even if there is no turbulence declared, because in the tests, turbulence is not always declared, even if we test it.
+    call init_turbulence_forcing()     
+    
+    ! we write all the values used by user_module, those given by the user, and the default ones, in 'disk.out' file
+    call write_disk_properties() 
     
     ! Here we display various warning for specific modification of the code that must be kept in mind (because this is not the normal behaviour of the code)
 
@@ -796,6 +807,8 @@ end subroutine initial_density_profile
     real(double_precision) :: x1, x2, y1, y2
     real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
 
+		!------------------------------------------------------------------------------
+
     if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. OUTER_BOUNDARY_RADIUS)) then
       
       x_radius = 2.d0 * sqrt(radius)
@@ -832,11 +845,57 @@ end subroutine initial_density_profile
   real(double_precision) :: get_viscosity ! the viscosity of the disk in [AU^2.day^-1]
   
   real(double_precision), intent(in) :: radius ! the distance from the central object in AU
-  
+  !------------------------------------------------------------------------------
   get_viscosity = viscosity * DAY / AU**2
   ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
   
   end function get_viscosity
+  
+  subroutine init_turbulence_forcing()
+  ! function that return the viscosity of the disk in [AU^2.day^-1]
+  
+  ! Parameters
+  ! radius : The orbital distance in AU
+  
+  ! Global parameters
+  ! viscosity : the viscosity of the disk in [cm^2/s]
+  
+  implicit none
+  
+  ! Output
+!~   No outputs
+  
+  ! Parameter
+  real(double_precision) :: radius ! the distance from the central object in AU
+  real(double_precision), parameter :: mass = 1. * EARTH_MASS ! in [Msun], the mass of a planet (needed to compute the angular velocity)
+  real(double_precision), parameter :: stellar_mass = 1. ! stellar mass in [Msun]
+  
+  ! Locals
+  real(double_precision), dimension(3) :: position
+  real(double_precision), dimension(3) :: velocity
+  type(PlanetProperties) :: p_prop ! various properties of a planet
+  !------------------------------------------------------------------------------
+   
+  radius = (OUTER_BOUNDARY_RADIUS - INNER_BOUNDARY_RADIUS) / 2.
+  
+  position(1:3) = 0.d0
+  velocity(1:3) = 0.d0
+  
+  position(1) = radius
+
+  ! We generate cartesian coordinate for the given mass and semi major axis
+  velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+  
+  ! we store in global parameters various properties of the planet
+  call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+   p_prop=p_prop) ! Output
+  
+  TURBULENT_FORCING = sqrt(get_viscosity(radius) / (140. * p_prop%omega)) / radius
+  
+!~   write(*,'(a,es10.3e2)') 'turbulence forcing = ', TURBULENT_FORCING
+!~   stop
+  
+  end subroutine init_turbulence_forcing
   
   function get_opacity(temperature, num_bulk_density)
   ! subroutine that return the opacity of the disk at the location of the planet given various parameters
