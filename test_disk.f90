@@ -892,11 +892,11 @@ program test_disk
   ! Inputs
   real(double_precision), intent(in) :: stellar_mass ! in [Msun * K2]
   
-  integer, parameter :: nb_points = 10000 ! the time through which we compute the turbulence
+  integer, parameter :: nb_points = 100000 ! the time through which we compute the turbulence
   integer, parameter :: nb_bins = 100 ! the number of bins for the histogram of the turbulence torque
   
-  real(double_precision) :: initial_time = 0.d0
-  type(PlanetProperties) :: p_prop ! various properties of a planet
+  real(double_precision) :: initial_time = 0.d0 ! in days
+  type(PlanetProperties) :: p_prop ! vari0ous properties of a planet
   real(double_precision) :: radius_planet
   real(double_precision) :: theta_planet
   real(double_precision), dimension(3) :: turbulence_acceleration ! in AU/DAY^2
@@ -906,9 +906,9 @@ program test_disk
   real(double_precision), dimension(nb_points) :: turbulence_torque ! in AU^2/DAY^2
   
   ! planet parameters
-  real(double_precision), parameter :: a = 100. ! in AU
+  real(double_precision), parameter :: a = 1. ! in AU
   real(double_precision), parameter :: mass = 1. * K2 * EARTH_MASS ! in [Msun * K2]
-  real(double_precision) :: delta_t = 365.25d0 * a**1.5d0 ! the timestep in days between two calculation of the turbulence torque. Must be greater than the coherence time of the turbulence to make the test of the turbulence usefull
+  real(double_precision) :: delta_t = 365.25d0!365.25d0 * a**1.5d0 ! the timestep in days between two calculation of the turbulence torque. Must be greater than the coherence time of the turbulence to make the test of the turbulence usefull
 
   
   ! histogram temp values
@@ -936,13 +936,14 @@ program test_disk
   call get_polar_coordinates(position(1), position(2), position(3), radius_planet, theta_planet) 
   ! This radius must be used instead of p_prop%radius because p_prop is the same during the calculation of the derivative
   
+  time = initial_time
   open(10, file="unitary_tests/turbulence_torque.dat")
   do i=1, nb_points
-    time = initial_time + i * delta_t
+    time = time + delta_t
     
     call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
-    turbulence_torque(i) = (- sin(theta_planet) * turbulence_acceleration(1) + cos(theta_planet) * turbulence_acceleration(2)) * a 
-    
+    turbulence_torque(i) = (-sin(theta_planet) * turbulence_acceleration(1) + cos(theta_planet) * turbulence_acceleration(2)) * a 
+
     write(10,*) time, turbulence_torque(i)
   end do
   close(10)
