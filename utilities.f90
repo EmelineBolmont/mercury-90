@@ -5,7 +5,7 @@ module utilities
 !** and things that are perfectly separated from mercury particuliar
 !** behaviour
 !**
-!** Version 1.1 - juillet 2012
+!** Version 1.2 - juillet 2012
 !*************************************************************
   use types_numeriques
 
@@ -654,5 +654,78 @@ function vect_product( x, y )
 
 
 end function vect_product
+
+subroutine get_histogram(datas, nb_bins, bin_x_values, bin_y_values) 
+! the subroutine get in argument a one dimension array and 
+! return an histogram of the number of bins specified in argument. By default the min and max for bins is the min and max of the 
+! data set. With optional argument it should be possible easily to accept in argument the min and max for bins (with default 
+! values) but it is not implemented yet since I have no need for this so far.
+!
+! Argument :
+! datas : a one dimension array that contains data to be used for the histogram
+! nb_bins : the number of bin we want for the histogram. Must fit the size of the two last argument, 
+!         that are used to store values of x and y for the histogram.
+!
+! Return : 
+! bin_x_values : The x values for the histogram. The array must be of size 'nb_bins'
+! bin_y_values : The y values for the histogram. The array must be of size 'nb_bins'
+
+implicit none
+
+! Input
+real(double_precision), dimension(:), intent(in) :: datas
+integer, intent(in) :: nb_bins
+
+! Output
+real(double_precision), dimension(nb_bins), intent(out) :: bin_x_values
+real(double_precision), dimension(nb_bins), intent(out) :: bin_y_values
+
+! Locals
+real(double_precision) :: delta_bin, max_value, min_value
+integer :: index_bin, nb_points
+
+integer :: i ! For loops
+
+!--------------------------------------------------------
+
+  ! We get the total number of points 
+  nb_points = size(datas)
+
+  ! We initialize the values of the counting array
+  bin_y_values(1:nb_bins) = 0
+
+  ! From the list of values, we get the values for the histogram
+  max_value = maxval(datas(1:nb_points))
+  min_value = minval(datas(1:nb_points))
+  
+  delta_bin = (max_value - min_value) / float(nb_bins)
+  
+  if (delta_bin.eq.0.d0) then
+    write(*,'(a, es6.0e2,a, es7.0e2,a, es7.0e2,a)') 'subroutine get_histogram: For ', float(nb_points), &
+             ' values, the turbulent torque is between [', min_value, ' ; ', max_value, ']'
+    write(*,'(a, i5, a, es7.0e2)') 'Thus, for ', nb_bins, ' bins in the histogram, the single width of a bin is : ', delta_bin
+    write(*,'(a)') 'Program excited.'
+    stop
+  end if
+  
+  do i=1,nb_bins
+    bin_x_values(i) = min_value + (i - 0.5d0) * delta_bin
+  end do
+    
+  do i=1, nb_points
+    ! if the value is exactly equal to max_value, we force the index to be nb_bins
+    index_bin = min(floor((datas(i) - min_value) / delta_bin)+1, nb_bins)
+    
+    ! With floor, we get the immediate integer below the value. Since the index start at 1, we add 1 to the value, because the 
+    ! calculation will get from 0 to the number of bins. Thus, for the max value, we will get nb_bins +1, which is not possible. 
+    ! As a consequence, we take the lower value between the index and nb_bins, to ensure that for the max value, we get an index 
+    ! of nb_bins.
+    bin_y_values(index_bin) = bin_y_values(index_bin) + 1
+  end do
+
+  ! We normalize the histogram
+  bin_y_values(1:nb_bins) = bin_y_values(1:nb_bins) / float(nb_points)
+
+end subroutine get_histogram
   
 end module utilities

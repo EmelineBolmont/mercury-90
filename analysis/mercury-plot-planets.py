@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# v1.0
+# v1.0.1
 # Script that will display the evolution of the semi major axis, mass, 
 # eccentricity and inclination for all the planets of the current simulation 
 # (You launch the script in the folder of the mercury simulation)
@@ -21,7 +21,7 @@ from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 
 isLog = False # We set the false option before. Because if not, we will erase the 'true' with other option that are not log, and 
 # thus will lead to be in the else and put log to false.
-OUTPUT_EXTENSION = 'pdf' # default value
+OUTPUT_EXTENSION = 'png' # default value in bitmap, because vectoriel can take time and space if there is a lot of data
 
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
@@ -69,75 +69,34 @@ liste_aei = process_stdout.split("\n")
 liste_aei.remove('') # we remove an extra element that doesn't mean anything
 nb_planete = len(liste_aei)
 
-
 ####################
-# On lit, pour chaque planète, le contenu du fichier et on stocke les variables qui nous intéressent.
+# On lit, pour chaque planete, le contenu du fichier et on stocke les variables qui nous intÃ©ressent.
 ####################
-t = [] # temps en année
-a = [] # demi-grand axe en ua
-e = [] # excentricité
+t = [] # time in years
+a = [] # semi major axis in AU
+e = [] # eccentricity
 q = [] # perihelion
 Q = [] # aphelion
 I = [] # inclinaison (degrees)
-n = [] # longitude of ascending node (degrees)
-m = [] # masse de la planète en masse solaire
+m = [] # planet mass in earth mass
 
-
-
-# On récupère les données orbitales
+# On rÃ©cupÃ¨re les donnÃ©es orbitales
 for planete in range(nb_planete):
 	
 	fichier_source = liste_aei[planete]
-	tableau = open(fichier_source, 'r')
+	(ti, ai, ei, Ii, mi) = np.loadtxt(fichier_source, skiprows=4, usecols = (0,1,2,3,7), dtype=float, unpack=True)
+	qi = ai * (1 - ei)
+	Qi = ai * (1 + ei)
+	mi = (MS / MT) * mi
 	
-	t.append([]) # temps en année
-	a.append([]) # demi-grand axe en ua
-	e.append([]) # excentricité
-	q.append([]) # perihelion
-	Q.append([]) # aphelion
-	I.append([]) # inclinaison (degrees)
-	n.append([]) # longitude of ascending node (degrees)
-	m.append([]) # masse de la planète en masse solaire
+	t.append(ti)
+	a.append(ai)
+	e.append(ei)
+	q.append(qi)
+	Q.append(Qi)
+	I.append(Ii)
+	m.append(mi)
 
-	# On passe les 3 premières lignes d'entête.
-	for indice in range(3):
-		tableau.readline()
-
-	entete = tableau.readline()
-	for ligne in tableau:
-		# Pour chaque ligne du tableau, on découpe suivant les 
-		# espaces. (par défaut, s'il y a plusieurs espaces à la 
-		# suite, il ne va pas créer 50 000 colonnes, ce qui ne 
-		# serait pas le cas avec un 'split(" ")')
-		colonne = ligne.split()
-		
-		# On essaye de rajouter les éléments. Si un seul d'entre eux
-		# à un soucis, on élimine toute la ligne (en gros, lors de 
-		# l'éjection d'une planète, certains paramètres peuvent 
-		# devenir ****** au lieu d'un float, et ça génère une erreur
-		# lors de la conversion en float)
-		try:
-			ti = float(colonne[0])
-			ai = float(colonne[1])
-			ei = float(colonne[2])
-			Ii = float(colonne[3])
-			ni = float(colonne[5])
-			mi = float(colonne[7])
-		except:
-			pass
-		t[-1].append(ti)
-		if (ai < 0):
-			print("t="+str(ti)+" years a="+str(ai)+" AU for "+fichier_source)
-		a[-1].append(ai)
-		e[-1].append(ei)
-		q[-1].append(ai * (1 - ei))
-		Q[-1].append(ai * (1 + ei))
-		I[-1].append(Ii)
-		n[-1].append(ni)
-		m[-1].append(mi * MS / MT)
-
-		
-	tableau.close()
 
 # We get the array of reference time, i.e, one of the longuest list of time available in the list of planets. 
 len_t = [len(ti) for ti in t]
