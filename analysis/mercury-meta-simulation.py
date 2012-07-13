@@ -485,7 +485,7 @@ for index_simu in range(starting_index, starting_index+NB_SIMULATIONS):
 	
 	command = BINARY_FOLDER+"/mercury\n" + \
 	          BINARY_FOLDER+"/element\n" + \
-	          "echo `date` `pwd` ': Done'>>~/qsub.log\n"
+	          "echo `date '+%d-%m-%Y at %H:%M:%S'` `pwd` ': Done'>>~/qsub.log\n"
 	script = simulations_utilities.SimpleJob(command) # For arguin
 	#~ script = simulations_utilities.Job_PBS(command, walltime=48) # For avakas
 	script.write()

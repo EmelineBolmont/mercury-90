@@ -4,13 +4,14 @@
 from __future__ import print_function
 
 __author__ = "Christophe Cossou <cossou@obs.u-bordeaux1.fr>"
-__date__ = "9 août 2011"
-__version__ = "$Revision: 1.0 $"
-__credits__ = """Display each script available and allow us to choose which one we want to run"""
+__date__ = "13 juillet 2012"
+__version__ = "$Revision: 1.1 $"
+__credits__ = """Display each gnuplot script available in the current working directory and allow us to choose which one we want to run"""
 
 import os
 import subprocess
 import pdb
+import sys # to allow retrieving of parameters of the script
 
 GNUPLOT_EXTENSION = "gnuplot"
 
@@ -71,8 +72,12 @@ def run(command):
 def enumeration(liste):
   """liste, un élément par ligne, les éléments de l'argument
   avec les indices associés"""
+  output_list = []
   for (indice,element) in enumerate(liste):
-    print(indice, ":",os.path.splitext(element)[0])
+    txt = "%2i : %-34s" % (indice, os.path.splitext(element)[0])
+    output_list.append(txt)
+  
+  print(" ".join(output_list))
 
 def getOutput(scriptname):
   """function that return the name of the output file of the given gnuplot script, if there is any"""
@@ -95,38 +100,72 @@ def getOutput(scriptname):
   return None
 
 
-######################
-# Début du programme #
-######################
+###############################################
+## Beginning of the program
+###############################################
 
-scripts = lister("*."+GNUPLOT_EXTENSION)
+#>>>>>>>>>>>>> We read parameters of the script <<<<<<<<<<<<<<<<
 
-nb_scripts = len(scripts)
-
-enumeration(scripts)
-
-indice_script = -1
+indice_script = None # to allow default actions if nothing is given in parameters
 generate_all = False
-while not(0<=indice_script<nb_scripts):
+
+isProblem = False
+problem_message = "The script can take various arguments :" + "\n" + \
+"(no spaces between the key and the values, only separated by '=')" + "\n" + \
+" * script (the script we want to launch, 'all' if we want to execute them all)" + "\n" + \
+" * help (display a little help message on HOW to use various options"
+
+# We get arguments from the script
+for arg in sys.argv[1:]:
   try:
-    txt_input = raw_input("Quel graphique voulez-vous afficher? (0-"+str(nb_scripts-1)+" ; 'all' pour tous les traiter ; 'l' pour la liste)\n")
-    
-    indice_script = int(txt_input)
-  except ValueError:
-    if (txt_input == 'l'):
-      enumeration(scripts)
-    elif (txt_input == 'all'):
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+  if (key == 'script'):
+    if (value == 'all'):
       generate_all = True
       indice_script = 0
     else:
-      print(unicode("Le paramètre doit être un entier compris entre 0 et "+str(nb_scripts-1), 'utf-8'))
+      generate_all = False
+      indice_script = int(value)
+  elif (key == 'help'):
+    isProblem = True
+  else:
+    print("the key '"+key+"' does not match")
+    isProblem = True
+
+if isProblem:
+  print(problem_message)
+  exit()
+  
+#>>>>>>>>>>>>> Get input if no parameters specified the gnuplot script to launch <<<<<<<<<<<<<<<<
+scripts = lister("*."+GNUPLOT_EXTENSION)
+nb_scripts = len(scripts)
+
+# If the action is not given in parameters, we ask the user through standard input
+if (indice_script == None):
+  enumeration(scripts)
+
+  while not(0<=indice_script<nb_scripts):
+    try:
+      txt_input = raw_input("Quel graphique voulez-vous afficher? (0-"+str(nb_scripts-1)+" ; 'all' pour tous les traiter ; 'l' pour la liste)\n")
+      
+      indice_script = int(txt_input)
+    except ValueError:
+      if (txt_input == 'l'):
+        enumeration(scripts)
+      elif (txt_input == 'all'):
+        generate_all = True
+        indice_script = 0
+      else:
+        print("The parameter must be between 0 and %i" % (nb_scripts-1))
 
 if not(generate_all):
   indexes = [indice_script]
 else:
   indexes = range(nb_scripts)
 
-# We run gnuplot for eevery script needed. 
+# We run gnuplot for every script needed. 
 for index in indexes:
   script = scripts[index]
 

@@ -896,7 +896,7 @@ program test_disk
   integer, parameter :: nb_bins = 100 ! the number of bins for the histogram of the turbulence torque
   
   real(double_precision) :: initial_time = 0.d0 ! in days
-  type(PlanetProperties) :: p_prop ! vari0ous properties of a planet
+  type(PlanetProperties) :: p_prop ! various properties of a planet
   real(double_precision) :: radius_planet
   real(double_precision) :: theta_planet
   real(double_precision), dimension(3) :: turbulence_acceleration ! in AU/DAY^2
@@ -906,7 +906,7 @@ program test_disk
   real(double_precision), dimension(nb_points) :: turbulence_torque ! in AU^2/DAY^2
   
   ! planet parameters
-  real(double_precision), parameter :: a = 1. ! in AU
+  real(double_precision), parameter :: a = 6. ! in AU
   real(double_precision), parameter :: mass = 1. * K2 * EARTH_MASS ! in [Msun * K2]
   real(double_precision) :: delta_t = 365.25d0!365.25d0 * a**1.5d0 ! the timestep in days between two calculation of the turbulence torque. Must be greater than the coherence time of the turbulence to make the test of the turbulence usefull
 
@@ -948,7 +948,7 @@ program test_disk
   end do
   close(10)
   
-  call get_histogram(turbulence_torque(1:nb_points), nb_bins, bin_x_values(1:nb_bins), bin_y_values(1:nb_bins)) 
+  call get_histogram(turbulence_torque(1:nb_points), bin_x_values(1:nb_bins), bin_y_values(1:nb_bins)) 
   
   ! We calculate the mean and stdev value of the data set and then generate a supposed gaussian to see if this function fit the datas
   ! the mean of the data set must be 0. So in order to check that, the mean is fixed to 0, to see if the gaussian looks nice.

@@ -655,7 +655,7 @@ function vect_product( x, y )
 
 end function vect_product
 
-subroutine get_histogram(datas, nb_bins, bin_x_values, bin_y_values) 
+subroutine get_histogram(datas, bin_x_values, bin_y_values) 
 ! the subroutine get in argument a one dimension array and 
 ! return an histogram of the number of bins specified in argument. By default the min and max for bins is the min and max of the 
 ! data set. With optional argument it should be possible easily to accept in argument the min and max for bins (with default 
@@ -671,21 +671,21 @@ subroutine get_histogram(datas, nb_bins, bin_x_values, bin_y_values)
 ! bin_y_values : The y values for the histogram. The array must be of size 'nb_bins'
 !
 ! Return code : (i don't know how this works though)
-! return 1 : When the min and max are the same, and no witdh can be defined
+! return 1 : When bin_x_values and bin_y_values do not have the same size
+! return 2 : When the min and max are the same, and no witdh can be defined
 
 implicit none
 
 ! Input
 real(double_precision), dimension(:), intent(in) :: datas
-integer, intent(in) :: nb_bins
 
 ! Output
-real(double_precision), dimension(nb_bins), intent(out) :: bin_x_values
-real(double_precision), dimension(nb_bins), intent(out) :: bin_y_values
+real(double_precision), dimension(:), intent(out) :: bin_x_values
+real(double_precision), dimension(:), intent(out) :: bin_y_values
 
 ! Locals
 real(double_precision) :: delta_bin, max_value, min_value
-integer :: index_bin, nb_points
+integer :: index_bin, nb_points, nb_bins
 
 integer :: i ! For loops
 
@@ -693,6 +693,15 @@ integer :: i ! For loops
 
   ! We get the total number of points 
   nb_points = size(datas)
+  
+  ! We get the number of bins from the size of the arrays associated
+  nb_bins = size(bin_y_values)
+  
+  if (.not.(size(bin_x_values).eq.nb_bins)) then
+    write(*,'(a)') '"bin_x_values" and "bin_y_values" do not have the same size'
+    write(*,'(a)') 'Program excited.'
+    return 1
+  end if
 
   ! We initialize the values of the counting array
   bin_y_values(1:nb_bins) = 0
@@ -708,7 +717,7 @@ integer :: i ! For loops
              ' values, the turbulent torque is between [', min_value, ' ; ', max_value, ']'
     write(*,'(a, i5, a, es7.0e2)') 'Thus, for ', nb_bins, ' bins in the histogram, the single width of a bin is : ', delta_bin
     write(*,'(a)') 'Program excited.'
-    return 1
+    return 2
   end if
   
   do i=1,nb_bins

@@ -19,6 +19,6 @@ sourceFile.setCompilingOptions("-O3 -march=native -pipe -finit-real=nan")
 sources_filename = lister("*.f90")
 
 # We create the binaries
-make_binaries(sources_filename, ["mercury.f90", "element.f90", "close.f90"], debug=False, gdb=False, profiling=False)
+make_binaries(sources_filename, ["mercury.f90", "element.f90", "close.f90"], debug=False, gdb=True, profiling=False)
 #~ make_binaries(sources_filename, {"mercury.f90":"mercury2", "element.f90":"element2", "close.f90":"close2"}, debug=False, gdb=False, profiling=False)
 
