@@ -88,6 +88,7 @@ module disk_properties
     real(double_precision) :: sigma ! the surface density of the gas disk at the planet location [MSUN.AU^-2]
     real(double_precision) :: sigma_index ! the negative slope of the surface density profile at the location of the planet.
     real(double_precision) :: scaleheight ! the scaleheight of the disk at the location of the planet [AU]
+    ! the scaleheight and/or aspect ratio is not used in the calculation of the turbulence, where the value 0.05 is used directly into the code
     real(double_precision) :: aspect_ratio ! the aspect_ratio of the gas disk at the location of the planet [no dim]
     real(double_precision) :: chi ! the thermal diffusion coefficient at the location of the planet [AU^2.day^-1]
     real(double_precision) :: nu ! the viscosity of the disk at the location of the planet [AU^2.day^-1]
@@ -97,19 +98,25 @@ module disk_properties
 
 contains
 
-subroutine print_planet_properties(p_prop, unit)
+subroutine print_planet_properties(p_prop, output)
 ! subroutine that display in the terminal all the values 
 ! contained in the instance of planet properties given in parameters
 !
 ! Parameters
 ! p_prop : an object of type 'PlanetProperties'
-! unit : the unit where to write the informations. By default, if nothing 
+! output : the unit where to write the informations. By default, if nothing 
 !        specified, the information are displayed on the screen
   implicit none
   type(PlanetProperties), intent(in) :: p_prop
-  integer, optional :: unit
+  integer, optional :: output
+  
+! Local
+integer :: unit
 
-  if (.not.present(unit)) then
+
+  if (present(output)) then
+    unit = output
+  else
     unit = 6
   end if
 
@@ -129,7 +136,7 @@ subroutine print_planet_properties(p_prop, unit)
   write(unit,'(a)')            '|#  Properties of the disk at the   #'
   write(unit,'(a)')            '|#     location of the planet       #'
   write(unit,'(a)')            '|####################################'
-  write(unit,'(a,f9.2,a)')     '| Sigma : ', p_prop%sigma , ' [Msun.AU^-2]'
+  write(unit,'(a,es10.2e2,a)')     '| Sigma : ', p_prop%sigma , ' [Msun.AU^-2]'
   write(unit,'(a,f9.2)')       '| Sigma_index : ', p_prop%sigma_index
   write(unit,'(a,f9.2,a)')     '| Scaleheight : ', p_prop%scaleheight , ' [AU]'
   write(unit,'(a,f6.4)')       '| Aspect_ratio : ', p_prop%aspect_ratio 

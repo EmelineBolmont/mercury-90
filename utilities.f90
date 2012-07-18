@@ -595,12 +595,20 @@ subroutine get_polar_coordinates(x, y, z, radius, theta)
   ! There will be problem if radius equal 0 because in this case, the angle can take any real value possible
   
   ! To obtain theta inside [0; 2 pi[ (source: wikipedia) -> The function atan2 do exactly this (inside [-pi ; pi[, but with a buit-in function
-  theta = atan2(y, x)
+!~   theta = atan2(y, x)
+  theta = acos(x / radius)
+  
+!~   write(*,*) x, y, z, radius, theta
+!~   stop
   
   ! We want the output between 0 and 2*PI
-  if (theta.lt.0.) then
-    theta = theta + TWOPI
+!~   if (theta.lt.0.) then
+!~     theta = theta + TWOPI
+!~   endif
+  if (y.lt.0.) then
+    theta = TWOPI - theta
   endif
+  
   
 end subroutine get_polar_coordinates
 
@@ -636,8 +644,9 @@ get_stdev = sqrt(sum((vector - get_mean(vector))**2) / size(vector))
 
 end function get_stdev
 
-function vect_product( x, y )
+function vect_product(x, y)
   ! Return the vectoriel product of two vectors
+  ! vect_product = x /\ y
   implicit none
 
   ! The function - output :

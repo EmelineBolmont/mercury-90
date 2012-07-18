@@ -280,6 +280,10 @@ subroutine write_disk_properties()
   write(10,'(a,l)') 'is turbulence (T:True;F:False) = ', IS_TURBULENCE
   if (IS_TURBULENCE) then
     write(10,'(a,es10.1e2,a)') '  turbulence_forcing = ', TURBULENT_FORCING, ' (adim)'
+    write(10,'(a,i4)') '  total number of modes = ', nb_modes
+    write(10,'(a,2(i3,a))') '  wavenumber in [', wavenumber_min, ';', wavenumber_max, ']'
+    write(10,'(a,i2)') '  wavenumber cutoff = ', wavenumber_cutoff
+    
   else
     write(10,'(a)') '  No turbulence'
   end if
@@ -865,7 +869,7 @@ end subroutine initial_density_profile
   implicit none
   
   ! Output
-!~   No outputs
+  !   No outputs
   
   ! Parameter
   real(double_precision) :: radius ! the distance from the central object in AU
@@ -892,7 +896,7 @@ end subroutine initial_density_profile
   call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
    p_prop=p_prop) ! Output
   
-  TURBULENT_FORCING = 1.e-4!sqrt(get_viscosity(radius) / (140. * p_prop%omega)) / radius
+  TURBULENT_FORCING = sqrt(get_viscosity(radius) / (140. * p_prop%omega)) / radius
   
 !~   write(*,'(a,es10.3e2)') 'turbulence forcing = ', TURBULENT_FORCING
 !~   stop

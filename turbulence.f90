@@ -18,7 +18,6 @@ module turbulence
   integer :: wavenumber_min = 1
   integer :: wavenumber_max = 96
   integer :: wavenumber_cutoff = 6 ! If the wavenumber if greater than this number, then we set the gravitational potential of this mode to 0, to gain computational time.
-  real(double_precision) :: lifetime_prefactor = 1.0 ! a security factor to limit the lifetime of a mode and fit more accurately to hydro simulations
   
   ! We define a new type for the properties of the planet
   type TurbulenceMode
@@ -37,20 +36,25 @@ module turbulence
 
   contains
 
-subroutine print_turbulencemode_properties(mode, unit)
+subroutine print_turbulencemode_properties(mode, output)
 ! subroutine that display in the terminal all the values 
 ! contained in the instance of turbulenceMode given in parameters
 !
 ! Parameters
 ! mode : an object of type 'TurbulenceMode'
-! unit : the unit where to write the informations. By default, if nothing 
+! output : the unit where to write the informations. By default, if nothing 
 !        specified, the information are displayed on the screen
   implicit none
   type(TurbulenceMode), intent(in) :: mode
-  integer, optional :: unit
+  integer, optional :: output
+  
+  ! Local
+  integer :: unit
   !------------------------------------------------------------------------------
   
-  if (.not.present(unit)) then
+  if (present(output)) then
+    unit = output
+  else
     unit = 6
   end if
   
@@ -84,7 +88,7 @@ subroutine init_mode(time, mode)
   type(TurbulenceMode), intent(out) :: mode
   
   ! Locals
-  real(double_precision) :: random_number_01, random_number_02, random_number_03, random_number_normal
+  real(double_precision) :: random_number_01, random_number_02, random_number_03, random_number_log
   type(PlanetProperties) :: d_prop ! to get some properties of the disk at a given location.calculate
   real(double_precision) :: aspect_ratio = 0.05d0 ! the aspect ratio of the disk. This has nothing to do with the value computed elsewhere. 
   
@@ -93,8 +97,8 @@ subroutine init_mode(time, mode)
   call random_number(random_number_02)
   call random_number(random_number_03)
   
-  random_number_normal = dble(wavenumber_min) * exp(log(dble(wavenumber_max) / dble(wavenumber_min)) * random_number_01) ! pour le mode m, on passe d'une distrib uniforme a une  distrib normale, modemax vaut 96 et modemin vaut 1
-  mode%wavenumber = dble(int(random_number_normal))! on force le fait qeu ce soit un entier
+  random_number_log = dble(wavenumber_min) * exp(log(dble(wavenumber_max) / dble(wavenumber_min)) * random_number_01) ! pour le mode m, on passe d'une distrib uniforme a une  distrib normale, modemax vaut 96 et modemin vaut 1
+  mode%wavenumber = dble(int(random_number_log))! on force le fait qeu ce soit un entier
 
   mode%r = INNER_BOUNDARY_RADIUS + (OUTER_BOUNDARY_RADIUS - INNER_BOUNDARY_RADIUS) * random_number_02 ! c'est le rk du papier, c'est la position radiale de l'origine de la turbulence
 
@@ -104,8 +108,8 @@ subroutine init_mode(time, mode)
   mode%radial_extent = 0.25d0 * PI * mode%r / mode%wavenumber ! c'est l'etendu du mode de la turbulence
   
   mode%t_init = time ! origine de la generation du mode 
-  ! The factor lifetime_prefactor is here to have a better agreement with mhd simulations. lifemode value has 0.1
-  mode%lifetime = lifetime_prefactor * TWOPI * mode%r**(1.5d0) / (mode%wavenumber * aspect_ratio) ! lifetime of the mode
+
+  mode%lifetime = TWOPI * mode%r**(1.5d0) / (mode%wavenumber * aspect_ratio) ! lifetime of the mode
   
 !~   call print_turbulencemode_properties(mode)
   
@@ -157,7 +161,8 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   real(double_precision), dimension(3), intent(out) :: turbulence_acceleration ! The gravitational potential induced by the turbulence
   
   ! Locals
-  real(double_precision), parameter :: acc_prefactor = (64.d0 / (K2 * PI * PI)) ! the prefactor used to calculate the acceleration
+  real(double_precision), parameter :: acc_prefactor = (64.d0 / (PI * PI)) ! the prefactor used to calculate the acceleration
+  ! The surface density of the disk is given in MSUN, with no K2, so the solar mass is given in MSUN too, without K2
   real(double_precision) :: r, phi ! polar coordinates of the planet
   real(double_precision), dimension(3) :: shifted_position
   real(double_precision) :: single_prefactor ! common prefactor for a given mode, for each position
@@ -189,11 +194,11 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
 	  call init_mode(time, turbulence_mode(k))
 	  relative_time = 0.d0
 	  
+!~ 	  write(*,'(a,es12.3e2,a,i2)') 'time = ', time/365.25d0, ' years. Initialisation of mode k=',k 
+	  
 !~ 	  open(10, file='turbulence_modes.out', access='append')
 !~ 	  write(10,*) 'time=', time, 'creation of mode ',k
-!~ 
 !~ 	  call print_turbulencemode_properties(turbulence_mode(k), unit=10)
-!~ 	  
 !~ 	  close(10)
 	end if
 
@@ -215,7 +220,7 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
 
   ! We apply at the end the prefactor of the gravitational potential
   planet_prefactor = acc_prefactor * TURBULENT_FORCING * p_prop%radius**3 * p_prop%omega**2 * p_prop%sigma
-  
+
   force_radius = planet_prefactor * sum_element_r
   force_theta  = planet_prefactor * sum_element_theta
   
@@ -227,65 +232,6 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   turbulence_acceleration(3) = 0.d0
 
 end subroutine get_turbulence_acceleration
-
-subroutine get_turbulence_potential(time, p_prop, position, full_gravitational_potential)
-  use utilities, only : get_polar_coordinates
-
-  implicit none
-  
-  ! Inputs
-  real(double_precision), intent(in) :: time ! The current time [days]
-  real(double_precision), dimension(3), intent(in) :: position ! the cartesian position [AU]
-  type(PlanetProperties) :: p_prop ! An object to store various properties of a planet
-  
-  ! Outputs
-  real(double_precision), intent(out) :: full_gravitational_potential ! The gravitational potential induced by the turbulence
-  
-  ! Locals
-  integer k
-  real(double_precision) :: single_potential ! the gravitational potential of a single turbulence mode
-  real(double_precision) :: relative_time ! the current time, with respect to the creation time of a given mode
-  real(double_precision) :: theta_planet ! the angle of the planet in polar coordinates
-  real(double_precision) :: radius_planet ! the radius of the planet [AU] (currently not needed here since we have the value in the p_prop object)
-
-  !------------------------------------------------------------------------------
-  
-  call get_polar_coordinates(position(1), position(2), position(3), radius_planet, theta_planet) 
-  ! This radius must be used instead of p_prop%radius because p_prop is the same during the calculation of the derivative
-  
-  ! initialisation
-  ! You must call once the subroutine "init_turbulence", in the global code or whatever
-
-full_gravitational_potential = 0.0d0
-
-! here we calculate the turbulent potential by calculating the potential of each mode, taking into account their dissipation through time.
-do k=1,nb_modes
-  relative_time = time - turbulence_mode(k)%t_init ! time expressed with respect to the creation time of the mode.
-  
-  ! If needed, we replace an old mode by a new one
-  if (relative_time.ge.turbulence_mode(k)%lifetime) then
-	call init_mode(time, turbulence_mode(k))
-	relative_time = 0.d0
-  end if
-
-  if (turbulence_mode(k)%wavenumber.gt.wavenumber_cutoff) then
-	single_potential = 0.0d0
-  else
-
-	single_potential =  turbulence_mode(k)%chi * & 
-				   exp(-(radius_planet - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
-				   cos(turbulence_mode(k)%wavenumber * theta_planet - &
-				   turbulence_mode(k)%phi - p_prop%omega * relative_time) * &
-				   sin(pi * relative_time / turbulence_mode(k)%lifetime) ! expression 14 of pierens et al.
-
-	full_gravitational_potential = full_gravitational_potential + single_potential
-  endif
-enddo
-
-! We apply at the end the prefactor of the gravitational potential
-full_gravitational_potential = TURBULENT_FORCING * p_prop%radius**2 * p_prop%omega**2 * full_gravitational_potential
-
-end subroutine get_turbulence_potential
 
 SUBROUTINE init_random_seed()
   INTEGER :: i, n, clock

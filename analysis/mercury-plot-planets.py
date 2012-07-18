@@ -15,6 +15,7 @@ import pylab as pl
 from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 
 
+
 ###############################################
 ## Beginning of the program
 ###############################################
@@ -143,8 +144,8 @@ for planet in range(nb_planete):
 		plot_a.plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
 		plot_a.plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
 
-pl.xlabel(unicode("time [years]",'utf-8'))
-pl.ylabel(unicode("a [AU]",'utf-8'))
+pl.xlabel("time [years]")
+pl.ylabel("a [AU]")
 #~ myyfmt = ScalarFormatter(useOffset=True)
 #~ myyfmt._set_offset(1e9)
 #~ myxfmt = ticker.ScalarFormatter()
@@ -160,8 +161,8 @@ for planet in range(nb_planete):
 		plot_e.semilogx(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 	else:
 		plot_e.plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-pl.xlabel(unicode("time [years]",'utf-8'))
-pl.ylabel(unicode("eccentricity",'utf-8'))
+pl.xlabel("time [years]")
+pl.ylabel("eccentricity")
 pl.grid(True)
 
 plot_m = fig.add_subplot(223, sharex=plot_a)
@@ -170,8 +171,8 @@ for planet in range(nb_planete):
 		plot_m.semilogx(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 	else:
 		plot_m.plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-pl.xlabel(unicode("time [years]",'utf-8'))
-pl.ylabel(unicode("mass [Earths]",'utf-8'))
+pl.xlabel("time [years]")
+pl.ylabel("mass [Earths]")
 pl.grid(True)
 
 plot_I = fig.add_subplot(224, sharex=plot_a)
@@ -180,8 +181,8 @@ for planet in range(nb_planete):
 		plot_I.semilogx(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 	else:
 		plot_I.plot(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-pl.xlabel(unicode("time [years]",'utf-8'))
-pl.ylabel(unicode("Inclination [degrees]",'utf-8'))
+pl.xlabel("time [years]")
+pl.ylabel("Inclination [degrees]")
 pl.grid(True)
 
 myyfmt = ScalarFormatter(useOffset=True, useMathText=True)
