@@ -277,13 +277,12 @@ subroutine write_disk_properties()
   write(10,'(a,f4.2)') 'adiabatic index = ', ADIABATIC_INDEX
   write(10,'(a,f4.2)') 'mean molecular weight = ', MEAN_MOLECULAR_WEIGHT
   write(10,'(a,es10.1e2,a)') 'viscosity = ', viscosity, ' (cm^2/s)'
-  write(10,'(a,l)') 'is turbulence (T:True;F:False) = ', IS_TURBULENCE
+  write(10,'(a,l,a)') 'is turbulence = ', IS_TURBULENCE, ' (T:True;F:False)'
   if (IS_TURBULENCE) then
     write(10,'(a,es10.1e2,a)') '  turbulence_forcing = ', TURBULENT_FORCING, ' (adim)'
     write(10,'(a,i4)') '  total number of modes = ', nb_modes
     write(10,'(a,2(i3,a))') '  wavenumber in [', wavenumber_min, ';', wavenumber_max, ']'
     write(10,'(a,i2)') '  wavenumber cutoff = ', wavenumber_cutoff
-    
   else
     write(10,'(a)') '  No turbulence'
   end if
@@ -422,8 +421,8 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   
   !------------------------------------------------------------------------------
   ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
-!~   p_prop%scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(p_prop%temperature) / p_prop%omega
-  p_prop%scaleheight = 0.05 * p_prop%radius
+  p_prop%scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(p_prop%temperature) / p_prop%omega
+!~   p_prop%scaleheight = 0.05 * p_prop%semi_major_axis
 
   !------------------------------------------------------------------------------
 !~   p_prop%nu = alpha * p_prop%omega * p_prop%scaleheight**2 ! [AU^2.day-1]
@@ -503,7 +502,7 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   ! k_p is defined to limit the number of operation and to have a value independant from chi_p or nu_p
   k_p = p_prop%radius * p_prop%radius * p_prop%omega * x_s * x_s * x_s / (2.d0 * PI)
   
-  ecc_corot = 1.d0 - tanh(p_prop%eccentricity / x_s)
+  ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
   
   !------------------------------------------------------------------------------
   p_nu = TWOTHIRD * sqrt(k_p / p_prop%nu)
@@ -1623,10 +1622,13 @@ subroutine get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotati
   x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
   
   !------------------------------------------------------------------------------
+  if (p_prop%eccentricity.gt.0.6) then
+  call print_planet_properties(p_prop)
+  write(*,*) p_prop%eccentricity, x_s
+  end if
+  ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
   
-  ecc_corot = 1.d0 - tanh(p_prop%eccentricity / x_s)
-  
-  corotation_torque = SATURATION_TORQUE * tanh(INDEP_CZ - p_prop%radius)
+  corotation_torque = SATURATION_TORQUE * dtanh(INDEP_CZ - p_prop%radius)
   
   corotation_torque = corotation_torque - lindblad_torque ! so that we can disable artificially the corotation part of the torque, even if the lindblad torque come from the paardekooper formulae
 
@@ -1680,7 +1682,7 @@ subroutine get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corota
   
   !------------------------------------------------------------------------------
   
-  ecc_corot = 1.d0 - tanh(p_prop%eccentricity / x_s)
+  ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
   
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
@@ -1762,7 +1764,7 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   
   !------------------------------------------------------------------------------
   
-  ecc_corot = 1.d0 - tanh(p_prop%eccentricity / x_s)
+  ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
   
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
@@ -1829,7 +1831,7 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
   
   !------------------------------------------------------------------------------
   
-  ecc_corot = 1.d0 - tanh(p_prop%eccentricity / x_s)
+  ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
   
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  

@@ -193,13 +193,6 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
 	if (relative_time.ge.turbulence_mode(k)%lifetime) then
 	  call init_mode(time, turbulence_mode(k))
 	  relative_time = 0.d0
-	  
-!~ 	  write(*,'(a,es12.3e2,a,i2)') 'time = ', time/365.25d0, ' years. Initialisation of mode k=',k 
-	  
-!~ 	  open(10, file='turbulence_modes.out', access='append')
-!~ 	  write(10,*) 'time=', time, 'creation of mode ',k
-!~ 	  call print_turbulencemode_properties(turbulence_mode(k), unit=10)
-!~ 	  close(10)
 	end if
 
 	! if the mode is too faint, we neglect it, instead of calculating a very small number
@@ -233,34 +226,34 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
 
 end subroutine get_turbulence_acceleration
 
-SUBROUTINE init_random_seed()
-  INTEGER :: i, n, clock
-  INTEGER, DIMENSION(:), ALLOCATABLE :: seed
+subroutine init_random_seed()
+  integer :: i, n, clock
+  integer, dimension(:), allocatable :: seed
 
-  CALL RANDOM_SEED(size = n)
-  ALLOCATE(seed(n))
+  call random_seed(size = n)
+  allocate(seed(n))
 
-  CALL SYSTEM_CLOCK(COUNT=clock)
+  call system_clock(count=clock)
 
   seed = clock + 37 * (/ (i - 1, i = 1, n) /)
-  CALL RANDOM_SEED(PUT = seed)
+  call random_seed(put = seed)
 
-  DEALLOCATE(seed)
-END SUBROUTINE
+  deallocate(seed)
+end subroutine
 
-SUBROUTINE normal(x)
+subroutine normal(x)
   ! generate a random number through a gaussian distribution of mean=0 and standard deviation of 1
   implicit none
   
-  ! Output
+  ! output
   real(double_precision), intent(out) :: x
   
-  ! Locals
+  ! locals
   real(double_precision) :: v1,v2,v11,v22
   real(double_precision) :: r
 
   r = 1.5d0
-  do while ((r.gt.1.d0).OR.(r.eq.0.d0))
+  do while ((r.gt.1.d0).or.(r.eq.0.d0))
 	call random_number(v1)
 	call random_number(v2)
 	v11 = 2.d0 * v1 - 1.d0
@@ -269,6 +262,6 @@ SUBROUTINE normal(x)
   enddo
   
   x = v11 * dsqrt(-2.d0 * dlog(r) / r)
-END SUBROUTINE normal
+end subroutine normal
 
 end module turbulence

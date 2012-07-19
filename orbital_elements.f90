@@ -353,10 +353,10 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   use utilities, only : mco_sine
 
   implicit none
-
   
   ! Input/Output
-  real(double_precision) :: gm,q,e,i,p,n,l,x,y,z,u,v,w
+  real(double_precision), intent(in) :: gm,q,e,i,p,n,l
+  real(double_precision), intent(out) :: x,y,z,u,v,w
   
   ! Local
   real(double_precision) :: g,a,ci,si,cn,sn,cg,sg,ce,se,romes,temp
@@ -368,12 +368,6 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   g = p - n
   
   ! Rotation factors
-!~   si = sin(i)
-!~   ci = cos(i)
-!~   sg = sin(g)
-!~   cg = cos(g)
-!~   sn = sin(n)
-!~   cn = cos(n)
   call mco_sine (i,si,ci)
   call mco_sine (g,sg,cg)
   call mco_sine (n,sn,cn)
@@ -467,7 +461,8 @@ subroutine mco_ov2x (rcen,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
 
   
   ! Input/Output
-  real(double_precision) :: rcen,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
+  real(double_precision), intent(in) :: rcen,mcen,m,fr,theta,phi,fv,vtheta,vphi
+  real(double_precision), intent(out) :: x,y,z,u,v,w
   
   ! Local
   real(double_precision) :: r,v1,temp

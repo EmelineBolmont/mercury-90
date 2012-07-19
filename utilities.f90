@@ -442,31 +442,32 @@ end function arcosh
 !------------------------------------------------------------------------------
 
 subroutine mco_sine (x,sx,cx)
-  
+  use physical_constant, only : PI, TWOPI
 
   implicit none
 
   
   ! Input/Output
-  real(double_precision) :: x,sx,cx
+  real(double_precision), intent(in) :: x
+  real(double_precision), intent(out) :: sx,cx
   
   ! Local
-  real(double_precision) :: pi,twopi
+!~   real(double_precision), parameter :: PI = 3.141592653589793d0
+!~   real(double_precision), parameter :: TWOPI = 2.d0 * PI
+  real(double_precision) :: argument
   
   !------------------------------------------------------------------------------
   
-  pi = 3.141592653589793d0
-  twopi = 2.d0 * pi
-  ! TODO voir pourquoi les rÃ©sultats sont diffÃ©rents si je fais cos() et sin() au lieu d'un call Ã  cette routine.
+  ! TODO why results of this routine are different from simple calls of intrinsec cos() and sin()
   if (x.gt.0) then
-     x = mod(x,twopi)
+     argument = mod(x,TWOPI)
   else
-     x = mod(x,twopi) + twopi
+     argument = mod(x,TWOPI) + TWOPI
   end if
   
-  cx = cos(x)
+  cx = cos(argument)
   
-  if (x.gt.pi) then
+  if (argument.gt.PI) then
      sx = -sqrt(1.d0 - cx*cx)
   else
      sx =  sqrt(1.d0 - cx*cx)
