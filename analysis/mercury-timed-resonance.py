@@ -2,11 +2,7 @@
 # -*- coding: utf-8 -*-
 # Version 1.2
 
-# The script will calculate the resonances between each final planets. We base our study on 'element.out'
-# That means that all the planets we are interested in are still there at the end of the simulation. Thus
-# we do not have to take care of the time of ejection/collision for each planet (we only take care 
-# of the last values for each planet, and this could cause problem if we would have done calculations between values (for 2 planets)
-# that refeered to different times during the simulation)
+# The script will calculate the resonances between each planet through time
 
 import pdb # Pour le debug
 import numpy as np

@@ -452,8 +452,6 @@ subroutine mco_sine (x,sx,cx)
   real(double_precision), intent(out) :: sx,cx
   
   ! Local
-!~   real(double_precision), parameter :: PI = 3.141592653589793d0
-!~   real(double_precision), parameter :: TWOPI = 2.d0 * PI
   real(double_precision) :: argument
   
   !------------------------------------------------------------------------------
@@ -489,15 +487,14 @@ subroutine getNumberOfBodies(nb_big_bodies, nb_bodies)
 
   integer, intent(out) :: nb_bodies, nb_big_bodies
   
-  
-  
   ! Local
   integer :: j,k,lim(2,10),nsub, error
   logical test
   character(len=80) :: infile(3),filename,c80
   character(len=150) :: string
   real(double_precision), dimension(9) :: dummy ! variable to read the value and have the right position in the file without storing the values
-
+  !------------------------------------------------------------------------------
+  
   do j = 1, 80
      filename(j:j) = ' '
   end do
