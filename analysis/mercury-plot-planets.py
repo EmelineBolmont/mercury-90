@@ -124,7 +124,6 @@ else:
 	t_min = ref_time[0]
 
 # We generate a list of colors
-tmp = autiwa.colorList(nb_planete)
 colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
 # on trace les plots
