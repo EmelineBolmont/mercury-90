@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # script to plot resonance between planets
-# Version 1.0a
+# Version 1.1
 
 #  this routine plots the resonant angles for a inner_period_nb:outer_period_nb resonance
 #  (inner_period_nb>outer_period_nb)
@@ -33,6 +33,7 @@ from math import *
 import numpy as np
 import pylab as pl
 import sys # to use in particuliar the sys.argv list to retrieve parameters of the script
+from matplotlib.ticker import ScalarFormatter
 
 
 def lancer_commande(commande):
@@ -218,9 +219,15 @@ while (nb_plots_x * nb_plots_y < q+3):
     nb_plots_x += 1
 
 # on trace les plots
+myxfmt = ScalarFormatter(useOffset=True)
+myxfmt._set_offset(1e5)
+myxfmt.set_scientific(True)
+myxfmt.set_powerlimits((-3, 3)) 
 
-pl.figure(1) 
-pl.clf() # On cree des sous plots. Pour subplot(311), Ca signifie qu'on a 2 lignes, 3 colonnes, et que le subplot 
+fig = pl.figure(1)
+pl.clf()
+fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
+# On cree des sous plots. Pour subplot(311), Ca signifie qu'on a 2 lignes, 3 colonnes, et que le subplot 
 # courant est le 1e. (on a donc 2*3=6 plots en tout)
 
 # We create a variable to store the index of the subplot
@@ -228,7 +235,7 @@ subplot_index = nb_plots_x * 100 + nb_plots_y * 10
 pl.suptitle("resonance "+str(inner_period_nb)+":"+str(outer_period_nb)+" between "+inner_planet+" and "+outer_planet)
 
 subplot_index += 1
-ax1 = pl.subplot(subplot_index)
+plot_period = pl.subplot(subplot_index)
 pl.plot(t, (a_outer / a_inner)**1.5)
 pl.xlabel(unicode("time [years]",'utf-8'))
 pl.ylabel(unicode("period ratio",'utf-8'))
@@ -236,7 +243,7 @@ pl.ylabel(unicode("period ratio",'utf-8'))
 pl.grid(True)
 
 subplot_index += 1
-pl.subplot(subplot_index, sharex=ax1)
+pl.subplot(subplot_index, sharex=plot_period)
 pl.plot(t, delta_longitude)
 pl.xlabel(unicode("time [years]",'utf-8'))
 pl.ylabel(unicode("w2 - w1",'utf-8'))
@@ -245,12 +252,14 @@ pl.grid(True)
 
 for i in range(q+1):
   subplot_index += 1
-  pl.subplot(subplot_index, sharex=ax1)
+  pl.subplot(subplot_index, sharex=plot_period)
   pl.plot(t, phi[i])
   pl.xlabel(unicode("time [years]",'utf-8'))
   pl.ylabel(unicode("φ"+str(i),'utf-8'))
   #~ pl.legend()
   pl.grid(True)
+
+plot_period.xaxis.set_major_formatter(myxfmt)
 
 
 
