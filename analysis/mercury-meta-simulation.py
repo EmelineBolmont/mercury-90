@@ -51,7 +51,7 @@ relative_time = "yes"
 nb_outputs = 1000
 user_force = "yes"
 # integration_time = 1e6 * YEARS
-timestep = 8 # days
+timestep = 3 # days
 m_star = 1.
 
 EJECTION_DISTANCE = 100
@@ -90,6 +90,7 @@ mass_dep_m_max = None
 mass_dep_cz_m_min = None
 mass_dep_cz_m_max = None
 is_turbulence = None
+turbulent_forcing = None
 
 #-------------------------------------------------------------------------------
 # Definition of functions
@@ -113,7 +114,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	global sigma_0, adiabatic_index, viscosity, b_h, torque_type
 	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
 	global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
-	global is_turbulence, saturation_torque
+	global is_turbulence, turbulent_forcing, saturation_torque
 	global PARAMETERS
 	
 	
@@ -180,7 +181,12 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 			elif (key == "viscosity"):
 				viscosity = float(value)
 			elif (key == "is_turbulence"):
-				is_turbulence = int(value)
+				try:
+					is_turbulence = int(value)
+				except ValueError:
+					raise ValueError("'is_turbulence' must be equal to 0 or 1")
+			elif (key == "turbulent_forcing"):
+				turbulent_forcing = float(value)
 			elif (key == "b/h"):
 				b_h = eval(value)
 			elif (key == "dissipation_type"):
@@ -211,7 +217,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 				mass_dep_cz_m_max = float(value)
 			else:
 				PARAMETERS += "the parameter "+key+" is not known. His value was : "+value+"\n"
-				print("Warning: no parameter is known for the key '"+key+"'")
+				raise ValueError("no parameter is known for the key '"+key+"'")
 			# Each parameter defined in the parameter file MUST BE a 'global()' variable, defined in the preamble of the function, in 
 			# order to retrieve their values in the rest of the program
 	
@@ -251,6 +257,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	PARAMETERS += "adiabatic_index = "+str(adiabatic_index)+"\n"
 	PARAMETERS += "viscosity = "+str(viscosity)+" cm^2/s\n"
 	PARAMETERS += "is_turbulence = "+str(is_turbulence)+"\n"
+	PARAMETERS += "turbulent_forcing = "+str(turbulent_forcing)+"\n"
 	PARAMETERS += "b/h = "+str(b_h)+"\n"
 	PARAMETERS += "dissipation_type = "+str(dissipation_type)+"\n"
 	if (dissipation_type == 2):
@@ -378,7 +385,7 @@ def generation_simulation_parameters():
 	if (user_force == "yes"):
 		diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=(sigma_0, 0.5), 
 		              disk_edges=(1., 100.), viscosity=viscosity, sample=sample, dissipation_type=dissipation_type, 
-		              is_turbulence=is_turbulence, 
+		              is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing,
 		              disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
 		              inner_boundary_condition=inner_boundary_condition, outer_boundary_condition=outer_boundary_condition,
 	                torque_profile_steepness=torque_profile_steepness, indep_cz=indep_cz, mass_dep_m_min=mass_dep_m_min, 
@@ -461,7 +468,7 @@ else:
 	starting_index = 1
 
 for index_simu in range(starting_index, starting_index+NB_SIMULATIONS):
-	folder_name = FOLDER_PREFIX+simulations_utilities.number_fill(index_simu, 5)
+	folder_name = "%s%05i" % (FOLDER_PREFIX, index_simu)
 	
 	if not(os.path.exists(folder_name)):
 		os.mkdir(folder_name)

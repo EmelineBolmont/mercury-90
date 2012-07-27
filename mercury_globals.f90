@@ -30,4 +30,5 @@ module mercury_globals
 
   real(double_precision) :: rmax !  RMAX  = heliocentric distance at which objects are considered ejected (AU)
   
+  
 end module mercury_globals

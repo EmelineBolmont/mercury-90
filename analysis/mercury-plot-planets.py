@@ -81,7 +81,7 @@ Q = [] # aphelion
 I = [] # inclinaison (degrees)
 m = [] # planet mass in earth mass
 
-# On rÃ©cupÃ¨re les donnÃ©es orbitales
+# We retrieve the orbital data
 for planete in range(nb_planete):
 	
 	fichier_source = liste_aei[planete]
@@ -90,20 +90,30 @@ for planete in range(nb_planete):
 	Qi = ai * (1 + ei)
 	mi = (MS / MT) * mi
 	
-	t.append(ti)
-	a.append(ai)
-	e.append(ei)
-	q.append(qi)
-	Q.append(Qi)
-	I.append(Ii)
-	m.append(mi)
+	if (type(ti) == np.ndarray):
+		t.append(ti)
+		a.append(ai)
+		e.append(ei)
+		q.append(qi)
+		Q.append(Qi)
+		I.append(Ii)
+		m.append(mi)
+	else:
+		# In case the is only one point, we force to have a list, to avoid plotting problems
+		t.append(np.array([ti]))
+		a.append(np.array([ai]))
+		e.append(np.array([ei]))
+		q.append(np.array([qi]))
+		Q.append(np.array([Qi]))
+		I.append(np.array([Ii]))
+		m.append(np.array([mi]))
 
 
 # We get the array of reference time, i.e, one of the longuest list of time available in the list of planets. 
-len_t = [len(ti) for ti in t]
-ref_len = max(len_t)
-ref_id = len_t.index(ref_len) # The ID of the longuest time array
+len_t = [ti.size for ti in t]
+ref_id = np.argmax(len_t) # The ID of the longuest time array
 ref_time = t[ref_id] # The longuest time array
+ref_len = ref_time.size
 
 delta_t = ref_time[1] - ref_time[0]
 
@@ -139,9 +149,12 @@ for planet in range(nb_planete):
 		plot_a.semilogx(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
 		plot_a.semilogx(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
 	else:
-		plot_a.plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-		plot_a.plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-		plot_a.plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
+		try:
+			plot_a.plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+			plot_a.plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
+			plot_a.plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
+		except:
+			pdb.set_trace()
 
 pl.xlabel("time [years]")
 pl.ylabel("a [AU]")
@@ -184,7 +197,7 @@ pl.xlabel("time [years]")
 pl.ylabel("Inclination [degrees]")
 pl.grid(True)
 
-myyfmt = ScalarFormatter(useOffset=True)
+myyfmt = ScalarFormatter(useOffset=False)
 #~ myyfmt._set_offset(1e5)
 myyfmt.set_scientific(True)
 myyfmt.set_powerlimits((-2, 3)) 

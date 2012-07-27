@@ -12,6 +12,8 @@ import autiwa
 import sys # to get access to arguments of the script
 import mercury_utilities
 import os
+from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
+
 
 ################
 ## Parameters ##
@@ -24,7 +26,7 @@ OUTPUT_EXTENSION = "png"
 NUMBER_OF_VALUES = 10 # sampling for period ratio around the given value 
 DENOMINATOR_LIMIT = 12 # Maximum value allowed of the denominator when we want to get a fraction from a decimal value
 UNCERTAINTY = 5 # In percentage
-NB_LAST_POINTS = 20 # Number of points we want to test the libration of angles.
+NB_LAST_POINTS = 200 # Number of points we want to test the libration of angles.
 
 NB_MEASUREMENTS = 500 # The number of times we test the resonances between planets (because the total number of output can vary from one simulation to another)
 
@@ -181,6 +183,7 @@ uncertainty = 0.01 * float(UNCERTAINTY)
 # We initialize the arrays
 t = [] # time in years
 a = [] # demi-grand axe en ua
+e = [] # eccentricity
 g = [] # argument of pericentre (degrees)
 n = [] # longitude of ascending node (degrees)
 M = [] # Mean anomaly (degrees)
@@ -192,14 +195,17 @@ M = [] # Mean anomaly (degrees)
 for (idx, planet_datafile) in enumerate(liste_aei):
   sys.stdout.write("Reading data files %5.1f %% : %s\r" % ((idx+1.) * 100. / float(nb_planets), planet_datafile))
   sys.stdout.flush()
-  (ti, ai, gi, ni, Mi) = np.loadtxt(planet_datafile, skiprows=4, usecols=(0,1,4,5,6), dtype=float, unpack=True)
+  (ti, ai, ei, gi, ni, Mi) = np.loadtxt(planet_datafile, skiprows=4, usecols=(0,1,2,4,5,6), dtype=float, unpack=True)
   t.append(ti)
   a.append(ai)
+  e.append(ei)
   g.append(gi)
   n.append(ni)
   M.append(Mi)
 
-# We change the range in time, if needed
+####################
+# We change the range in time, if needed and do some pre-calculations
+####################
 # We get the array of reference time, i.e, one of the longuest list of time available in the list of planets. 
 lengths = [ai.size for ai in a]
 
@@ -223,6 +229,7 @@ else:
 for planet in range(nb_planets):
   t[planet] = t[planet][id_min:id_max]
   a[planet] = a[planet][id_min:id_max]
+  e[planet] = e[planet][id_min:id_max]
   g[planet] = g[planet][id_min:id_max]
   n[planet] = n[planet][id_min:id_max]
   M[planet] = M[planet][id_min:id_max]
@@ -232,6 +239,7 @@ for planet in range(nb_planets)[::-1]:
   if (len(t[planet]) == 0):
     del(t[planet])
     del(a[planet])
+    del(e[planet])
     del(g[planet])
     del(n[planet])
     del(M[planet])
@@ -251,13 +259,20 @@ if (NB_MEASUREMENTS < max_lengths):
 else:
   time_delay = 1
 
+# We want at least to test every single point once. 
+# Thus, we make sure that "NB_LAST_POINTS" is at least equal to the space between two tests of the resonances
 if (time_delay > NB_LAST_POINTS):
   print("Warning: The interval between two checks of resonance is greater than the number of points used to test it.")
-  print("         'NB_LAST_POINTS' set manually to 'time_delay'")
+  print("         'NB_LAST_POINTS' extended to 'time_delay'")
   NB_LAST_POINTS = time_delay
 
+# We calculate q and Q
+q = [ai * (1 - ei) for (ai, ei) in zip(a,e)]
+Q = [ai * (1 + ei) for (ai, ei) in zip(a,e)]
 
+####################
 # We declare the arrays needed for the resonances
+####################
 # to store the successive resonances for each planet. If a resonance is written at the index i, that mean that the planet i is the inner planet of the resonance given in the array. 
 resonance_index_range = [[] for planet in range(nb_planets)] # For each planet, each tuple is a range of time during which the planet is in resonance with the planet just after it.
 resonance_type = [[] for planet in range(nb_planets)] # For each planet, store the type of resonance 3:2, 4:3 and so on. The index i of the sublist (of a given planet) correspond to the range in time of the array resonance_time
@@ -272,14 +287,13 @@ resonance_inner_rank = [[] for planet in range(nb_planets)] # The rank, in dista
 # We sort the planet in the order of distance from the host star
 distance = [ai[0] for ai in a]
 planet_index_sorted_by_distance = np.argsort(distance) # the i-th closest planet in distance is the planet planet_index_sorted_by_distance[i]
-ordering_planets = np.argsort(planet_index_sorted_by_distance) # the i-th planet is the ordering_planets[i] in distance
+ordering_planets = 1 + np.argsort(planet_index_sorted_by_distance) # the i-th planet is the ordering_planets[i] in distance starting at 1
 
 # we append the ordering of the current planets in order to display resonances later
 for (planet_idx, order) in enumerate(ordering_planets):
-  dynamic_order[planet_idx].append(order+1)
+  dynamic_order[planet_idx].append(order)
   time_order[planet_idx].append(t[planet_idx][0])
 ###
-
 for instant_index in range(NB_LAST_POINTS,max_lengths,time_delay):
   
   # We display a progress bar of the computation
@@ -382,8 +396,12 @@ for planet in range(nb_planets):
   sys.stdout.flush()
   if isLog:
     plot_a.semilogx(t[planet], a[planet], color=colors[planet], label=planet_names[planet])
+    plot_a.semilogx(t[planet], q[planet], color=colors[planet])
+    plot_a.semilogx(t[planet], Q[planet], color=colors[planet])
   else:
     plot_a.plot(t[planet], a[planet], color=colors[planet], label=planet_names[planet])
+    plot_a.plot(t[planet], q[planet], color=colors[planet])
+    plot_a.plot(t[planet], Q[planet], color=colors[planet])
 
 ylims = list(pl.ylim())
 for planet in range(nb_planets):
@@ -430,7 +448,16 @@ for planet in range(nb_planets):
 plot_res.set_xlabel("time [years]")
 plot_res.set_ylabel("planet order")
 plot_res.set_ylim((0, nb_planets+1))
+plot_res.yaxis.set_ticks(range(1, nb_planets+1))
+plot_res.yaxis.set_ticklabels(range(1, nb_planets+1))
 plot_res.grid(True)
+
+myxfmt = ScalarFormatter(useOffset=True)
+myxfmt._set_offset(1e5)
+myxfmt.set_scientific(True)
+myxfmt.set_powerlimits((-3, 3)) 
+plot_a.xaxis.set_major_formatter(myxfmt)
+plot_res.yaxis.set_major_formatter(FormatStrFormatter('%i'))
 
 sys.stdout.write("Saving graphics                            \r")
 sys.stdout.flush()
@@ -441,7 +468,8 @@ sys.stdout.flush()
 pl.show()
 
 ## TODO
-# display only
+# Store the list of fraction for a given period ratio. If a period ratio is less than 
+#  delta ratio/2 of an existing one, we do not calculate again the fraction, but instead retrieve the existing list
 
 ## Tricks
 # One thing to understand is the fact that when checking resonances at t=ti, we actually search for a resonance between t=ti-dt and t=ti. 
