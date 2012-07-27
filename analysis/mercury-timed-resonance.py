@@ -26,7 +26,7 @@ OUTPUT_EXTENSION = "png"
 NUMBER_OF_VALUES = 10 # sampling for period ratio around the given value 
 DENOMINATOR_LIMIT = 12 # Maximum value allowed of the denominator when we want to get a fraction from a decimal value
 UNCERTAINTY = 5 # In percentage
-NB_LAST_POINTS = 200 # Number of points we want to test the libration of angles.
+NB_LAST_POINTS = 100 # Number of points we want to test the libration of angles.
 
 NB_MEASUREMENTS = 500 # The number of times we test the resonances between planets (because the total number of output can vary from one simulation to another)
 
@@ -196,12 +196,21 @@ for (idx, planet_datafile) in enumerate(liste_aei):
   sys.stdout.write("Reading data files %5.1f %% : %s\r" % ((idx+1.) * 100. / float(nb_planets), planet_datafile))
   sys.stdout.flush()
   (ti, ai, ei, gi, ni, Mi) = np.loadtxt(planet_datafile, skiprows=4, usecols=(0,1,2,4,5,6), dtype=float, unpack=True)
-  t.append(ti)
-  a.append(ai)
-  e.append(ei)
-  g.append(gi)
-  n.append(ni)
-  M.append(Mi)
+  
+  if (type(ti) == np.ndarray):
+    t.append(ti)
+    a.append(ai)
+    e.append(ei)
+    g.append(gi)
+    n.append(ni)
+    M.append(Mi)
+  else:
+    t.append(np.array([ti]))
+    a.append(np.array([ai]))
+    e.append(np.array([ei]))
+    g.append(np.array([gi]))
+    n.append(np.array([ni]))
+    M.append(np.array([Mi]))
 
 ####################
 # We change the range in time, if needed and do some pre-calculations
