@@ -67,9 +67,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 ! dissipation_timestep : the timestep between two computation of the disk [in days]
 ! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
 !
-! Errors : 
-! stop ! 1 : Bad value for migration torque type
-! stop ! 2 : Bad value for the dissipation type of the surface density of the disk
   use physical_constant
   use mercury_constant
   use turbulence
@@ -148,9 +145,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
           call exponential_decay_density_profile()
           
         case default
-          write(*,*) 'Error: The dissipation rule cannot be found.'
-          write(*,*) 'Given value :', DISSIPATION_TYPE
-          stop ! 2
+            stop 'Error in user_module : The "dissipation_type" cannot be found. &
+                 &Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay'
+
       end select
       
       ! we get the temperature profile.
@@ -208,10 +205,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
             
           case default
-            write(*,*) 'Warning: The torque rule cannot be found.'
-            write(*,*) 'Given value :', TORQUE_TYPE
-            write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
-            stop ! 1
+            stop 'Error in user_module : The "torque_type" cannot be found. &
+                 &Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
         end select
         
 

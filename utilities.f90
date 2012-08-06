@@ -676,10 +676,6 @@ subroutine get_histogram(datas, bin_x_values, bin_y_values)
 ! Return : 
 ! bin_x_values : The x values for the histogram. The array must be of size 'nb_bins'
 ! bin_y_values : The y values for the histogram. The array must be of size 'nb_bins'
-!
-! Return code : (i don't know how this works though)
-! stop ! 1 : When bin_x_values and bin_y_values do not have the same size
-! stop ! 2 : When the min and max are the same, and no witdh can be defined
 
 implicit none
 
@@ -705,9 +701,7 @@ integer :: i ! For loops
   nb_bins = size(bin_y_values)
   
   if (.not.(size(bin_x_values).eq.nb_bins)) then
-    write(*,'(a)') '"bin_x_values" and "bin_y_values" do not have the same size'
-    write(*,'(a)') 'Program excited.'
-    stop ! 1
+    stop 'Error in get_histogram : "bin_x_values" and "bin_y_values" do not have the same size'
   end if
 
   ! We initialize the values of the counting array
@@ -723,8 +717,7 @@ integer :: i ! For loops
     write(*,'(a, es6.0e2,a, es7.0e2,a, es7.0e2,a)') 'subroutine get_histogram: For ', float(nb_points), &
              ' values, the turbulent torque is between [', min_value, ' ; ', max_value, ']'
     write(*,'(a, i5, a, es7.0e2)') 'Thus, for ', nb_bins, ' bins in the histogram, the single width of a bin is : ', delta_bin
-    write(*,'(a)') 'Program excited.'
-    stop ! 2
+    stop 'Error in get_histogram : the min and max of the dataset are equal, resulting in a delta_bin equal to 0.'
   end if
   
   do i=1,nb_bins
