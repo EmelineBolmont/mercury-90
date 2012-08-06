@@ -196,11 +196,13 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 			elif (key == "sample"):
 				sample = int(value)
 			elif (key == "inner_boundary_condition"):
-				inner_boundary_condition = value
+				# We ensure that there is no extra quote in the string with the function str2str that remove extra ' and "
+				# There extra quote will generate an error in the mercury.py class Disk
+				inner_boundary_condition = simulations_utilities.str2str(value)
 			elif (key == "outer_boundary_condition"):
-				outer_boundary_condition = value
+				outer_boundary_condition = simulations_utilities.str2str(value)
 			elif (key == "torque_type"):
-				torque_type = value
+				torque_type = simulations_utilities.str2str(value)
 			elif (key == "torque_profile_steepness"):
 				torque_profile_steepness = float(value)
 			elif (key == "saturation_torque"):
