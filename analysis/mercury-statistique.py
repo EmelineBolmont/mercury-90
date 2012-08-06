@@ -40,7 +40,7 @@ resonances = ["4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 # On prépare les plots
 #######################
 
-OUTPUT_EXTENSION = "pdf" # default extension for outputs
+OUTPUT_EXTENSION = "png" # default extension for outputs
 
 dossier_plot = "output"
 
@@ -180,7 +180,7 @@ for simu in liste_simu:
 		I_system.append(Ii)
 		m_system.append(mi)
 		if (ai < 23 and ai > 19 and mi > 16 and mi < 20):
-			print("in "+simu+" a planet has a="+str(ai)+" AU and m="+str(mi)+" mt")
+			print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
 		#~ if (a_system[-1]> 20.):
 			#~ print("in "+simu+" "+datas[0]+" has a="+datas[1])
 	
@@ -243,7 +243,7 @@ for simu in liste_simu:
 		#~ if (max(e_system) > 0.8):
 			#~ print("max eccentricity :",max(e_system),simu)
 	else:
-		print("in "+simu+" there is only "+str(final_nb_planets[-1])+" planet left")
+		print("in %s there is only %i planet left" % (simu, final_nb_planets[-1]))
 	
 	#~ idx_before:idx_after is the range of planets between the first non coorbital inner and outer the position of the reference planet (if they exists)
 	
@@ -282,8 +282,8 @@ for simu in liste_simu:
 				break
 			
 	##########
-print("less massive in the list of most massive :",min(most_massive))
-print("most massive planet formed in all simulations :",max(most_massive))
+print("less massive in the list of most massive : %f" % min(most_massive))
+print("most massive planet formed in all simulations : %f" % max(most_massive))
 
 #######################
 #   Tracé des plots   #
