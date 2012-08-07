@@ -32,9 +32,11 @@ module disk_properties
   real(double_precision) :: MEAN_MOLECULAR_WEIGHT = 2.35 ! the mean molecular weight in mass of a proton
   
   ! Here we define the power law for surface density sigma(R) = INITIAL_SIGMA_0 * R^(-INITIAL_SIGMA_INDEX)
+  logical :: IS_MANUAL_SURFACE_DENSITY = .false. ! If true, the surface density profile is read from the file 'surface_density_profile.dat' instead of being a power law following the 2 next parameters.
   real(double_precision) :: INITIAL_SIGMA_0 = 450 ! the surface density at (R=1AU) [g/cm^2]
   real(double_precision) :: INITIAL_SIGMA_INDEX = 0.5! the negative slope of the surface density power law (alpha in the paper)
-  real(double_precision) :: INITIAL_SIGMA_0_NUM ! the surface density at (R=1AU) [Msun/AU^2]
+  real(double_precision), parameter :: SIGMA_CGS2NUM = AU**2 / MSUN ! The factor to convert surface density from g/cm^2 to MSUN/AU^2 (the numerical units)
+  real(double_precision), parameter :: SIGMA_NUM2CGS = MSUN / AU**2 ! The factor to convert surface density from MSUN/AU^2 (numerical units) to g/cm^2 (CGS)
   integer :: DISSIPATION_TYPE = 1 ! integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
   real(double_precision) :: TAU_DISSIPATION = -1.d0 ! the characteristic time for the exponential decay of the surface density (in years)
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]

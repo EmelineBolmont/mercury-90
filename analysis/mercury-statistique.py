@@ -181,6 +181,8 @@ for simu in liste_simu:
 		m_system.append(mi)
 		if (ai < 23 and ai > 19 and mi > 16 and mi < 20):
 			print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
+		if (ai>2.5) and (mi > 10.):
+			print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
 		#~ if (a_system[-1]> 20.):
 			#~ print("in "+simu+" "+datas[0]+" has a="+datas[1])
 	
