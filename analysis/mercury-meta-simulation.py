@@ -71,7 +71,8 @@ EJECTION_DISTANCE = 100
 #----------------------------------
 # Parameters for the disk
 # None parameters will not be displayed in the parameter file and thus, default values of the code will be used.
-sigma_0 = 1700 # g/cm^2
+surface_density = (1700, 0.5) # (g/cm^2, power law index)
+density_file = 'surface_density_profile.dat'
 adiabatic_index = 1.4 # the adiabatic index of the disk
 viscosity = 1.e15 # cm^2/s
 b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
@@ -111,7 +112,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	global NB_SIMULATIONS, QUEUE, BINARY_FOLDER, isErase
 	global epoch, integration_time, time_format, relative_time, nb_outputs, user_force
 	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters
-	global sigma_0, adiabatic_index, viscosity, b_h, torque_type
+	global surface_density, adiabatic_index, viscosity, b_h, torque_type
 	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
 	global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
 	global is_turbulence, turbulent_forcing, saturation_torque
@@ -174,8 +175,11 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 				I_parameters = eval(value)
 			#----------------------------------
 			# Disk parameters
-			elif (key == "sigma_0"):
-				sigma_0 = float(value)
+			elif (key == "surface_density"):
+				if (value=='manual'):
+					surface_density = value
+				else:
+					surface_density = eval(value)
 			elif (key == "adiabatic_index"):
 				adiabatic_index = float(value)
 			elif (key == "viscosity"):
@@ -218,8 +222,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 			elif (key == "mass_dep_cz_m_max"):
 				mass_dep_cz_m_max = float(value)
 			else:
-				PARAMETERS += "the parameter "+key+" is not known. His value was : "+value+"\n"
-				raise ValueError("no parameter is known for the key '"+key+"'")
+				PARAMETERS += "the parameter %s is not known. His value was : %s\n" % (key, value)
+				raise ValueError("no parameter is known for the key '%s'" % key)
 			# Each parameter defined in the parameter file MUST BE a 'global()' variable, defined in the preamble of the function, in 
 			# order to retrieve their values in the rest of the program
 	
@@ -254,7 +258,10 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	PARAMETERS += "e parameters = "+str(e_parameters)+"\n"
 	PARAMETERS += "I parameters = "+str(I_parameters)+"\n"
 	PARAMETERS += "----------------------------------\nDisk Parameters\n\n"
-	PARAMETERS += "sigma_0 = "+str(sigma_0)+" g/cm^2\n"
+	if (surface_density == 'manual'):
+		PARAMETERS += "surface_density = manual\n"
+	else:
+		PARAMETERS += "sigma_0 = %f g/cm^2 ; negative power law index = %f\n" % surface_density
 	PARAMETERS += "sample = "+str(sample)+"\n"
 	PARAMETERS += "adiabatic_index = "+str(adiabatic_index)+"\n"
 	PARAMETERS += "viscosity = "+str(viscosity)+" cm^2/s\n"
@@ -385,7 +392,7 @@ def generation_simulation_parameters():
 	messagein.write()
 
 	if (user_force == "yes"):
-		diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=(sigma_0, 0.5), 
+		diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
 		              disk_edges=(1., 100.), viscosity=viscosity, sample=sample, dissipation_type=dissipation_type, 
 		              is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing,
 		              disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
@@ -401,6 +408,15 @@ def generation_simulation_parameters():
 				shutil.copy2("../"+torque_file, "./"+torque_file)
 			else:
 				raise NameError("The file "+torque_file+" does not exist in the parent directory\n keep in mind to delete the created folder.")
+				
+				
+		# If we want to use a manual surface density profile, we copy the density profile from the current working directory
+		if (surface_density == 'manual'):
+			if (os.path.isfile("../"+density_file)):
+				shutil.copy2("../"+density_file, "./"+density_file)
+			else:
+				raise NameError("The file "+density_file+" does not exist in the parent directory\n keep in mind to delete the created folder.")
+				
 	
 	# We store a log file of the simulation parameters
 	f = open(SUB_FOLDER_LOG, 'w')
