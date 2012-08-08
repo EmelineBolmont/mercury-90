@@ -19,26 +19,13 @@ import numpy as np
 # Mass threshold
 MASS_THRESHOLD = 5 # Earth mass
 
-CONVERGENCE_ZONE = 6. # in AU, the location of the convergence zone (as a reference for plotting period ratios)
+CONVERGENCE_ZONE = 3. # in AU, the location of the convergence zone (as a reference for plotting period ratios)
 
 DELTA_RATIO = 0.005
 DELTA_M = 0.1
 
-#######################
-# On prÃ©pare le fichier log
-#######################
 # Get current working directory
 rep_exec = os.getcwd()
-
-# On prÃ©pare un fichier oÃ¹ seront stockÃ©s les informations du script au 
-# cours de son exÃ©cution de sorte de pouvoir surveiller comment Ã§a se passe
-nom_script = autiwa.nom_fichier(__file__)
-nom_fichier_log = nom_script + ".log"
-
-# On efface le fichier log des prÃ©cÃ©dentes exÃ©cutions car la fonction 
-# d'Ã©criture du fichier log Ã©crit Ã  la suite du fichier
-if os.path.exists(nom_fichier_log):
-    os.remove(nom_fichier_log)
 
 resonances = ["3:2", "4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 
@@ -52,11 +39,10 @@ extensions = ['pdf', 'png', 'svg']
 dossier_plot = "output"
 
 #######################
-# On dÃ©finit et prÃ©pare les diffÃ©rents dossiers 
-# oÃ¹ on doit lire les rÃ©sultats des simulations
+# We prepare the various folders we we will read the simulations
 #######################
-# On dÃ©finit une liste de nom de dossier que, quoi qu'il arrive
-# on ne souhaite pas traiter et donc qu'on vire de la liste.
+# We define a list of folder names we don't want to read. 
+# Theses names will be suppressed from the final list, in case they exist.
 dossier_suppr = ["output", "indiv_simu_01"]
 
 #######################
@@ -101,7 +87,7 @@ subplot_index = nb_plots_x * 100 + nb_plots_y * 10
 # We go in each sub folder of the current working directory
 
 for (meta_index, meta_simu) in enumerate(liste_meta_simu):
-	autiwa.write_log(nom_fichier_log, "Traitement de "+meta_simu)
+	print("Traitement de %s"%meta_simu)
 	os.chdir(os.path.join(rep_exec,meta_simu))
 	
 	meta_prefix = meta_simu # it is thought to have the initial number of planets in here
@@ -146,7 +132,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
 	
 	final_nb_planets = [] # the final number of planets in the system
 	
-	autiwa.write_log(nom_fichier_log, "\t Reading datas")
+	print("\t Reading datas")
 	
 	for simu in liste_simu:
 		os.chdir(os.path.join(rep_exec, meta_simu, simu))
@@ -221,11 +207,15 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
 		# We search for the two most massives planets of a system
 		tmp = list(m_system)
 		tmp.sort()
-		most_massive.append(tmp[-1])
-		second_massive.append(tmp[-2])
-		if (abs(tmp[-1] - 16) < DELTA_M):
-			print("meta_simu :"+meta_prefix+"\t simu :"+simu)
-		
+		try:
+			mass_first = tmp[-1]
+			mass_second = tmp[-2]
+			most_massive.append(mass_first)
+			second_massive.append(mass_second)
+			#~ if (abs(mass_first - 16) < DELTA_M):
+				#~ print("meta_simu :"+meta_prefix+"\t simu :"+simu)
+		except:
+			pass
 		
 		#~ idx_before:idx_after is the range of planets between the first non coorbital inner and outer the position of the reference planet (if they exists)
 		
@@ -267,7 +257,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
 	#######################
 	#   TracÃ© des plots   #
 	#######################
-	autiwa.write_log(nom_fichier_log, "\t Computing Plots")
+	print("\t Computing Plots")
 	os.chdir(rep_exec)
 	nb_bins = 50
 	
@@ -284,18 +274,18 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
 	pl.figure(2)
 	pl.xlabel("mass [Earths]")
 	pl.ylabel("eccentricity")
-	pl.plot(m_relat, e, 'o', markersize=5, label='nb='+meta_prefix)
+	pl.plot(m, e, 'o', markersize=5, label='nb='+meta_prefix)
 	
-	nom_fichier_plot3 = "e_fct_dist"
-	dist = [ai - CONVERGENCE_ZONE for ai in a]
+	nom_fichier_plot3 = "e_fct_a"
+	#~ dist = [ai - CONVERGENCE_ZONE for ai in a]
 	pl.figure(3)
-	pl.xlabel("distance from convergence zone")
+	pl.xlabel("distance [AU]")
 	pl.ylabel("eccentricity")
-	pl.plot(dist, e, 'o', markersize=5, label='nb='+meta_prefix)
+	pl.plot(a, e, 'o', markersize=5, label='nb='+meta_prefix)
 
 	nom_fichier_plot4 = 'histogrammes_I'
 	pl.figure(4)
-	pl.xlabel(unicode("I (en degrÃ©s?)",'utf-8'))
+	pl.xlabel(unicode("I (in degrees)",'utf-8'))
 	pl.ylabel("density of probability")
 	pl.hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step', label='nb='+meta_prefix)
 	
@@ -314,8 +304,8 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
 	pl.xlabel(unicode("a [AU]",'utf-8'))
 	pl.ylabel("mass [Earths]")
 	pl.plot(a, m2, 'o', markersize=2, color=colors[meta_index], label='nb='+meta_prefix)
-	pl.ylim(0, 18)
-	pl.xlim(1, 10)
+	pl.ylim(0, 12)
+	#~ pl.xlim(1, 10)
 	pl.legend()
 	
 	
@@ -337,41 +327,40 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
 	pl.ylabel("second most massive [Earths]")
 	pl.plot(most_massive, second_massive, 'o', markersize=5, label='nb='+meta_prefix)
 	
-	
-	pl.figure(9)
-	if (meta_prefix == '50'):
-		m_first = [mi + random.uniform(-0.25,0.25) for mi in m_first]
-		m_second = [mi + random.uniform(-0.25,0.25) for mi in m_second]
-		m_clo_first = [mi + random.uniform(-0.25,0.25) for mi in m_clo_first]
-		m_clo_second = [mi + random.uniform(-0.25,0.25) for mi in m_clo_second]
-		nom_fichier_plot9 = "coorbital_pl_mass"
-		pl.title("Mass of the coorbital planets")
-		pl.xlabel("mass of the first planet [Earths]")
-		pl.ylabel("mass of the second planet [Earths]")
-		
-		pl.plot(m_clo_first, m_clo_second, 'ro', markersize=5, label="closest from CZ")
-		pl.plot(m_first, m_second, 'bo', markersize=5, label="all others")
-		ylims = list(pl.ylim())
-		xlims = list(pl.xlim())
-		limits = [max(xlims[0], ylims[0]), min(xlims[1], ylims[1])]
-		pl.plot(limits, limits, 'k--', label="equal mass")
+	#~ pl.figure(9)
+	#~ if (meta_prefix == '50'):
+		#~ m_first = [mi + random.uniform(-0.25,0.25) for mi in m_first]
+		#~ m_second = [mi + random.uniform(-0.25,0.25) for mi in m_second]
+		#~ m_clo_first = [mi + random.uniform(-0.25,0.25) for mi in m_clo_first]
+		#~ m_clo_second = [mi + random.uniform(-0.25,0.25) for mi in m_clo_second]
+		#~ nom_fichier_plot9 = "coorbital_pl_mass"
+		#~ pl.title("Mass of the coorbital planets")
+		#~ pl.xlabel("mass of the first planet [Earths]")
+		#~ pl.ylabel("mass of the second planet [Earths]")
+		#~ 
+		#~ pl.plot(m_clo_first, m_clo_second, 'ro', markersize=5, label="closest from CZ")
+		#~ pl.plot(m_first, m_second, 'bo', markersize=5, label="all others")
+		#~ ylims = list(pl.ylim())
+		#~ xlims = list(pl.xlim())
+		#~ limits = [max(xlims[0], ylims[0]), min(xlims[1], ylims[1])]
+		#~ pl.plot(limits, limits, 'k--', label="equal mass")
 
 fig = pl.figure(6)
 ax1 = fig.add_subplot(221)
-ax1.set_xticklabels([])
+#~ ax1.set_xticklabels([])
 
 ax1 = fig.add_subplot(222)
-ax1.set_xticklabels([])
-ax1.set_yticklabels([])
+#~ ax1.set_xticklabels([])
+#~ ax1.set_yticklabels([])
 
 ax1 = fig.add_subplot(223)
 
 
 ax1 = fig.add_subplot(224)
-ax1.set_yticklabels([])
+#~ ax1.set_yticklabels([])
 
-autiwa.write_log(nom_fichier_log, "Storing plots")
-for ext in [".png", ".pdf"]:
+print("Storing plots")
+for ext in [".png"]:
 	pl.figure(1)
 	pl.legend()
 	pl.savefig(nom_fichier_plot1+ext)
@@ -393,7 +382,7 @@ for ext in [".png", ".pdf"]:
 	pl.savefig(nom_fichier_plot5+ext)
 	
 	pl.figure(6)
-	pl.subplots_adjust(hspace = 0, wspace = 0)
+	#~ pl.subplots_adjust(hspace = 0, wspace = 0)
 	pl.legend()
 	pl.savefig(nom_fichier_plot6+ext)
 	
@@ -417,9 +406,9 @@ for ext in [".png", ".pdf"]:
 	pl.legend()
 	pl.savefig(nom_fichier_plot8+ext)
 	
-	pl.figure(9)
-	pl.legend()
-	pl.savefig(nom_fichier_plot9+ext)
+	#~ pl.figure(9)
+	#~ pl.legend()
+	#~ pl.savefig(nom_fichier_plot9+ext)
 
 
 pl.show()

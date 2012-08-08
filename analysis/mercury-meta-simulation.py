@@ -67,7 +67,7 @@ EJECTION_DISTANCE = 100
 #~ a_parameters = (1, 20, "uniform") # the semi major axis (in AU)
 #~ e_parameters = (0.001, 0.5, "uniform") # the eccentricity
 #~ I_parameters = (0.01, 3, "uniform") # The inclination (in degrees)
-
+radius_star = 0.005 # The radius of the central star in AU
 #----------------------------------
 # Parameters for the disk
 # None parameters will not be displayed in the parameter file and thus, default values of the code will be used.
@@ -112,7 +112,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	
 	global NB_SIMULATIONS, QUEUE, BINARY_FOLDER, isErase
 	global epoch, integration_time, time_format, relative_time, nb_outputs, user_force
-	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters
+	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
 	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges
 	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
 	global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
@@ -174,6 +174,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 				e_parameters = eval(value)
 			elif (key == "I_parameters"):
 				I_parameters = eval(value)
+			elif (key == "radius_star"):
+				radius_star = float(value)
 			#----------------------------------
 			# Disk parameters
 			elif (key == "surface_density"):
@@ -311,6 +313,12 @@ def generation_simulation_parameters():
 		
 		m = simulations_utilities.setParameter(mass_parameters, nb_planets)
 		m = [mi * MT / MS for mi in m]
+	
+	#~ # To add manually one massive planet in the set of planets.
+	#~ random_index = random.randint(0, nb_planets)
+	#~ random_mass = random.uniform(4, 5)
+	#~ m.insert(random_index, random_mass * MT / MS)
+	#~ nb_planets += 1
 
 # This type is special and only for orbital distance. It define the various distances upon the mutual hill radii distance. 
 # It is possible, by including two values in a tuple instead of a single value to define a random calculation of the distance 
@@ -385,7 +393,7 @@ def generation_simulation_parameters():
 	paramin = mercury.Param(algorithme="HYBRID", start_time=epoch, stop_time=epoch+integration_time, output_interval=output_interval, 
 	h=timestep, accuracy=1.e-12, stop_integration="no", collisions="yes", fragmentation="no", 
 	time_format=time_format, relative_time=relative_time, output_precision="medium", relativity="no", 
-	user_force=user_force, ejection_distance=EJECTION_DISTANCE, radius_star=0.005, central_mass=1.0, 
+	user_force=user_force, ejection_distance=EJECTION_DISTANCE, radius_star=radius_star, central_mass=1.0, 
 	J2=0, J4=0, J6=0, changeover=3., data_dump=data_dump, periodic_effect=100)
 	paramin.write()
 
