@@ -111,7 +111,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	"""
 	
 	global NB_SIMULATIONS, QUEUE, BINARY_FOLDER, isErase
-	global epoch, integration_time, time_format, relative_time, nb_outputs, user_force
+	global epoch, integration_time, time_format, relative_time, nb_outputs, user_force, timestep
 	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
 	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges
 	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
@@ -157,6 +157,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 				nb_outputs = int(value)
 			elif (key == "user_force"):
 				user_force = simulations_utilities.str2str(value)
+			elif (key == "timestep"):
+				timestep = float(value)
 			#----------------------------------
 			# Planetary system parameters
 			elif (key in ["fixed_total_mass", "FIXED_TOTAL_MASS"]):
@@ -252,7 +254,9 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	PARAMETERS += "integration time = %.2e years\n" % (integration_time/365.25)
 	PARAMETERS += "number of outputs = "+str(nb_outputs)+"\n"
 	PARAMETERS += "user force = "+str(user_force)+"\n"
+	PARAMETERS += "timestep = %f\n" % timestep
 	PARAMETERS += "----------------------------------\nPlanetary System Parameters\n\n"
+	PARAMETERS += "radius_star = %f\n" % radius_star
 	PARAMETERS += "fixed total mass = "+str(FIXED_TOTAL_MASS)+"\n"
 	if (FIXED_TOTAL_MASS==True):
 		PARAMETERS += "total mass = "+str(TOTAL_MASS)+"\n"
