@@ -304,7 +304,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
 	pl.xlabel(unicode("a [AU]",'utf-8'))
 	pl.ylabel("mass [Earths]")
 	pl.plot(a, m2, 'o', markersize=2, color=colors[meta_index], label='nb='+meta_prefix)
-	pl.ylim(0, 12)
+	#~ pl.ylim(0, 12)
 	#~ pl.xlim(1, 10)
 	pl.legend()
 	

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Version 1.3
-# 23-07-12
+# Version 1.4
+# 09-08-12
 # The script will calculate the resonances between each planet through time
 
 import pdb # Pour le debug
@@ -26,7 +26,7 @@ OUTPUT_EXTENSION = "png"
 NUMBER_OF_VALUES = 10 # sampling for period ratio around the given value 
 DENOMINATOR_LIMIT = 12 # Maximum value allowed of the denominator when we want to get a fraction from a decimal value
 UNCERTAINTY = 5 # In percentage
-NB_LAST_POINTS = 100 # Number of points we want to test the libration of angles.
+NB_LAST_POINTS = 50 # Number of points we want to test the libration of angles.
 
 NB_MEASUREMENTS = 500 # The number of times we test the resonances between planets (because the total number of output can vary from one simulation to another)
 
@@ -134,7 +134,8 @@ problem_message = "AIM : Display all the resonances of all the planet during the
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * t_max : the end of the output (in years)" + "\n" + \
 " * t_min : the beginning of the output (in years)" + "\n" + \
-" * sample : the number of points in time where to search for resonances between planets" + "\n" + \
+" * measure : the number of points in time where to search for resonances between planets" + "\n" + \
+" * sample : The number of successive points used to test a resonance" + "\n" + \
 " * log : time will be displayed in log" + "\n" + \
 " * ext=png : The extension for the output files" + "\n" + \
 " * help : display this current message"
@@ -150,8 +151,10 @@ for arg in sys.argv[1:]:
     t_min = float(value)
   elif (key == 't_max'):
     t_max = float(value)
-  elif (key == 'sample'):
+  elif (key == 'measure'):
     NB_MEASUREMENTS = int(value)
+  elif (key == 'sample'):
+    NB_LAST_POINTS = int(value)
   elif (key == 'log'):
     isLog = True
   elif (key == 'help'):
@@ -378,7 +381,8 @@ for instant_index in range(NB_LAST_POINTS,max_lengths,time_delay):
           resonance_index_range[still_here_planets[inner]][-1][1] = instant_index
         else:
           resonance_type[still_here_planets[inner]].append(res)
-          resonance_index_range[still_here_planets[inner]].append([range_start, range_stop])
+          # To avoid overlap, we define the resonance at the position of the range_stop, without associating, by default, any length.
+          resonance_index_range[still_here_planets[inner]].append([range_stop, range_stop])
           resonance_with[still_here_planets[inner]].append(still_here_planets[outer])
           resonance_inner_rank[still_here_planets[inner]].append(ordering_planets[inner])
 
@@ -399,7 +403,7 @@ fig = pl.figure(1)
 pl.clf()
 fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
 # On crée des sous plots. Pour subplot(311), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
-plot_a = fig.add_subplot(211)
+plot_a = fig.add_subplot(311)
 for planet in range(nb_planets):
   sys.stdout.write("Generating graphics  %5.1f %%                          \r" % ((planet+1) * 25. / float(nb_planets)))
   sys.stdout.flush()
@@ -414,7 +418,7 @@ for planet in range(nb_planets):
 
 ylims = list(pl.ylim())
 for planet in range(nb_planets):
-  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % (25.+(planet+1) * 25. / float(nb_planets)))
+  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % (20.+(planet+1) * 20. / float(nb_planets)))
   sys.stdout.flush()
   for (outer, (id_begin, id_end)) in zip(resonance_with[planet], resonance_index_range[planet]):
     plot_a.plot([t[planet][id_begin], t[planet][id_begin]], [a[planet][id_begin], a[outer][id_begin]], 'k--')
@@ -428,9 +432,9 @@ plot_a.set_xlabel("time [years]")
 plot_a.set_ylabel("a [AU]")
 plot_a.grid(True)
 
-plot_res = fig.add_subplot(212, sharex=plot_a)
+plot_res = fig.add_subplot(312, sharex=plot_a)
 for planet in range(nb_planets):
-  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % (50.+(planet+1) * 25. / float(nb_planets)))
+  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % (40.+(planet+1) * 20. / float(nb_planets)))
   sys.stdout.flush()
   for (res, inner_rank, (id_begin, id_end)) in zip(resonance_type[planet], resonance_inner_rank[planet], resonance_index_range[planet]):
     x_position = (t[planet][id_begin] + t[planet][id_end]) / 2.
@@ -448,7 +452,7 @@ for planet in range(nb_planets):
     plot_res.plot([x_right, x_right], [y_bottom, y_top], 'k-')
 
 for planet in range(nb_planets):
-  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % (75.+(planet+1) * 25. / float(nb_planets)))
+  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % (60.+(planet+1) * 20. / float(nb_planets)))
   sys.stdout.flush()
   if isLog:
     plot_res.semilogx(time_order[planet], dynamic_order[planet], color=colors[planet], label=planet_names[planet])
@@ -460,6 +464,18 @@ plot_res.set_ylim((0, nb_planets+1))
 plot_res.yaxis.set_ticks(range(1, nb_planets+1))
 plot_res.yaxis.set_ticklabels(range(1, nb_planets+1))
 plot_res.grid(True)
+
+plot_e = fig.add_subplot(313, sharex=plot_a)
+for planet in range(nb_planets):
+  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % ((planet+1) * 25. / float(nb_planets)))
+  sys.stdout.flush()
+  if isLog:
+    plot_e.semilogx(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
+  else:
+    plot_e.plot(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
+plot_e.set_xlabel("time [years]")
+plot_e.set_ylabel("eccentricity")
+plot_e.grid(True)
 
 myxfmt = ScalarFormatter(useOffset=True)
 myxfmt._set_offset(1e5)
