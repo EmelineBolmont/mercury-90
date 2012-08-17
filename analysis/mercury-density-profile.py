@@ -8,76 +8,44 @@
 import pylab as pl
 import numpy as np
 
+OUTPUT_EXTENSION = 'pdf'
+
 ####################
 # On lit, pour chaque planète, le contenu du fichier et on stocke les variables qui nous intéressent.
 ####################
-a = [] # demi-grand axe en ua
-Sigma = [] # surface density (in g/cm^2)
-index = [] # surface density index
+# a : demi-grand axe en ua
+# sigma : surface density (in g/cm^2)
+# index : surface density index
 
-
-# On récupère les données orbitales
-
-
-tableau = open("density_profile.dat", 'r')
-
-# On passe la 1e ligne d'entête.
-for indice in range(1):
-	tableau.readline()
-
-for ligne in tableau:
-	# Pour chaque ligne du tableau, on découpe suivant les 
-	# espaces. (par défaut, s'il y a plusieurs espaces à la 
-	# suite, il ne va pas créer 50 000 colonnes, ce qui ne 
-	# serait pas le cas avec un 'split(" ")')
-	colonne = ligne.split()
-	
-	# On essaye de rajouter les éléments. Si un seul d'entre eux
-	# à un soucis, on élimine toute la ligne (en gros, lors de 
-	# l'éjection d'une planète, certains paramètres peuvent 
-	# devenir ****** au lieu d'un float, et ça génère une erreur
-	# lors de la conversion en float)
-	try:
-		ai = float(colonne[0])
-		Sigmai = float(colonne[1])
-		#~ indexi = float(colonne[2])
-	except:
-		pass
-
-	a.append(ai)       # demi-grand axe en ua
-	Sigma.append(Sigmai) # surface density (in g/cm^2)
-	#~ index.append(indexi) # surface density index
-tableau.close()
-
-a = np.array(a)
-Sigma = np.array(Sigma)
-#~ index = np.array(index)
+# We retrieve the datas
+(a, sigma, index) = np.loadtxt("density_profile.dat", skiprows=1, dtype=float, unpack=True)
 
 # on trace les plots
 
+fig = pl.figure(1)
+# On crÃ©e des sous plots. Pour subplot(231), Ã§a signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
+plot_density = fig.add_subplot(211)
+plot_density.plot(a, sigma)
 
-pl.figure(1)
-pl.clf()
-pl.plot(a, Sigma)
-pl.axis('tight')
-pl.xlim(xmin=0)
-pl.ylim(ymin=0)
+plot_density.set_xlabel("a [UA]")
+plot_density.set_ylabel("surface density [g/cm^2]")
+plot_density.axis('tight')
+plot_density.set_xlim(xmin=0)
+plot_density.set_ylim(ymin=0)
+plot_density.grid(True)
 
-pl.xlabel(unicode("a [UA]",'utf-8'))
-pl.ylabel(unicode("surface density [g/cm^2]",'utf-8'))
-#~ pl.legend()
-pl.grid(True)
+plot_idx = fig.add_subplot(212, sharex=plot_density)
+plot_idx.plot(a, index)
 
+plot_idx.set_xlabel("a [UA]")
+plot_idx.set_ylabel("density power law")
+plot_idx.set_ylim((-2,2))
+plot_idx.grid(True)
 
-
-#~ dossier_output = "output"
-#~ system("mkdir dossier_output")
-#~ system("cd dossier_output")
-
-pl.figure(1)
+# We generate the output file
 nom_fichier_plot = "density_profile"
-#~ pl.savefig(nom_fichier_plot+'.svg', format='svg')
-pl.savefig(nom_fichier_plot+'.pdf', format='pdf')
+fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
+
 
 pl.show()
 

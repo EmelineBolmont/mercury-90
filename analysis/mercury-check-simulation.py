@@ -8,9 +8,16 @@ import pdb
 import autiwa
 import sys
 import subprocess
+import simulations_utilities
+import mercury_utilities
 
 # Get current working directory
 rep_exec = os.getcwd()
+
+# Get the machine hostname
+hostname = simulations_utilities.getHostname()
+
+
 
 #    .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-. 
 #  .'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `.
@@ -25,7 +32,7 @@ rep_exec = os.getcwd()
 # (    '  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `    )
 #  `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .'
 #    `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'
-
+isOK = True # If no problems are found, this boolean help display a message that says that everything went fine.
 isRestart = False # Say if we want to re-run the simulation or not.
 isMeta = False # If we consider the current folder as a folder that list sub-meta-simulations where the simulations really are
 isContinue = False # Do we want to continue simulations that did not have time to finish?
@@ -116,32 +123,27 @@ for meta in meta_list:
     if simu not in NaN_folder:
       if (is_finished == 0):
         print("%s/%s : The simulation is not finished" % (absolute_parent_path, simu))
+        isOK = False
         if (isContinue):
-          command = "rm *.aei *.clo"
-          print("\tCleaning the simulation files : %s" % command)
-          (stdout, stderr, returnCode) = autiwa.lancer_commande(command)
-    
-          command = "./runjob"
-          print("\tStarting the simulation again : %s" % command)
-          job = subprocess.Popen(command, shell=True)
-          returnCode = job.wait()
+          mercury_utilities.prepareSubmission(hostname)
+          
+          mercury_utilities.mercury_continue()
         
     else:
       print("%s/%s : NaN are present" % (absolute_parent_path, simu))
+      isOK = False
       if (isRestart):
-        # For each folder were there is a problem (NaN in the output in other words) we clean and relaunch the simulation
-        command = "rm *.out *.dmp *.tmp *.sh.* *.aei *.clo"
-        print("\tCleaning the simulation files : %s" % command)
-        (stdout, stderr, returnCode) = autiwa.lancer_commande(command)
+        mercury_utilities.prepareSubmission(hostname)
         
-        command = "./runjob"
-        print("\tContinuing the simulation to allow it to finish properly : %s" % command)
-        job = subprocess.Popen(command, shell=True)
-        returnCode = job.wait()
+        mercury_utilities.mercury_restart()
+        
   
     # We get back in the parent directory
     os.chdir("..")
   
   os.chdir(rep_exec)
+
+if (isOK):
+  print("All the simulations finished correctly and without NaN")
   
 # TODO Check in a folder if a simulation is currently running (don't know how to test that)

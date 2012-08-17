@@ -1615,7 +1615,7 @@ program test_disk
     
     real(double_precision) :: total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
-    real(double_precision) :: e, q, gm
+    real(double_precision) :: e, q, gm, x_s, gamma_eff, Q_p
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     
@@ -1676,11 +1676,22 @@ program test_disk
           stop
       end select
       
-      total_torque = lindblad_torque + ecc_corot * corotation_torque
+      !------------------------------------------------------------------------------
+      ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
+      Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
+      !------------------------------------------------------------------------------
+
+      gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
+      sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
+      + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
+
+      !------------------------------------------------------------------------------
+
+      x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
       
       
               
-      write(10,*) e, ecc_corot, total_torque
+      write(10,*) e, ecc_corot, x_s
     end do
     
     close(10)
@@ -1691,24 +1702,16 @@ program test_disk
 
     write(10,*) "set terminal pdfcairo enhanced"
     write(10,*) "set output 'ecc_corot.pdf'"
-    write(10,*) 'set multiplot layout 2, 1 \'
-    write(10,'(2(a,f4.1),2a)') 'title "mass = ',mass / (EARTH_MASS * K2),' m_{earth} ; a = ',a ,&
-                            '; torque type = ', trim(TORQUE_TYPE),'"'
+    write(10,'(2(a,f4.1),2a)') 'set title "mass = ',mass / (EARTH_MASS * K2),' m_{earth} ; a = ',a ,'AU"'
 
     write(10,*) 'set xlabel "eccentricity"'
     write(10,*) 'set logscale x'
-    write(10,*) 'set grid'
+    write(10,*) 'set mxtics 10'
+    write(10,*) 'set grid xtics ytics mxtics'
     write(10,*) 'set xrange [',e_min ,':1]'
 
-    write(10,*) "plot 'ecc_corot.dat' using 1:2 with lines title 'eccentricity correction'"
-    
-    write(10,*) 'set xlabel "eccentricity"'
-    write(10,*) 'set ylabel "torque [{/Symbol G}_0]"'
-    write(10,*) 'set grid'
-    write(10,*) 'set xrange [',e_min ,':1]'
-    write(10,*) "plot 'ecc_corot.dat' using 1:3 with lines title '{/Symbol G}_{tot}'"
-    
-    write(10,*) 'unset multiplot'
+    write(10,*) "plot 'ecc_corot.dat' using 1:2 with lines title 'eccentricity correction', \"
+    write(10,*) "     '' using 3:2 with lines title 'x_s semi width of horseshoe region'"
     
     close(10)
 

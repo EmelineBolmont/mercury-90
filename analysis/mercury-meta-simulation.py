@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # script to test various pieces of python code
-# Version 2.1
+# Version 2.1.1
 
-from mercury_utilities import * # module that contain utilities to help create a planetary system. 
-import simulations_utilities    # module that contain utilities to help launch simulations
+import mercury_utilities        # module that contain utilities for the mercury simulations
+import simulations_utilities    # module that contain utilities to help launch simulations, regardless of the kind of simulations
 #~ import mercury                  # module that contain object for each parameter file (and also for bodies and planetary system)
 import pdb                      # to debug via pdb.set_trace()
 import os                       # to create folder, change directory and so on
@@ -78,6 +78,7 @@ viscosity = 1.e15 # cm^2/s
 b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
 sample = 400
 disk_edges = (1., 100.) # (the inner and outer edge of the disk in AU)
+inner_width_smoothing = 0.05 # (in unit of the inner boundary radius) , the width of the region where the surface density decay to become 0 at the inner edge
 dissipation_type = 0
 disk_exponential_decay = None # in years
 inner_boundary_condition = 'open'
@@ -113,7 +114,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	global NB_SIMULATIONS, QUEUE, BINARY_FOLDER, isErase
 	global epoch, integration_time, time_format, relative_time, nb_outputs, user_force, timestep
 	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
-	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges
+	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_width_smoothing
 	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
 	global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
 	global is_turbulence, turbulent_forcing, saturation_torque
@@ -187,6 +188,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 					surface_density = eval(value)
 			elif (key == "disk_edges"):
 				disk_edges = eval(value)
+			elif (key == "inner_width_smoothing"):
+				inner_width_smoothing = float(value)
 			elif (key == "adiabatic_index"):
 				adiabatic_index = float(value)
 			elif (key == "viscosity"):
@@ -273,6 +276,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 		PARAMETERS += "sigma_0 = %f g/cm^2 ; negative power law index = %f\n" % surface_density
 	PARAMETERS += "sample = "+str(sample)+"\n"
 	PARAMETERS += "disk_edges = "+str(disk_edges)+" AU\n"
+	PARAMETERS += "inner_width_smoothing = "+str(inner_width_smoothing)+" AU\n"
 	PARAMETERS += "adiabatic_index = "+str(adiabatic_index)+"\n"
 	PARAMETERS += "viscosity = "+str(viscosity)+" cm^2/s\n"
 	PARAMETERS += "is_turbulence = "+str(is_turbulence)+"\n"
@@ -374,7 +378,7 @@ def generation_simulation_parameters():
 	if ((len_m != len_a) or (len_a != len_e) or (len_e != len_I)):
 		raise TypeError("The size of {m,a,e,I} is not the same")
 
-	system = definePlanetarySystem(m=m, a=a, e=e, I=I)
+	system = mercury_utilities.definePlanetarySystem(m=m, a=a, e=e, I=I)
 
 	# We write the files
 
@@ -410,7 +414,7 @@ def generation_simulation_parameters():
 	if (user_force == "yes"):
 		diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
 		              disk_edges=disk_edges, viscosity=viscosity, sample=sample, dissipation_type=dissipation_type, 
-		              is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing,
+		              is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing, inner_width_smoothing=inner_width_smoothing,
 		              disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
 		              inner_boundary_condition=inner_boundary_condition, outer_boundary_condition=outer_boundary_condition,
 	                torque_profile_steepness=torque_profile_steepness, indep_cz=indep_cz, mass_dep_m_min=mass_dep_m_min, 
@@ -455,6 +459,9 @@ def generation_simulation_parameters():
 # (    '  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `-'  _  `    )
 #  `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .'
 #    `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'
+
+# We want to know the name of the machine, to adapt the way we will launch the simulations in function
+hostname = simulations_utilities.getHostname()
 
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
@@ -524,19 +531,7 @@ for index_simu in range(starting_index, starting_index+NB_SIMULATIONS):
 	
 	generation_simulation_parameters()
 	
-	command = BINARY_FOLDER+"/mercury\n" + \
-	          BINARY_FOLDER+"/element\n" + \
-	          "echo `date '+%d-%m-%Y at %H:%M:%S'` `pwd` ': Done'>>~/qsub.log\n"
-	script = simulations_utilities.SimpleJob(command) # For arguin
-	#~ script = simulations_utilities.Job_PBS(command, walltime=48) # For avakas
-	script.write()
-	
-	
-	simulations_utilities.setExecutionRight("simulation.sh")
-	
-	# We define a bash script to launch the simulation in a queue
-	simulations_utilities.writeRunjobSGE("simulation.sh", QUEUE) # For arguin
-	#~ simulations_utilities.writeRunjobPBS("simulation.sh") # For avakas
+	mercury_utilities.prepareSubmission(hostname)
 	
 	# We launch the job
 	if toLaunch:

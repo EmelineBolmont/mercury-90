@@ -26,7 +26,7 @@ OUTPUT_EXTENSION = "png"
 NUMBER_OF_VALUES = 10 # sampling for period ratio around the given value 
 DENOMINATOR_LIMIT = 12 # Maximum value allowed of the denominator when we want to get a fraction from a decimal value
 UNCERTAINTY = 5 # In percentage
-NB_LAST_POINTS = 50 # Number of points we want to test the libration of angles.
+NB_LAST_POINTS = 10 # Number of points we want to test the libration of angles.
 
 NB_MEASUREMENTS = 500 # The number of times we test the resonances between planets (because the total number of output can vary from one simulation to another)
 
@@ -470,9 +470,9 @@ for planet in range(nb_planets):
   sys.stdout.write("Generating graphics  %5.1f %%                          \r" % ((planet+1) * 25. / float(nb_planets)))
   sys.stdout.flush()
   if isLog:
-    plot_e.semilogx(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
+    plot_e.loglog(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
   else:
-    plot_e.plot(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
+    plot_e.semilogy(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
 plot_e.set_xlabel("time [years]")
 plot_e.set_ylabel("eccentricity")
 plot_e.grid(True)
