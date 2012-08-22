@@ -385,6 +385,7 @@ subroutine write_disk_properties()
     write(10,'(a)') '  No turbulence'
   end if
   write(10,*) ''
+  write(10,'(a,f5.2,a)') 'The orbits will be resolved up to ', distance_accuracy, ' AU'
   write(10,'(a,f6.1,a)') 'inner edge of the disk = ',INNER_BOUNDARY_RADIUS, ' (AU)'
   write(10,'(a,f6.1,a)') 'outer edge of the disk = ',OUTER_BOUNDARY_RADIUS, ' (AU)'
   if (IS_MANUAL_SURFACE_DENSITY) then
@@ -424,7 +425,7 @@ subroutine write_disk_properties()
   write(10,'(a)') 'When the inclination damping stops'
   write(10,'(a,es10.1e2,a)') 'inclination cutoff = ',INCLINATION_CUTOFF, ' (rad)'
   write(10,'(a)') 'When the torque of the disk is deactivated'
-  write(10,'(a,f5.2,a)') 'cut off : semi major axis < ',INNER_BOUNDARY_RADIUS, ' AU'
+  write(10,'(a,f5.3,a)') 'cut off : semi major axis < ',INNER_BOUNDARY_RADIUS, ' AU'
   write(10,'(a,f5.3)') 'cut off : eccentricity > ',ECCENTRICITY_CUTOFF
   write(10,*) ''
   write(10,'(a)') "Possible values : 'real', 'mass_independant', 'linear_indep', 'tanh_indep'"

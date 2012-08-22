@@ -4,7 +4,7 @@
 
 import mercury_utilities        # module that contain utilities for the mercury simulations
 import simulations_utilities    # module that contain utilities to help launch simulations, regardless of the kind of simulations
-#~ import mercury                  # module that contain object for each parameter file (and also for bodies and planetary system)
+import mercury                  # module that contain object for each parameter file (and also for bodies and planetary system)
 import pdb                      # to debug via pdb.set_trace()
 import os                       # to create folder, change directory and so on
 import subprocess               # to launch 'runjob'
