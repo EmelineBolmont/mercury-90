@@ -25,8 +25,9 @@ OUTPUT_EXTENSION = "png"
 # that we search for a corresping fraction to the orbital period ratio
 NUMBER_OF_VALUES = 10 # sampling for period ratio around the given value 
 DENOMINATOR_LIMIT = 12 # Maximum value allowed of the denominator when we want to get a fraction from a decimal value
+NUMERATOR_LIMIT = 20 # maximum value allowed for the numerator
 UNCERTAINTY = 5 # In percentage
-NB_LAST_POINTS = 10 # Number of points we want to test the libration of angles.
+NB_LAST_POINTS = 15 # Number of points we want to test the libration of angles.
 
 NB_MEASUREMENTS = 500 # The number of times we test the resonances between planets (because the total number of output can vary from one simulation to another)
 
@@ -64,7 +65,7 @@ def get_possible_resonances(periodRatio):
   # We sort the resonances to get the more interesting first (3:2 before 32:27 for instance)
   tmp = [(res.numerator, res) for res in resonances]
   tmp.sort()
-  resonances = [element[1] for element in tmp]
+  resonances = [element[1] for element in tmp if element[1].numerator < NUMERATOR_LIMIT]
   
   #~ print(uncertainty)
   #~ print(periodMin)

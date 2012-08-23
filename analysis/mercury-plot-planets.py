@@ -217,10 +217,10 @@ plot_e.yaxis.set_major_formatter(myyfmt)
 #~ system("mkdir dossier_output")
 #~ system("cd dossier_output")
 
-pl.figure(1)
+
 nom_fichier_plot = "evolution_planete"
 #~ pl.savefig(nom_fichier_plot+'.svg', format='svg')
-pl.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
+fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()
 

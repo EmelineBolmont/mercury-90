@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # script to plot resonance between planets
-# Version 1.1
+# Version 1.2
 
 #  this routine plots the resonant angles for a inner_period_nb:outer_period_nb resonance
 #  (inner_period_nb>outer_period_nb)
@@ -34,6 +34,12 @@ import numpy as np
 import pylab as pl
 import sys # to use in particuliar the sys.argv list to retrieve parameters of the script
 from matplotlib.ticker import ScalarFormatter
+
+ANGLE_MIN = - 180.
+ANGLE_MAX = 180.
+
+OUTPUT_EXTENSION = 'pdf' # default value in bitmap, because vectoriel can take time and space if there is a lot of data
+
 
 
 def lancer_commande(commande):
@@ -71,8 +77,7 @@ outer_planet = sys.argv[2].rstrip(".aei")
 inner_period_nb = int(sys.argv[3])
 outer_period_nb = int(sys.argv[4])
 
-ANGLE_MIN = - 180.
-ANGLE_MAX = 180.
+
 
 ####################
 # On récupère la liste des fichiers planètes.aei
@@ -231,45 +236,37 @@ fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hs
 # courant est le 1e. (on a donc 2*3=6 plots en tout)
 
 # We create a variable to store the index of the subplot
-subplot_index = nb_plots_x * 100 + nb_plots_y * 10
+subplot_index = 0
 pl.suptitle("resonance "+str(inner_period_nb)+":"+str(outer_period_nb)+" between "+inner_planet+" and "+outer_planet)
 
 subplot_index += 1
-plot_period = pl.subplot(subplot_index)
+plot_period = pl.subplot(nb_plots_x, nb_plots_y, subplot_index)
 pl.plot(t, (a_outer / a_inner)**1.5)
-pl.xlabel(unicode("time [years]",'utf-8'))
-pl.ylabel(unicode("period ratio",'utf-8'))
+pl.xlabel("time [years]")
+pl.ylabel("period ratio")
 #~ pl.legend()
 pl.grid(True)
 
 subplot_index += 1
-pl.subplot(subplot_index, sharex=plot_period)
+pl.subplot(nb_plots_x, nb_plots_y, subplot_index, sharex=plot_period)
 pl.plot(t, delta_longitude)
-pl.xlabel(unicode("time [years]",'utf-8'))
-pl.ylabel(unicode("w2 - w1",'utf-8'))
+pl.xlabel("time [years]")
+pl.ylabel("w2 - w1")
 #~ pl.legend()
 pl.grid(True)
 
 for i in range(q+1):
   subplot_index += 1
-  pl.subplot(subplot_index, sharex=plot_period)
+  pl.subplot(nb_plots_x, nb_plots_y, subplot_index, sharex=plot_period)
   pl.plot(t, phi[i])
-  pl.xlabel(unicode("time [years]",'utf-8'))
-  pl.ylabel(unicode("φ"+str(i),'utf-8'))
+  pl.xlabel("time [years]")
+  pl.ylabel(unicode("φ%i" % i, 'utf8'))
   #~ pl.legend()
   pl.grid(True)
 
 plot_period.xaxis.set_major_formatter(myxfmt)
 
-
-
-#~ dossier_output = "output"
-#~ system("mkdir dossier_output")
-#~ system("cd dossier_output")
-
-pl.figure(1)
-nom_fichier_plot = "resonance_"+str(inner_period_nb)+"_"+str(outer_period_nb)+"_between_"+inner_planet+"_and_"+outer_planet
-#~ pl.savefig(nom_fichier_plot+'.svg', format='svg')
-pl.savefig(nom_fichier_plot+'.pdf', format='pdf') # We store into a .pdf file
+nom_fichier_plot = "resonance_%i_%i_between_%s_and_%s" % (inner_period_nb, outer_period_nb, inner_planet, outer_planet)
+fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show() # We display the plot
