@@ -47,7 +47,7 @@ for arg in sys.argv[1:]:
 	elif (key == 't_max'):
 		t_max = float(value)
 	elif (key == 'massive'):
-		MAX_COLORED = float(value)
+		MAX_COLORED = int(value)
 	elif (key == 'log'):
 		isLog = True
 	elif (key == 'ext'):
@@ -94,7 +94,7 @@ for planete in range(nb_planete):
 	(ti, ai, mi) = np.loadtxt(fichier_source, skiprows=4, usecols = (0,1,7), dtype=float, unpack=True)
 	#~ qi = ai * (1 - ei)
 	#~ Qi = ai * (1 + ei)
-	mi = (MS / MT) * mi
+	#~ mi = (MS / MT) * mi
 	
 	if (type(ti) == np.ndarray):
 		t.append(ti)
