@@ -31,6 +31,7 @@ problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * t_max (the end of the output, in years)" + "\n" + \
 " * t_min (the beginning of the output (in years)" + "\n" + \
+" * massive (the number of most massive planets to be tracked)" + "\n" + \
 " * log (time will be displayed in log)" + "\n" + \
 " * help (display a little help message on HOW to use various options" + "\n" + \
 " * ext=pdf (The extension for the output files)"
@@ -45,6 +46,8 @@ for arg in sys.argv[1:]:
 		t_min = float(value)
 	elif (key == 't_max'):
 		t_max = float(value)
+	elif (key == 'massive'):
+		MAX_COLORED = float(value)
 	elif (key == 'log'):
 		isLog = True
 	elif (key == 'ext'):
@@ -74,71 +77,43 @@ nb_planete = len(liste_aei)
 
 
 ####################
-# On lit, pour chaque planète, le contenu du fichier et on stocke les variables qui nous intéressent.
+# On lit, pour chaque planete, le contenu du fichier et on stocke les variables qui nous intÃ©ressent.
 ####################
-t = [] # temps en année
-a = [] # demi-grand axe en ua
-e = [] # excentricité
-q = [] # perihelion
-Q = [] # aphelion
-I = [] # inclinaison
-n = [] # longitude of ascending node
-m = [] # masse de la planète en masse solaire
+t = [] # time in years
+a = [] # semi major axis in AU
+#~ e = [] # eccentricity
+#~ q = [] # perihelion
+#~ Q = [] # aphelion
+#~ I = [] # inclinaison (degrees)
+m = [] # planet mass in earth mass
 
-
-
-# On récupère les données orbitales
+# We retrieve the orbital data
 for planete in range(nb_planete):
 	
 	fichier_source = liste_aei[planete]
-	tableau = open(fichier_source, 'r')
+	(ti, ai, mi) = np.loadtxt(fichier_source, skiprows=4, usecols = (0,1,7), dtype=float, unpack=True)
+	#~ qi = ai * (1 - ei)
+	#~ Qi = ai * (1 + ei)
+	mi = (MS / MT) * mi
 	
-	t.append([]) # temps en année
-	a.append([]) # demi-grand axe en ua
-	e.append([]) # excentricité
-	q.append([]) # perihelion
-	Q.append([]) # aphelion
-	I.append([]) # inclinaison
-	n.append([]) # longitude of ascending node
-	m.append([]) # masse de la planète en masse solaire
+	if (type(ti) == np.ndarray):
+		t.append(ti)
+		a.append(ai)
+		#~ e.append(ei)
+		#~ q.append(qi)
+		#~ Q.append(Qi)
+		#~ I.append(Ii)
+		m.append(mi)
+	else:
+		# In case the is only one point, we force to have a list, to avoid plotting problems
+		t.append(np.array([ti]))
+		a.append(np.array([ai]))
+		#~ e.append(np.array([ei]))
+		#~ q.append(np.array([qi]))
+		#~ Q.append(np.array([Qi]))
+		#~ I.append(np.array([Ii]))
+		m.append(np.array([mi]))
 
-	# On passe les 3 premières lignes d'entête.
-	for indice in range(3):
-		tableau.readline()
-
-	entete = tableau.readline()
-	for ligne in tableau:
-		# Pour chaque ligne du tableau, on découpe suivant les 
-		# espaces. (par défaut, s'il y a plusieurs espaces à la 
-		# suite, il ne va pas créer 50 000 colonnes, ce qui ne 
-		# serait pas le cas avec un 'split(" ")')
-		colonne = ligne.split()
-		
-		# On essaye de rajouter les éléments. Si un seul d'entre eux
-		# à un soucis, on élimine toute la ligne (en gros, lors de 
-		# l'éjection d'une planète, certains paramètres peuvent 
-		# devenir ****** au lieu d'un float, et ça génère une erreur
-		# lors de la conversion en float)
-		try:
-			ti = float(colonne[0])
-			ai = float(colonne[1])
-			ei = float(colonne[2])
-			Ii = float(colonne[3])
-			ni = float(colonne[5])
-			mi = float(colonne[7])
-		except:
-			pass
-		t[-1].append(ti)
-		a[-1].append(ai)
-		e[-1].append(ei)
-		q[-1].append(ai * (1 - ei))
-		Q[-1].append(ai * (1 + ei))
-		I[-1].append(Ii)
-		n[-1].append(ni)
-		m[-1].append(mi * MS / MT)
-
-		
-	tableau.close()
 
 # We get the array of reference time, i.e, one of the longuest list of time available in the list of planets. 
 len_t = [len(ti) for ti in t]
@@ -228,53 +203,40 @@ for line in reversed(lines):
 
 fig = pl.figure(1)
 pl.clf()
-ax1 = fig.add_subplot(211)
+fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
 
 # On crée des sous plots. Pour subplot(321), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
-pl.subplot(211)
+plot_a = fig.add_subplot(211)
 for planet in range(nb_planete):
 	if isLog:
-		pl.semilogx(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-		#~ pl.semilogx(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-		#~ pl.semilogx(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
+		plot_a.semilogx(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 	else:
-		pl.plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-		#~ pl.plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-		#~ pl.plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
+		plot_a.plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+
 
 for planet in lost_in_collisions:
 	if isLog:
-		pl.semilogx(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
+		plot_a.semilogx(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
 	else:
-		pl.plot(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
+		plot_a.plot(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
 
-ax1.set_xticklabels([])
-#~ pl.xlabel(unicode("time [years]",'utf-8'))
-pl.ylabel(unicode("a [UA]",'utf-8'))
-#~ pl.legend()
-pl.grid(True)
+plot_a.set_xlabel("time [years]")
+plot_a.set_ylabel("a [UA]")
+plot_a.grid(True)
 
-pl.subplot(212, sharex=ax1)
+plot_mass = fig.add_subplot(212, sharex=plot_a)
 for planet in range(nb_planete):
 	if isLog:
-		pl.semilogx(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		plot_mass.semilogx(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 	else:
-		pl.plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-pl.xlabel(unicode("time [years]",'utf-8'))
-pl.ylabel(unicode("mass [Earths]",'utf-8'))
-pl.grid(True)
+		plot_mass.plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+plot_mass.set_xlabel("time [years]")
+plot_mass.set_ylabel("mass [Earths]")
+plot_mass.grid(True)
 
 
-
-#~ dossier_output = "output"
-#~ system("mkdir dossier_output")
-#~ system("cd dossier_output")
-
-pl.figure(1)
-pl.subplots_adjust(hspace = 0)
 nom_fichier_plot = "plot_am"
-#~ pl.savefig(nom_fichier_plot+'.svg', format='svg')
-pl.savefig(nom_fichier_plot+'.'+OUTPUT_EXTENSION, format=OUTPUT_EXTENSION)
+fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()
 
