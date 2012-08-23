@@ -20,21 +20,24 @@ COLOR_EJECTED = '909090'
 ###############################################
 ## Beginning of the program
 ###############################################
-
-isLog = False # We set the false option before. Because if not, we will erase the 'true' with other option that are not log, and 
+# We set the false option before. Because if not, we will erase the 'true' with other option that are not log, and 
 # thus will lead to be in the else and put log to false.
+isLog = False 
+
+isaLog = False # Put a semilog in 'a' if true
 
 OUTPUT_EXTENSION = "pdf" # default extension for outputs
 
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * t_max (the end of the output, in years)" + "\n" + \
-" * t_min (the beginning of the output (in years)" + "\n" + \
-" * massive (the number of most massive planets to be tracked)" + "\n" + \
-" * log (time will be displayed in log)" + "\n" + \
-" * help (display a little help message on HOW to use various options" + "\n" + \
-" * ext=pdf (The extension for the output files)"
+" * t_max : the end of the output, in years)" + "\n" + \
+" * t_min : the beginning of the output (in years)" + "\n" + \
+" * massive : the number of most massive planets to be tracked" + "\n" + \
+" * log : time (x-axis) will be displayed in log" + "\n" + \
+" * alog : semi major axis (y-axis) will be displayed in log" + "\n" + \
+" * help : display a little help message on HOW to use various options" + "\n" + \
+" * ext=pdf : The extension for the output files"
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -50,6 +53,8 @@ for arg in sys.argv[1:]:
 		MAX_COLORED = int(value)
 	elif (key == 'log'):
 		isLog = True
+	elif (key == 'alog'):
+		isaLog = True
 	elif (key == 'ext'):
 		OUTPUT_EXTENSION = value
 	elif (key == 'help'):
@@ -94,7 +99,7 @@ for planete in range(nb_planete):
 	(ti, ai, mi) = np.loadtxt(fichier_source, skiprows=4, usecols = (0,1,7), dtype=float, unpack=True)
 	#~ qi = ai * (1 - ei)
 	#~ Qi = ai * (1 + ei)
-	#~ mi = (MS / MT) * mi
+	mi = (MS / MT) * mi
 	
 	if (type(ti) == np.ndarray):
 		t.append(ti)
@@ -208,17 +213,29 @@ fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hs
 # On crée des sous plots. Pour subplot(321), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
 plot_a = fig.add_subplot(211)
 for planet in range(nb_planete):
-	if isLog:
-		plot_a.semilogx(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+	if isaLog:
+		if isLog:
+			plot_a.loglog(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		else:
+			plot_a.semilogy(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 	else:
-		plot_a.plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		if isLog:
+			plot_a.semilogx(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+		else:
+			plot_a.plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 
 
 for planet in lost_in_collisions:
-	if isLog:
-		plot_a.semilogx(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
+	if isaLog:
+		if isLog:
+			plot_a.loglog(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
+		else:
+			plot_a.semilogy(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
 	else:
-		plot_a.plot(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
+		if isLog:
+			plot_a.semilogx(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
+		else:
+			plot_a.plot(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
 
 plot_a.set_xlabel("time [years]")
 plot_a.set_ylabel("a [UA]")
