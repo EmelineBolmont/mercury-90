@@ -167,7 +167,7 @@ pl.ylabel("a [AU]")
 #~ pl.legend()
 pl.grid(True)
 
-plot_e = fig.add_subplot(222, sharex=plot_a)
+plot_e = fig.add_subplot(2, 2, 2, sharex=plot_a)
 for planet in range(nb_planete):
 	if isLog:
 		plot_e.semilogx(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
@@ -177,7 +177,7 @@ pl.xlabel("time [years]")
 pl.ylabel("eccentricity")
 pl.grid(True)
 
-plot_m = fig.add_subplot(223, sharex=plot_a)
+plot_m = fig.add_subplot(2, 2, 3, sharex=plot_a)
 for planet in range(nb_planete):
 	if isLog:
 		plot_m.semilogx(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
@@ -187,7 +187,7 @@ pl.xlabel("time [years]")
 pl.ylabel("mass [Earths]")
 pl.grid(True)
 
-plot_I = fig.add_subplot(224, sharex=plot_a)
+plot_I = fig.add_subplot(2, 2, 4, sharex=plot_a)
 for planet in range(nb_planete):
 	if isLog:
 		plot_I.semilogx(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))

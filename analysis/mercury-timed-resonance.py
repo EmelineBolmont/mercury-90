@@ -3,6 +3,9 @@
 # Version 1.4
 # 09-08-12
 # The script will calculate the resonances between each planet through time
+#
+# /!\ Warning : It seems to be problems in some python version in the line 62 (with the module Fraction. 
+#               But it works perfectly on another server, so I don't know what to think about this.
 
 import pdb # Pour le debug
 import numpy as np

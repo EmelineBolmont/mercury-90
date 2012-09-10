@@ -211,7 +211,7 @@ pl.clf()
 fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
 
 # On crée des sous plots. Pour subplot(321), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
-plot_a = fig.add_subplot(211)
+plot_a = fig.add_subplot(2, 1, 1)
 for planet in range(nb_planete):
 	if isaLog:
 		if isLog:
@@ -241,7 +241,7 @@ plot_a.set_xlabel("time [years]")
 plot_a.set_ylabel("a [UA]")
 plot_a.grid(True)
 
-plot_mass = fig.add_subplot(212, sharex=plot_a)
+plot_mass = fig.add_subplot(2, 1, 2, sharex=plot_a)
 for planet in range(nb_planete):
 	if isLog:
 		plot_mass.semilogx(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
