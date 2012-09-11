@@ -49,6 +49,7 @@ epoch = 0
 time_format = "years"
 relative_time = "yes"
 nb_outputs = 1000
+nb_dumps = 10 # Number of times we will create .dmp files and output dE/E
 user_force = "yes"
 # integration_time = 1e6 * YEARS
 timestep = 3 # days
@@ -112,7 +113,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	"""
 	
 	global NB_SIMULATIONS, QUEUE, BINARY_FOLDER, isErase
-	global epoch, integration_time, time_format, relative_time, nb_outputs, user_force, timestep
+	global epoch, integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
 	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
 	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_width_smoothing
 	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
@@ -156,6 +157,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 				relative_time = simulations_utilities.str2str(value)
 			elif (key == "nb_outputs"):
 				nb_outputs = int(value)
+			elif (key == "nb_dumps"):
+				nb_dumps = int(value)
 			elif (key == "user_force"):
 				user_force = simulations_utilities.str2str(value)
 			elif (key == "timestep"):
@@ -256,6 +259,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	PARAMETERS += "epoch = "+str(epoch/365.25)+" years\n"
 	PARAMETERS += "integration time = %.2e years\n" % (integration_time/365.25)
 	PARAMETERS += "number of outputs = "+str(nb_outputs)+"\n"
+	PARAMETERS += "number of dumps = "+str(nb_dumps)+"\n"
 	PARAMETERS += "user force = "+str(user_force)+"\n"
 	PARAMETERS += "timestep = %f\n" % timestep
 	PARAMETERS += "----------------------------------\nPlanetary System Parameters\n\n"
@@ -304,7 +308,7 @@ def generation_simulation_parameters():
 	"""
 	
 	output_interval = integration_time / float(nb_outputs)
-	data_dump = abs(int(integration_time / (nb_outputs * timestep)))
+	data_dump = abs(int(integration_time / (nb_dumps * timestep)))
 
 	# We begin the random generation of parameters.
 	if FIXED_TOTAL_MASS:
