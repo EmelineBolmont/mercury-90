@@ -182,32 +182,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 
         !------------------------------------------------------------------------------
         ! Calculation of the acceleration due to migration
-        select case(TORQUE_TYPE)
-          case('real') ! The normal torque profile, calculated form properties of the disk
-            call get_corotation_torque(mass(1), mass(planet), p_prop, & ! input
+        call get_torques(mass(1), mass(planet), p_prop, & ! input
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-          
-          ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-          case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
-            call get_corotation_torque_linear_indep(mass(1), mass(planet), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-          
-          case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
-            call get_corotation_torque_tanh_indep(mass(1), mass(planet), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-          
-          case('mass_dependant')
-            call get_corotation_torque_mass_dep_CZ(mass(1), mass(planet), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-            
-          case('manual')
-            call get_corotation_torque_manual(mass(1), mass(planet), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-            
-          case default
-            stop 'Error in user_module : The "torque_type" cannot be found. &
-                 &Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
-        end select
         
         
         torque = torque_ref * (lindblad_torque + ecc_corot * corotation_torque)
@@ -280,16 +256,16 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 !~         end if
 
       end if
-      if (time.gt.9.825225e6) then
-        if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%radius.gt.INNER_BOUNDARY_RADIUS)) then
-        
-          call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
-                       time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
-                       turbulence_acceleration)
-        end if
-        write (*,*) "time = ", time, " ; planet", planet
-        call print_planet_properties(p_prop)
-      end if
+!~       if (time.gt.9.825225e6) then
+!~         if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%radius.gt.INNER_BOUNDARY_RADIUS)) then
+!~         
+!~           call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
+!~                        time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
+!~                        turbulence_acceleration)
+!~         end if
+!~         write (*,*) "time = ", time, " ; planet", planet
+!~         call print_planet_properties(p_prop)
+!~       end if
     end if
   end do
   

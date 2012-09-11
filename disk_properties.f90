@@ -98,6 +98,26 @@ module disk_properties
     real(double_precision) :: temperature ! the temperature of the disk at the location of the planet [K] 
     real(double_precision) :: temperature_index ! the negative temperature index of the disk at the location of the planet [no dim] 
   end type PlanetProperties
+  
+  procedure(get_torques_interface), pointer :: get_torques
+  
+  abstract interface 
+  subroutine get_torques_interface(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0, ecc_corot)
+    import 
+    
+    implicit none
+    real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
+    ! Properties of the planet
+    real(double_precision), intent(in) :: mass ! the mass of the planet [Msun * K2]
+    type(PlanetProperties), intent(in) :: p_prop ! various properties of the planet
+    
+    
+    real(double_precision), intent(out) :: corotation_torque
+    real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
+    real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
+    real(double_precision), intent(out) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
+  end subroutine get_torques_interface
+  end interface
 
 contains
 
