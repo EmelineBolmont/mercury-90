@@ -18,6 +18,20 @@ import os
 from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 
 
+# README
+# There a several parameters to deal with to obtain an optimised calculation. 
+# First, you can control the number of instants where you will check for resonances
+# Second, you can control the number of points in the past you will use, for a given instant, to check if there were resonance. Beware
+#  here, because too many points will make you loose some resonances (because the point of stability can vary in time, even with libration
+#  and if there is too few points, you will find resonances that might not exist in reality
+# And finally, you can modify the tolerance over the standard deviation for the resonant angle. 
+# But you should not modify that unless you know what you are doing. The tolerance must not be too small, because weak resonances with
+# secular change in the resonance angle libration can exist. But if there is not enough outputs, the risk is to find a resonance
+# where there is none, only because the huge time between outputs can make the resonant angle to be in libration just by a sample effect.
+#
+# /!\ If a resonance is found at only one instant, she will not be displayed, becarefull of the number of instant where to test them
+
+
 ################
 ## Parameters ##
 ################
@@ -36,7 +50,7 @@ NB_MEASUREMENTS = 500 # The number of times we test the resonances between plane
 
 # the threshold of the standard deviation of a resonant angle, 
 # below which we consider there is libration and thus, a resonance.
-STD_THRESHOLD = 40 
+STD_THRESHOLD = 70 
 
 # Extreme angles for angle folding. We will apply a mod 2pi to all angles, 
 # but theses values determines between wich values we will constrains the angles.
@@ -138,10 +152,10 @@ problem_message = "AIM : Display all the resonances of all the planet during the
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * t_max : the end of the output (in years)" + "\n" + \
 " * t_min : the beginning of the output (in years)" + "\n" + \
-" * measure : the number of points in time where to search for resonances between planets" + "\n" + \
-" * sample : The number of successive points used to test a resonance" + "\n" + \
-" * log : time will be displayed in log" + "\n" + \
-" * ext=png : The extension for the output files" + "\n" + \
+" * instants : (%d) the number of points in time where to search for resonances between planets" % NB_MEASUREMENTS + "\n" + \
+" * sample : (%d) The number of successive points used to test a resonance" % NB_LAST_POINTS + "\n" + \
+" * log : (%s) time will be displayed in log" % isLog + "\n" + \
+" * ext=png : (%s) The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
 " * help : display this current message"
 
 for arg in sys.argv[1:]:
@@ -155,7 +169,7 @@ for arg in sys.argv[1:]:
     t_min = float(value)
   elif (key == 't_max'):
     t_max = float(value)
-  elif (key == 'measure'):
+  elif (key == 'instants'):
     NB_MEASUREMENTS = int(value)
   elif (key == 'sample'):
     NB_LAST_POINTS = int(value)
@@ -279,7 +293,7 @@ else:
 # Thus, we make sure that "NB_LAST_POINTS" is at least equal to the space between two tests of the resonances
 if (time_delay > NB_LAST_POINTS):
   print("Warning: The interval between two checks of resonance is greater than the number of points used to test it.")
-  print("         'NB_LAST_POINTS' extended to 'time_delay'")
+  print("         'NB_LAST_POINTS' extended to 'time_delay'=%d" % time_delay)
   NB_LAST_POINTS = time_delay
 
 # We calculate q and Q
@@ -384,6 +398,15 @@ for instant_index in range(NB_LAST_POINTS,max_lengths,time_delay):
         if isExtend:
           resonance_index_range[still_here_planets[inner]][-1][1] = instant_index
         else:
+          # We test here the previous resonance. If she was only at one instant, we delete it
+          if (len(resonance_index_range[still_here_planets[inner]]) != 0):
+            tmp = resonance_index_range[still_here_planets[inner]][-1]
+            if (tmp[0] == tmp[1]):
+              del(resonance_type[still_here_planets[inner]][-1])
+              del(resonance_index_range[still_here_planets[inner]][-1])
+              del(resonance_with[still_here_planets[inner]][-1])
+              del(resonance_inner_rank[still_here_planets[inner]][-1])
+            
           resonance_type[still_here_planets[inner]].append(res)
           # To avoid overlap, we define the resonance at the position of the range_stop, without associating, by default, any length.
           resonance_index_range[still_here_planets[inner]].append([range_stop, range_stop])
