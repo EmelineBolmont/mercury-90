@@ -37,6 +37,7 @@ isRestart = False # Say if we want to re-run the simulation or not.
 isStart = False # will erase output file if they exists and run all the simulations.
 isMeta = False # If we consider the current folder as a folder that list sub-meta-simulations where the simulations really are
 isContinue = False # Do we want to continue simulations that did not have time to finish?
+WALLTIME = None
 
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
@@ -46,6 +47,7 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " * continue : Say that we want to continue the simulations that did not have enough time to finish" + "\n" + \
 " * restart : Say if we want to re-run the simulation in case of NaN problems" + "\n" + \
 " * start : will erase output file if they exists and run all the simulations." + "\n" + \
+" * walltime : (in hours) the estimated time for the job. Only used for avakas" + "\n" + \
 "" + "\n" + \
 "Example : mercury-check-simulation.py meta restart continue"
 
@@ -75,6 +77,9 @@ if isProblem:
   print(problem_message)
   exit()
 
+if (('avakas' in hostname) and WALLTIME == None):
+	print("Walltime option must be set. type 'help' for a description of the options")
+	exit()
 
 # We go in each sub folder of the current working directory
 
@@ -118,7 +123,7 @@ for meta in meta_list:
     
     # If the option 'start' is given, we force the run of the simulation, whatever there is an old simulation or not in the folder.
     if (isStart):
-      mercury_utilities.prepareSubmission(hostname)
+      mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
       mercury_utilities.mercury_restart()
     else:
       # We check if the simulation had time to finish
@@ -136,7 +141,7 @@ for meta in meta_list:
           print("%s/%s : The simulation is not finished" % (absolute_parent_path, simu))
           isOK = False
           if (isContinue):
-            mercury_utilities.prepareSubmission(hostname)
+            mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
             
             mercury_utilities.mercury_continue()
           
@@ -144,7 +149,7 @@ for meta in meta_list:
         print("%s/%s : NaN are present" % (absolute_parent_path, simu))
         isOK = False
         if (isRestart):
-          mercury_utilities.prepareSubmission(hostname)
+          mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
           
           mercury_utilities.mercury_restart()
         
