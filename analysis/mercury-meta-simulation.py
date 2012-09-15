@@ -42,6 +42,8 @@ QUEUE = "arguin1.q,arguin2.q"
 # The absolute path to the folder were are the binary files of mercury
 BINARY_FOLDER = "/home/cossou/bin/mercury"
 
+WALLTIME = 48 # estimated duration of the job (currently only used for avakas)
+
 #----------------------------------
 # Parameters for mercury
 
@@ -112,7 +114,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	This function doesn't return anything, but will store in global variable the values stored in the parameter file given in parameter.
 	"""
 	
-	global NB_SIMULATIONS, QUEUE, BINARY_FOLDER, isErase
+	global NB_SIMULATIONS, QUEUE, BINARY_FOLDER, WALLTIME, isErase
 	global epoch, integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
 	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
 	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_width_smoothing
@@ -145,6 +147,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 				QUEUE = simulations_utilities.str2str(value)
 			elif (key in ["binary_folder", "BINARY_FOLDER"]):
 				BINARY_FOLDER = simulations_utilities.str2str(value)
+			elif (key in ["walltime", "WALLTIME"]):
+				WALLTIME = int(value)
 			#----------------------------------
 			# Mercury parameters
 			elif (key == "epoch"):
@@ -535,7 +539,7 @@ for index_simu in range(starting_index, starting_index+NB_SIMULATIONS):
 	
 	generation_simulation_parameters()
 	
-	mercury_utilities.prepareSubmission(hostname)
+	mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
 	
 	# We launch the job
 	if toLaunch:
