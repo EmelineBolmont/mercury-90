@@ -67,6 +67,8 @@ for arg in sys.argv[1:]:
     isContinue = True
   elif (key == 'meta'):
     isMeta = True
+  elif (key == 'walltime'):
+    WALLTIME = int(value)
   elif (key == 'help'):
     isProblem = True
   else:
