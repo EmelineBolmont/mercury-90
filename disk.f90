@@ -1904,8 +1904,7 @@ subroutine get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotati
   sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
   + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
   
-  lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
-  lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
+  lindblad_torque = -2.5d0
   
   !------------------------------------------------------------------------------
   

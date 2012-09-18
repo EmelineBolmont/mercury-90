@@ -64,6 +64,7 @@ program test_disk
     call study_torques_fixed_a(stellar_mass=stellar_mass)
     call study_torques_fixed_m(stellar_mass=stellar_mass)
     call study_ecc_corot(stellar_mass=stellar_mass)
+    call study_eccentricity_effect_on_corotation(stellar_mass=stellar_mass)
     call study_temperature_profile()
     call study_optical_depth_profile()
     call study_thermal_diffusivity_profile()
@@ -1341,7 +1342,7 @@ program test_disk
     real(double_precision), parameter :: a_max = 15 ! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision), parameter :: mass = 5. * EARTH_MASS * K2
+    real(double_precision), parameter :: mass = 10. * EARTH_MASS * K2
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
@@ -1449,6 +1450,124 @@ program test_disk
 
     
   end subroutine study_torques_fixed_m
+  
+  subroutine study_eccentricity_effect_on_corotation(stellar_mass)
+  ! subroutine that test the function 'get_corotation_torque'
+  
+  ! Return:
+  !  a data file 'torques_fixed_m.dat' 
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+    implicit none
+    
+    real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
+    
+    integer, parameter :: nb_a = 400
+    real(double_precision), parameter :: a_min = 0.1 ! in AU
+    real(double_precision), parameter :: a_max = 15 ! in AU
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    
+    real(double_precision), parameter :: mass = 10. * EARTH_MASS * K2
+    
+    real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
+    real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
+    real(double_precision) :: position(3), velocity(3)
+    type(PlanetProperties) :: p_prop
+    real(double_precision), dimension(5) :: eccentricities
+    real(double_precision), dimension(5) :: corot_damping
+    real(double_precision), dimension(10) :: outputs
+    real(double_precision) :: x_s
+    
+    integer :: i,j ! for loops
+    
+    write(*,*) 'Evolution of the torque for a fixed planet mass "m"'
+    x_s = 1.
+    eccentricities(1) = 0.   ! in units of x_s 
+    eccentricities(2) = 0.25 ! in units of x_s 
+    eccentricities(3) = 0.5  ! in units of x_s
+    eccentricities(4) = 1.   ! in units of x_s
+    eccentricities(5) = 2.   ! in units of x_s
+    
+    do i=1, 5
+      corot_damping(i) = get_corotation_damping(e=eccentricities(i), x_s=x_s)
+    end do
+
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='unitary_tests/eccentricity_effect_on_corotation.dat')
+
+    
+    write(10,*) '# a in AU ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
+
+
+    ! We generate cartesian coordinate for the given semi major axis
+    position(1) = a
+    
+    
+    do j=1,nb_a
+      a = (a_min + a_step * (j - 1.d0))
+      ! We generate cartesian coordinate for the given semi major axis
+      position(1) = a
+      
+      ! We generate cartesian coordinate for the given mass and semi major axis
+      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      
+      ! we store in global parameters various properties of the planet
+      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+       p_prop=p_prop) ! Output
+      
+      !------------------------------------------------------------------------------
+      ! Calculation of the acceleration due to migration
+      call get_torques(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
+      
+      total_torque = lindblad_torque + corotation_torque
+      
+      do i=1,5
+        outputs(2*i-1) = corot_damping(i) * corotation_torque
+        outputs(2*i) = lindblad_torque + corot_damping(i) * corotation_torque
+      end do
+      write(10,*) a, lindblad_torque, outputs
+    end do
+    
+    close(10)
+    
+    
+    open(10, file="unitary_tests/eccentricity_effect_on_corotation.gnuplot")
+    
+    write(10,*) "set terminal pdfcairo enhanced"
+    
+    write(10,*) "set output 'eccentricity_effect_on_corotation.pdf'"
+
+    
+
+    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,'(a,f4.1,a)') 'set title "for planet mass = ',mass / (EARTH_MASS * K2),' m_{earth}"'
+
+    
+    write(10,*) 'set ylabel "torque [{/Symbol G}_0]"'
+    
+    
+
+    write(10,*) 'set grid'
+    write(10,*) 'set xrange [', a_min, ':', a_max, ']'
+    
+    write(10,*) 'plot \'
+    do i=1, 5
+      write(10,'(a,i2,a, f4.2,a)') "'eccentricity_effect_on_corotation.dat' using 1:",2*i+1, &
+      " with lines title '{/Symbol G}_c ; e/x_s=",eccentricities(i),"',\"
+      write(10,'(a,i2,a, f4.2,a)') "'eccentricity_effect_on_corotation.dat' using 1:",2*i+2, &
+      " with lines title '{/Symbol G}_{tot} ; e/x_s=",eccentricities(i),"',\"
+    end do
+    write(10,*) "'eccentricity_effect_on_corotation.dat' using 1:2 with lines title '{/Symbol G}_L'"
+    
+    
+    close(10)
+
+
+    
+  end subroutine study_eccentricity_effect_on_corotation
   
   subroutine study_ecc_corot(stellar_mass)
   ! subroutine that test the function 'get_corotation_torque'
