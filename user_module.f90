@@ -184,6 +184,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         ! Calculation of the acceleration due to migration
         call get_torques(mass(1), mass(planet), p_prop, & ! input
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
+!~         
+!~         call get_corotation_torque_tanh_indep(mass(1), mass(planet), p_prop, & ! input
+!~             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
         
         
         torque = torque_ref * (lindblad_torque + ecc_corot * corotation_torque)
@@ -246,18 +249,20 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         
         
       end if
-!~       if (time.gt.9.825225e6) then
+!~       if (time.gt.365.25) then
 !~         if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%radius.gt.INNER_BOUNDARY_RADIUS)) then
 !~         
 !~           call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
 !~                        time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
-!~                        turbulence_acceleration)
+!~                        turbulence_acceleration, corotation_torque, lindblad_torque, torque_ref, ecc_corot)
 !~         end if
 !~         open(12, file="debug.out", access='append')
 !~         write (12,*) "time = ", time, " ; planet", planet
+!~         call print_planet_properties(p_prop, output=12)
 !~         close(12)
-!~         call print_planet_properties(p_prop)
+!~         stop
 !~       end if
+      
     end if
   end do
   
@@ -267,7 +272,7 @@ end subroutine mfo_user
 
 subroutine debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
                        time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
-                       turbulence_acceleration)
+                       turbulence_acceleration, corotation_torque, lindblad_torque, torque_ref, ecc_corot)
 ! subroutine that print informations helpfull to debug, such as migration timescales, accelerations and so on
 
 implicit none
@@ -283,6 +288,11 @@ implicit none
   real(double_precision), dimension(3), intent(in) :: migration_acceleration
   real(double_precision), dimension(3), intent(in) :: eccentricity_acceleration
   real(double_precision), dimension(3), intent(in) :: turbulence_acceleration
+  
+  real(double_precision), intent(in) :: corotation_torque
+  real(double_precision), intent(in) :: lindblad_torque
+  real(double_precision), intent(in) :: torque_ref
+  real(double_precision), intent(in) :: ecc_corot
 
 ! Local
 character(len=80) :: output_format
@@ -305,6 +315,11 @@ write(12,'(a,es10.3e2,a)') 'migration timescale =', time_mig, ' days'
 write(12,output_format) 'amx = ', migration_acceleration(1), &
                        'amy = ', migration_acceleration(2), &
                        'amz = ', migration_acceleration(3)
+write(12,*) 'lindblad torque = ', lindblad_torque
+write(12,*) 'corotation torque = ', corotation_torque
+write(12,*) 'Gamma_0 = ', torque_ref, '[Ms.AU^2]'
+write(12,*) 'corotation damping = ', ecc_corot
+
 write(12,'(a)') '------------------------------------'
 write(12,'(a)') '|       Eccentricity damping       |'
 write(12,'(a)') '------------------------------------'

@@ -377,7 +377,7 @@ subroutine write_disk_properties()
   write(10,*) ''
   write(10,'(a,l,a)') 'is turbulence = ', IS_TURBULENCE, ' (T:True;F:False)'
   if (IS_TURBULENCE) then
-    write(10,'(a,es10.1e2,a)') '  turbulence_forcing = ', TURBULENT_FORCING, ' (adim)'
+    write(10,'(a,es10.2e2,a)') '  turbulence_forcing = ', TURBULENT_FORCING, ' (adim)'
     write(10,'(a,i4)') '  total number of modes = ', nb_modes
     write(10,'(a,2(i3,a))') '  wavenumber in [', wavenumber_min, ';', wavenumber_max, ']'
     write(10,'(a,i2)') '  wavenumber cutoff = ', wavenumber_cutoff
@@ -563,8 +563,7 @@ function get_corotation_damping(e, x_s)
   !------------------------------------------------------------------------------
   
 !~   get_corotation_damping = 1.d0 - dtanh(e / x_s)
-  get_corotation_damping = 1.d0 + a * (dtanh(c) - dtanh((b * e) / x_s - c))
-
+  get_corotation_damping = 1.d0 + a * (dtanh(c) - dtanh((b * e) / x_s + c))
 
 end function get_corotation_damping
 
@@ -812,7 +811,7 @@ subroutine init_globals(stellar_mass, time)
     ! We initialize the value even if there is no turbulence declared, because in the tests, 
     ! turbulence is not always declared, even if we test it.
     ! We only initialize the turbulence if there is no value (which would means that the value was defined in the parameter file 'disk.in'
-    if (isnan(TURBULENT_FORCING)) then
+    if (TURBULENT_FORCING.eq.0.d0) then
 			call init_turbulence_forcing() 
     end if
     
