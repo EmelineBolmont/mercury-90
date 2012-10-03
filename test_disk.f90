@@ -72,7 +72,7 @@ program test_disk
     
     ! Test dissipation
 !~     call test_viscous_dissipation()
-!~     call test_exponential_dissipation()
+    call test_disk_dissipation()
 !~     call study_dissipation_of_the_disk(stellar_mass)
     
   end subroutine unitary_tests
@@ -703,7 +703,7 @@ program test_disk
   
   end subroutine test_viscous_dissipation
   
-  subroutine test_exponential_dissipation()
+  subroutine test_disk_dissipation()
   ! function to test the viscous dissipation with a dirac function. 
   
   ! Global parameters
@@ -740,6 +740,7 @@ program test_disk
     character(len=80) :: filename_density, filename_density_ref
     character(len=80) :: output_density, output_time, time_format, purcent_format
     integer :: time_length ! the length of the displayed time, usefull for a nice display
+    real(double_precision) :: next_dissipation_step
     
     integer :: i,k ! for loops
     integer :: nb_time ! The total number of 't' values. 
@@ -747,10 +748,6 @@ program test_disk
     real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total torque during the dissipation of the disk'
-    
-    ! we force the dissipation type 
-    DISSIPATION_TYPE = 2
-    TAU_DISSIPATION = 1e6 ! in years
     
     call system("rm unitary_tests/dissipation/*")
     
@@ -770,14 +767,12 @@ program test_disk
     allocate(time(time_size), stat=error)
     time(1) = t_min * 365.25d0 ! days
     
-    dissipation_timestep = (t_max - t_min) * 365.25d0 / dfloat(max_frames)
-    
     
     do while (time(k).lt.(t_max*365.d0))
       ! We open the file where we want to write the outputs
       write(filename_density, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',k,'.dat'    
       
-      ! we store in a .dat file the temperature profile
+      ! we store in a .dat file the surface density profile
       call store_density_profile(filename=filename_density)
       
       if (k.eq.1) then
@@ -790,7 +785,7 @@ program test_disk
       
       
       ! we get the new dissipated surface density profile. For that goal, we dissipate as many times as needed to reach the required time for the next frame.
-      call exponential_decay_density_profile()
+      call dissipate_disk(time(k), next_dissipation_step)
       
       
       ! we expand the 'time' array if the limit is reached
@@ -809,7 +804,7 @@ program test_disk
       write(*,purcent_format) int(time(k)/365.25d0, kind=8), int(t_max, kind=8) ! We display on the screen how far we are from the end of the integration.
       
       
-      time(k+1) = time(k) + dissipation_timestep ! days
+      time(k+1) = next_dissipation_step ! days
       
       
       k = k + 1 ! We increment the integer that point the time in the array (since it's a 'while' and not a 'do' loop)
@@ -840,7 +835,7 @@ program test_disk
     end do
     close(13)
   
-  end subroutine test_exponential_dissipation
+  end subroutine test_disk_dissipation
   
   subroutine test_turbulence_torque(stellar_mass)
   

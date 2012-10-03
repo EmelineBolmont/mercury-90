@@ -37,9 +37,19 @@ module disk_properties
   real(double_precision) :: INITIAL_SIGMA_INDEX = 0.5! the negative slope of the surface density power law (alpha in the paper)
   real(double_precision), parameter :: SIGMA_CGS2NUM = AU**2 / MSUN ! The factor to convert surface density from g/cm^2 to MSUN/AU^2 (the numerical units)
   real(double_precision), parameter :: SIGMA_NUM2CGS = MSUN / AU**2 ! The factor to convert surface density from MSUN/AU^2 (numerical units) to g/cm^2 (CGS)
-  integer :: DISSIPATION_TYPE = 0 ! integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
-  real(double_precision) :: TAU_DISSIPATION = -1.d0 ! the characteristic time for the exponential decay of the surface density (in years)
+  
+  integer :: DISSIPATION_TYPE = 0 ! integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile. 3 for mixed dissipation, both viscously and with photoevaporation, with two timescales
+  real(double_precision) :: TAU_DISSIPATION = -1.d0 ! the characteristic time for the exponential decay of the surface density (in years) (dissipation_type=2)
+  
+  
+  real(double_precision) :: PHOTOEVAP_MASSLOSS = 1e-9 ! solar mass per year
+  real(double_precision) :: R_PHOTOEVAP = 2. ! (AU) the location in the disk where the photoevaporation is the most important (where the photoevaporation gap is created)
+  real(double_precision) :: R_VISCOUS = 40. ! (AU) the location in the disk used to evaluate the characteristique time for photo
+  real(double_precision) :: TAU_VISCOUS ! (years) the characteristic time for the viscous exponential decay (calculated at R_VISCOUS)
+  real(double_precision) :: TAU_PHOTOEVAP ! (years) the characteristic time for the photoevaporation exponential decay (calculated at R_PHOTOEVAP)
+  
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
+  
   character(len=80) :: INNER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
   character(len=80) :: OUTER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
   ! values possible to change the properties of the torque. 'real', 'mass_independant', 'mass_dependant', 'manual'. 

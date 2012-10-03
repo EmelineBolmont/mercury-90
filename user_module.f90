@@ -113,6 +113,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision), dimension(3) :: turbulence_acceleration
   real(double_precision) :: inclination_acceleration_z
   real(double_precision), save :: next_dissipation_step = -1.d0 ! next time at which we will compute the thermal properties of the disk?
+  
   !------------------------------------------------------------------------------
   ! Setup
 
@@ -130,25 +131,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   if (DISSIPATION_TYPE.ne.0) then
     if (time.gt.next_dissipation_step) then
       ! we get the density profile.
-      select case(DISSIPATION_TYPE)
-        case(1) ! viscous dissipation
-          dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
-          ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
-          next_dissipation_step = time + dissipation_timestep
-          call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
-        
-        case(2) ! exponential decay
-          ! we want 1% variation : timestep = - tau * ln(1e-2)
-          dissipation_timestep = 4.6 * TAU_DISSIPATION
-          next_dissipation_step = time + dissipation_timestep
-          
-          call exponential_decay_density_profile()
-          
-        case default
-            stop 'Error in user_module : The "dissipation_type" cannot be found. &
-                 &Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay'
-
-      end select
+      call dissipate_disk(time, next_dissipation_step)
+      
       
       ! we get the temperature profile.
       call calculate_temperature_profile()
