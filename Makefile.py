@@ -4,6 +4,14 @@
 
 from make import *
 
+import git_infos
+
+branch = git_infos.get_current_branch()
+commit = git_infos.get_current_revision()
+isModifs = git_infos.is_non_committed_modifs()
+print(isModifs)
+exit()
+
 # We clean undesirable files. Indeed, we will compile everything everytime.
 clean(["o", "mod"])
 
