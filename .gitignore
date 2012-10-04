@@ -1,0 +1,7 @@
+*.o
+*.mod
+*.log
+close
+mercury
+element
+test_disk
