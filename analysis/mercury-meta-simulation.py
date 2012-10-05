@@ -84,6 +84,9 @@ disk_edges = (1., 100.) # (the inner and outer edge of the disk in AU)
 inner_smoothing_width = 0.05 # (in unit of the inner boundary radius) , the width of the region where the surface density decay to become 0 at the inner edge
 dissipation_type = 0
 disk_exponential_decay = None # in years
+tau_viscous = None # in years
+tau_photoevap = None # in years
+dissipation_time_switch = None # in years
 inner_boundary_condition = 'open'
 outer_boundary_condition = 'open'
 torque_type = 'real'
@@ -118,6 +121,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	global epoch, integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
 	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
 	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_smoothing_width
+	global tau_viscous, tau_photoevap, dissipation_time_switch
 	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
 	global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
 	global is_turbulence, turbulent_forcing, saturation_torque
@@ -214,6 +218,12 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 				dissipation_type = int(value)
 			elif (key == "disk_exponential_decay"):
 				disk_exponential_decay = float(value)
+			elif (key == "tau_viscous"):
+				tau_viscous = float(value)
+			elif (key == "tau_photoevap"):
+				tau_photoevap = float(value)
+			elif (key == "dissipation_time_switch"):
+				dissipation_time_switch = float(value)
 			elif (key == "sample"):
 				sample = int(value)
 			elif (key == "inner_boundary_condition"):
@@ -293,12 +303,16 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	PARAMETERS += "dissipation_type = "+str(dissipation_type)+"\n"
 	if (dissipation_type == 2):
 		PARAMETERS += "disk_exponential_decay = "+str(disk_exponential_decay)+"\n"
+	if (dissipation_type == 3):
+		PARAMETERS += "tau_viscous = "+str(tau_viscous)+" years\n"
+		PARAMETERS += "tau photoevap = "+str(tau_photoevap)+" years\n"
+		PARAMETERS += "switch time = "+str(dissipation_time_switch)+" years\n"
 	PARAMETERS += "inner_boundary_condition = "+str(inner_boundary_condition)+"\n"
 	PARAMETERS += "outer_boundary_condition = "+str(outer_boundary_condition)+"\n"
 	PARAMETERS += "torque_type = "+str(torque_type)+"\n"
 	PARAMETERS += "torque_profile_steepness = "+str(torque_profile_steepness)+"\n"
 	PARAMETERS += "saturation_torque = "+str(saturation_torque)+"\n"
-	PARAMETERS += "indep_cz = "+str(indep_cz )+"\n"
+	PARAMETERS += "indep_cz = "+str(indep_cz)+"\n"
 	PARAMETERS += "mass_dep_m_min = "+str(mass_dep_m_min )+"\n"
 	PARAMETERS += "mass_dep_m_max = "+str(mass_dep_m_max )+"\n"
 	PARAMETERS += "mass_dep_cz_m_min = "+str(mass_dep_cz_m_min )+"\n"
@@ -423,6 +437,7 @@ def generation_simulation_parameters():
 		diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
 		              disk_edges=disk_edges, viscosity=viscosity, sample=sample, dissipation_type=dissipation_type, 
 		              is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing, inner_smoothing_width=inner_smoothing_width,
+		              tau_viscous=tau_viscous, tau_photoevap=tau_photoevap, dissipation_time_switch=dissipation_time_switch, 
 		              disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
 		              inner_boundary_condition=inner_boundary_condition, outer_boundary_condition=outer_boundary_condition,
 	                torque_profile_steepness=torque_profile_steepness, indep_cz=indep_cz, mass_dep_m_min=mass_dep_m_min, 
