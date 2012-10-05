@@ -81,7 +81,7 @@ viscosity = 1.e15 # cm^2/s
 b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
 sample = 400
 disk_edges = (1., 100.) # (the inner and outer edge of the disk in AU)
-inner_width_smoothing = 0.05 # (in unit of the inner boundary radius) , the width of the region where the surface density decay to become 0 at the inner edge
+inner_smoothing_width = 0.05 # (in unit of the inner boundary radius) , the width of the region where the surface density decay to become 0 at the inner edge
 dissipation_type = 0
 disk_exponential_decay = None # in years
 inner_boundary_condition = 'open'
@@ -117,7 +117,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	global NB_SIMULATIONS, QUEUE, BINARY_FOLDER, WALLTIME, isErase
 	global epoch, integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
 	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
-	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_width_smoothing
+	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_smoothing_width
 	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
 	global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
 	global is_turbulence, turbulent_forcing, saturation_torque
@@ -195,8 +195,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 					surface_density = eval(value)
 			elif (key == "disk_edges"):
 				disk_edges = eval(value)
-			elif (key == "inner_width_smoothing"):
-				inner_width_smoothing = float(value)
+			elif (key == "inner_smoothing_width"):
+				inner_smoothing_width = float(value)
 			elif (key == "adiabatic_index"):
 				adiabatic_index = float(value)
 			elif (key == "viscosity"):
@@ -284,7 +284,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 		PARAMETERS += "sigma_0 = %f g/cm^2 ; negative power law index = %f\n" % surface_density
 	PARAMETERS += "sample = "+str(sample)+"\n"
 	PARAMETERS += "disk_edges = "+str(disk_edges)+" AU\n"
-	PARAMETERS += "inner_width_smoothing = "+str(inner_width_smoothing)+" AU\n"
+	PARAMETERS += "inner_smoothing_width = "+str(inner_smoothing_width)+" AU\n"
 	PARAMETERS += "adiabatic_index = "+str(adiabatic_index)+"\n"
 	PARAMETERS += "viscosity = "+str(viscosity)+" cm^2/s\n"
 	PARAMETERS += "is_turbulence = "+str(is_turbulence)+"\n"
@@ -422,7 +422,7 @@ def generation_simulation_parameters():
 	if (user_force == "yes"):
 		diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
 		              disk_edges=disk_edges, viscosity=viscosity, sample=sample, dissipation_type=dissipation_type, 
-		              is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing, inner_width_smoothing=inner_width_smoothing,
+		              is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing, inner_smoothing_width=inner_smoothing_width,
 		              disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
 		              inner_boundary_condition=inner_boundary_condition, outer_boundary_condition=outer_boundary_condition,
 	                torque_profile_steepness=torque_profile_steepness, indep_cz=indep_cz, mass_dep_m_min=mass_dep_m_min, 
