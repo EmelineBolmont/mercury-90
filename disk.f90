@@ -28,7 +28,8 @@ module disk
 
   implicit none
   
-  
+  logical, save :: FIRST_CALL = .True.
+    
   ! If we don't put a cutoff, then the simulation will crash if the inclination become exactly equal to zero, 
   ! which in addition is not really physically possible.
   ! The other idea behind this cutoff is to allow planets to come close, and pass one in front of the other without collision. 
@@ -758,6 +759,8 @@ subroutine init_globals(stellar_mass, time)
 ! temp_profile_index : values of the local negative slope of the temperature profile
 ! chi_profile : thermal diffusivity
 ! tau_profile : optical depth 
+
+! FIRST_CALL
 !
 ! Parameters
 ! stellar_mass : the mass of the central object [Msun * K2]
@@ -769,11 +772,10 @@ subroutine init_globals(stellar_mass, time)
   real(double_precision), intent(in) :: time ! the current time of the simulation [days]
   
   ! Locals
-  logical, save :: FirstCall = .True.
   integer :: i  
   
-  if (FirstCall) then
-    FirstCall = .False.
+  if (FIRST_CALL) then
+    FIRST_CALL = .False.
     
     call read_disk_properties()
     
