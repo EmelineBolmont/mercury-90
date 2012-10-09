@@ -37,6 +37,7 @@ isRestart = False # Say if we want to re-run the simulation or not.
 isStart = False # will erase output file if they exists and run all the simulations.
 isMeta = False # If we consider the current folder as a folder that list sub-meta-simulations where the simulations really are
 isContinue = False # Do we want to continue simulations that did not have time to finish?
+showFinished = False # By default, We only show problems. 
 WALLTIME = None
 
 isProblem = False
@@ -48,8 +49,15 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " * restart : Say if we want to re-run the simulation in case of NaN problems" + "\n" + \
 " * start : will erase output file if they exists and run all the simulations." + "\n" + \
 " * walltime : (in hours) the estimated time for the job. Only used for avakas" + "\n" + \
+" * finished : Instead of show problems, will only show finished simulations" + "\n" + \
 "" + "\n" + \
-"Example : mercury-check-simulation.py meta restart continue"
+"Example : \n" + \
+"> mercury-check-simulation.py meta restart continue\n" + \
+"will continue non finished simulation and restart thoses with NaN considering\n" + \
+" that each subfolder of the current folder contain a simulation in \n" + \
+"each sub-folder (subsubfolder of the PWD).\n" + \
+">mercury-check-simulation.py finished meta walltime=48\n" + \
+"will show the simulations that are finished. " + \
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -69,6 +77,8 @@ for arg in sys.argv[1:]:
     isMeta = True
   elif (key == 'walltime'):
     WALLTIME = int(value)
+  elif (key == 'finished'):
+    showFinished = True
   elif (key == 'help'):
     isProblem = True
   else:
@@ -117,6 +127,8 @@ for meta in meta_list:
   for simu in simu_list:
     os.chdir(simu)
     
+    simulation_status = 0 # if 0, then the simulation ended correctly
+    
     if not(os.path.isfile("param.in")):
       print("%s/%s : doesn't look like a regular simulation folder" % (absolute_parent_path, simu))
       print("\t 'param.in' does not exist, folder skipped")
@@ -140,7 +152,8 @@ for meta in meta_list:
       # If there is Nan, we do not want to continue the simulation, but restart it, or check manually, so theses two kinds of problems are separated.
       if simu not in NaN_folder:
         if (is_finished == 0):
-          print("%s/%s : The simulation is not finished" % (absolute_parent_path, simu))
+          simulation_status = 1
+          
           isOK = False
           if (isContinue):
             mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
@@ -148,13 +161,22 @@ for meta in meta_list:
             mercury_utilities.mercury_continue()
           
       else:
-        print("%s/%s : NaN are present" % (absolute_parent_path, simu))
+        simulation_status = 2
+        
         isOK = False
         if (isRestart):
           mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
           
           mercury_utilities.mercury_restart()
-        
+    if (simulation_status == 0 and showFinished):
+       print("%s/%s : The simulation is finished" % (absolute_parent_path, simu))
+    
+    elif (simulation_status == 1 and not(showFinished)):
+      print("%s/%s : The simulation is not finished" % (absolute_parent_path, simu))
+    
+    elif (simulation_status == 2 and not(showFinished)):
+      print("%s/%s : NaN are present" % (absolute_parent_path, simu))
+    
   
     # We get back in the parent directory
     os.chdir("..")
