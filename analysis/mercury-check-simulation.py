@@ -57,7 +57,7 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " that each subfolder of the current folder contain a simulation in \n" + \
 "each sub-folder (subsubfolder of the PWD).\n" + \
 ">mercury-check-simulation.py finished meta walltime=48\n" + \
-"will show the simulations that are finished. " + \
+"will show the simulations that are finished. "
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
