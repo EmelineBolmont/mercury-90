@@ -30,15 +30,24 @@ program test_disk
     implicit none
     
     real(double_precision) :: stellar_mass ! [Msun * K2]
+    
+    logical :: isDefined
 
     stellar_mass = 1.d0 * K2 ! [Msun * K2]
+    
+    
+    
+    inquire(file='unitary_tests', exist=isDefined)
+    
+    ! We create the folder 'dissipation' if he doesn't exists.
+    if (.not.isDefined) then
+      call system("mkdir unitary_tests")
+    end if
     
     write(*,*) 'Initialisation'
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
     ! Note that the initial density profile and temperature profile are calculated inside the 'init_globals' routine.
 
-!~     ! We force the value to be interesting for our tests
-!~     TORQUE_TYPE = 'tanh_indep' ! 'real', 'linear_indep', 'tanh_indep', 'mass_dependant', 'manual'
     
     ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
     call study_torques(stellar_mass)
@@ -55,7 +64,7 @@ program test_disk
     call test_manual_torque_interpolation()
     call test_density_interpolation()
     call test_retrieval_of_orbital_elements(stellar_mass=stellar_mass)
-!~     call test_turbulence_torque(stellar_mass=stellar_mass)
+!     call test_turbulence_torque(stellar_mass=stellar_mass)
     call test_turbulence_mode()
 
     
@@ -72,9 +81,10 @@ program test_disk
     call study_dissipation_at_one_location()
     
     ! Test dissipation
-!~     call test_viscous_dissipation()
-!~     call test_disk_dissipation()
-!~     call study_influence_of_dissipation_on_torque(stellar_mass)
+    ! EVERYTHING ABOVE MUST BE COMMENTED BEFORE DECOMMENTING 'ONE' AND ONE ALONE OF THESES ONES
+!~     call test_viscous_dissipation(stellar_mass)
+!~     call test_disk_dissipation(stellar_mass)
+    call study_influence_of_dissipation_on_torque(stellar_mass)
 
     
   end subroutine unitary_tests
@@ -479,7 +489,7 @@ program test_disk
     
   end subroutine test_retrieval_of_orbital_elements
 
-  subroutine test_viscous_dissipation()
+  subroutine test_viscous_dissipation(stellar_mass)
   ! function to test the viscous dissipation with a dirac function. 
   
   ! Global parameters
@@ -500,6 +510,8 @@ program test_disk
   
   implicit none
     
+    real(double_precision), intent(in) :: stellar_mass
+    
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
     real(double_precision), parameter :: t_max = 1.d5 ! time in years
@@ -516,6 +528,7 @@ program test_disk
     character(len=80) :: filename_density, filename_density_ref
     character(len=80) :: output_density, output_time, time_format, purcent_format
     integer :: time_length ! the length of the displayed time, usefull for a nice display
+    real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
     
     ! For the definition of the diffusion function
     real(double_precision) :: r_0 = 50.d0 ! position of the dirac function (in AU)
@@ -537,6 +550,11 @@ program test_disk
     real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
     !------------------------------------------------------------------------------
     write(*,*) 'Test viscous dissipation of the disk'
+    
+    write(*,*) '  Force Initialisation again'
+    FIRST_CALL = .true.
+    call init_globals(stellar_mass=stellar_mass, time=0.d0)
+    !------------------------------------------------------------------------------
     
     ! we force the dissipation type 
     DISSIPATION_TYPE = 1
@@ -705,7 +723,7 @@ program test_disk
   
   end subroutine test_viscous_dissipation
   
-  subroutine test_disk_dissipation()
+  subroutine test_disk_dissipation(stellar_mass)
   ! function to test the viscous dissipation with a dirac function. 
   
   ! Global parameters
@@ -725,6 +743,8 @@ program test_disk
   use bessel, only : bessik
   
   implicit none
+    
+    real(double_precision), intent(in) :: stellar_mass
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
@@ -748,8 +768,20 @@ program test_disk
     integer :: nb_time ! The total number of 't' values. 
     integer :: error ! to retrieve error, especially during allocations
     real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
+    logical :: isDefined
     !------------------------------------------------------------------------------
     write(*,*) 'Test dissipation of the disk'
+    
+    write(*,*) '  Force Initialisation again'
+    FIRST_CALL = .true.
+    call init_globals(stellar_mass=stellar_mass, time=0.d0)
+    
+    inquire(file='unitary_tests/dissipation', exist=isDefined)
+    
+    ! We create the folder 'dissipation' if he doesn't exists.
+    if (.not.isDefined) then
+      call system("mkdir unitary_tests/dissipation")
+    end if
     
     call system("rm unitary_tests/dissipation/*")
     
@@ -2032,7 +2064,7 @@ program test_disk
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
-    real(double_precision), parameter :: t_max = 1.d6 ! time in years
+    real(double_precision), parameter :: t_max = 2.5d6 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
     
@@ -2055,8 +2087,22 @@ program test_disk
     integer :: i,j,k ! for loops
     integer :: nb_time ! The total number of 't' values. 
     integer :: error ! to retrieve error, especially during allocations
+    logical :: isDefined
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total torque during the dissipation of the disk'
+    
+    write(*,*) '  Force Initialisation again'
+    FIRST_CALL = .true.
+    call init_globals(stellar_mass=stellar_mass, time=0.d0)
+    
+    inquire(file='dissipation', exist=isDefined)
+    
+    ! We create the folder 'dissipation' if he doesn't exists.
+    if (.not.isDefined) then
+      call system("mkdir dissipation")
+    end if
+    
+    call system("rm dissipation/*")
     
     position(:) = 0.d0
     velocity(:) = 0.d0
@@ -2074,7 +2120,7 @@ program test_disk
     
     ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
     density_min = 0.
-    density_max = maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
+    density_max = maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * SIGMA_NUM2CGS
 
     
 !~     call system("rm dissipation/*")
@@ -2092,7 +2138,7 @@ program test_disk
     write(output_time, '(i0)') int(t_max)
     time_length = len(trim(output_time))
     write(time_format, *) '(i',time_length,'.',time_length,')'
-    write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years")'
+    write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years ; k = ",i5)'
     
     !------------------------------------------------------------------------------
     k = 1
@@ -2127,10 +2173,13 @@ program test_disk
         deallocate(time_temp, stat=error)
       end if
       
-      write(*,purcent_format) int(time(k)/365.25d0), int(t_max)
+      write(*,purcent_format) int(time(k)/365.25d0), int(t_max), k
       
-      
-      time(k+1) = time(k) + dissipation_timestep * 365.25d0 ! days
+      if (.not.disk_effect) then
+        next_dissipation_step = t_max * 365.d0
+      end if
+
+      time(k+1) = next_dissipation_step ! days
       ! we get the temperature profile.
       call calculate_temperature_profile()
       

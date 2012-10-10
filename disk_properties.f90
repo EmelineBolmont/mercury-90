@@ -47,10 +47,9 @@ module disk_properties
   real(double_precision) :: TAU_VISCOUS = 1.d7 ! (years) the characteristic time for the viscous exponential decay
   real(double_precision) :: TAU_PHOTOEVAP = 3.d4 ! (years) the characteristic time for the photoevaporation exponential decay
   
-  real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
-  
   character(len=80) :: INNER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
   character(len=80) :: OUTER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
+
   ! values possible to change the properties of the torque. 'real', 'mass_independant', 'mass_dependant', 'manual'. 
   ! If 'manual' is chosen, the code will read the file 'torque_profile.dat' that must exist and the first column must be semi major axis in AU, and the second one is the torque (in units of \Gamma_0 for the moment)
   character(len=80) :: TORQUE_TYPE = 'real' 

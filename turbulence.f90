@@ -129,14 +129,14 @@ subroutine init_turbulence(time)
   ! We initialize only if turbulence_mode is not allocated yet (which would mean that the initialisation has already been done).
   if (.not.allocated(turbulence_mode)) then
 	allocate(turbulence_mode(nb_modes))
-	
-	! We initialize the random seed
-	call init_random_seed()
-	
-	do i=1, nb_modes
-	  call init_mode(time, turbulence_mode(i))
-	end do
   end if
+  
+  ! We initialize the random seed
+  call init_random_seed()
+  
+  do i=1, nb_modes
+	call init_mode(time, turbulence_mode(i))
+  end do
   
 end subroutine init_turbulence
 

@@ -28,7 +28,8 @@ module disk
 
   implicit none
   
-  
+  logical, save :: FIRST_CALL = .True.
+    
   ! If we don't put a cutoff, then the simulation will crash if the inclination become exactly equal to zero, 
   ! which in addition is not really physically possible.
   ! The other idea behind this cutoff is to allow planets to come close, and pass one in front of the other without collision. 
@@ -758,6 +759,8 @@ subroutine init_globals(stellar_mass, time)
 ! temp_profile_index : values of the local negative slope of the temperature profile
 ! chi_profile : thermal diffusivity
 ! tau_profile : optical depth 
+
+! FIRST_CALL
 !
 ! Parameters
 ! stellar_mass : the mass of the central object [Msun * K2]
@@ -769,13 +772,15 @@ subroutine init_globals(stellar_mass, time)
   real(double_precision), intent(in) :: time ! the current time of the simulation [days]
   
   ! Locals
-  logical, save :: FirstCall = .True.
   integer :: i  
   
-  if (FirstCall) then
-    FirstCall = .False.
+  if (FIRST_CALL) then
+    FIRST_CALL = .False.
+    TAU_DISSIPATION = -1.d0
     
     call read_disk_properties()
+    
+    disk_effect = .true.
     
     select case(TORQUE_TYPE)
 			case('real') ! The normal torque profile, calculated form properties of the disk
@@ -799,24 +804,34 @@ subroutine init_globals(stellar_mass, time)
 						 &Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
     end select
     
-    allocate(distance_sample(NB_SAMPLE_PROFILES))
+    if (.not.allocated(distance_sample)) then
+			allocate(distance_sample(NB_SAMPLE_PROFILES))
+		end if
     distance_sample(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(x_sample(NB_SAMPLE_PROFILES))
+    if (.not.allocated(x_sample)) then
+      allocate(x_sample(NB_SAMPLE_PROFILES))
+    end if
     x_sample(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(surface_density_profile(NB_SAMPLE_PROFILES))
-    allocate(surface_density_index(NB_SAMPLE_PROFILES))
+    if (.not.allocated(surface_density_profile)) then
+      allocate(surface_density_profile(NB_SAMPLE_PROFILES))
+      allocate(surface_density_index(NB_SAMPLE_PROFILES))
+    end if
     surface_density_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     surface_density_index(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(temperature_profile(NB_SAMPLE_PROFILES))
-    allocate(temp_profile_index(NB_SAMPLE_PROFILES))
+    if (.not.allocated(temperature_profile)) then
+			allocate(temperature_profile(NB_SAMPLE_PROFILES))
+			allocate(temp_profile_index(NB_SAMPLE_PROFILES))
+    end if
     temperature_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     temp_profile_index(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(chi_profile(NB_SAMPLE_PROFILES))
-    allocate(tau_profile(NB_SAMPLE_PROFILES))
+    if (.not.allocated(chi_profile)) then
+			allocate(chi_profile(NB_SAMPLE_PROFILES))
+			allocate(tau_profile(NB_SAMPLE_PROFILES))
+    end if
     chi_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     tau_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     
@@ -1380,7 +1395,7 @@ end subroutine initial_density_profile
     
   end subroutine calculate_temperature_profile
   
-  subroutine exponential_decay_density_profile()
+  subroutine exponential_decay_density_profile(delta_t, tau)
 ! subroutine that calculate new surface density profile given the old one and a timestep for the exponential decay
 ! 
 ! Global Parameters 
@@ -1399,10 +1414,13 @@ end subroutine initial_density_profile
     ! Local values
     integer :: i
     
+    real(double_precision), intent(in) :: delta_t ! (in days) the period of time during which we dissipate
+    real(double_precision), intent(in) :: tau ! (in days) the characteristic time of the exponential decay
+    
     !------------------------------------------------------------------------------
     
     do i=1,NB_SAMPLE_PROFILES
-      surface_density_profile(i) = surface_density_profile(i) * exp(- dissipation_timestep / (TAU_DISSIPATION * 365.25d0))
+      surface_density_profile(i) = surface_density_profile(i) * exp(- delta_t / tau)
 !~       surface_density_index(i) = - (log(surface_density_profile(i)) - log(surface_density_profile(i-1))) &
 !~                                   / (log(distance_sample(i)) - log(distance_sample(i-1)))
     end do
@@ -1413,11 +1431,12 @@ end subroutine initial_density_profile
   
   implicit none
   
-  real(double_precision), intent(in) :: time
-  real(double_precision), intent(out) :: next_dissipation_step
+  real(double_precision), intent(in) :: time ! days
+  real(double_precision), intent(out) :: next_dissipation_step ! days
   
   ! Locals
   real(double_precision) :: sigma, sigma_index
+  real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
   !------------------------------------------------------------------------------
   
   select case(DISSIPATION_TYPE)
@@ -1425,25 +1444,25 @@ end subroutine initial_density_profile
 			dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
 			! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
 			next_dissipation_step = time + dissipation_timestep
-			call viscously_dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
+			call viscously_dissipate_density_profile(dissipation_timestep)
 		
 		case(2) ! exponential decay
-			! we want 1% variation : timestep = - tau * ln(1e-2)
-			dissipation_timestep = 4.6 * TAU_DISSIPATION
+			! we want 1% variation : timestep = - tau * ln(0.99)
+			dissipation_timestep = 0.01 * TAU_DISSIPATION * 365.25d0
 			next_dissipation_step = time + dissipation_timestep
 			
-			call exponential_decay_density_profile()
+			call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
 		
 		case(3) ! both (slow then fast decay)
 			if ((time/365.25).gt.DISSIPATION_TIME_SWITCH) then
 				TAU_DISSIPATION = TAU_PHOTOEVAP
 			end if
 			
-			! we want 1% variation : timestep = - tau * ln(1e-2)
-			dissipation_timestep = 4.6 * TAU_DISSIPATION
+			! we want 1% variation : timestep = - tau * ln(99)
+			dissipation_timestep = 0.01 * TAU_DISSIPATION * 365.25d0
 			next_dissipation_step = time + dissipation_timestep
 			
-			call exponential_decay_density_profile()
+			call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
 		case default
 				stop 'Error in user_module : The "dissipation_type" cannot be found. &
 						 &Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay ; &
@@ -1458,7 +1477,7 @@ end subroutine initial_density_profile
   
   end subroutine dissipate_disk
   
-  subroutine viscously_dissipate_density_profile()
+  subroutine viscously_dissipate_density_profile(dissipation_timestep)
 ! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
 ! 
 ! Global Parameters 
@@ -1476,6 +1495,8 @@ end subroutine initial_density_profile
     use mercury_constant
 
     implicit none
+
+    real(double_precision), intent(in) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
 
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
     real(double_precision) :: a_im12, a_ip12 ! ip12 == (i+1/2) ; im12 == (i-1/2)
