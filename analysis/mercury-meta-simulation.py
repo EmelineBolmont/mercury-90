@@ -52,6 +52,7 @@ time_format = "years"
 relative_time = "yes"
 nb_outputs = 1000
 nb_dumps = 100 # Number of times we will create .dmp files and output dE/E
+aei_outputs = 2000
 user_force = "yes"
 # integration_time = 1e6 * YEARS
 timestep = 3 # days
@@ -327,6 +328,11 @@ def generation_simulation_parameters():
 	
 	output_interval = integration_time / float(nb_outputs)
 	data_dump = abs(int(integration_time / (nb_dumps * timestep)))
+	
+	if (aei_outputs < nb_outputs):
+		aei_time = integration_time / float(aei_outputs)
+	else:
+		aei_time = 0.0 # We want to see all the outputs of xv.out
 
 	# We begin the random generation of parameters.
 	if FIXED_TOTAL_MASS:
@@ -414,7 +420,7 @@ def generation_simulation_parameters():
 
 	# Setting the output interval to 0 ensure that we will have every output written in the xv.out in the element files.
 	elementin = mercury.Element(format_sortie=" a8.5 e8.6 i8.4 g8.4 n8.4 l8.4 m13e ", coord="Cen", 
-	output_interval=0.0, time_format=time_format, relative_time=relative_time)
+	output_interval=aei_time, time_format=time_format, relative_time=relative_time)
 	elementin.write()
 
 	closein = mercury.Close(time_format=time_format, relative_time=relative_time)
