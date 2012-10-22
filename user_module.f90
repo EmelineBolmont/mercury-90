@@ -141,7 +141,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         
         ! we store in a .dat file the temperature profile
         call store_temperature_profile(filename='temperature_profile.dat')
-        call store_density_profile(filename='density_profile.dat')
+        call store_density_profile(filename='surface_density_profile.dat')
         call store_scaleheight_profile()
       end if
     end if

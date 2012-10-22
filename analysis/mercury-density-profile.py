@@ -18,12 +18,11 @@ OUTPUT_EXTENSION = 'pdf'
 # index : surface density index
 
 # We retrieve the datas
-(a, sigma, index) = np.loadtxt("density_profile.dat", skiprows=1, dtype=float, unpack=True)
+(a, sigma, index) = np.loadtxt("surface_density_profile.dat", skiprows=1, dtype=float, unpack=True)
 
 # on trace les plots
 
 fig = pl.figure(1)
-# On crÃ©e des sous plots. Pour subplot(231), Ã§a signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
 plot_density = fig.add_subplot(211)
 plot_density.plot(a, sigma)
 

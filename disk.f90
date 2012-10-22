@@ -774,6 +774,9 @@ subroutine init_globals(stellar_mass, time)
   
   ! Locals
   integer :: i  
+  logical :: isDefined
+  logical :: temp_manual ! To store the old value for the manual density profile, because we will force its value during the process
+
   
   if (FIRST_CALL) then
     FIRST_CALL = .False.
@@ -862,6 +865,21 @@ subroutine init_globals(stellar_mass, time)
     
     call initial_density_profile()
     
+    inquire(file='big.dmp', exist=isDefined)
+    
+    ! If we continue an integration, we do special treatments to get good dissipation of the disk and so on, 
+    ! assuming that the past integration time was from 0 to the current 'time'
+    if (isDefined) then
+      ! We implement the old density profile, from 'density_profile.dat' to the manual density profile
+      
+      temp_manual = IS_MANUAL_SURFACE_DENSITY
+      IS_MANUAL_SURFACE_DENSITY = .true.
+      call initial_density_profile()
+      IS_MANUAL_SURFACE_DENSITY = temp_manual
+      
+      
+    end if
+    
     ! we get the temperature profile, but we need the surface density profile before.
     call calculate_temperature_profile() ! WARNING : SCALEHEIGHT_PREFACTOR must exist before the temperature profile is computed !
     
@@ -944,7 +962,13 @@ subroutine initial_density_profile()
 		filename = 'surface_density_profile.dat'
 		inquire(file=filename, exist=isDefined)
 		if (.not.isDefined) then
-			stop 'Error in "initial_density_profile" : the file "surface_density_profile.dat" does not exist.'
+      filename = 'density_profile.dat'
+      inquire(file=filename, exist=isDefined)
+      
+      if (.not.isDefined) then
+        stop 'Error in "initial_density_profile" : the file "surface_density_profile.dat" does not exist. &
+           &(and "density_profile.dat" neither).'
+      end if
 		end if
 		
 		! We get the total lines of the file
