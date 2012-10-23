@@ -258,7 +258,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   external force
   
   ! Local
-  integer :: iback(nb_bodies_initial),index(nb_bodies_initial),ibs(nb_bodies_initial),jbs(nb_bodies_initial),nclo_old
+  integer :: iback(nb_bodies_initial),index(nb_bodies_initial),ibs(CMAX),jbs(CMAX),nclo_old
   integer :: i,j,k,nbs,nbsbig,statbs(nb_bodies_initial)
   integer :: nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),nowflag,dtflag
   real(double_precision) :: tlocal,hlocal,hdid,tmp0
