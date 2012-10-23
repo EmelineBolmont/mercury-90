@@ -560,6 +560,7 @@ subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
               else
                 write(*,*) 'Error: The number of close encounters exceed the limit (CMAX=',CMAX,').'
                 write(*,*) '       All remaining close encounters are skipped'
+                return
               end if
            end if
         end if
