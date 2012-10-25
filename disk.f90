@@ -865,7 +865,9 @@ subroutine init_globals(stellar_mass, time)
     
     call initial_density_profile()
     
-    inquire(file='big.dmp', exist=isDefined)
+    ! All files will already be created by mercury, even if it is not a restart, 
+    ! so we need to check disk.out instead, that will be created at the end of init_globals()
+    inquire(file='disk.out', exist=isDefined)
     
     ! If we continue an integration, we do special treatments to get good dissipation of the disk and so on, 
     ! assuming that the past integration time was from 0 to the current 'time'
