@@ -487,8 +487,11 @@ subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
 
   
   ! Input/Output
-  integer :: i0,nbod,nbig,ce(nbod),nce,ice(CMAX),jce(CMAX)
+  integer :: i0
+  integer, intent(in) :: nbod,nbig
   real(double_precision) :: x0(3,nbod),v0(3,nbod),x1(3,nbod),v1(3,nbod),h,rcrit(nbod)
+  
+  integer, intent(out) :: ce(nbod),nce,ice(CMAX),jce(CMAX)
   
   ! Local
   integer :: i,j
