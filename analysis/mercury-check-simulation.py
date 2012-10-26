@@ -89,7 +89,7 @@ if isProblem:
   print(problem_message)
   exit()
 
-if (('avakas' in hostname) and WALLTIME == None):
+if (('avakas' in hostname) and WALLTIME == None and (isContinue or isRestart or isForcedStart)):
 	print("Walltime option must be set. type 'help' for a description of the options")
 	exit()
 
