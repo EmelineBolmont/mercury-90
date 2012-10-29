@@ -624,8 +624,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   character(len=80) :: outfile
   
   ! Local
-  logical :: alreadyExist
-  integer :: i,j, k, error
+  integer :: i,j, error
   real(double_precision) :: d0,d1,d0t,d1t,hm1,tmp0,tmp1
   real(double_precision) :: dx0,dy0,dz0,du0,dv0,dw0,dx1,dy1,dz1,du1,dv1,dw1
   real(double_precision) :: xmin(nb_bodies_initial),xmax(nb_bodies_initial),ymin(nb_bodies_initial),ymax(nb_bodies_initial)
@@ -688,18 +687,6 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
            ! If the minimum separation qualifies as an encounter or if a collision
            ! is in progress, store details
            if ((d2min.le.d2ce.and.d0t*h.le.0.and.d1t*h.ge.0).or.(d2min.le.d2hit)) then
-              ! We check that the current close encounter do not already exist in the list for the current timestep 
-              ! (can cause problems with BS sub integration where the same close encounter can appear at each sub timestep)
-              alreadyExist = .false.
-              do k=1, nclo
-                if ((iclo(k).eq.i).and.(jclo(k).eq.j)) then
-                  alreadyExist = .true.
-                  exit
-                end if
-              end do
-              
-              if (alreadyExist) exit
-              
               nclo = nclo + 1
               !if (i == 3 .or. j == 3) then
                ! print *, 'clo', time, nclo, i, j
