@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # script to test various pieces of python code
-# Version 2.1.1
+# Version 2.2
 
 import mercury_utilities        # module that contain utilities for the mercury simulations
 import simulations_utilities    # module that contain utilities to help launch simulations, regardless of the kind of simulations
@@ -35,12 +35,6 @@ toLaunch = True # Do we launch the simulation once the files are created?
 
 # Number of simulations we want to launch with the same properties
 NB_SIMULATIONS = 1
-
-# name of the queue where we want to lauch simulations (either syntax is correct : "arguin*.q", "arguin1.q" or "arguin1.q,arguin2.q")
-QUEUE = "arguin1.q,arguin2.q"
-
-# The absolute path to the folder were are the binary files of mercury
-BINARY_FOLDER = "/home/cossou/bin/mercury"
 
 WALLTIME = 48 # estimated duration of the job (currently only used for avakas)
 
@@ -105,6 +99,115 @@ turbulent_forcing = None
 #-------------------------------------------------------------------------------
 # Definition of functions
 
+def generate_meta_simulationin():
+	"""function that will generate a "meta_simulation.in" file to show how this works"""
+	
+	DEMO_FILE = \
+"""#!/usr/bin/env python
+# for a shortened parameter file, only "integration_time", 
+# "mass_parameters", "a_parameters", "e_parameters", "I_parameters", 
+# "FIXED_TOTAL_MASS" (and TOTAL_MASS or NB_PLANETS) are absolutely needed. 
+# Other parameters contains default values inside the original script.
+#-------------------------------------------------------------------------------
+# Definition of parameters of the script
+
+#----------------------------------
+# Parameters for the meta simulation
+
+# Number of simulations we want to launch with the same properties
+NB_SIMULATIONS = 2
+
+# The limited time above which the simulation will be stopped in avakas (useless for other servers)
+WALLTIME = 119 # in hours
+
+#----------------------------------
+# Parameters for mercury
+
+integration_time = 1e7 # in years
+time_format = "years" # days or years
+relative_time = "yes" # yes or no
+nb_outputs = 100000 # number of outputs contained in xv.out (max possibility of accuracy in time)
+nb_dumps = 1000 # number of outputs contained in generated .aei files by element
+user_force = "yes" # yes or no, if we use user_module
+timestep = 0.4 # days
+
+#----------------------------------
+# Parameters for the planetary systems
+
+# If FIXED_TOTAL_MASS = True, then it's the parameter TOTAL_MASS which is important, else, it's NB_PLANETS that is important.
+FIXED_TOTAL_MASS = True
+TOTAL_MASS = 20 # earth mass, only used if FIXED_TOTAL_MASS = True
+# NB_PLANETS = 5 # (number) only used if FIXED_TOTAL_MASS = False
+
+
+# To define parameters, you currently have 3 possibilities :
+# _ parameters = 3 : all the planets will have the same value
+# _ parameters = (1., 0.3, 'gaussian') : values will follow a gaussian law of mean value 1 and standard deviation 0.3
+# _ parameters = (1., 3, 'uniform') : value will be randomly generated following a uniform law between 1 and 3
+mass_parameters = (0.1, 1, "uniform") # the mass (in earth mass)
+
+# For 'a', there is a special option that allow us to define a hill radii separation. (a_0, delta, 'rh')
+# a_0 and delta can be calculated randomly for each planet if, instead of a value, a tuple of two values is given
+a_parameters = ((1, 1.5), (4., 6.), "rh") # the semi major axis (in AU)
+
+e_parameters = (1e-3, 1e-5, "uniform") # the eccentricity
+
+I_parameters = (-1, 1, "uniform") # The inclination (in degrees)
+
+radius_star = 0.05 # The radius of the central star in AU
+
+#----------------------------------
+# Parameters for the disk
+
+# Surface density. We can define a power law through :
+#    surface_density =  (sigma_0, alpha) : Sigma(R) = Sigma_0 * R**(-alpha)
+#  But we can also define a manual surface density profile with 
+#    surface_density =  "manual"
+#  then, the file 'surface_density_profile.dat' must exist in the folder of meta_simulation.in so that it can be copied
+surface_density = (500, 0.5) # g/cm^2 (sigma_0, alpha) help to define a power law : Sigma(R) = Sigma_0 * R**(-alpha)
+
+adiabatic_index = 1.4 # The adiabatic index of the disk
+
+viscosity = 1.e15 # cm^2/s
+disk_edges = (0.1, 100.) # (the inner and outer edge of the disk in AU)
+# The width of the region where the surface density decay to become 0 at the inner edge
+inner_smoothing_width = 0.05 # (in unit of the inner boundary radius)
+
+b/h = 0.4 # The smoothing width for gravitational effects
+
+sample = 200 # The number of points for the surface density profile
+
+dissipation_type = 0 # The type of dissipation for the disk (0 for none)
+inner_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
+outer_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
+disk_exponential_decay = 1e6 # years (for dissipation_type=2)
+tau_viscous = 1e7 # years (for dissipation_type=3)
+tau_photoevap = 1e5 # years (for dissipation_type=3)
+dissipation_time_switch = 2e6 # years (for dissipation_type=3)
+
+# We define the type of torque profile : 
+# real : the profile defined by paardekooper formulas, nothing else to add in parameters here, everything is in the code
+# manual : the file 'torque_profile.dat' must exist in the folder of meta_simulation.in and 
+#          will contains two colums (first distance in AU, second the torque in units of Gamma_0)
+# other options : linear_indep, tanh_indep, mass_dependant
+torque_type = real # real, linear_indep, tanh_indep, mass_dependant, manual
+indep_cz = 3.0 # in AU, the position of the convergence zone (for linear or tanh_indep)
+torque_profile_steepness = 1.0 # the steepness for linear torque dependance (for linear_indep and mass_dependant)
+saturation_torque = 1.0 # (in Gamma_0) the torque saturation value (for tanh_indep)
+# help to define a CZ(m) by defining two points (for mass_dependant)
+mass_dep_m_min = 5 # (earth mass)  help to define a CZ(m) by defining two points
+mass_dep_m_max = 20 # (earth mass) help to define a CZ(m) by defining two points
+mass_dep_cz_m_min = 50 # (AU)      help to define a CZ(m) by defining two points
+mass_dep_cz_m_max = 5 # (AU)       help to define a CZ(m) by defining two points
+
+is_turbulence = 0 # is there turbulence or not?
+turbulent_forcing = 1e-4 # the turbulence forcing associated with turbulence, if any
+"""
+
+	demo_parameter_file = open("meta_simulation.in", 'w')
+	demo_parameter_file.write(DEMO_FILE)
+	demo_parameter_file.close()
+
 def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR="="):
 	"""function that read the parameter file associated with meta 
 	simulations to get values that define the meta simulation
@@ -118,8 +221,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	This function doesn't return anything, but will store in global variable the values stored in the parameter file given in parameter.
 	"""
 	
-	global NB_SIMULATIONS, QUEUE, BINARY_FOLDER, WALLTIME, isErase
-	global epoch, integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
+	global NB_SIMULATIONS, WALLTIME, isErase
+	global integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
 	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
 	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_smoothing_width
 	global tau_viscous, tau_photoevap, dissipation_time_switch
@@ -148,16 +251,10 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 			# Meta simulation parameters
 			if (key in ["nb_simulations", "NB_SIMULATIONS"]):
 				NB_SIMULATIONS = int(value)
-			elif (key in ["queue", "QUEUE"]):
-				QUEUE = simulations_utilities.str2str(value)
-			elif (key in ["binary_folder", "BINARY_FOLDER"]):
-				BINARY_FOLDER = simulations_utilities.str2str(value)
 			elif (key in ["walltime", "WALLTIME"]):
 				WALLTIME = int(value)
 			#----------------------------------
 			# Mercury parameters
-			elif (key == "epoch"):
-				epoch = float(value) * YEAR
 			elif (key == "integration_time"):
 				integration_time = float(value) * YEAR
 			elif (key == "time_format"):
@@ -271,7 +368,6 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
 	# We prepare a variable we will use to store a log file of the parameters in each sub simulation folder
 	PARAMETERS += "Here are the parameters used to generate the simulation.\n"
 	PARAMETERS += "----------------------------------\nMercury Parameters\n\n"
-	PARAMETERS += "epoch = "+str(epoch/365.25)+" years\n"
 	PARAMETERS += "integration time = %.2e years\n" % (integration_time/365.25)
 	PARAMETERS += "number of outputs = "+str(nb_outputs)+"\n"
 	PARAMETERS += "number of dumps = "+str(nb_dumps)+"\n"
@@ -426,7 +522,7 @@ def generation_simulation_parameters():
 	closein = mercury.Close(time_format=time_format, relative_time=relative_time)
 	closein.write()
 
-	paramin = mercury.Param(algorithme="HYBRID", start_time=epoch, stop_time=epoch+integration_time, output_interval=output_interval, 
+	paramin = mercury.Param(algorithme="HYBRID", start_time=0, stop_time=integration_time, output_interval=output_interval, 
 	h=timestep, accuracy=1.e-12, stop_integration="no", collisions="yes", fragmentation="no", 
 	time_format=time_format, relative_time=relative_time, output_precision="medium", relativity="no", 
 	user_force=user_force, ejection_distance=EJECTION_DISTANCE, radius_star=radius_star, central_mass=1.0, 
@@ -495,8 +591,10 @@ hostname = simulations_utilities.getHostname()
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * help (display a little help message on HOW to use various options" + "\n" + \
-" * norun (will create the various folders and file, but will not run the simulation)"
+" * help : display a little help message on HOW to use various options" + "\n" + \
+" * norun : will create the various folders and file, but will not run the simulation" + "\n" + \
+" * demo : will create a 'meta_simulation.in' file " + "\n" + \
+"   (needed by the current script) to show what can be defined"
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -506,6 +604,10 @@ for arg in sys.argv[1:]:
 		key = arg
 	if (key == 'norun'):
 		toLaunch = False
+	elif (key == 'demo'):
+		print("A demo file 'meta_simulation.in' is being generated...")
+		generate_meta_simulationin()
+		exit()
 	elif (key == 'help'):
 		isProblem = True
 	else:
@@ -542,20 +644,7 @@ for index_simu in range(starting_index, starting_index+NB_SIMULATIONS):
 	
 	if not(os.path.exists(folder_name)):
 		os.mkdir(folder_name)
-	#~ else:
-		#~ if isErase:
-			#~ process = subprocess.Popen("rm -f "+folder_name+"/*", shell=True)
-			#~ (process_stdout, process_stderr) = process.communicate()
-			#~ returnCode = process.wait()
-			#~ if (process_stdout != None):
-				#~ print(process_stdout)
-			#~ if (process_stderr != None):
-				#~ print(process_stderr)
-			#~ if (returnCode != 0):
-				#~ print("Warning: Unable to delete previous files")
-				#~ pdb.set_trace()
-		#~ else:
-			#~ print("Warning: a simulation already exists")
+
 	os.chdir(folder_name)
 	
 	generation_simulation_parameters()
