@@ -29,6 +29,7 @@
 import pdb        # to debug via pdb.set_trace()
 import os         # to create folder, change directory and so on
 import subprocess # to launch 'runjob'
+import autiwa
 from math import *
 import numpy as np
 import pylab as pl
@@ -215,13 +216,7 @@ delta_longitude[too_high] = delta_longitude[too_high] - 360.
 # environment in order to plot ALL the resonant angles and have x and
 # y numbers as close on from another as possible. There are q+1
 # resonant angles, the period ratio and w1 - w2, i.e q+3 plots
-nb_plots_x = 1
-nb_plots_y = 1
-while (nb_plots_x * nb_plots_y < q+3):
-  if (nb_plots_x == nb_plots_y):
-    nb_plots_y += 1
-  else:
-    nb_plots_x += 1
+(nb_lines, nb_rows) = autiwa.get_subplot_shape(q+3)
 
 # on trace les plots
 myxfmt = ScalarFormatter(useOffset=True)
@@ -240,7 +235,7 @@ subplot_index = 0
 pl.suptitle("resonance "+str(inner_period_nb)+":"+str(outer_period_nb)+" between "+inner_planet+" and "+outer_planet)
 
 subplot_index += 1
-plot_period = pl.subplot(nb_plots_x, nb_plots_y, subplot_index)
+plot_period = pl.subplot(nb_lines, nb_rows, subplot_index)
 pl.plot(t, (a_outer / a_inner)**1.5)
 pl.xlabel("time [years]")
 pl.ylabel("period ratio")
@@ -248,7 +243,7 @@ pl.ylabel("period ratio")
 pl.grid(True)
 
 subplot_index += 1
-pl.subplot(nb_plots_x, nb_plots_y, subplot_index, sharex=plot_period)
+pl.subplot(nb_lines, nb_rows, subplot_index, sharex=plot_period)
 pl.plot(t, delta_longitude)
 pl.xlabel("time [years]")
 pl.ylabel("w2 - w1")
@@ -257,7 +252,7 @@ pl.grid(True)
 
 for i in range(q+1):
   subplot_index += 1
-  pl.subplot(nb_plots_x, nb_plots_y, subplot_index, sharex=plot_period)
+  pl.subplot(nb_lines, nb_rows, subplot_index, sharex=plot_period)
   pl.plot(t, phi[i])
   pl.xlabel("time [years]")
   pl.ylabel(unicode("φ%i" % i, 'utf8'))
