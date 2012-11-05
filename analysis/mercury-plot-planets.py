@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# v1.0.1
+# v1.1
 # Script that will display the evolution of the semi major axis, mass, 
 # eccentricity and inclination for all the planets of the current simulation 
 # (You launch the script in the folder of the mercury simulation)
@@ -13,7 +13,7 @@ import sys # to be able to retrieve arguments of the script
 import pylab as pl
 #~ import matplotlib.pyplot as pl
 from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
-
+from analysis import get_x_s
 
 
 ###############################################
@@ -22,16 +22,18 @@ from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 
 isLog = False # We set the false option before. Because if not, we will erase the 'true' with other option that are not log, and 
 # thus will lead to be in the else and put log to false.
+isXS = False # If true, will display the semiwitdh of the horseshoe region in the eccentricity plot
 OUTPUT_EXTENSION = 'png' # default value in bitmap, because vectoriel can take time and space if there is a lot of data
 
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * t_max (the end of the output, in years)" + "\n" + \
-" * t_min (the beginning of the output (in years)" + "\n" + \
-" * log (time will be displayed in log)" + "\n" + \
-" * help (display a little help message on HOW to use various options" + "\n" + \
-" * ext=png (The extension for the output files)"
+" * t_max : the end of the output (in years)" + "\n" + \
+" * t_min : the beginning of the output (in years)" + "\n" + \
+" * log : [%s] time will be displayed in log" % isLog + "\n" + \
+" * xs : [%s] will display the semiwitdh of the horseshoe region in the eccentricity plot" % isXS + "\n" + \
+" * help : display a little help message on HOW to use various options" + "\n" + \
+" * ext=png : [%s] The extension for the output files" % OUTPUT_EXTENSION
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -45,6 +47,8 @@ for arg in sys.argv[1:]:
 		t_max = float(value)
 	elif (key == 'log'):
 		isLog = True
+	elif (key == 'xs'):
+		isXS = True
 	elif (key == 'ext'):
 		OUTPUT_EXTENSION = value
 	elif (key == 'help'):
@@ -84,36 +88,58 @@ m = [] # planet mass in earth mass
 # We retrieve the orbital data
 for planete in range(nb_planete):
 	
+	ti = [] # time in years
+	ai = [] # semi major axis in AU
+	ei = [] # eccentricity
+	Ii = [] # inclinaison (degrees)
+	mi = [] # planet mass in earth mass
+	
 	fichier_source = liste_aei[planete]
-	(ti, ai, ei, Ii, mi) = np.loadtxt(fichier_source, skiprows=4, usecols = (0,1,2,3,7), dtype=float, unpack=True)
+	object_file = open(fichier_source, 'r')
+	
+	for i in range(4):
+		object_file.readline()
+		
+	for line in object_file:
+		# When using [a:b], the actual range will be from a to b-1 included.
+		ti.append(float(line[1:19]))
+		ai.append(float(line[19:28]))
+		ei.append(float(line[28:37]))
+		Ii.append(float(line[37:46]))
+		mi.append(float(line[73:87]))
+	object_file.close()
+	
+	ti = np.array(ti)
+	ai = np.array(ai)
+	ei = np.array(ei)
+	Ii = np.array(Ii)
+	mi = np.array(mi)
+	
 	qi = ai * (1 - ei)
 	Qi = ai * (1 + ei)
 	mi = (MS / MT) * mi
 	
-	if (type(ti) == np.ndarray):
-		t.append(ti)
-		a.append(ai)
-		e.append(ei)
-		q.append(qi)
-		Q.append(Qi)
-		I.append(Ii)
-		m.append(mi)
-	else:
-		# In case the is only one point, we force to have a list, to avoid plotting problems
-		t.append(np.array([ti]))
-		a.append(np.array([ai]))
-		e.append(np.array([ei]))
-		q.append(np.array([qi]))
-		Q.append(np.array([Qi]))
-		I.append(np.array([Ii]))
-		m.append(np.array([mi]))
+	t.append(ti)
+	a.append(ai)
+	e.append(ei)
+	q.append(qi)
+	Q.append(Qi)
+	I.append(Ii)
+	m.append(mi)
+	
 
+if (isXS):
+	x_s = []
+	for mi in m:
+		x_s.append(get_x_s((MT/MS) * mi))
 
 # We get the array of reference time, i.e, one of the longuest list of time available in the list of planets. 
 len_t = [ti.size for ti in t]
 ref_id = np.argmax(len_t) # The ID of the longuest time array
 ref_time = t[ref_id] # The longuest time array
 ref_len = ref_time.size
+
+#~ pdb.set_trace()
 
 delta_t = ref_time[1] - ref_time[0]
 
@@ -136,90 +162,83 @@ else:
 # We generate a list of colors
 colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
-# on trace les plots
-
+# We display plots
 fig = pl.figure(1)
 pl.clf()
 fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
-# On crée des sous plots. Pour subplot(311), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
-plot_a = fig.add_subplot(221)
+# We create subplots. add_subplot(2, 3, 1) means we have 2 lines, 3 columns, 
+# and that the active plot is the first, starting from top left (for 6 plots in total)
+plot_a = fig.add_subplot(2, 2, 1)
+
+if isLog:
+	plot = plot_a.semilogx
+else:
+	plot = plot_a.plot
+
 for planet in range(nb_planete):
-	if isLog:
-		plot_a.semilogx(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-		plot_a.semilogx(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-		plot_a.semilogx(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
-	else:
-		try:
-			plot_a.plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-			plot_a.plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-			plot_a.plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
-		except:
-			pdb.set_trace()
+	plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+	plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
+	plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
 
-pl.xlabel("time [years]")
-pl.ylabel("a [AU]")
-#~ myyfmt = ScalarFormatter(useOffset=True)
-#~ myyfmt._set_offset(1e9)
-#~ myxfmt = ticker.ScalarFormatter()
-#~ myxfmt.set_scientific(True)
-#~ myxfmt.set_powerlimits((-3, 3)) 
-
-#~ pl.legend()
-pl.grid(True)
+plot_a.set_xlabel("time [years]")
+plot_a.set_ylabel("a [AU]")
+plot_a.grid(True)
 
 plot_e = fig.add_subplot(2, 2, 2, sharex=plot_a)
+if isLog:
+	plot = plot_e.loglog
+else:
+	plot = plot_e.semilogy
+
 for planet in range(nb_planete):
-	if isLog:
-		plot_e.semilogx(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-	else:
-		plot_e.plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-pl.xlabel("time [years]")
-pl.ylabel("eccentricity")
-pl.grid(True)
+	plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+
+if isXS:
+	for planet in range(nb_planete):
+		plot(t[planet][id_min:id_max+1], x_s[planet][id_min:id_max+1], color=colors[planet])
+
+plot_e.set_xlabel("time [years]")
+plot_e.set_ylabel("eccentricity")
+plot_e.grid(True)
+
 
 plot_m = fig.add_subplot(2, 2, 3, sharex=plot_a)
+if isLog:
+	plot = plot_m.semilogx
+else:
+	plot = plot_m.plot
+	
 for planet in range(nb_planete):
-	if isLog:
-		plot_m.semilogx(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-	else:
-		plot_m.plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-pl.xlabel("time [years]")
-pl.ylabel("mass [Earths]")
-pl.grid(True)
+	plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+plot_m.set_xlabel("time [years]")
+plot_m.set_ylabel("mass [Earths]")
+plot_m.grid(True)
 
 plot_I = fig.add_subplot(2, 2, 4, sharex=plot_a)
+if isLog:
+	plot = plot_I.semilogx
+else:
+	plot = plot_I.plot
+
 for planet in range(nb_planete):
-	if isLog:
-		plot_I.semilogx(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-	else:
-		plot_I.plot(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-pl.xlabel("time [years]")
-pl.ylabel("Inclination [degrees]")
-pl.grid(True)
+	plot(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+plot_I.set_xlabel("time [years]")
+plot_I.set_ylabel("Inclination [degrees]")
+plot_I.grid(True)
 
 myyfmt = ScalarFormatter(useOffset=False)
-#~ myyfmt._set_offset(1e5)
 myyfmt.set_scientific(True)
 myyfmt.set_powerlimits((-2, 3)) 
-#~ myyfmt._set_offset(1e9)
 myxfmt = ScalarFormatter(useOffset=True)
 myxfmt._set_offset(1e5)
 myxfmt.set_scientific(True)
 myxfmt.set_powerlimits((-3, 3)) 
-#~ myxfmt = FormatStrFormatter('%0.0e')
-#~ pdb.set_trace()
-#~ plot_a.xaxis.set_major_formatter(FormatStrFormatter('%0.0e'))
+
 plot_a.xaxis.set_major_formatter(myxfmt)
 plot_I.yaxis.set_major_formatter(myyfmt)
-plot_e.yaxis.set_major_formatter(myyfmt)
-
-#~ dossier_output = "output"
-#~ system("mkdir dossier_output")
-#~ system("cd dossier_output")
 
 
 nom_fichier_plot = "evolution_planete"
-#~ pl.savefig(nom_fichier_plot+'.svg', format='svg')
 fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()
