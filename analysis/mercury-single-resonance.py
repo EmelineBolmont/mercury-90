@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # script to plot resonance between planets
-# Version 1.2
+# Version 1.3
 
 #  this routine plots the resonant angles for a inner_period_nb:outer_period_nb resonance
 #  (inner_period_nb>outer_period_nb)
@@ -227,37 +227,35 @@ myxfmt.set_powerlimits((-3, 3))
 fig = pl.figure(1)
 pl.clf()
 fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
-# On cree des sous plots. Pour subplot(311), Ca signifie qu'on a 2 lignes, 3 colonnes, et que le subplot 
-# courant est le 1e. (on a donc 2*3=6 plots en tout)
 
 # We create a variable to store the index of the subplot
 subplot_index = 0
-pl.suptitle("resonance "+str(inner_period_nb)+":"+str(outer_period_nb)+" between "+inner_planet+" and "+outer_planet)
+fig.suptitle("resonance "+str(inner_period_nb)+":"+str(outer_period_nb)+" between "+inner_planet+" and "+outer_planet)
 
 subplot_index += 1
-plot_period = pl.subplot(nb_lines, nb_rows, subplot_index)
-pl.plot(t, (a_outer / a_inner)**1.5)
-pl.xlabel("time [years]")
-pl.ylabel("period ratio")
+plot_period = fig.add_subplot(nb_lines, nb_rows, subplot_index)
+plot_period.plot(t, (a_outer / a_inner)**1.5)
+plot_period.set_xlabel("time [years]")
+plot_period.set_ylabel("period ratio")
 #~ pl.legend()
-pl.grid(True)
+plot_period.grid(True)
 
+# For each resonant angle, it is important to show only the points and not lines, 
+# so that we do not mask interesting features by meaningless lines.
 subplot_index += 1
-pl.subplot(nb_lines, nb_rows, subplot_index, sharex=plot_period)
-pl.plot(t, delta_longitude)
-pl.xlabel("time [years]")
-pl.ylabel("w2 - w1")
-#~ pl.legend()
-pl.grid(True)
+plot_dl = fig.add_subplot(nb_lines, nb_rows, subplot_index, sharex=plot_period)
+plot_dl.plot(t, delta_longitude, '.')
+plot_dl.set_xlabel("time [years]")
+plot_dl.set_ylabel("w2 - w1")
+plot_dl.grid(True)
 
 for i in range(q+1):
   subplot_index += 1
-  pl.subplot(nb_lines, nb_rows, subplot_index, sharex=plot_period)
-  pl.plot(t, phi[i])
-  pl.xlabel("time [years]")
-  pl.ylabel(unicode("φ%i" % i, 'utf8'))
-  #~ pl.legend()
-  pl.grid(True)
+  plot_phi = fig.add_subplot(nb_lines, nb_rows, subplot_index, sharex=plot_period)
+  plot_phi.plot(t, phi[i], '.')
+  plot_phi.set_xlabel("time [years]")
+  plot_phi.set_ylabel(unicode("φ%i" % i, 'utf8'))
+  plot_phi.grid(True)
 
 plot_period.xaxis.set_major_formatter(myxfmt)
 
