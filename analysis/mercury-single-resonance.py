@@ -23,7 +23,7 @@
 
 # EXAMPLE
 # To search for a 4:3 resonance between inner PLANET66 and outer PLANET68 : 
-# mercury-resonances.py PLANET66.aei PLANET68.aei 4 3
+# mercury-single-resonance.py PLANET66.aei PLANET68.aei 4 3
 
 
 import pdb        # to debug via pdb.set_trace()
@@ -36,8 +36,8 @@ import pylab as pl
 import sys # to use in particuliar the sys.argv list to retrieve parameters of the script
 from matplotlib.ticker import ScalarFormatter
 
-ANGLE_MIN = - 180.
-ANGLE_MAX = 180.
+ANGLE_MIN = - 90.
+ANGLE_MAX = 270.
 
 OUTPUT_EXTENSION = 'pdf' # default value in bitmap, because vectoriel can take time and space if there is a lot of data
 

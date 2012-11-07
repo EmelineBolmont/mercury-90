@@ -9,7 +9,7 @@
 
 import pdb # Pour le debug
 import numpy as np
-from fractions import Fraction
+import analysis
 import pylab as pl
 import autiwa
 import sys # to get access to arguments of the script
@@ -54,92 +54,8 @@ STD_THRESHOLD = 70
 
 # Extreme angles for angle folding. We will apply a mod 2pi to all angles, 
 # but theses values determines between wich values we will constrains the angles.
-ANGLE_MIN = - 180.
-ANGLE_MAX = 180.
-
-def get_possible_resonances(periodRatio):
-  periodMin = periodRatio * (1 - uncertainty)
-  periodMax = periodRatio * (1 + uncertainty)
-  
-  # We do not want period ratios less than 1 (this only happens for coorbitals I think)
-  if (periodMin < 1.):
-    periodMin = 1.
-  
-  periodWidth = periodMax - periodMin
-  deltaPeriod = periodWidth/NUMBER_OF_VALUES
-  
-  
-  periods = [periodMin + deltaPeriod * i for i in range(NUMBER_OF_VALUES)]
-
-  resonances = []
-  for period_i in periods:
-    fraction = Fraction(period_i).limit_denominator(DENOMINATOR_LIMIT)
-    resonances.append(fraction)
-
-  # We exclude all values that appears several time to only keep one occurence of each value
-  resonances = list(set(resonances))
-
-  # We sort the resonances to get the more interesting first (3:2 before 32:27 for instance)
-  tmp = [(res.numerator, res) for res in resonances]
-  tmp.sort()
-  resonances = [element[1] for element in tmp if element[1].numerator < NUMERATOR_LIMIT]
-  
-  #~ print(uncertainty)
-  #~ print(periodMin)
-  #~ print(periodMax)
-  #~ print(resonances)
-  #~ exit()
-  
-  return resonances
-
-def isResonance(res, g_inner, n_inner, M_inner, g_outer, n_outer, M_outer):
-  """Given a resonance as a Fraction object, and g, n M for inner and
-  outer planet, the function return if there is the resonance between
-  the two planets"""
-  outer_period_nb = res.denominator
-  inner_period_nb = res.numerator
-  
-  # Resonances are usually displayed as (p+q):p where q is the order of
-  # the resonance. We retreive thoses parameters
-  p = outer_period_nb
-  q = inner_period_nb - outer_period_nb
-
-  # We calculate the resonant angles
-  long_of_peri_inner = g_inner + n_inner
-  mean_longitude_inner = M_inner + long_of_peri_inner
-
-  long_of_peri_outer = g_outer + n_outer
-  mean_longitude_outer = M_outer + long_of_peri_outer
-
-  phi = np.empty((q+1, NB_LAST_POINTS)) # we create an array, empty for the moment, that will contain all the resonant angles associated with the supposed resonance.
-
-  temp_value = inner_period_nb * mean_longitude_outer - outer_period_nb * mean_longitude_inner
-
-  for i in range(q+1):
-    phi[i] = temp_value - i * long_of_peri_inner - (q - i) * long_of_peri_outer
-
-  # We take modulo 2*pi of the resonant angle
-  phi = phi%(360.)
-  too_low = phi < ANGLE_MIN
-  too_high = phi > ANGLE_MAX
-  phi[too_low] = phi[too_low] + 360.
-  phi[too_high] = phi[too_high] - 360.
-
-  delta_longitude = long_of_peri_outer - long_of_peri_inner
-  delta_longitude = delta_longitude%(360.)
-  too_low = delta_longitude < ANGLE_MIN
-  too_high = delta_longitude > ANGLE_MAX
-  delta_longitude[too_low] = delta_longitude[too_low] + 360.
-  delta_longitude[too_high] = delta_longitude[too_high] - 360.
-  
-  # If one of the std's is small (Typically, around 25, but 
-  # I had once a 80 that was not a resonance, so I think a threshold around 40 is a good one)
-  standard_deviation = min(phi.std(1))
-    
-  if (standard_deviation < STD_THRESHOLD):
-    return True
-  else:
-    return False
+ANGLE_CENTER_VALUE = 90.
+ 
 ###############################################
 ## Beginning of the program
 ###############################################
@@ -377,13 +293,15 @@ for instant_index in range(NB_LAST_POINTS,max_lengths,time_delay):
     if (abs(periodRatio_begin - periodRatio_end) > 0.02):
       continue
     
-    resonances = get_possible_resonances(periodRatio_end)
+    resonances = analysis.get_possible_resonances(periodRatio_end, uncertainty=uncertainty, 
+                 denominator_limit=DENOMINATOR_LIMIT, numerator_limit=NUMERATOR_LIMIT, sampling=NUMBER_OF_VALUES)
 
     # For each resonance we check if this one exist between the two considered planets
     index = 0
     while (index < len(resonances)):
       res = resonances[index]
-      is_resonance = isResonance(res, g_inner, n_inner, M_inner, g_outer, n_outer, M_outer)
+      is_resonance = analysis.isResonance(res, g_inner, n_inner, M_inner, g_outer, n_outer, M_outer, 
+                    nb_points=NB_LAST_POINTS, angle_center_value=ANGLE_CENTER_VALUE, std_threshold=STD_THRESHOLD)
       if (is_resonance):
         isExtend = False # boolean that say if the current resonance is the extension of the last resonance listed for the inner planet
         if (len(resonance_type[still_here_planets[inner]]) != 0):

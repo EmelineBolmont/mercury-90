@@ -14,6 +14,7 @@ import pylab as pl
 #~ import matplotlib.pyplot as pl
 from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 from analysis import get_x_s
+import mercury_utilities
 
 
 ###############################################
@@ -85,6 +86,15 @@ Q = [] # aphelion
 I = [] # inclinaison (degrees)
 m = [] # planet mass in earth mass
 
+i = 0
+error = True
+positions = []
+while (len(positions) == 0):
+	try:
+		positions = mercury_utilities.get_column_position(liste_aei[i])
+	except:
+		i += 1
+
 # We retrieve the orbital data
 for planete in range(nb_planete):
 	
@@ -100,13 +110,14 @@ for planete in range(nb_planete):
 	for i in range(4):
 		object_file.readline()
 		
+
 	for line in object_file:
 		# When using [a:b], the actual range will be from a to b-1 included.
-		ti.append(float(line[1:19]))
-		ai.append(float(line[19:28]))
-		ei.append(float(line[28:37]))
-		Ii.append(float(line[37:46]))
-		mi.append(float(line[73:87]))
+		ti.append(float(line[positions[0][0]:positions[0][1]]))
+		ai.append(float(line[positions[1][0]:positions[1][1]]))
+		ei.append(float(line[positions[2][0]:positions[2][1]]))
+		Ii.append(float(line[positions[3][0]:positions[3][1]]))
+		mi.append(float(line[positions[7][0]:positions[7][1]]))
 	object_file.close()
 	
 	ti = np.array(ti)
