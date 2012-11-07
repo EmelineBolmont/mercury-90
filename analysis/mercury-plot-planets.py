@@ -113,11 +113,16 @@ for planete in range(nb_planete):
 
 	for line in object_file:
 		# When using [a:b], the actual range will be from a to b-1 included.
-		ti.append(float(line[positions[0][0]:positions[0][1]]))
-		ai.append(float(line[positions[1][0]:positions[1][1]]))
-		ei.append(float(line[positions[2][0]:positions[2][1]]))
-		Ii.append(float(line[positions[3][0]:positions[3][1]]))
-		mi.append(float(line[positions[7][0]:positions[7][1]]))
+		try:
+			ti.append(float(line[positions[0][0]:positions[0][1]]))
+			ai.append(float(line[positions[1][0]:positions[1][1]]))
+			ei.append(float(line[positions[2][0]:positions[2][1]]))
+			Ii.append(float(line[positions[3][0]:positions[3][1]]))
+			mi.append(float(line[positions[7][0]:positions[7][1]]))
+		except:
+			print(fichier_source)
+			print(line)
+			pdb.set_trace()
 	object_file.close()
 	
 	ti = np.array(ti)
