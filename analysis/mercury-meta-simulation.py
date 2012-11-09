@@ -434,6 +434,10 @@ def generation_simulation_parameters():
 	if FIXED_TOTAL_MASS:
 		total_mass = 0
 		m = []
+		if (type(mass_parameters[0]) == list):
+			print("Warning: We can only specify a list of pre-planets in the case where the number of planet is fixed (and not the total mass)")
+			exit()
+		
 		while (total_mass < TOTAL_MASS):
 			m0 = simulations_utilities.setParameter(mass_parameters, 1)[0] # The function return a list, and we want to have one element
 			# the mass must be expressed relatively to the mass of the central body
