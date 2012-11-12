@@ -35,6 +35,7 @@ hostname = simulations_utilities.getHostname()
 isOK = True # If no problems are found, this boolean help display a message that says that everything went fine.
 isRestart = False # Say if we want to re-run the simulation or not.
 isForcedStart = False # will erase output file if they exists and run all the simulations.
+isForcedContinue = False # will continue the simulation no matter what
 isMeta = False # If we consider the current folder as a folder that list sub-meta-simulations where the simulations really are
 isContinue = False # Do we want to continue simulations that did not have time to finish?
 showFinished = False # By default, We only show problems. 
@@ -48,6 +49,7 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " * continue : Say that we want to continue the simulations that did not have enough time to finish" + "\n" + \
 " * restart : Say if we want to re-run the simulation in case of NaN problems" + "\n" + \
 " * force-start : will erase output file if they exists and run all the simulations." + "\n" + \
+" * force-continue : will erase output file if they exists and continue all the simulations" + "\n" + \
 " * walltime : (in hours) the estimated time for the job. Only used for avakas" + "\n" + \
 " * finished : Instead of show problems, will only show finished simulations" + "\n" + \
 "" + "\n" + \
@@ -69,6 +71,11 @@ for arg in sys.argv[1:]:
     isRestart = True
   elif (key == 'force-start'):
     isForcedStart = True
+    isRestart = False
+    isContinue = False
+  elif (key == 'force-continue'):
+    isForcedContinue = True
+    isForcedStart = False
     isRestart = False
     isContinue = False
   elif (key == 'continue'):
@@ -135,39 +142,29 @@ for meta in meta_list:
       os.chdir("..")
       continue
     
-    # If the option 'start' is given, we force the run of the simulation, whatever there is an old simulation or not in the folder.
-    if (isForcedStart):
-      mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
-      mercury_utilities.mercury_restart()
-    else:
-      # We check if the simulation had time to finish
-      command = 'tail info.out|grep "Integration complete"|wc -l'
-      (stdout, stderr, returnCode) = autiwa.lancer_commande(command)
-      if (returnCode != 0):
-        print("The command '%s' did not end correctly" % command)
-        print(stderr)
-        pdb.set_trace()
-      is_finished = int(stdout.split("\n")[0]) # We get the number of times "Integration complete" is present in the end of the 'info.out' file
-      
-      # If there is Nan, we do not want to continue the simulation, but restart it, or check manually, so theses two kinds of problems are separated.
-      if simu not in NaN_folder:
-        if (is_finished == 0):
-          simulation_status = 1
-          
-          isOK = False
-          if (isContinue):
-            mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
-            
-            mercury_utilities.mercury_continue()
-          
-      else:
-        simulation_status = 2
+    
+
+    # We check if the simulation had time to finish
+    command = 'tail info.out|grep "Integration complete"|wc -l'
+    (stdout, stderr, returnCode) = autiwa.lancer_commande(command)
+    if (returnCode != 0):
+      print("The command '%s' did not end correctly" % command)
+      print(stderr)
+      pdb.set_trace()
+    is_finished = int(stdout.split("\n")[0]) # We get the number of times "Integration complete" is present in the end of the 'info.out' file
+    
+    # If there is Nan, we do not want to continue the simulation, but restart it, or check manually, so theses two kinds of problems are separated.
+    if simu not in NaN_folder:
+      if (is_finished == 0):
+        simulation_status = 1
         
         isOK = False
-        if (isRestart):
-          mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
-          
-          mercury_utilities.mercury_restart()
+
+    else:
+      simulation_status = 2
+      
+      isOK = False
+        
     if (simulation_status == 0 and showFinished):
        print("%s/%s : The simulation is finished" % (absolute_parent_path, simu))
     
@@ -176,6 +173,21 @@ for meta in meta_list:
     
     elif (simulation_status == 2 and not(showFinished)):
       print("%s/%s : NaN are present" % (absolute_parent_path, simu))
+    
+    
+    if (simulation_status != 0 or (isForcedStart or isForcedContinue)):
+      mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
+    
+    # If the option 'start' is given, we force the run of the simulation, whatever there is an old simulation or not in the folder.
+    if (isForcedStart):
+      mercury_utilities.mercury_restart()
+    
+    if (((simulation_status == 1) and isContinue) or isForcedContinue):
+      mercury_utilities.mercury_continue()
+    
+    if ((simulation_status == 2) and isRestart):
+      mercury_utilities.mercury_restart()
+    
     
   
     # We get back in the parent directory

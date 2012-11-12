@@ -15,6 +15,7 @@ import mercury_utilities
 rep_exec = os.getcwd()
 
 NB_OUTPUTS = 2000
+EXTENSION = 1e6 # extension of the simulation in years (for extend())
 
 def regen_aei_files():
 	"""in the current working directory, 
@@ -36,11 +37,17 @@ def erase_aei():
 	command = "rm *.aei"
 	(stdout, stderr, returnCode) = autiwa.lancer_commande(command)
 
-
+def extend():
+  """Will edit the param.* files to add 'extension' to the total integration time
+  
+  Parameters : extension (in years)
+  """
+  mercury_utilities.extend_simulation(extension=EXTENSION)
 
 COMMANDS = {"regen_aei":regen_aei_files, 
 "change_nb_outputs":change_nb_outputs,
-"erase_aei":erase_aei
+"erase_aei":erase_aei,
+"extend":extend
 }
 
 COMMANDS_HELP = ""
@@ -72,6 +79,7 @@ problem_message = "AIM : Provide a simple script that can execute " + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
 " * meta : option that will consider the current folder as a folder that list meta simulation instead of simple simulations" + "\n" + \
 " * nb_outputs=nb : [%i] To define the number of outputs we want for .aei files. Only used by the command 'change_nb_outputs'" % NB_OUTPUTS + "\n" + \
+" * extension=nb : [%f] The time of extension for the simulations (in years). Only used by the command 'extend'" % EXTENSION + "\n" + \
 " * command=commandName : option that will consider the current folder as a folder that list meta simulation instead of simple simulations" + "\n" + \
 "   list of commands :\n" + \
 COMMANDS_HELP + \
@@ -95,6 +103,8 @@ for arg in sys.argv[1:]:
     isMeta = True
   elif (key == 'nb_outputs'):
     NB_OUTPUTS = int(value)
+  elif (key == 'extension'):
+    EXTENSION = float(value)
   elif (key == 'help'):
     isProblem = True
   else:

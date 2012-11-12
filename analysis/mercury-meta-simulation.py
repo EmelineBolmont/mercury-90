@@ -144,6 +144,8 @@ TOTAL_MASS = 20 # earth mass, only used if FIXED_TOTAL_MASS = True
 # _ parameters = 3 : all the planets will have the same value
 # _ parameters = (1., 0.3, 'gaussian') : values will follow a gaussian law of mean value 1 and standard deviation 0.3
 # _ parameters = (1., 3, 'uniform') : value will be randomly generated following a uniform law between 1 and 3
+# _ parameters = ([10.], (1., 3, 'uniform')) we copy the first list and complete it given the other parameters. 
+    /!\ For mass, this only works if FIXED_TOTAL_MASS = False
 mass_parameters = (0.1, 1, "uniform") # the mass (in earth mass)
 
 # For 'a', there is a special option that allow us to define a hill radii separation. (a_0, delta, 'rh')
