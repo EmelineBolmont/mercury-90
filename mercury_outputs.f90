@@ -63,7 +63,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   ! Local
   integer :: k,year,month
   real(double_precision) :: tmp0,t1,rfac,fr,fv,theta,phi,vtheta,vphi
-  character(len=80) :: c(200)
+  character(len=80) :: c(CMAX)
   character(len=38) :: fstop
   character(len=6) :: tstring
   integer :: error
