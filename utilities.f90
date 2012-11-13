@@ -448,24 +448,21 @@ subroutine mco_sine (x,sx,cx)
 
   
   ! Input/Output
-  real(double_precision), intent(in) :: x
+  real(double_precision) :: x
   real(double_precision), intent(out) :: sx,cx
-  
-  ! Local
-  real(double_precision) :: argument
   
   !------------------------------------------------------------------------------
   
   ! TODO why results of this routine are different from simple calls of intrinsec cos() and sin()
   if (x.gt.0) then
-     argument = mod(x,TWOPI)
+     x = mod(x,TWOPI)
   else
-     argument = mod(x,TWOPI) + TWOPI
+     x = mod(x,TWOPI) + TWOPI
   end if
   
-  cx = cos(argument)
+  cx = cos(x)
   
-  if (argument.gt.PI) then
+  if (x.gt.PI) then
      sx = -sqrt(1.d0 - cx*cx)
   else
      sx =  sqrt(1.d0 - cx*cx)
