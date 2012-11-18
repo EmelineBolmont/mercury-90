@@ -609,9 +609,9 @@ function get_corotation_damping(e, x_s)
 	
 	real(double_precision) :: get_corotation_damping
 	
-	real(double_precision), parameter :: a = 0.5d0
-	real(double_precision), parameter :: b = 2.3d0
-	real(double_precision), parameter :: c = -1.8d0
+	real(double_precision), parameter :: a = 0.45d0
+	real(double_precision), parameter :: b = 3.46d0
+	real(double_precision), parameter :: c = -2.34d0
   !------------------------------------------------------------------------------
   
 !~   get_corotation_damping = 1.d0 - dtanh(e / x_s)
