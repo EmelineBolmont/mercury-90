@@ -1535,7 +1535,11 @@ program test_disk
     open(10, file='unitary_tests/eccentricity_effect_on_corotation.dat')
 
     
-    write(10,*) '# a in AU ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
+!~     write(10,'(10(a,f4.2),a)') '# a in AU ; G_c(e/x_s=',eccentricities(1),') ; G_t(e/x_s=',eccentricities(1),&
+!~                         ') ; G_c(e/x_s=',eccentricities(2),') ; G_t(e/x_s=',eccentricities(2),&
+!~                         ') ; G_c(e/x_s=',eccentricities(3),') ; G_t(e/x_s=',eccentricities(3),&
+!~                         ') ; G_c(e/x_s=',eccentricities(4),') ; G_t(e/x_s=',eccentricities(4),&
+!~                         ') ; G_c(e/x_s=',eccentricities(5),') ; G_t(e/x_s=',eccentricities(5),')'
 
 
     ! We generate cartesian coordinate for the given semi major axis
@@ -1662,9 +1666,8 @@ program test_disk
       
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to migration
-      call get_torques(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-      
+      call get_torques(stellar_mass=stellar_mass, mass=mass, p_prop=p_prop, corotation_torque=corotation_torque, &
+          lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot)
       
       !------------------------------------------------------------------------------
       ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
