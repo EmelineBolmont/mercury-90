@@ -214,6 +214,7 @@ if isXS:
 	for planet in range(nb_planete):
 		plot(t[planet][id_min:id_max+1], x_s[planet][id_min:id_max+1], color=colors[planet])
 
+
 plot_e.set_xlabel("time [years]")
 plot_e.set_ylabel("eccentricity")
 plot_e.grid(True)

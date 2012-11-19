@@ -39,7 +39,7 @@ from matplotlib.ticker import ScalarFormatter
 ANGLE_MIN = - 90.
 ANGLE_MAX = 270.
 
-OUTPUT_EXTENSION = 'pdf' # default value in bitmap, because vectoriel can take time and space if there is a lot of data
+OUTPUT_EXTENSION = 'png' # default value in bitmap, because vectoriel can take time and space if there is a lot of data
 
 
 
@@ -128,40 +128,37 @@ M_outer = [] # Mean anomaly (degrees)
 values = [[t_inner, a_inner, g_inner, n_inner, M_inner], [t_outer, a_outer, g_outer, n_outer, M_outer]]
 filenames = [inner_planet, outer_planet]
 for ind in range(2):
-  fichier_source = filenames[ind]+".aei"
-  tableau = open(fichier_source, 'r')
+  
+  source_file = filenames[ind]+".aei"
+  
+  sys.stdout.write("Reading data files %5.1f %% : %s                \r" % ((ind) * 25., source_file))
+  sys.stdout.flush()
+  
+  tableau = open(source_file, 'r')
 
-  # we skip the three first lines
-  for indice in range(3):
+  # we skip the four first lines
+  for indice in range(4):
       tableau.readline()
-  # we store the fourth line that contains the description of all the columns
-  entete = tableau.readline()
+  
+  tapp = values[ind][0].append
+  aapp = values[ind][1].append
+  gapp = values[ind][2].append
+  napp = values[ind][3].append
+  Mapp = values[ind][4].append
   
   for ligne in tableau:
-    # Pour chaque ligne du tableau, on dÃ©coupe suivant les 
-    # espaces. (par dÃ©faut, s'il y a plusieurs espaces Ã  la 
-    # suite, il ne va pas crÃ©er 50 000 colonnes, ce qui ne 
-    # serait pas le cas avec un 'split(" ")')
     colonne = ligne.split()
     
-    # On essaye de rajouter les Ã©lÃ©ments. Si un seul d'entre eux
-    # Ã  un soucis, on Ã©limine toute la ligne (en gros, lors de 
-    # l'Ã©jection d'une planÃ¨te, certains paramÃ¨tres peuvent 
-    # devenir ****** au lieu d'un float, et Ã§a gÃ©nÃ¨re une erreur
-    # lors de la conversion en float)
-    try:
-      ti = float(colonne[0])
-      ai = float(colonne[1])
-      gi = float(colonne[4])
-      ni = float(colonne[5])
-      Mi = float(colonne[6])
-    except:
-      pass
-    values[ind][0].append(ti)
-    values[ind][1].append(ai)
-    values[ind][2].append(gi)
-    values[ind][3].append(ni)
-    values[ind][4].append(Mi)
+    tapp(float(colonne[0]))
+    aapp(float(colonne[1]))
+    gapp(float(colonne[4]))
+    napp(float(colonne[5]))
+    Mapp(float(colonne[6]))
+  tableau.close()
+  
+
+sys.stdout.write("Calculating angles %5.1f %%                          \r" % (50.))
+sys.stdout.flush()
 
 # We search for an ejection and the the low numbered list between inner and outer planet
 nb_times = min(len(t_inner), len(t_outer))
@@ -224,6 +221,9 @@ myxfmt._set_offset(1e5)
 myxfmt.set_scientific(True)
 myxfmt.set_powerlimits((-3, 3)) 
 
+sys.stdout.write("Displaying %5.1f %%                          \r" % (75.))
+sys.stdout.flush()
+
 fig = pl.figure(1)
 pl.clf()
 fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
@@ -250,6 +250,8 @@ plot_dl.set_ylabel("w2 - w1")
 plot_dl.grid(True)
 
 for i in range(q+1):
+  sys.stdout.write("Displaying %5.1f %%                          \r" % (75. + float((i+3) / (q+3)) * 25.))
+  sys.stdout.flush()
   subplot_index += 1
   plot_phi = fig.add_subplot(nb_lines, nb_rows, subplot_index, sharex=plot_period)
   plot_phi.plot(t, phi[i], '.')
