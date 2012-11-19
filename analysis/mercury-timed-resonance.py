@@ -22,8 +22,8 @@ from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 # There a several parameters to deal with to obtain an optimised calculation. 
 # First, you can control the number of instants where you will check for resonances
 # Second, you can control the number of points in the past you will use, for a given instant, to check if there were resonance. Beware
-#  here, because too many points will make you loose some resonances (because the point of stability can vary in time, even with libration
-#  and if there is too few points, you will find resonances that might not exist in reality
+#	here, because too many points will make you loose some resonances (because the point of stability can vary in time, even with libration
+#	and if there is too few points, you will find resonances that might not exist in reality
 # And finally, you can modify the tolerance over the standard deviation for the resonant angle. 
 # But you should not modify that unless you know what you are doing. The tolerance must not be too small, because weak resonances with
 # secular change in the resonance angle libration can exist. But if there is not enough outputs, the risk is to find a resonance
@@ -75,31 +75,31 @@ problem_message = "AIM : Display all the resonances of all the planet during the
 " * help : display this current message"
 
 for arg in sys.argv[1:]:
-  try:
-    (key, value) = arg.split("=")
-  except:
-    key = arg
-  if (key == 'ext'):
-    OUTPUT_EXTENSION = value
-  elif (key == 't_min'):
-    t_min = float(value)
-  elif (key == 't_max'):
-    t_max = float(value)
-  elif (key == 'instants'):
-    NB_MEASUREMENTS = int(value)
-  elif (key == 'sample'):
-    NB_LAST_POINTS = int(value)
-  elif (key == 'log'):
-    isLog = True
-  elif (key == 'help'):
-    print(problem_message)
-    exit()
-  else:
-    print("the key '"+key+"' does not match")
-    isProblem = True
+	try:
+		(key, value) = arg.split("=")
+	except:
+		key = arg
+	if (key == 'ext'):
+		OUTPUT_EXTENSION = value
+	elif (key == 't_min'):
+		t_min = float(value)
+	elif (key == 't_max'):
+		t_max = float(value)
+	elif (key == 'instants'):
+		NB_MEASUREMENTS = int(value)
+	elif (key == 'sample'):
+		NB_LAST_POINTS = int(value)
+	elif (key == 'log'):
+		isLog = True
+	elif (key == 'help'):
+		print(problem_message)
+		exit()
+	else:
+		print("the key '"+key+"' does not match")
+		isProblem = True
 
 if isProblem:
-  print(problem_message)
+	print(problem_message)
 
 ####################
 # we get the name of the files for all the planets in the system
@@ -110,7 +110,7 @@ nb_planets = len(liste_aei)
 # We also initialize the list for the names of the planets
 planet_names = []
 for filename in liste_aei:
-  planet_names.append(os.path.splitext(filename)[0])
+	planet_names.append(os.path.splitext(filename)[0])
 
 ####################
 # Initialization of some variables and tests
@@ -124,30 +124,79 @@ e = [] # eccentricity
 g = [] # argument of pericentre (degrees)
 n = [] # longitude of ascending node (degrees)
 M = [] # Mean anomaly (degrees)
+q = [] # periastron (AU)
+Q = [] # apoastron (AU)
+
 
 ####################
 # We read the datas for all the planets
 ####################
 
-for (idx, planet_datafile) in enumerate(liste_aei):
-  sys.stdout.write("Reading data files %5.1f %% : %s\r" % ((idx+1.) * 100. / float(nb_planets), planet_datafile))
-  sys.stdout.flush()
-  (ti, ai, ei, gi, ni, Mi) = np.loadtxt(planet_datafile, skiprows=4, usecols=(0,1,2,4,5,6), dtype=float, unpack=True)
-  
-  if (type(ti) == np.ndarray):
-    t.append(ti)
-    a.append(ai)
-    e.append(ei)
-    g.append(gi)
-    n.append(ni)
-    M.append(Mi)
-  else:
-    t.append(np.array([ti]))
-    a.append(np.array([ai]))
-    e.append(np.array([ei]))
-    g.append(np.array([gi]))
-    n.append(np.array([ni]))
-    M.append(np.array([Mi]))
+i = 0
+error = True
+positions = []
+while (len(positions) == 0):
+	try:
+		positions = mercury_utilities.get_column_position(liste_aei[i])
+	except:
+		i += 1
+
+# We retrieve the orbital data
+for (planete, planet_datafile) in enumerate(liste_aei):
+	sys.stdout.write("Reading data files %5.1f %% : %s        \r" % ((planete+1.) * 100. / float(nb_planets), planet_datafile))
+	sys.stdout.flush()
+	
+	ti = [] # time in years
+	ai = [] # semi major axis in AU
+	ei = [] # eccentricity
+	gi = [] # (in degrees)
+	ni = [] # (in degrees)
+	Mi = [] # (in degrees)
+
+	
+	fichier_source = liste_aei[planete]
+	object_file = open(fichier_source, 'r')
+	
+	for i in range(4):
+		object_file.readline()
+	
+	tiapp = ti.append
+	aiapp = ai.append
+	eiapp = ei.append
+	giapp = gi.append
+	niapp = ni.append
+	Miapp = Mi.append
+	
+
+	for line in object_file:
+		# When using [a:b], the actual range will be from a to b-1 included.
+		tiapp(float(line[positions[0]:positions[1]]))
+		aiapp(float(line[positions[1]:positions[2]]))
+		eiapp(float(line[positions[2]:positions[3]]))
+		giapp(float(line[positions[4]:positions[5]]))
+		niapp(float(line[positions[5]:positions[6]]))
+		Miapp(float(line[positions[6]:positions[7]]))
+
+	object_file.close()
+	
+	ti = np.array(ti)
+	ai = np.array(ai)
+	ei = np.array(ei)
+	gi = np.array(gi)
+	ni = np.array(ni)
+	Mi = np.array(Mi)
+	
+	qi = ai * (1 - ei)
+	Qi = ai * (1 + ei)
+	
+	t.append(ti)
+	a.append(ai)
+	e.append(ei)
+	g.append(gi)
+	n.append(ni)
+	M.append(Mi)
+	q.append(qi)
+	Q.append(Qi)
 
 ####################
 # We change the range in time, if needed and do some pre-calculations
@@ -173,24 +222,24 @@ else:
 	id_min = 0
 
 for planet in range(nb_planets):
-  t[planet] = t[planet][id_min:id_max]
-  a[planet] = a[planet][id_min:id_max]
-  e[planet] = e[planet][id_min:id_max]
-  g[planet] = g[planet][id_min:id_max]
-  n[planet] = n[planet][id_min:id_max]
-  M[planet] = M[planet][id_min:id_max]
+	t[planet] = t[planet][id_min:id_max]
+	a[planet] = a[planet][id_min:id_max]
+	e[planet] = e[planet][id_min:id_max]
+	g[planet] = g[planet][id_min:id_max]
+	n[planet] = n[planet][id_min:id_max]
+	M[planet] = M[planet][id_min:id_max]
 
 # We go in reverse order because once we delete the index 'i', all the indexes after are shifted and 4 become 3 if we delete the index 3
 for planet in range(nb_planets)[::-1]: 
-  if (len(t[planet]) == 0):
-    del(t[planet])
-    del(a[planet])
-    del(e[planet])
-    del(g[planet])
-    del(n[planet])
-    del(M[planet])
-    del(liste_aei[planet])
-    del(planet_names[planet])
+	if (len(t[planet]) == 0):
+		del(t[planet])
+		del(a[planet])
+		del(e[planet])
+		del(g[planet])
+		del(n[planet])
+		del(M[planet])
+		del(liste_aei[planet])
+		del(planet_names[planet])
 
 # Once we eventually have deleted the planet that have dissapeared in the range considered, we calculate once again the total number of planets
 nb_planets = len(t)
@@ -201,16 +250,16 @@ max_lengths = max(lengths)
 
 # If the user require more measurement than timestep available, we force to have nb_measurements equal the number of timestep
 if (NB_MEASUREMENTS < max_lengths):
-  time_delay = max_lengths / NB_MEASUREMENTS
+	time_delay = max_lengths / NB_MEASUREMENTS
 else:
-  time_delay = 1
+	time_delay = 1
 
 # We want at least to test every single point once. 
 # Thus, we make sure that "NB_LAST_POINTS" is at least equal to the space between two tests of the resonances
 if (time_delay > NB_LAST_POINTS):
-  print("Warning: The interval between two checks of resonance is greater than the number of points used to test it.")
-  print("         'NB_LAST_POINTS' extended to 'time_delay'=%d" % time_delay)
-  NB_LAST_POINTS = time_delay
+	print("Warning: The interval between two checks of resonance is greater than the number of points used to test it.")
+	print("				 'NB_LAST_POINTS' extended to 'time_delay'=%d" % time_delay)
+	NB_LAST_POINTS = time_delay
 
 # We calculate q and Q
 q = [ai * (1 - ei) for (ai, ei) in zip(a,e)]
@@ -237,108 +286,108 @@ ordering_planets = 1 + np.argsort(planet_index_sorted_by_distance) # the i-th pl
 
 # we append the ordering of the current planets in order to display resonances later
 for (planet_idx, order) in enumerate(ordering_planets):
-  dynamic_order[planet_idx].append(order)
-  time_order[planet_idx].append(t[planet_idx][0])
+	dynamic_order[planet_idx].append(order)
+	time_order[planet_idx].append(t[planet_idx][0])
 ###
 for instant_index in range(NB_LAST_POINTS,max_lengths,time_delay):
-  
-  # We display a progress bar of the computation
-  # The extra spaces are to make sure that no old character from the previous line will appear
-  sys.stdout.write("Progression %6.2f %% : %i / %i                   \r" % ((instant_index * 100. / float(max_lengths)), instant_index, max_lengths))
-  sys.stdout.flush()
-  
-  range_start = instant_index - (NB_LAST_POINTS-1)
-  range_stop  = instant_index
+	
+	# We display a progress bar of the computation
+	# The extra spaces are to make sure that no old character from the previous line will appear
+	sys.stdout.write("Progression %6.2f %% : %i / %i                   \r" % ((instant_index * 100. / float(max_lengths)), instant_index, max_lengths))
+	sys.stdout.flush()
+	
+	range_start = instant_index - (NB_LAST_POINTS-1)
+	range_stop	= instant_index
 
-  # We make sublist only with the planets that still exist at the present time
-  still_here_planets = []
-  a_temp = []
-  g_temp = []
-  n_temp = []
-  M_temp = []
+	# We make sublist only with the planets that still exist at the present time
+	still_here_planets = []
+	a_temp = []
+	g_temp = []
+	n_temp = []
+	M_temp = []
 
-  for planet in range(nb_planets):
-    if (t[planet].size > instant_index):
-      still_here_planets.append(planet)
-      a_temp.append(a[planet][range_start:range_stop+1])
-      g_temp.append(g[planet][range_start:range_stop+1])
-      n_temp.append(n[planet][range_start:range_stop+1])
-      M_temp.append(M[planet][range_start:range_stop+1])
-      
-  # We sort the planet in the order of distance from the host star
-  distance_end = [ai[-1] for ai in a_temp] # The distance of each planet from the host star, in AU, at the end of the current sub-range (of a_temp)
-  distance_begin = [ai[0] for ai in a_temp] # The distance of each planet from the host star, in AU, at the beginning of the current sub-range (of a_temp)
-  planet_index_sorted_by_distance = np.argsort(distance_end) # the i-th closest planet in distance is the planet planet_index_sorted_by_distance[i]
-  ordering_planets = 1 + np.argsort(planet_index_sorted_by_distance) # the i-th planet is the ordering_planets[i] in distance (starting at 1)
+	for planet in range(nb_planets):
+		if (t[planet].size > instant_index):
+			still_here_planets.append(planet)
+			a_temp.append(a[planet][range_start:range_stop+1])
+			g_temp.append(g[planet][range_start:range_stop+1])
+			n_temp.append(n[planet][range_start:range_stop+1])
+			M_temp.append(M[planet][range_start:range_stop+1])
+			
+	# We sort the planet in the order of distance from the host star
+	distance_end = [ai[-1] for ai in a_temp] # The distance of each planet from the host star, in AU, at the end of the current sub-range (of a_temp)
+	distance_begin = [ai[0] for ai in a_temp] # The distance of each planet from the host star, in AU, at the beginning of the current sub-range (of a_temp)
+	planet_index_sorted_by_distance = np.argsort(distance_end) # the i-th closest planet in distance is the planet planet_index_sorted_by_distance[i]
+	ordering_planets = 1 + np.argsort(planet_index_sorted_by_distance) # the i-th planet is the ordering_planets[i] in distance (starting at 1)
 
-  # we append the ordering of the current planets in order to display resonances later
-  for (planet_idx, order) in zip(still_here_planets, ordering_planets):
-    dynamic_order[planet_idx].append(order)
-    time_order[planet_idx].append(t[planet_idx][instant_index])
+	# we append the ordering of the current planets in order to display resonances later
+	for (planet_idx, order) in zip(still_here_planets, ordering_planets):
+		dynamic_order[planet_idx].append(order)
+		time_order[planet_idx].append(t[planet_idx][instant_index])
 
-  for (inner, outer) in zip(planet_index_sorted_by_distance[0:-1], planet_index_sorted_by_distance[1:]):
-    g_inner = g_temp[inner]
-    n_inner = n_temp[inner]
-    M_inner = M_temp[inner]
+	for (inner, outer) in zip(planet_index_sorted_by_distance[0:-1], planet_index_sorted_by_distance[1:]):
+		g_inner = g_temp[inner]
+		n_inner = n_temp[inner]
+		M_inner = M_temp[inner]
 
-    g_outer = g_temp[outer]
-    n_outer = n_temp[outer]
-    M_outer = M_temp[outer]
+		g_outer = g_temp[outer]
+		n_outer = n_temp[outer]
+		M_outer = M_temp[outer]
 
-    # We get the various possible resonance between the two planets
-    periodRatio_begin = (distance_begin[outer] / distance_begin[inner])**1.5
-    periodRatio_end = (distance_end[outer] / distance_end[inner])**1.5
-    
-    # If the period ratio is too different between the beginning and the end of the range, we do not calculate possible resonances to gain time.
-    if (abs(periodRatio_begin - periodRatio_end) > 0.02):
-      continue
-    
-    resonances = analysis.get_possible_resonances(periodRatio_end, uncertainty=uncertainty, 
-                 denominator_limit=DENOMINATOR_LIMIT, numerator_limit=NUMERATOR_LIMIT, sampling=NUMBER_OF_VALUES)
+		# We get the various possible resonance between the two planets
+		periodRatio_begin = (distance_begin[outer] / distance_begin[inner])**1.5
+		periodRatio_end = (distance_end[outer] / distance_end[inner])**1.5
+		
+		# If the period ratio is too different between the beginning and the end of the range, we do not calculate possible resonances to gain time.
+		if (abs(periodRatio_begin - periodRatio_end) > 0.02):
+			continue
+		
+		resonances = analysis.get_possible_resonances(periodRatio_end, uncertainty=uncertainty, 
+								 denominator_limit=DENOMINATOR_LIMIT, numerator_limit=NUMERATOR_LIMIT, sampling=NUMBER_OF_VALUES)
 
-    # For each resonance we check if this one exist between the two considered planets
-    index = 0
-    while (index < len(resonances)):
-      res = resonances[index]
-      is_resonance = analysis.isResonance(res, g_inner, n_inner, M_inner, g_outer, n_outer, M_outer, 
-                    nb_points=NB_LAST_POINTS, angle_center_value=ANGLE_CENTER_VALUE, std_threshold=STD_THRESHOLD)
-      if (is_resonance):
-        isExtend = False # boolean that say if the current resonance is the extension of the last resonance listed for the inner planet
-        if (len(resonance_type[still_here_planets[inner]]) != 0):
-          last_type = resonance_type[still_here_planets[inner]][-1]
-          last_index_range = resonance_index_range[still_here_planets[inner]][-1]
-          
-          # if the two index ranges overlap
-          if ((last_type == res) and (last_index_range[1] >= range_start-1)):
-            isExtend = True
-        
-        # if the current resonance already existed before, we only extend the index range of validity for the last resonance of the inner planet index
-        if isExtend:
-          resonance_index_range[still_here_planets[inner]][-1][1] = instant_index
-        else:
-          # We test here the previous resonance. If she was only at one instant, we delete it
-          if (len(resonance_index_range[still_here_planets[inner]]) != 0):
-            tmp = resonance_index_range[still_here_planets[inner]][-1]
-            if (tmp[0] == tmp[1]):
-              del(resonance_type[still_here_planets[inner]][-1])
-              del(resonance_index_range[still_here_planets[inner]][-1])
-              del(resonance_with[still_here_planets[inner]][-1])
-              del(resonance_inner_rank[still_here_planets[inner]][-1])
-            
-          resonance_type[still_here_planets[inner]].append(res)
-          # To avoid overlap, we define the resonance at the position of the range_stop, without associating, by default, any length.
-          resonance_index_range[still_here_planets[inner]].append([range_stop, range_stop])
-          resonance_with[still_here_planets[inner]].append(still_here_planets[outer])
-          resonance_inner_rank[still_here_planets[inner]].append(ordering_planets[inner])
+		# For each resonance we check if this one exist between the two considered planets
+		index = 0
+		while (index < len(resonances)):
+			res = resonances[index]
+			is_resonance = analysis.isResonance(res, g_inner, n_inner, M_inner, g_outer, n_outer, M_outer, 
+										nb_points=NB_LAST_POINTS, angle_center_value=ANGLE_CENTER_VALUE, std_threshold=STD_THRESHOLD)
+			if (is_resonance):
+				isExtend = False # boolean that say if the current resonance is the extension of the last resonance listed for the inner planet
+				if (len(resonance_type[still_here_planets[inner]]) != 0):
+					last_type = resonance_type[still_here_planets[inner]][-1]
+					last_index_range = resonance_index_range[still_here_planets[inner]][-1]
+					
+					# if the two index ranges overlap
+					if ((last_type == res) and (last_index_range[1] >= range_start-1)):
+						isExtend = True
+				
+				# if the current resonance already existed before, we only extend the index range of validity for the last resonance of the inner planet index
+				if isExtend:
+					resonance_index_range[still_here_planets[inner]][-1][1] = instant_index
+				else:
+					# We test here the previous resonance. If she was only at one instant, we delete it
+					if (len(resonance_index_range[still_here_planets[inner]]) != 0):
+						tmp = resonance_index_range[still_here_planets[inner]][-1]
+						if (tmp[0] == tmp[1]):
+							del(resonance_type[still_here_planets[inner]][-1])
+							del(resonance_index_range[still_here_planets[inner]][-1])
+							del(resonance_with[still_here_planets[inner]][-1])
+							del(resonance_inner_rank[still_here_planets[inner]][-1])
+						
+					resonance_type[still_here_planets[inner]].append(res)
+					# To avoid overlap, we define the resonance at the position of the range_stop, without associating, by default, any length.
+					resonance_index_range[still_here_planets[inner]].append([range_stop, range_stop])
+					resonance_with[still_here_planets[inner]].append(still_here_planets[outer])
+					resonance_inner_rank[still_here_planets[inner]].append(ordering_planets[inner])
 
-        # If we find a resonance, we do not search for another one
-        break
-      index += 1
+				# If we find a resonance, we do not search for another one
+				break
+			index += 1
 
 ####################
 # We now want to display in a fashion way the resonances
 ####################
-sys.stdout.write("Generating graphics                            \r")
+sys.stdout.write("Generating graphics                          \r")
 sys.stdout.flush()
 
 # We generate a list of colors
@@ -350,28 +399,28 @@ fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hs
 # On crée des sous plots. Pour subplot(311), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
 plot_a = fig.add_subplot(311)
 for planet in range(nb_planets):
-  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % ((planet+1) * 25. / float(nb_planets)))
-  sys.stdout.flush()
-  if isLog:
-    plot_a.semilogx(t[planet], a[planet], color=colors[planet], label=planet_names[planet])
-    plot_a.semilogx(t[planet], q[planet], color=colors[planet])
-    plot_a.semilogx(t[planet], Q[planet], color=colors[planet])
-  else:
-    plot_a.plot(t[planet], a[planet], color=colors[planet], label=planet_names[planet])
-    plot_a.plot(t[planet], q[planet], color=colors[planet])
-    plot_a.plot(t[planet], Q[planet], color=colors[planet])
+	sys.stdout.write("Generating graphics	%5.1f %%                          \r" % ((planet+1) * 25. / float(nb_planets)))
+	sys.stdout.flush()
+	if isLog:
+		plot_a.semilogx(t[planet], a[planet], color=colors[planet], label=planet_names[planet])
+		plot_a.semilogx(t[planet], q[planet], color=colors[planet])
+		plot_a.semilogx(t[planet], Q[planet], color=colors[planet])
+	else:
+		plot_a.plot(t[planet], a[planet], color=colors[planet], label=planet_names[planet])
+		plot_a.plot(t[planet], q[planet], color=colors[planet])
+		plot_a.plot(t[planet], Q[planet], color=colors[planet])
 
 ylims = list(pl.ylim())
 for planet in range(nb_planets):
-  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % (20.+(planet+1) * 20. / float(nb_planets)))
-  sys.stdout.flush()
-  for (outer, (id_begin, id_end)) in zip(resonance_with[planet], resonance_index_range[planet]):
-    plot_a.plot([t[planet][id_begin], t[planet][id_begin]], [a[planet][id_begin], a[outer][id_begin]], 'k--')
-    plot_a.plot([t[planet][id_end], t[planet][id_end]], [a[planet][id_end], a[outer][id_end]], 'k--')
+	sys.stdout.write("Generating graphics	%5.1f %%                          \r" % (20.+(planet+1) * 20. / float(nb_planets)))
+	sys.stdout.flush()
+	for (outer, (id_begin, id_end)) in zip(resonance_with[planet], resonance_index_range[planet]):
+		plot_a.plot([t[planet][id_begin], t[planet][id_begin]], [a[planet][id_begin], a[outer][id_begin]], 'k--')
+		plot_a.plot([t[planet][id_end], t[planet][id_end]], [a[planet][id_end], a[outer][id_end]], 'k--')
 
 # For a huge number of planet, the legend will be horrible, so we skip this line in that case
 if (nb_planets<=10):
-  plot_a.legend()
+	plot_a.legend()
 
 plot_a.set_xlabel("time [years]")
 plot_a.set_ylabel("a [AU]")
@@ -379,30 +428,30 @@ plot_a.grid(True)
 
 plot_res = fig.add_subplot(312, sharex=plot_a)
 for planet in range(nb_planets):
-  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % (40.+(planet+1) * 20. / float(nb_planets)))
-  sys.stdout.flush()
-  for (res, inner_rank, (id_begin, id_end)) in zip(resonance_type[planet], resonance_inner_rank[planet], resonance_index_range[planet]):
-    x_position = (t[planet][id_begin] + t[planet][id_end]) / 2.
-    y_position = inner_rank + .5
-    
-    x_left = t[planet][id_begin]
-    x_right = t[planet][id_end]
-    y_bottom = inner_rank + 0.1
-    y_top = inner_rank + 0.9
-    
-    text = "%i:%i" % (res.numerator, res.denominator)
-    plot_res.text(x_position, y_position, text, horizontalalignment='center', verticalalignment='center', rotation='vertical')
-    plot_res.fill([x_left, x_right, x_right, x_left],[y_bottom, y_bottom, y_top, y_top], fill=True, color='#cccccc')
-    plot_res.plot([x_left, x_left], [y_bottom, y_top], 'k-')
-    plot_res.plot([x_right, x_right], [y_bottom, y_top], 'k-')
+	sys.stdout.write("Generating graphics	%5.1f %%                          \r" % (40.+(planet+1) * 20. / float(nb_planets)))
+	sys.stdout.flush()
+	for (res, inner_rank, (id_begin, id_end)) in zip(resonance_type[planet], resonance_inner_rank[planet], resonance_index_range[planet]):
+		x_position = (t[planet][id_begin] + t[planet][id_end]) / 2.
+		y_position = inner_rank + .5
+		
+		x_left = t[planet][id_begin]
+		x_right = t[planet][id_end]
+		y_bottom = inner_rank + 0.1
+		y_top = inner_rank + 0.9
+		
+		text = "%i:%i" % (res.numerator, res.denominator)
+		plot_res.text(x_position, y_position, text, horizontalalignment='center', verticalalignment='center', rotation='vertical')
+		plot_res.fill([x_left, x_right, x_right, x_left],[y_bottom, y_bottom, y_top, y_top], fill=True, color='#cccccc')
+		plot_res.plot([x_left, x_left], [y_bottom, y_top], 'k-')
+		plot_res.plot([x_right, x_right], [y_bottom, y_top], 'k-')
 
 for planet in range(nb_planets):
-  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % (60.+(planet+1) * 20. / float(nb_planets)))
-  sys.stdout.flush()
-  if isLog:
-    plot_res.semilogx(time_order[planet], dynamic_order[planet], color=colors[planet], label=planet_names[planet])
-  else:
-    plot_res.plot(time_order[planet], dynamic_order[planet], color=colors[planet], label=planet_names[planet])
+	sys.stdout.write("Generating graphics	%5.1f %%                          \r" % (60.+(planet+1) * 20. / float(nb_planets)))
+	sys.stdout.flush()
+	if isLog:
+		plot_res.semilogx(time_order[planet], dynamic_order[planet], color=colors[planet], label=planet_names[planet])
+	else:
+		plot_res.plot(time_order[planet], dynamic_order[planet], color=colors[planet], label=planet_names[planet])
 plot_res.set_xlabel("time [years]")
 plot_res.set_ylabel("planet order")
 plot_res.set_ylim((0, nb_planets+1))
@@ -412,12 +461,12 @@ plot_res.grid(True)
 
 plot_e = fig.add_subplot(313, sharex=plot_a)
 for planet in range(nb_planets):
-  sys.stdout.write("Generating graphics  %5.1f %%                          \r" % ((planet+1) * 25. / float(nb_planets)))
-  sys.stdout.flush()
-  if isLog:
-    plot_e.loglog(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
-  else:
-    plot_e.semilogy(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
+	sys.stdout.write("Generating graphics	%5.1f %%                          \r" % ((planet+1) * 25. / float(nb_planets)))
+	sys.stdout.flush()
+	if isLog:
+		plot_e.loglog(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
+	else:
+		plot_e.semilogy(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
 plot_e.set_xlabel("time [years]")
 plot_e.set_ylabel("eccentricity")
 plot_e.grid(True)
@@ -429,17 +478,17 @@ myxfmt.set_powerlimits((-3, 3))
 plot_a.xaxis.set_major_formatter(myxfmt)
 plot_res.yaxis.set_major_formatter(FormatStrFormatter('%i'))
 
-sys.stdout.write("Saving graphics                            \r")
+sys.stdout.write("Saving graphics                          \r")
 sys.stdout.flush()
 pl.savefig('%s.%s' % (NOM_FICHIER_PLOT, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
-sys.stdout.write("Displaying graphics                            \n")
+sys.stdout.write("Displaying graphics                          \n")
 sys.stdout.flush()
 pl.show()
 
 ## TODO
 # Store the list of fraction for a given period ratio. If a period ratio is less than 
-#  delta ratio/2 of an existing one, we do not calculate again the fraction, but instead retrieve the existing list
+#	delta ratio/2 of an existing one, we do not calculate again the fraction, but instead retrieve the existing list
 
 ## Tricks
 # One thing to understand is the fact that when checking resonances at t=ti, we actually search for a resonance between t=ti-dt and t=ti. 
