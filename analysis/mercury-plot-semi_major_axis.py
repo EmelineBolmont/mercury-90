@@ -17,7 +17,7 @@ from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 ## Beginning of the program
 ###############################################
 
-
+isaLog = False # If true, the distance axis will be in log
 isLog = False # We set the false option before. Because if not, we will erase the 'true' with other option that are not log, and 
 # thus will lead to be in the else and put log to false.
 OUTPUT_EXTENSION = 'pdf' # default value
@@ -29,9 +29,10 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " * t_min (the beginning of the output (in years)" + "\n" + \
 " * a_max (the end of the y axis, in AU)" + "\n" + \
 " * a_min (the beginning of the y axis, in AU)" + "\n" + \
-" * log (time will be displayed in log)" + "\n" + \
+" * alog : [%s] distance will be displayed in log" % isaLog + "\n" + \
+" * log : [%s] time will be displayed in log" % isLog + "\n" + \
 " * help (display a little help message on HOW to use various options" + "\n" + \
-" * ext=png (The extension for the output files)"
+" * ext=png : [%s] The extension for the output files" % OUTPUT_EXTENSION
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -49,6 +50,8 @@ for arg in sys.argv[1:]:
 		a_max = float(value)
 	elif (key == 'log'):
 		isLog = True
+	elif (key == 'alog'):
+		isaLog = True
 	elif (key == 'ext'):
 		OUTPUT_EXTENSION = value
 	elif (key == 'help'):
@@ -158,15 +161,20 @@ colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 fig = pl.figure(1)
 pl.clf()
 plot_a = fig.add_subplot(111)
+
+if (isaLog and isLog):
+	plot = plot_a.loglog
+elif (isaLog and not(isLog)):
+	plot = plot_a.semilogy
+elif (not(isaLog) and isLog):
+	plot = plot_a.semilogx
+else:
+	plot = plot_a.plot
+
 for planet in range(nb_planete):
-	if isLog:
-		pl.semilogx(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-		pl.semilogx(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-		pl.semilogx(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
-	else:
-		pl.plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-		pl.plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-		pl.plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
+	plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+	plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
+	plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
 pl.xlim([t_min, t_max])
 
 ylims = list(pl.ylim())
