@@ -1535,11 +1535,11 @@ program test_disk
     open(10, file='unitary_tests/eccentricity_effect_on_corotation.dat')
 
     
-!~     write(10,'(10(a,f4.2),a)') '# a in AU ; G_c(e/x_s=',eccentricities(1),') ; G_t(e/x_s=',eccentricities(1),&
-!~                         ') ; G_c(e/x_s=',eccentricities(2),') ; G_t(e/x_s=',eccentricities(2),&
-!~                         ') ; G_c(e/x_s=',eccentricities(3),') ; G_t(e/x_s=',eccentricities(3),&
-!~                         ') ; G_c(e/x_s=',eccentricities(4),') ; G_t(e/x_s=',eccentricities(4),&
-!~                         ') ; G_c(e/x_s=',eccentricities(5),') ; G_t(e/x_s=',eccentricities(5),')'
+    write(10,'(10(a,f4.2),a)') '# a in AU ; G_c(e/x_s=',eccentricities(1),') ; G_t(e/x_s=',eccentricities(1),&
+                        ') ; G_c(e/x_s=',eccentricities(2),') ; G_t(e/x_s=',eccentricities(2),&
+                        ') ; G_c(e/x_s=',eccentricities(3),') ; G_t(e/x_s=',eccentricities(3),&
+                        ') ; G_c(e/x_s=',eccentricities(4),') ; G_t(e/x_s=',eccentricities(4),&
+                        ') ; G_c(e/x_s=',eccentricities(5),') ; G_t(e/x_s=',eccentricities(5),')'
 
 
     ! We generate cartesian coordinate for the given semi major axis
