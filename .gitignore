@@ -12,3 +12,5 @@ dissipation
 simu_test
 *.dat
 unitary_tests
+*.bak
+*~
