@@ -84,11 +84,6 @@ if isProblem:
 liste_aei = mercury_utilities.get_aei_files()
 nb_planets = len(liste_aei)
 
-# We also initialize the list for the names of the planets
-planet_names = []
-for filename in liste_aei:
-	planet_names.append(os.path.splitext(filename)[0])
-
 ####################
 # Initialization of some variables and tests
 ####################
@@ -150,7 +145,11 @@ for (planete, planet_datafile) in enumerate(liste_aei):
 a_init = [ai[0] for ai in a_temp]
 initial_order = np.argsort(a_init)
 
+# We also initialize the list for the names of the planets
+# in the correct order
+planet_names = []
 for order in initial_order:
+	planet_names.append(os.path.splitext(liste_aei[order])[0])
 	t.append(t_temp[order])
 	a.append(a_temp[order])
 	e.append(e_temp[order])
@@ -178,6 +177,7 @@ if ('t_min' in locals()):
 else:
 	id_min = 0
 
+ref_time = ref_time[id_min:id_max]
 
 # Once we eventually have deleted the planet that have dissapeared in the range considered, we calculate once again the total number of planets
 nb_planets = len(t)
@@ -191,6 +191,11 @@ for planet in range(nb_planets):
 lengths = [ai.size for ai in a]
 max_lengths = max(lengths)
 
+# We shift the indexes because of the reshaping of the arrays
+id_max = id_max - id_min
+id_min = 0
+
+# Numbers usefull in case of ejections, because ordering will not mean anything for the planets that are ejected
 pl_min = [] # The extremum to plot datas
 pl_max = [] # The extremum to plot datas
 for planet in range(nb_planets):
@@ -231,17 +236,34 @@ fig = pl.figure(1)
 pl.clf()
 
 plot_a = fig.add_subplot(311)
+q = [ai * (1 - ei) for (ai, ei) in zip(a, e)]
+Q = [ai * (1 + ei) for (ai, ei) in zip(a, e)]
 for planet in range(nb_planets):
 	plot_a.plot(t[planet], a[planet], color=colors[planet], label=planet_names[planet])
+	plot_a.plot(t[planet], q[planet], color=colors[planet])
+	plot_a.plot(t[planet], Q[planet], color=colors[planet])
 
 plot_a.set_xlabel("time [years]")
 plot_a.set_ylabel("a [AU]")
 plot_a.grid(True)
 plot_a.legend()
 
-plot_order = fig.add_subplot(312, sharex=plot_a)
+plot_PR = fig.add_subplot(312, sharex=plot_a)
+for planet in range(nb_planets-1):
+	plot_PR.plot(ref_time, period_ratio[planet], color=colors[planet], label="period ratio %i/%i" % (planet+2, planet+1))
+
+plot_PR.set_xlabel("time [years]")
+plot_PR.set_ylabel("period ratio")
+plot_PR.grid(True)
+plot_PR.legend()
+plot_PR.set_ylim(ymin=0.95)
+
+plot_order = fig.add_subplot(313, sharex=plot_a)
 for planet in range(nb_planets):
-	plot_order.plot(t[planet], planet_rank[planet][pl_min[planet]:pl_max[planet]], color=colors[planet])
+	try:
+		plot_order.plot(t[planet], planet_rank[planet][pl_min[planet]:pl_max[planet]], color=colors[planet])
+	except:
+		pdb.set_trace()
 
 plot_order.set_xlabel("time [years]")
 plot_order.set_ylabel("order")
@@ -251,15 +273,7 @@ ylims = plot_order.get_ylim()
 plot_order.set_ylim([ylims[0]-1, ylims[1]+1])
 
 
-plot_PR = fig.add_subplot(313, sharex=plot_a)
-for planet in range(nb_planets-1):
-	plot_PR.plot(ref_time, period_ratio[planet], color=colors[planet], label="period ratio %i/%i" % (planet+2, planet+1))
 
-plot_PR.set_xlabel("time [years]")
-plot_PR.set_ylabel("period ratio")
-plot_PR.grid(True)
-plot_PR.legend()
-plot_PR.set_ylim(ymin=0.95)
 
 print("                                         ")
 
