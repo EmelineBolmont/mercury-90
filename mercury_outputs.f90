@@ -63,7 +63,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   ! Local
   integer :: k,year,month
   real(double_precision) :: tmp0,t1,rfac,fr,fv,theta,phi,vtheta,vphi
-  character(len=80) :: c(CMAX)
+  character(len=80) :: c(CMAX*4)
   character(len=38) :: fstop
   character(len=6) :: tstring
   integer :: error
@@ -103,7 +103,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   end do
   
   ! If required, output the stored close encounter details
-  if (nstored.ge.100.or.ceflush.eq.0) then
+  if ((nstored.ge.CMAX*2).or.(ceflush.eq.0)) then
      open (22, file=outfile(2), status='old', access='append',iostat=error)
      if (error /= 0) then
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(2))
