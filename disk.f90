@@ -804,8 +804,9 @@ subroutine init_globals(stellar_mass, time)
 				get_torques => get_corotation_torque_manual
 				
 			case default
-				stop 'Error in user_module : The "torque_type" cannot be found. &
-						 &Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
+        write (*,*) 'The torque_type="', TORQUE_TYPE,'" cannot be found.'
+				write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
+				stop 'Error in user_module, subroutine init_globals' 
     end select
     
     if (.not.allocated(distance_sample)) then
@@ -1491,9 +1492,11 @@ end subroutine initial_density_profile
 			
 			call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
 		case default
-				stop 'Error in user_module : The "dissipation_type" cannot be found. &
-						 &Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay ; &
+        write (*,*) 'The dissipation_type="', DISSIPATION_TYPE,'" cannot be found.'
+        write (*,*) 'Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay ; &
 						 &3 for mixed exponentiel decay'
+				stop 'Error in user_module, subroutine dissipate_disk'
+						 
 
 	end select
 	
