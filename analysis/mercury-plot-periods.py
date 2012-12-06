@@ -22,8 +22,8 @@ from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 # There a several parameters to deal with to obtain an optimised calculation. 
 # First, you can control the number of instants where you will check for resonances
 # Second, you can control the number of points in the past you will use, for a given instant, to check if there were resonance. Beware
-#	here, because too many points will make you loose some resonances (because the point of stability can vary in time, even with libration
-#	and if there is too few points, you will find resonances that might not exist in reality
+#  here, because too many points will make you loose some resonances (because the point of stability can vary in time, even with libration
+#  and if there is too few points, you will find resonances that might not exist in reality
 # And finally, you can modify the tolerance over the standard deviation for the resonant angle. 
 # But you should not modify that unless you know what you are doing. The tolerance must not be too small, because weak resonances with
 # secular change in the resonance angle libration can exist. But if there is not enough outputs, the risk is to find a resonance
@@ -56,27 +56,27 @@ problem_message = "AIM : Display all the resonances of all the planet during the
 " * help : display this current message"
 
 for arg in sys.argv[1:]:
-	try:
-		(key, value) = arg.split("=")
-	except:
-		key = arg
-	if (key == 'ext'):
-		OUTPUT_EXTENSION = value
-	elif (key == 't_min'):
-		t_min = float(value)
-	elif (key == 't_max'):
-		t_max = float(value)
-	elif (key == 'log'):
-		isLog = True
-	elif (key == 'help'):
-		print(problem_message)
-		exit()
-	else:
-		print("the key '"+key+"' does not match")
-		isProblem = True
+  try:
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+  if (key == 'ext'):
+    OUTPUT_EXTENSION = value
+  elif (key == 't_min'):
+    t_min = float(value)
+  elif (key == 't_max'):
+    t_max = float(value)
+  elif (key == 'log'):
+    isLog = True
+  elif (key == 'help'):
+    print(problem_message)
+    exit()
+  else:
+    print("the key '"+key+"' does not match")
+    isProblem = True
 
 if isProblem:
-	print(problem_message)
+  print(problem_message)
 
 ####################
 # we get the name of the files for all the planets in the system
@@ -106,41 +106,41 @@ i = 0
 error = True
 positions = []
 while (len(positions) == 0):
-	try:
-		positions = mercury_utilities.get_column_position(liste_aei[i])
-	except:
-		i += 1
+  try:
+    positions = mercury_utilities.get_column_position(liste_aei[i])
+  except:
+    i += 1
 
 # We retrieve the orbital data
 for (planete, planet_datafile) in enumerate(liste_aei):
-	sys.stdout.write("Reading data files %5.1f %% : %s        \r" % ((planete+1.) * 100. / float(nb_planets), planet_datafile))
-	sys.stdout.flush()
-	
-	ti = [] # time in years
-	ai = [] # semi major axis in AU
-	ei = [] # eccentricity
-	
-	fichier_source = liste_aei[planete]
-	object_file = open(fichier_source, 'r')
-	
-	for i in range(4):
-		object_file.readline()
-	
-	tiapp = ti.append
-	aiapp = ai.append
-	eiapp = ei.append
-	
-	for line in object_file:
-		# When using [a:b], the actual range will be from a to b-1 included.
-		tiapp(float(line[positions[0]:positions[1]]))
-		aiapp(float(line[positions[1]:positions[2]]))
-		eiapp(float(line[positions[2]:positions[3]]))
-	object_file.close()
-	
-	if (ti != []):
-		t_temp.append(np.array(ti))
-		a_temp.append(np.array(ai))
-		e_temp.append(np.array(ei))
+  sys.stdout.write("Reading data files %5.1f %% : %s        \r" % ((planete+1.) * 100. / float(nb_planets), planet_datafile))
+  sys.stdout.flush()
+  
+  ti = [] # time in years
+  ai = [] # semi major axis in AU
+  ei = [] # eccentricity
+  
+  fichier_source = liste_aei[planete]
+  object_file = open(fichier_source, 'r')
+  
+  for i in range(4):
+    object_file.readline()
+  
+  tiapp = ti.append
+  aiapp = ai.append
+  eiapp = ei.append
+  
+  for line in object_file:
+    # When using [a:b], the actual range will be from a to b-1 included.
+    tiapp(float(line[positions[0]:positions[1]]))
+    aiapp(float(line[positions[1]:positions[2]]))
+    eiapp(float(line[positions[2]:positions[3]]))
+  object_file.close()
+  
+  if (ti != []):
+    t_temp.append(np.array(ti))
+    a_temp.append(np.array(ai))
+    e_temp.append(np.array(ei))
 
 a_init = [ai[0] for ai in a_temp]
 initial_order = np.argsort(a_init)
@@ -149,10 +149,10 @@ initial_order = np.argsort(a_init)
 # in the correct order
 planet_names = []
 for order in initial_order:
-	planet_names.append(os.path.splitext(liste_aei[order])[0])
-	t.append(t_temp[order])
-	a.append(a_temp[order])
-	e.append(e_temp[order])
+  planet_names.append(os.path.splitext(liste_aei[order])[0])
+  t.append(t_temp[order])
+  a.append(a_temp[order])
+  e.append(e_temp[order])
 
 ####################
 # We change the range in time, if needed and do some pre-calculations
@@ -167,15 +167,15 @@ delta_t = ref_time[1] - ref_time[0]
 
 # We get the index for the t_max value
 if ('t_max' in locals()):
-	id_max = int((t_max - ref_time[0]) / delta_t)
+  id_max = int((t_max - ref_time[0]) / delta_t)
 else:
-	id_max = len(ref_time)
+  id_max = len(ref_time)
 
 # We get the index for the t_min value
 if ('t_min' in locals()):
-	id_min = int((t_min - ref_time[0]) / delta_t)
+  id_min = int((t_min - ref_time[0]) / delta_t)
 else:
-	id_min = 0
+  id_min = 0
 
 ref_time = ref_time[id_min:id_max]
 
@@ -199,8 +199,8 @@ id_min = 0
 pl_min = [] # The extremum to plot datas
 pl_max = [] # The extremum to plot datas
 for planet in range(nb_planets):
-	pl_min.append(max(id_min, 0))
-	pl_max.append(min(id_max, lengths[planet]))
+  pl_min.append(max(id_min, 0))
+  pl_max.append(min(id_max, lengths[planet]))
 
 OP = [ai**1.5 for ai in a] # The orbital period in years
 
@@ -212,7 +212,7 @@ OP = [ai**1.5 for ai in a] # The orbital period in years
 orbital_periods = np.empty((nb_planets, max_lengths))
 orbital_periods.fill(np.NaN)
 for i in range(nb_planets):
-	orbital_periods[i, 0:lengths[i]] = OP[i]
+  orbital_periods[i, 0:lengths[i]] = OP[i]
 
 
 planet_index_sorted_by_distance = orbital_periods.argsort(axis=0)
@@ -222,7 +222,7 @@ planet_rank = 1 + planet_index_sorted_by_distance.argsort(axis=0) # for each pla
 orbital_periods.sort(axis=0)
 period_ratio = np.empty((nb_planets-1, max_lengths))
 for planet in range(nb_planets-1):
-	period_ratio[planet] = orbital_periods[planet+1] / orbital_periods[planet]
+  period_ratio[planet] = orbital_periods[planet+1] / orbital_periods[planet]
 
 
 ####################
@@ -239,9 +239,9 @@ plot_a = fig.add_subplot(311)
 q = [ai * (1 - ei) for (ai, ei) in zip(a, e)]
 Q = [ai * (1 + ei) for (ai, ei) in zip(a, e)]
 for planet in range(nb_planets):
-	plot_a.plot(t[planet], a[planet], color=colors[planet], label=planet_names[planet])
-	plot_a.plot(t[planet], q[planet], color=colors[planet])
-	plot_a.plot(t[planet], Q[planet], color=colors[planet])
+  plot_a.plot(t[planet], a[planet], color=colors[planet], label=planet_names[planet])
+  plot_a.plot(t[planet], q[planet], color=colors[planet])
+  plot_a.plot(t[planet], Q[planet], color=colors[planet])
 
 plot_a.set_xlabel("time [years]")
 plot_a.set_ylabel("a [AU]")
@@ -250,7 +250,7 @@ plot_a.legend()
 
 plot_PR = fig.add_subplot(312, sharex=plot_a)
 for planet in range(nb_planets-1):
-	plot_PR.plot(ref_time, period_ratio[planet], color=colors[planet], label="period ratio %i/%i" % (planet+2, planet+1))
+  plot_PR.plot(ref_time, period_ratio[planet], color=colors[planet], label="period ratio %i/%i" % (planet+2, planet+1))
 
 plot_PR.set_xlabel("time [years]")
 plot_PR.set_ylabel("period ratio")
@@ -260,10 +260,10 @@ plot_PR.set_ylim(ymin=0.95)
 
 plot_order = fig.add_subplot(313, sharex=plot_a)
 for planet in range(nb_planets):
-	try:
-		plot_order.plot(t[planet], planet_rank[planet][pl_min[planet]:pl_max[planet]], color=colors[planet])
-	except:
-		pdb.set_trace()
+  try:
+    plot_order.plot(t[planet], planet_rank[planet][pl_min[planet]:pl_max[planet]], color=colors[planet])
+  except:
+    pdb.set_trace()
 
 plot_order.set_xlabel("time [years]")
 plot_order.set_ylabel("order")

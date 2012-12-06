@@ -48,30 +48,30 @@ problem_message = "The script can take various arguments :" + "\n" + \
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
-	try:
-		(key, value) = arg.split("=")
-	except:
-		key = arg
-	if (key == 'ratio'):
-		periodRatio = float(value)
-	elif (key == 'uncertainty'):
-		uncertainty = 0.01 * float(value)
-	elif (key == 'element'):
-		isElement = True
-	elif (key == 'help'):
-		isProblem = True
-	else:
-		print("the key '"+key+"' does not match")
-		isProblem = True
+  try:
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+  if (key == 'ratio'):
+    periodRatio = float(value)
+  elif (key == 'uncertainty'):
+    uncertainty = 0.01 * float(value)
+  elif (key == 'element'):
+    isElement = True
+  elif (key == 'help'):
+    isProblem = True
+  else:
+    print("the key '"+key+"' does not match")
+    isProblem = True
 
 if ('periodRatio' not in vars().keys()):
-	if not(isProblem):
-		print("Error: The periodRatio is not set")
-		isProblem = True
+  if not(isProblem):
+    print("Error: The periodRatio is not set")
+    isProblem = True
 
 if isProblem:
-	print(problem_message)
-	exit()
+  print(problem_message)
+  exit()
 
 periodMin = periodRatio * (1 - uncertainty)
 periodMax = periodRatio * (1 + uncertainty)

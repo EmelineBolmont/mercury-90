@@ -94,23 +94,23 @@ problem_message = "AIM : Display in a m = f(a) diagram, all the planets of the c
 " * help : display this current message"
 
 for arg in sys.argv[1:]:
-	try:
-		(key, value) = arg.split("=")
-	except:
-		key = arg
-	if (key == 'ext'):
-		OUTPUT_EXTENSION = value
-	elif (key == 'cz'):
-		CZ = eval(value)
-	elif (key == 'help'):
-		print(problem_message)
-		exit()
-	else:
-		print("the key '"+key+"' does not match")
-		isProblem = True
+  try:
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+  if (key == 'ext'):
+    OUTPUT_EXTENSION = value
+  elif (key == 'cz'):
+    CZ = eval(value)
+  elif (key == 'help'):
+    print(problem_message)
+    exit()
+  else:
+    print("the key '"+key+"' does not match")
+    isProblem = True
 
 if isProblem:
-	print(problem_message)
+  print(problem_message)
 
 uncertainty = 0.01 * float(UNCERTAINTY)
 

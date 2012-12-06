@@ -97,8 +97,8 @@ if isProblem:
   exit()
 
 if (('avakas' in hostname) and WALLTIME == None and (isContinue or isRestart or isForcedStart)):
-	print("Walltime option must be set. type 'help' for a description of the options")
-	exit()
+  print("Walltime option must be set. type 'help' for a description of the options")
+  exit()
 
 # We go in each sub folder of the current working directory
 

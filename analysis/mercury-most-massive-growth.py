@@ -42,43 +42,43 @@ problem_message = "The script can take various arguments :" + "\n" + \
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
-	try:
-		(key, value) = arg.split("=")
-	except:
-		key = arg
-	if (key == 't_min'):
-		t_min = float(value)
-	elif (key == 't_max'):
-		t_max = float(value)
-	elif (key == 'massive'):
-		MAX_COLORED = int(value)
-	elif (key == 'ecc'):
-		isEcc = True
-	elif (key == 'log'):
-		isLog = True
-	elif (key == 'alog'):
-		isaLog = True
-	elif (key == 'ext'):
-		OUTPUT_EXTENSION = value
-	elif (key == 'help'):
-		isProblem = True
-	else:
-		print("the key '"+key+"' does not match")
-		isProblem = True
+  try:
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+  if (key == 't_min'):
+    t_min = float(value)
+  elif (key == 't_max'):
+    t_max = float(value)
+  elif (key == 'massive'):
+    MAX_COLORED = int(value)
+  elif (key == 'ecc'):
+    isEcc = True
+  elif (key == 'log'):
+    isLog = True
+  elif (key == 'alog'):
+    isaLog = True
+  elif (key == 'ext'):
+    OUTPUT_EXTENSION = value
+  elif (key == 'help'):
+    isProblem = True
+  else:
+    print("the key '"+key+"' does not match")
+    isProblem = True
 
 if isProblem:
-	print(problem_message)
-	exit()
+  print(problem_message)
+  exit()
 
 ####################
 # On récupère la liste des fichiers planètes.aei
 ####################
 (process_stdout, process_stderr, return_code) = autiwa.lancer_commande("ls *.aei")
 if (return_code != 0):
-	print("the command return an error "+str(return_code))
-	print(process_stderr)
-	exit()
-	
+  print("the command return an error "+str(return_code))
+  print(process_stderr)
+  exit()
+  
 liste_aei = process_stdout.split("\n")
 liste_aei.remove('') # we remove an extra element that doesn't mean anything
 nb_planete = len(liste_aei)
@@ -97,30 +97,30 @@ m = [] # planet mass in earth mass
 
 # We retrieve the orbital data
 for planete in range(nb_planete):
-	
-	fichier_source = liste_aei[planete]
-	(ti, ai, ei, mi) = np.loadtxt(fichier_source, skiprows=4, usecols = (0,1,2,7), dtype=float, unpack=True)
-	qi = ai * (1 - ei)
-	Qi = ai * (1 + ei)
-	mi = (MS / MT) * mi
-	
-	if (type(ti) == np.ndarray):
-		t.append(ti)
-		a.append(ai)
-		e.append(ei)
-		q.append(qi)
-		Q.append(Qi)
-		#~ I.append(Ii)
-		m.append(mi)
-	else:
-		# In case the is only one point, we force to have a list, to avoid plotting problems
-		t.append(np.array([ti]))
-		a.append(np.array([ai]))
-		e.append(np.array([ei]))
-		q.append(np.array([qi]))
-		Q.append(np.array([Qi]))
-		#~ I.append(np.array([Ii]))
-		m.append(np.array([mi]))
+  
+  fichier_source = liste_aei[planete]
+  (ti, ai, ei, mi) = np.loadtxt(fichier_source, skiprows=4, usecols = (0,1,2,7), dtype=float, unpack=True)
+  qi = ai * (1 - ei)
+  Qi = ai * (1 + ei)
+  mi = (MS / MT) * mi
+  
+  if (type(ti) == np.ndarray):
+    t.append(ti)
+    a.append(ai)
+    e.append(ei)
+    q.append(qi)
+    Q.append(Qi)
+    #~ I.append(Ii)
+    m.append(mi)
+  else:
+    # In case the is only one point, we force to have a list, to avoid plotting problems
+    t.append(np.array([ti]))
+    a.append(np.array([ai]))
+    e.append(np.array([ei]))
+    q.append(np.array([qi]))
+    Q.append(np.array([Qi]))
+    #~ I.append(np.array([Ii]))
+    m.append(np.array([mi]))
 
 
 # We get the array of reference time, i.e, one of the longuest list of time available in the list of planets. 
@@ -133,42 +133,42 @@ delta_t = ref_time[1] - ref_time[0]
 
 # We get the index for the t_max value
 if ('t_max' in locals()):
-	id_max = int((t_max - ref_time[0]) / delta_t)
-	t_max = ref_time[id_max]
+  id_max = int((t_max - ref_time[0]) / delta_t)
+  t_max = ref_time[id_max]
 else:
-	id_max = ref_len - 1
-	t_max = ref_time[-1]
+  id_max = ref_len - 1
+  t_max = ref_time[-1]
 
 # We get the index for the t_min value
 if ('t_min' in locals()):
-	id_min = int((t_min - ref_time[0]) / delta_t)
-	t_min = ref_time[id_min]
+  id_min = int((t_min - ref_time[0]) / delta_t)
+  t_min = ref_time[id_min]
 else:
-	id_min = 0
-	t_min = ref_time[0]
+  id_min = 0
+  t_min = ref_time[0]
 
 # We get the list of masses at the 't_max' time. By default, it will be the final time of the simulation.
 final_name = []
 final_mass = []
 for (aei_file,mi) in zip(liste_aei,m):
-	if (len(mi) > id_max):
-		final_name.append(aei_file.rstrip(".aei"))
-		final_mass.append(mi[id_max])
+  if (len(mi) > id_max):
+    final_name.append(aei_file.rstrip(".aei"))
+    final_mass.append(mi[id_max])
 
 nb_final = len(final_name)
 decorated = [(final_mass[i], i, final_name[i]) for i in range(nb_final)]
 decorated.sort(reverse=True) # We get the final planets, the bigger the firsts
 
 for (i , (mass, dumb,  name)) in enumerate(decorated):
-	final_name[i] = name
-	final_mass[i] = mass
+  final_name[i] = name
+  final_mass[i] = mass
 
 
 # We get all the association of name/index of planets
 ind_of_planet = {}
 for (ind, filename) in enumerate(liste_aei):
-	basename = os.path.splitext(filename)[0]
-	ind_of_planet[basename] = ind
+  basename = os.path.splitext(filename)[0]
+  ind_of_planet[basename] = ind
 
 # We generate a list of colors
 tmp = autiwa.colorList(MAX_COLORED, exclude=['ffffff', COLOR_FINAL, COLOR_EJECTED])
@@ -180,7 +180,7 @@ colors = ['#'+COLOR_EJECTED] * nb_planete
 
 # For the planets that remains in the simulation at the end, we change the color (either a flashy one for the most massives, or a default one)
 for (name, color) in zip(final_name, tmp):
-	colors[ind_of_planet[name]] = '#'+color
+  colors[ind_of_planet[name]] = '#'+color
 
 
 
@@ -194,14 +194,14 @@ tableau.close()
 #  If only one body is left, we want to see each of the bodies that collides with him to get his color.
 lost_in_collisions = [] 
 for line in reversed(lines):
-	if (line.count('was hit by') > 0):
-		words = line.split()
-		if (float(words[-2]) > t_max):
-			continue
-		remaining_planet = words[0]
-		lost_planet = words[4]
-		colors[ind_of_planet[lost_planet]] = colors[ind_of_planet[remaining_planet]]
-		lost_in_collisions.append(ind_of_planet[lost_planet])
+  if (line.count('was hit by') > 0):
+    words = line.split()
+    if (float(words[-2]) > t_max):
+      continue
+    remaining_planet = words[0]
+    lost_planet = words[4]
+    colors[ind_of_planet[lost_planet]] = colors[ind_of_planet[remaining_planet]]
+    lost_in_collisions.append(ind_of_planet[lost_planet])
 
 #~ # We generate a list of colors
 #~ tmp = autiwa.colorList(nb_planete)
@@ -215,28 +215,28 @@ fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hs
 
 # On crée des sous plots. Pour subplot(321), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
 if (isEcc == True):
-	plot_a = fig.add_subplot(3, 1, 1)
+  plot_a = fig.add_subplot(3, 1, 1)
 else:
-	plot_a = fig.add_subplot(2, 1, 1)
+  plot_a = fig.add_subplot(2, 1, 1)
 
 if isaLog:
-	if isLog:
-		plot = plot_a.loglog
-	else:
-		plot = plot_a.semilogy
+  if isLog:
+    plot = plot_a.loglog
+  else:
+    plot = plot_a.semilogy
 else:
-	if isLog:
-		plot = plot_a.semilogx
-	else:
-		plot = plot_a.plot
+  if isLog:
+    plot = plot_a.semilogx
+  else:
+    plot = plot_a.plot
 for planet in range(nb_planete):
-	plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-	#~ plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-	#~ plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
+  plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+  #~ plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
+  #~ plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
 
 
 for planet in lost_in_collisions:
-	plot(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
+  plot(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
 
 
 plot_a.set_xlabel("time [years]")
@@ -244,30 +244,30 @@ plot_a.set_ylabel("a [UA]")
 plot_a.grid(True)
 
 if (isEcc == True):
-	plot_e = fig.add_subplot(3, 1, 2, sharex=plot_a)
-	if isLog:
-		plot = plot_e.semilogx
-	else:
-		plot = plot_e.plot
+  plot_e = fig.add_subplot(3, 1, 2, sharex=plot_a)
+  if isLog:
+    plot = plot_e.semilogx
+  else:
+    plot = plot_e.plot
 
-	for planet in range(nb_planete):
-		plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-	plot_e.set_xlabel("time [years]")
-	plot_e.set_ylabel("eccentricity")
-	plot_e.grid(True)
+  for planet in range(nb_planete):
+    plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+  plot_e.set_xlabel("time [years]")
+  plot_e.set_ylabel("eccentricity")
+  plot_e.grid(True)
 
 if (isEcc == True):
-	plot_mass = fig.add_subplot(3, 1, 3, sharex=plot_a)
+  plot_mass = fig.add_subplot(3, 1, 3, sharex=plot_a)
 else:
-	plot_mass = fig.add_subplot(2, 1, 2, sharex=plot_a)
+  plot_mass = fig.add_subplot(2, 1, 2, sharex=plot_a)
 
 if isLog:
-	plot = plot_mass.semilogx
+  plot = plot_mass.semilogx
 else:
-	plot = plot_mass.plot
+  plot = plot_mass.plot
 
 for planet in range(nb_planete):
-	plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+  plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 plot_mass.set_xlabel("time [years]")
 plot_mass.set_ylabel("mass [Earths]")
 plot_mass.grid(True)

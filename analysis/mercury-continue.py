@@ -8,27 +8,27 @@ import subprocess
 import mercury
 
 def lancer_commande(commande):
-    """lance une commande qui sera typiquement soit une liste, soit une 
-    commande seule. La fonction renvoit un tuple avec la sortie, 
-    l'erreur et le code de retour"""
-    if (type(commande)==list):
-        process = subprocess.Popen(commande, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    elif (type(commande)==str):
-        process = subprocess.Popen(commande, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    else:
-        raise TypeError("La commande n'est ni une liste, ni une chaine de caractere.")
-    (process_stdout, process_stderr) = process.communicate()
-    returncode = process.poll()
-    return (process_stdout, process_stderr, returncode)
+  """lance une commande qui sera typiquement soit une liste, soit une 
+  commande seule. La fonction renvoit un tuple avec la sortie, 
+  l'erreur et le code de retour"""
+  if (type(commande)==list):
+    process = subprocess.Popen(commande, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  elif (type(commande)==str):
+    process = subprocess.Popen(commande, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+  else:
+    raise TypeError("La commande n'est ni une liste, ni une chaine de caractere.")
+  (process_stdout, process_stderr) = process.communicate()
+  returncode = process.poll()
+  return (process_stdout, process_stderr, returncode)
     
 # First, we need to get the dump files 
 files_to_move = ["param", "big"]
 
 if os.path.exists("small.dmp"):
-	files_to_move.append("small")
+  files_to_move.append("small")
 
 for filename in files_to_move:
-	lancer_commande("mv "+filename+".dmp "+filename+".in")
+  lancer_commande("mv "+filename+".dmp "+filename+".in")
 
 # We delete output files
 lancer_commande("rm *.aei *.clo *.out")

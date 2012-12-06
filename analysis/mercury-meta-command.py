@@ -18,24 +18,24 @@ NB_OUTPUTS = 2000
 EXTENSION = 1e6 # extension of the simulation in years (for extend())
 
 def regen_aei_files():
-	"""in the current working directory, 
-	will generate element.in (param.in 
-	must exist) and launch 'element'."""
-	mercury_utilities.generateOutputs()
+  """in the current working directory, 
+  will generate element.in (param.in 
+  must exist) and launch 'element'."""
+  mercury_utilities.generateOutputs()
 
 def change_nb_outputs():
-	"""will adapt the timestep between outputs in 
-	'element.in' depending on the integration 
-	time to fit the required number of outputs.
-	'param.in' must exist. But the outputs files 
-	will not be re-generated"""
-	mercury_utilities.generateElementIN(nb_outputs=NB_OUTPUTS)
+  """will adapt the timestep between outputs in 
+  'element.in' depending on the integration 
+  time to fit the required number of outputs.
+  'param.in' must exist. But the outputs files 
+  will not be re-generated"""
+  mercury_utilities.generateElementIN(nb_outputs=NB_OUTPUTS)
 
 def erase_aei():
-	"""supress all the .aei files for each simulation"""
-	
-	command = "rm *.aei"
-	(stdout, stderr, returnCode) = autiwa.lancer_commande(command)
+  """supress all the .aei files for each simulation"""
+  
+  command = "rm *.aei"
+  (stdout, stderr, returnCode) = autiwa.lancer_commande(command)
 
 def extend():
   """Will edit the param.* files to add 'extension' to the total integration time
@@ -52,7 +52,7 @@ COMMANDS = {"regen_aei":regen_aei_files,
 
 COMMANDS_HELP = ""
 for (key, value) in COMMANDS.items():
-	COMMANDS_HELP += "    # '%s' : %s\n" % (key, value.__doc__)
+  COMMANDS_HELP += "    # '%s' : %s\n" % (key, value.__doc__)
 
 #    .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-. 
 #  .'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `.
@@ -112,7 +112,7 @@ for arg in sys.argv[1:]:
     isProblem = True
 
 if (commandKey == None):
-	isProblem = True
+  isProblem = True
 
 if isProblem:
   print(problem_message)

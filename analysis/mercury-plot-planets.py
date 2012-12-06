@@ -39,41 +39,41 @@ problem_message = "The script can take various arguments :" + "\n" + \
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
-	try:
-		(key, value) = arg.split("=")
-	except:
-		key = arg
-	if (key == 't_min'):
-		t_min = float(value)
-	elif (key == 't_max'):
-		t_max = float(value)
-	elif (key == 'log'):
-		isLog = True
-	elif (key == 'alog'):
-		isaLog = True
-	elif (key == 'xs'):
-		isXS = True
-	elif (key == 'ext'):
-		OUTPUT_EXTENSION = value
-	elif (key == 'help'):
-		isProblem = True
-	else:
-		print("the key '"+key+"' does not match")
-		isProblem = True
+  try:
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+  if (key == 't_min'):
+    t_min = float(value)
+  elif (key == 't_max'):
+    t_max = float(value)
+  elif (key == 'log'):
+    isLog = True
+  elif (key == 'alog'):
+    isaLog = True
+  elif (key == 'xs'):
+    isXS = True
+  elif (key == 'ext'):
+    OUTPUT_EXTENSION = value
+  elif (key == 'help'):
+    isProblem = True
+  else:
+    print("the key '"+key+"' does not match")
+    isProblem = True
 
 if isProblem:
-	print(problem_message)
-	exit()
+  print(problem_message)
+  exit()
 
 ####################
 # On récupère la liste des fichiers planètes.aei
 ####################
 (process_stdout, process_stderr, return_code) = autiwa.lancer_commande("ls *.aei")
 if (return_code != 0):
-	print("the command return an error "+str(return_code))
-	print(process_stderr)
-	exit()
-	
+  print("the command return an error "+str(return_code))
+  print(process_stderr)
+  exit()
+  
 liste_aei = process_stdout.split("\n")
 liste_aei.remove('') # we remove an extra element that doesn't mean anything
 nb_planete = len(liste_aei)
@@ -93,65 +93,65 @@ i = 0
 error = True
 positions = []
 while (len(positions) == 0):
-	try:
-		positions = mercury_utilities.get_column_position(liste_aei[i])
-	except:
-		i += 1
+  try:
+    positions = mercury_utilities.get_column_position(liste_aei[i])
+  except:
+    i += 1
 
 # We retrieve the orbital data
 for planete in range(nb_planete):
-	
-	ti = [] # time in years
-	ai = [] # semi major axis in AU
-	ei = [] # eccentricity
-	Ii = [] # inclinaison (degrees)
-	mi = [] # planet mass in earth mass
-	
-	fichier_source = liste_aei[planete]
-	object_file = open(fichier_source, 'r')
-	
-	for i in range(4):
-		object_file.readline()
-	
-	tiapp = ti.append
-	aiapp = ai.append
-	eiapp = ei.append
-	Iiapp = Ii.append
-	miapp = mi.append
+  
+  ti = [] # time in years
+  ai = [] # semi major axis in AU
+  ei = [] # eccentricity
+  Ii = [] # inclinaison (degrees)
+  mi = [] # planet mass in earth mass
+  
+  fichier_source = liste_aei[planete]
+  object_file = open(fichier_source, 'r')
+  
+  for i in range(4):
+    object_file.readline()
+  
+  tiapp = ti.append
+  aiapp = ai.append
+  eiapp = ei.append
+  Iiapp = Ii.append
+  miapp = mi.append
 
-	for line in object_file:
-		# When using [a:b], the actual range will be from a to b-1 included.
-		tiapp(float(line[positions[0]:positions[1]]))
-		aiapp(float(line[positions[1]:positions[2]]))
-		eiapp(float(line[positions[2]:positions[3]]))
-		Iiapp(float(line[positions[3]:positions[4]]))
-		miapp(float(line[positions[7]:positions[8]]))
+  for line in object_file:
+    # When using [a:b], the actual range will be from a to b-1 included.
+    tiapp(float(line[positions[0]:positions[1]]))
+    aiapp(float(line[positions[1]:positions[2]]))
+    eiapp(float(line[positions[2]:positions[3]]))
+    Iiapp(float(line[positions[3]:positions[4]]))
+    miapp(float(line[positions[7]:positions[8]]))
 
-	object_file.close()
-	
-	ti = np.array(ti)
-	ai = np.array(ai)
-	ei = np.array(ei)
-	Ii = np.array(Ii)
-	mi = np.array(mi)
-	
-	qi = ai * (1 - ei)
-	Qi = ai * (1 + ei)
-	mi = (MS / MT) * mi
-	
-	t.append(ti)
-	a.append(ai)
-	e.append(ei)
-	q.append(qi)
-	Q.append(Qi)
-	I.append(Ii)
-	m.append(mi)
-	
+  object_file.close()
+  
+  ti = np.array(ti)
+  ai = np.array(ai)
+  ei = np.array(ei)
+  Ii = np.array(Ii)
+  mi = np.array(mi)
+  
+  qi = ai * (1 - ei)
+  Qi = ai * (1 + ei)
+  mi = (MS / MT) * mi
+  
+  t.append(ti)
+  a.append(ai)
+  e.append(ei)
+  q.append(qi)
+  Q.append(Qi)
+  I.append(Ii)
+  m.append(mi)
+  
 
 if (isXS):
-	x_s = []
-	for mi in m:
-		x_s.append(get_x_s((MT/MS) * mi))
+  x_s = []
+  for mi in m:
+    x_s.append(get_x_s((MT/MS) * mi))
 
 # We get the array of reference time, i.e, one of the longuest list of time available in the list of planets. 
 len_t = [ti.size for ti in t]
@@ -165,19 +165,19 @@ delta_t = ref_time[1] - ref_time[0]
 
 # We get the index for the t_max value
 if ('t_max' in locals()):
-	id_max = int((t_max - ref_time[0]) / delta_t)
-	t_max = ref_time[id_max]
+  id_max = int((t_max - ref_time[0]) / delta_t)
+  t_max = ref_time[id_max]
 else:
-	id_max = ref_len - 1
-	t_max = ref_time[-1]
+  id_max = ref_len - 1
+  t_max = ref_time[-1]
 
 # We get the index for the t_min value
 if ('t_min' in locals()):
-	id_min = int((t_min - ref_time[0]) / delta_t)
-	t_min = ref_time[id_min]
+  id_min = int((t_min - ref_time[0]) / delta_t)
+  t_min = ref_time[id_min]
 else:
-	id_min = 0
-	t_min = ref_time[0]
+  id_min = 0
+  t_min = ref_time[0]
 
 # We generate a list of colors
 colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
@@ -191,18 +191,18 @@ fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hs
 plot_a = fig.add_subplot(2, 2, 1)
 
 if (isaLog and isLog):
-	plot = plot_a.loglog
+  plot = plot_a.loglog
 elif (isaLog and not(isLog)):
-	plot = plot_a.semilogy
+  plot = plot_a.semilogy
 elif (not(isaLog) and isLog):
-	plot = plot_a.semilogx
+  plot = plot_a.semilogx
 else:
-	plot = plot_a.plot
+  plot = plot_a.plot
 
 for planet in range(nb_planete):
-	plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-	plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
-	plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
+  plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+  plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
+  plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
 
 plot_a.set_xlabel("time [years]")
 plot_a.set_ylabel("a [AU]")
@@ -210,16 +210,16 @@ plot_a.grid(True)
 
 plot_e = fig.add_subplot(2, 2, 2, sharex=plot_a)
 if isLog:
-	plot = plot_e.loglog
+  plot = plot_e.loglog
 else:
-	plot = plot_e.semilogy
+  plot = plot_e.semilogy
 
 for planet in range(nb_planete):
-	plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+  plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 
 if isXS:
-	for planet in range(nb_planete):
-		plot(t[planet][id_min:id_max+1], x_s[planet][id_min:id_max+1], color=colors[planet])
+  for planet in range(nb_planete):
+    plot(t[planet][id_min:id_max+1], x_s[planet][id_min:id_max+1], color=colors[planet])
 
 
 plot_e.set_xlabel("time [years]")
@@ -229,24 +229,24 @@ plot_e.grid(True)
 
 plot_m = fig.add_subplot(2, 2, 3, sharex=plot_a)
 if isLog:
-	plot = plot_m.semilogx
+  plot = plot_m.semilogx
 else:
-	plot = plot_m.plot
-	
+  plot = plot_m.plot
+  
 for planet in range(nb_planete):
-	plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+  plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 plot_m.set_xlabel("time [years]")
 plot_m.set_ylabel("mass [Earths]")
 plot_m.grid(True)
 
 plot_I = fig.add_subplot(2, 2, 4, sharex=plot_a)
 if isLog:
-	plot = plot_I.semilogx
+  plot = plot_I.semilogx
 else:
-	plot = plot_I.plot
+  plot = plot_I.plot
 
 for planet in range(nb_planete):
-	plot(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+  plot(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 plot_I.set_xlabel("time [years]")
 plot_I.set_ylabel("Inclination [degrees]")
 plot_I.grid(True)

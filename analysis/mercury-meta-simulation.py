@@ -100,9 +100,9 @@ turbulent_forcing = None
 # Definition of functions
 
 def generate_meta_simulationin():
-	"""function that will generate a "meta_simulation.in" file to show how this works"""
-	
-	DEMO_FILE = \
+  """function that will generate a "meta_simulation.in" file to show how this works"""
+  
+  DEMO_FILE = \
 """#!/usr/bin/env python
 # for a shortened parameter file, only "integration_time", 
 # "mass_parameters", "a_parameters", "e_parameters", "I_parameters", 
@@ -206,376 +206,376 @@ is_turbulence = 0 # is there turbulence or not?
 turbulent_forcing = 1e-4 # the turbulence forcing associated with turbulence, if any
 """
 
-	demo_parameter_file = open("meta_simulation.in", 'w')
-	demo_parameter_file.write(DEMO_FILE)
-	demo_parameter_file.close()
+  demo_parameter_file = open("meta_simulation.in", 'w')
+  demo_parameter_file.write(DEMO_FILE)
+  demo_parameter_file.close()
 
 def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR="="):
-	"""function that read the parameter file associated with meta 
-	simulations to get values that define the meta simulation
-	
-	PARAMETER :
-	parameter_file : the name of the file where are stored the parameters
-	COMMENT_CHARACTER="#" : after this character in the parameter file, all the rest of the line will be ignored
-	PARAMETER_SEPARATOR="=" : This character will separate the key and the value for a given parameter
-	
-	ACTION :
-	This function doesn't return anything, but will store in global variable the values stored in the parameter file given in parameter.
-	"""
-	
-	global NB_SIMULATIONS, WALLTIME, isErase
-	global integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
-	global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
-	global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_smoothing_width
-	global tau_viscous, tau_photoevap, dissipation_time_switch
-	global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
-	global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
-	global is_turbulence, turbulent_forcing, saturation_torque
-	global PARAMETERS
-	
-	
-	f = open(parameter_file, 'r')
-	lines = f.readlines()
-	f.close()
-	
-	# Variable to store various information about the meta simulation that we will store in each sub simulation folder.
-	PARAMETERS = ""
+  """function that read the parameter file associated with meta 
+  simulations to get values that define the meta simulation
+  
+  PARAMETER :
+  parameter_file : the name of the file where are stored the parameters
+  COMMENT_CHARACTER="#" : after this character in the parameter file, all the rest of the line will be ignored
+  PARAMETER_SEPARATOR="=" : This character will separate the key and the value for a given parameter
+  
+  ACTION :
+  This function doesn't return anything, but will store in global variable the values stored in the parameter file given in parameter.
+  """
+  
+  global NB_SIMULATIONS, WALLTIME, isErase
+  global integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
+  global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
+  global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_smoothing_width
+  global tau_viscous, tau_photoevap, dissipation_time_switch
+  global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
+  global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
+  global is_turbulence, turbulent_forcing, saturation_torque
+  global PARAMETERS
+  
+  
+  f = open(parameter_file, 'r')
+  lines = f.readlines()
+  f.close()
+  
+  # Variable to store various information about the meta simulation that we will store in each sub simulation folder.
+  PARAMETERS = ""
 
-	for line in lines:
-		# we get rid of any comments
-		line = line.split(COMMENT_CHARACTER)[0]
-		line = line.replace("\n", "")
-		line = line.replace(" ", "")
+  for line in lines:
+    # we get rid of any comments
+    line = line.split(COMMENT_CHARACTER)[0]
+    line = line.replace("\n", "")
+    line = line.replace(" ", "")
 
-		if (line.count(PARAMETER_SEPARATOR) == 1):
-			(key, value) = line.split(PARAMETER_SEPARATOR)
-			#----------------------------------
-			# Meta simulation parameters
-			if (key in ["nb_simulations", "NB_SIMULATIONS"]):
-				NB_SIMULATIONS = int(value)
-			elif (key in ["walltime", "WALLTIME"]):
-				WALLTIME = int(value)
-			#----------------------------------
-			# Mercury parameters
-			elif (key == "integration_time"):
-				integration_time = float(value) * YEAR
-			elif (key == "time_format"):
-				time_format = simulations_utilities.str2str(value)
-			elif (key == "relative_time"):
-				relative_time = simulations_utilities.str2str(value)
-			elif (key == "nb_outputs"):
-				nb_outputs = int(value)
-			elif (key == "nb_dumps"):
-				nb_dumps = int(value)
-			elif (key == "user_force"):
-				user_force = simulations_utilities.str2str(value)
-			elif (key == "timestep"):
-				timestep = float(value)
-			#----------------------------------
-			# Planetary system parameters
-			elif (key in ["fixed_total_mass", "FIXED_TOTAL_MASS"]):
-				FIXED_TOTAL_MASS = simulations_utilities.str2bool(value)
-			elif (key in ["total_mass", "TOTAL_MASS"]):
-				
-				TOTAL_MASS = float(value)
-			elif (key in ["nb_planets", "NB_PLANETS"]):
-				NB_PLANETS = int(value)
-			elif (key == "mass_parameters"):
-				mass_parameters = eval(value) # We must use 'eval' because else, the tuple will not be set correctly. I don't know better solution for now
-			elif (key == "a_parameters"):
-				a_parameters = eval(value)
-			elif (key == "e_parameters"):
-				e_parameters = eval(value)
-			elif (key == "I_parameters"):
-				I_parameters = eval(value)
-			elif (key == "radius_star"):
-				radius_star = float(value)
-			#----------------------------------
-			# Disk parameters
-			elif (key == "surface_density"):
-				if (value=='manual'):
-					surface_density = value
-				else:
-					surface_density = eval(value)
-			elif (key == "disk_edges"):
-				disk_edges = eval(value)
-			elif (key == "inner_smoothing_width"):
-				inner_smoothing_width = float(value)
-			elif (key == "adiabatic_index"):
-				adiabatic_index = float(value)
-			elif (key == "viscosity"):
-				viscosity = float(value)
-			elif (key == "is_turbulence"):
-				try:
-					is_turbulence = int(value)
-				except ValueError:
-					raise ValueError("'is_turbulence' must be equal to 0 or 1")
-			elif (key == "turbulent_forcing"):
-				turbulent_forcing = float(value)
-			elif (key == "b/h"):
-				b_h = eval(value)
-			elif (key == "dissipation_type"):
-				dissipation_type = int(value)
-			elif (key == "disk_exponential_decay"):
-				disk_exponential_decay = float(value)
-			elif (key == "tau_viscous"):
-				tau_viscous = float(value)
-			elif (key == "tau_photoevap"):
-				tau_photoevap = float(value)
-			elif (key == "dissipation_time_switch"):
-				dissipation_time_switch = float(value)
-			elif (key == "sample"):
-				sample = int(value)
-			elif (key == "inner_boundary_condition"):
-				# We ensure that there is no extra quote in the string with the function str2str that remove extra ' and "
-				# There extra quote will generate an error in the mercury.py class Disk
-				inner_boundary_condition = simulations_utilities.str2str(value)
-			elif (key == "outer_boundary_condition"):
-				outer_boundary_condition = simulations_utilities.str2str(value)
-			elif (key == "torque_type"):
-				torque_type = simulations_utilities.str2str(value)
-			elif (key == "torque_profile_steepness"):
-				torque_profile_steepness = float(value)
-			elif (key == "saturation_torque"):
-				saturation_torque = float(value)
-			elif (key == "indep_cz"):
-				indep_cz = float(value)
-			elif (key == "mass_dep_m_min"):
-				mass_dep_m_min = float(value)
-			elif (key == "mass_dep_m_max"):
-				mass_dep_m_max = float(value)
-			elif (key == "mass_dep_cz_m_min"):
-				mass_dep_cz_m_min = float(value)
-			elif (key == "mass_dep_cz_m_max"):
-				mass_dep_cz_m_max = float(value)
-			else:
-				PARAMETERS += "the parameter %s is not known. His value was : %s\n" % (key, value)
-				raise ValueError("no parameter is known for the key '%s'" % key)
-			# Each parameter defined in the parameter file MUST BE a 'global()' variable, defined in the preamble of the function, in 
-			# order to retrieve their values in the rest of the program
-	
-	if (FIXED_TOTAL_MASS==True):
-		if ('TOTAL_MASS' not in globals()):
-			print("You defined a Fixed total mass simulation but did not set the 'TOTAL_MASS' parameter")
-			exit()
-		elif ('NB_PLANETS' in globals()):
-			print("Warning: NB_PLANETS has been defined but will not be used because FIXED_TOTAL_MASS is True")
-	else:
-		if ('NB_PLANETS' not in globals()):
-			print("You defined a Fixed number of planets simulation but did not set the 'NB_PLANETS' parameter")
-			exit()
-		elif ('TOTAL_MASS' in globals()):
-			print("Warning: TOTAL_MASS has been defined but will not be used because FIXED_TOTAL_MASS is False")
-	
-	# We prepare a variable we will use to store a log file of the parameters in each sub simulation folder
-	PARAMETERS += "Here are the parameters used to generate the simulation.\n"
-	PARAMETERS += "----------------------------------\nMercury Parameters\n\n"
-	PARAMETERS += "integration time = %.2e years\n" % (integration_time/365.25)
-	PARAMETERS += "number of outputs = "+str(nb_outputs)+"\n"
-	PARAMETERS += "number of dumps = "+str(nb_dumps)+"\n"
-	PARAMETERS += "user force = "+str(user_force)+"\n"
-	PARAMETERS += "timestep = %f\n" % timestep
-	PARAMETERS += "----------------------------------\nPlanetary System Parameters\n\n"
-	PARAMETERS += "radius_star = %f\n" % radius_star
-	PARAMETERS += "fixed total mass = "+str(FIXED_TOTAL_MASS)+"\n"
-	if (FIXED_TOTAL_MASS==True):
-		PARAMETERS += "total mass = "+str(TOTAL_MASS)+"\n"
-	else:
-		PARAMETERS += "number of planets = "+str(NB_PLANETS)+"\n"
-	PARAMETERS += "mass parameters = "+str(mass_parameters)+"\n"
-	PARAMETERS += "a parameters = "+str(a_parameters)+"\n"
-	PARAMETERS += "e parameters = "+str(e_parameters)+"\n"
-	PARAMETERS += "I parameters = "+str(I_parameters)+"\n"
-	PARAMETERS += "----------------------------------\nDisk Parameters\n\n"
-	if (surface_density == 'manual'):
-		PARAMETERS += "surface_density = manual\n"
-	else:
-		PARAMETERS += "sigma_0 = %f g/cm^2 ; negative power law index = %f\n" % surface_density
-	PARAMETERS += "sample = "+str(sample)+"\n"
-	PARAMETERS += "disk_edges = "+str(disk_edges)+" AU\n"
-	PARAMETERS += "inner_smoothing_width = "+str(inner_smoothing_width)+" AU\n"
-	PARAMETERS += "adiabatic_index = "+str(adiabatic_index)+"\n"
-	PARAMETERS += "viscosity = "+str(viscosity)+" cm^2/s\n"
-	PARAMETERS += "is_turbulence = "+str(is_turbulence)+"\n"
-	PARAMETERS += "turbulent_forcing = "+str(turbulent_forcing)+"\n"
-	PARAMETERS += "b/h = "+str(b_h)+"\n"
-	PARAMETERS += "dissipation_type = "+str(dissipation_type)+"\n"
-	if (dissipation_type == 2):
-		PARAMETERS += "disk_exponential_decay = "+str(disk_exponential_decay)+"\n"
-	if (dissipation_type == 3):
-		PARAMETERS += "tau_viscous = "+str(tau_viscous)+" years\n"
-		PARAMETERS += "tau photoevap = "+str(tau_photoevap)+" years\n"
-		PARAMETERS += "switch time = "+str(dissipation_time_switch)+" years\n"
-	PARAMETERS += "inner_boundary_condition = "+str(inner_boundary_condition)+"\n"
-	PARAMETERS += "outer_boundary_condition = "+str(outer_boundary_condition)+"\n"
-	PARAMETERS += "torque_type = "+str(torque_type)+"\n"
-	PARAMETERS += "torque_profile_steepness = "+str(torque_profile_steepness)+"\n"
-	PARAMETERS += "saturation_torque = "+str(saturation_torque)+"\n"
-	PARAMETERS += "indep_cz = "+str(indep_cz)+"\n"
-	PARAMETERS += "mass_dep_m_min = "+str(mass_dep_m_min )+"\n"
-	PARAMETERS += "mass_dep_m_max = "+str(mass_dep_m_max )+"\n"
-	PARAMETERS += "mass_dep_cz_m_min = "+str(mass_dep_cz_m_min )+"\n"
-	PARAMETERS += "mass_dep_cz_m_max = "+str(mass_dep_cz_m_max )+"\n"
+    if (line.count(PARAMETER_SEPARATOR) == 1):
+      (key, value) = line.split(PARAMETER_SEPARATOR)
+      #----------------------------------
+      # Meta simulation parameters
+      if (key in ["nb_simulations", "NB_SIMULATIONS"]):
+        NB_SIMULATIONS = int(value)
+      elif (key in ["walltime", "WALLTIME"]):
+        WALLTIME = int(value)
+      #----------------------------------
+      # Mercury parameters
+      elif (key == "integration_time"):
+        integration_time = float(value) * YEAR
+      elif (key == "time_format"):
+        time_format = simulations_utilities.str2str(value)
+      elif (key == "relative_time"):
+        relative_time = simulations_utilities.str2str(value)
+      elif (key == "nb_outputs"):
+        nb_outputs = int(value)
+      elif (key == "nb_dumps"):
+        nb_dumps = int(value)
+      elif (key == "user_force"):
+        user_force = simulations_utilities.str2str(value)
+      elif (key == "timestep"):
+        timestep = float(value)
+      #----------------------------------
+      # Planetary system parameters
+      elif (key in ["fixed_total_mass", "FIXED_TOTAL_MASS"]):
+        FIXED_TOTAL_MASS = simulations_utilities.str2bool(value)
+      elif (key in ["total_mass", "TOTAL_MASS"]):
+        
+        TOTAL_MASS = float(value)
+      elif (key in ["nb_planets", "NB_PLANETS"]):
+        NB_PLANETS = int(value)
+      elif (key == "mass_parameters"):
+        mass_parameters = eval(value) # We must use 'eval' because else, the tuple will not be set correctly. I don't know better solution for now
+      elif (key == "a_parameters"):
+        a_parameters = eval(value)
+      elif (key == "e_parameters"):
+        e_parameters = eval(value)
+      elif (key == "I_parameters"):
+        I_parameters = eval(value)
+      elif (key == "radius_star"):
+        radius_star = float(value)
+      #----------------------------------
+      # Disk parameters
+      elif (key == "surface_density"):
+        if (value=='manual'):
+          surface_density = value
+        else:
+          surface_density = eval(value)
+      elif (key == "disk_edges"):
+        disk_edges = eval(value)
+      elif (key == "inner_smoothing_width"):
+        inner_smoothing_width = float(value)
+      elif (key == "adiabatic_index"):
+        adiabatic_index = float(value)
+      elif (key == "viscosity"):
+        viscosity = float(value)
+      elif (key == "is_turbulence"):
+        try:
+          is_turbulence = int(value)
+        except ValueError:
+          raise ValueError("'is_turbulence' must be equal to 0 or 1")
+      elif (key == "turbulent_forcing"):
+        turbulent_forcing = float(value)
+      elif (key == "b/h"):
+        b_h = eval(value)
+      elif (key == "dissipation_type"):
+        dissipation_type = int(value)
+      elif (key == "disk_exponential_decay"):
+        disk_exponential_decay = float(value)
+      elif (key == "tau_viscous"):
+        tau_viscous = float(value)
+      elif (key == "tau_photoevap"):
+        tau_photoevap = float(value)
+      elif (key == "dissipation_time_switch"):
+        dissipation_time_switch = float(value)
+      elif (key == "sample"):
+        sample = int(value)
+      elif (key == "inner_boundary_condition"):
+        # We ensure that there is no extra quote in the string with the function str2str that remove extra ' and "
+        # There extra quote will generate an error in the mercury.py class Disk
+        inner_boundary_condition = simulations_utilities.str2str(value)
+      elif (key == "outer_boundary_condition"):
+        outer_boundary_condition = simulations_utilities.str2str(value)
+      elif (key == "torque_type"):
+        torque_type = simulations_utilities.str2str(value)
+      elif (key == "torque_profile_steepness"):
+        torque_profile_steepness = float(value)
+      elif (key == "saturation_torque"):
+        saturation_torque = float(value)
+      elif (key == "indep_cz"):
+        indep_cz = float(value)
+      elif (key == "mass_dep_m_min"):
+        mass_dep_m_min = float(value)
+      elif (key == "mass_dep_m_max"):
+        mass_dep_m_max = float(value)
+      elif (key == "mass_dep_cz_m_min"):
+        mass_dep_cz_m_min = float(value)
+      elif (key == "mass_dep_cz_m_max"):
+        mass_dep_cz_m_max = float(value)
+      else:
+        PARAMETERS += "the parameter %s is not known. His value was : %s\n" % (key, value)
+        raise ValueError("no parameter is known for the key '%s'" % key)
+      # Each parameter defined in the parameter file MUST BE a 'global()' variable, defined in the preamble of the function, in 
+      # order to retrieve their values in the rest of the program
+  
+  if (FIXED_TOTAL_MASS==True):
+    if ('TOTAL_MASS' not in globals()):
+      print("You defined a Fixed total mass simulation but did not set the 'TOTAL_MASS' parameter")
+      exit()
+    elif ('NB_PLANETS' in globals()):
+      print("Warning: NB_PLANETS has been defined but will not be used because FIXED_TOTAL_MASS is True")
+  else:
+    if ('NB_PLANETS' not in globals()):
+      print("You defined a Fixed number of planets simulation but did not set the 'NB_PLANETS' parameter")
+      exit()
+    elif ('TOTAL_MASS' in globals()):
+      print("Warning: TOTAL_MASS has been defined but will not be used because FIXED_TOTAL_MASS is False")
+  
+  # We prepare a variable we will use to store a log file of the parameters in each sub simulation folder
+  PARAMETERS += "Here are the parameters used to generate the simulation.\n"
+  PARAMETERS += "----------------------------------\nMercury Parameters\n\n"
+  PARAMETERS += "integration time = %.2e years\n" % (integration_time/365.25)
+  PARAMETERS += "number of outputs = "+str(nb_outputs)+"\n"
+  PARAMETERS += "number of dumps = "+str(nb_dumps)+"\n"
+  PARAMETERS += "user force = "+str(user_force)+"\n"
+  PARAMETERS += "timestep = %f\n" % timestep
+  PARAMETERS += "----------------------------------\nPlanetary System Parameters\n\n"
+  PARAMETERS += "radius_star = %f\n" % radius_star
+  PARAMETERS += "fixed total mass = "+str(FIXED_TOTAL_MASS)+"\n"
+  if (FIXED_TOTAL_MASS==True):
+    PARAMETERS += "total mass = "+str(TOTAL_MASS)+"\n"
+  else:
+    PARAMETERS += "number of planets = "+str(NB_PLANETS)+"\n"
+  PARAMETERS += "mass parameters = "+str(mass_parameters)+"\n"
+  PARAMETERS += "a parameters = "+str(a_parameters)+"\n"
+  PARAMETERS += "e parameters = "+str(e_parameters)+"\n"
+  PARAMETERS += "I parameters = "+str(I_parameters)+"\n"
+  PARAMETERS += "----------------------------------\nDisk Parameters\n\n"
+  if (surface_density == 'manual'):
+    PARAMETERS += "surface_density = manual\n"
+  else:
+    PARAMETERS += "sigma_0 = %f g/cm^2 ; negative power law index = %f\n" % surface_density
+  PARAMETERS += "sample = "+str(sample)+"\n"
+  PARAMETERS += "disk_edges = "+str(disk_edges)+" AU\n"
+  PARAMETERS += "inner_smoothing_width = "+str(inner_smoothing_width)+" AU\n"
+  PARAMETERS += "adiabatic_index = "+str(adiabatic_index)+"\n"
+  PARAMETERS += "viscosity = "+str(viscosity)+" cm^2/s\n"
+  PARAMETERS += "is_turbulence = "+str(is_turbulence)+"\n"
+  PARAMETERS += "turbulent_forcing = "+str(turbulent_forcing)+"\n"
+  PARAMETERS += "b/h = "+str(b_h)+"\n"
+  PARAMETERS += "dissipation_type = "+str(dissipation_type)+"\n"
+  if (dissipation_type == 2):
+    PARAMETERS += "disk_exponential_decay = "+str(disk_exponential_decay)+"\n"
+  if (dissipation_type == 3):
+    PARAMETERS += "tau_viscous = "+str(tau_viscous)+" years\n"
+    PARAMETERS += "tau photoevap = "+str(tau_photoevap)+" years\n"
+    PARAMETERS += "switch time = "+str(dissipation_time_switch)+" years\n"
+  PARAMETERS += "inner_boundary_condition = "+str(inner_boundary_condition)+"\n"
+  PARAMETERS += "outer_boundary_condition = "+str(outer_boundary_condition)+"\n"
+  PARAMETERS += "torque_type = "+str(torque_type)+"\n"
+  PARAMETERS += "torque_profile_steepness = "+str(torque_profile_steepness)+"\n"
+  PARAMETERS += "saturation_torque = "+str(saturation_torque)+"\n"
+  PARAMETERS += "indep_cz = "+str(indep_cz)+"\n"
+  PARAMETERS += "mass_dep_m_min = "+str(mass_dep_m_min )+"\n"
+  PARAMETERS += "mass_dep_m_max = "+str(mass_dep_m_max )+"\n"
+  PARAMETERS += "mass_dep_cz_m_min = "+str(mass_dep_cz_m_min )+"\n"
+  PARAMETERS += "mass_dep_cz_m_max = "+str(mass_dep_cz_m_max )+"\n"
 
 
 
 
 def generation_simulation_parameters():
-	"""the function generate simulations files in the current working directory, given the parameters on top of the script
-	"""
-	
-	output_interval = integration_time / float(nb_outputs)
-	data_dump = abs(int(integration_time / (nb_dumps * timestep)))
-	
-	if (aei_outputs < nb_outputs):
-		aei_time = integration_time / float(aei_outputs)
-	else:
-		aei_time = 0.0 # We want to see all the outputs of xv.out
+  """the function generate simulations files in the current working directory, given the parameters on top of the script
+  """
+  
+  output_interval = integration_time / float(nb_outputs)
+  data_dump = abs(int(integration_time / (nb_dumps * timestep)))
+  
+  if (aei_outputs < nb_outputs):
+    aei_time = integration_time / float(aei_outputs)
+  else:
+    aei_time = 0.0 # We want to see all the outputs of xv.out
 
-	# We begin the random generation of parameters.
-	if FIXED_TOTAL_MASS:
-		total_mass = 0
-		m = []
-		if (type(mass_parameters[0]) == list):
-			print("Warning: We can only specify a list of pre-planets in the case where the number of planet is fixed (and not the total mass)")
-			exit()
-		
-		while (total_mass < TOTAL_MASS):
-			m0 = simulations_utilities.setParameter(mass_parameters, 1)[0] # The function return a list, and we want to have one element
-			# the mass must be expressed relatively to the mass of the central body
-			m.append(simulations_utilities.significativeRound(m0 * MT / MS, 4))
-			total_mass += m0
-		nb_planets = len(m)
-	else:
-		nb_planets = NB_PLANETS
-		
-		m = simulations_utilities.setParameter(mass_parameters, nb_planets)
-		m = [mi * MT / MS for mi in m]
-	
-	#~ # To add manually one massive planet in the set of planets.
-	#~ random_index = random.randint(0, nb_planets)
-	#~ random_mass = random.uniform(4, 5)
-	#~ m.insert(random_index, random_mass * MT / MS)
-	#~ nb_planets += 1
+  # We begin the random generation of parameters.
+  if FIXED_TOTAL_MASS:
+    total_mass = 0
+    m = []
+    if (type(mass_parameters[0]) == list):
+      print("Warning: We can only specify a list of pre-planets in the case where the number of planet is fixed (and not the total mass)")
+      exit()
+    
+    while (total_mass < TOTAL_MASS):
+      m0 = simulations_utilities.setParameter(mass_parameters, 1)[0] # The function return a list, and we want to have one element
+      # the mass must be expressed relatively to the mass of the central body
+      m.append(simulations_utilities.significativeRound(m0 * MT / MS, 4))
+      total_mass += m0
+    nb_planets = len(m)
+  else:
+    nb_planets = NB_PLANETS
+    
+    m = simulations_utilities.setParameter(mass_parameters, nb_planets)
+    m = [mi * MT / MS for mi in m]
+  
+  #~ # To add manually one massive planet in the set of planets.
+  #~ random_index = random.randint(0, nb_planets)
+  #~ random_mass = random.uniform(4, 5)
+  #~ m.insert(random_index, random_mass * MT / MS)
+  #~ nb_planets += 1
 
 # This type is special and only for orbital distance. It define the various distances upon the mutual hill radii distance. 
 # It is possible, by including two values in a tuple instead of a single value to define a random calculation of the distance 
 # (whether the initial radius of the innermost planet of the hill separation.)
-	if (type(a_parameters) in [list, tuple] and a_parameters[-1] == 'rh'):
-		if (type(a_parameters[0]) == tuple):
-			a = [random.uniform(a_parameters[0][0], a_parameters[0][1])]
-		else:
-			a = [a_parameters[0]]
-			
-		# If the value is a tuple, we generate a random value of delta between the two values, else, we take the only value.
-		if (type(a_parameters[1]) == tuple):
-			delta = [random.uniform(a_parameters[1][0], a_parameters[1][1]) for i in range(nb_planets)] # the first value will never be used
-		else:
-			delta = [a_parameters[1] for i in range(nb_planets)] # the first value will never be used
-			
-		for i in range(1,nb_planets):
-			chi = delta[i] / 2. * ((m[i-1] + m[i]) / (3 * m_star))**(1/3.)
-			ai = a[i-1] * (1 + chi) / (1 - chi)
-			a.append(ai)
-	else:
-		a = simulations_utilities.setParameter(a_parameters, nb_planets)
-		
-	e = simulations_utilities.setParameter(e_parameters, nb_planets)
-	I = simulations_utilities.setParameter(I_parameters, nb_planets)
-	
-	# If there is planet beyong the ejection distance, we remove them before the simulation start :
-	m_to_del = []
-	a_to_del = []
-	e_to_del = []
-	I_to_del = []
-	for (mi, ai, ei, Ii) in zip(m, a, e, I):
-		if (ai > EJECTION_DISTANCE):
-			m_to_del.append(mi)
-			a_to_del.append(ai)
-			e_to_del.append(ei)
-			I_to_del.append(Ii)
-	for (mi, ai, ei, Ii) in zip(m_to_del, a_to_del, e_to_del, I_to_del):
-		m.remove(mi)
-		a.remove(ai)
-		e.remove(ei)
-		I.remove(Ii)
-	
-	len_m = len(m)
-	len_a = len(a)
-	len_e = len(e)
-	len_I = len(I)
-	
-	if ((len_m != len_a) or (len_a != len_e) or (len_e != len_I)):
-		raise TypeError("The size of {m,a,e,I} is not the same")
+  if (type(a_parameters) in [list, tuple] and a_parameters[-1] == 'rh'):
+    if (type(a_parameters[0]) == tuple):
+      a = [random.uniform(a_parameters[0][0], a_parameters[0][1])]
+    else:
+      a = [a_parameters[0]]
+      
+    # If the value is a tuple, we generate a random value of delta between the two values, else, we take the only value.
+    if (type(a_parameters[1]) == tuple):
+      delta = [random.uniform(a_parameters[1][0], a_parameters[1][1]) for i in range(nb_planets)] # the first value will never be used
+    else:
+      delta = [a_parameters[1] for i in range(nb_planets)] # the first value will never be used
+      
+    for i in range(1,nb_planets):
+      chi = delta[i] / 2. * ((m[i-1] + m[i]) / (3 * m_star))**(1/3.)
+      ai = a[i-1] * (1 + chi) / (1 - chi)
+      a.append(ai)
+  else:
+    a = simulations_utilities.setParameter(a_parameters, nb_planets)
+    
+  e = simulations_utilities.setParameter(e_parameters, nb_planets)
+  I = simulations_utilities.setParameter(I_parameters, nb_planets)
+  
+  # If there is planet beyong the ejection distance, we remove them before the simulation start :
+  m_to_del = []
+  a_to_del = []
+  e_to_del = []
+  I_to_del = []
+  for (mi, ai, ei, Ii) in zip(m, a, e, I):
+    if (ai > EJECTION_DISTANCE):
+      m_to_del.append(mi)
+      a_to_del.append(ai)
+      e_to_del.append(ei)
+      I_to_del.append(Ii)
+  for (mi, ai, ei, Ii) in zip(m_to_del, a_to_del, e_to_del, I_to_del):
+    m.remove(mi)
+    a.remove(ai)
+    e.remove(ei)
+    I.remove(Ii)
+  
+  len_m = len(m)
+  len_a = len(a)
+  len_e = len(e)
+  len_I = len(I)
+  
+  if ((len_m != len_a) or (len_a != len_e) or (len_e != len_I)):
+    raise TypeError("The size of {m,a,e,I} is not the same")
 
-	system = mercury_utilities.definePlanetarySystem(m=m, a=a, e=e, I=I)
+  system = mercury_utilities.definePlanetarySystem(m=m, a=a, e=e, I=I)
 
-	# We write the files
+  # We write the files
 
-	bigin = mercury.Big(system)
-	bigin.write()
+  bigin = mercury.Big(system)
+  bigin.write()
 
-	smallin = mercury.Small(system)
-	smallin.write()
-	if not(os.path.exists("small.in")):
-		pdb.set_trace()
+  smallin = mercury.Small(system)
+  smallin.write()
+  if not(os.path.exists("small.in")):
+    pdb.set_trace()
 
-	# Setting the output interval to 0 ensure that we will have every output written in the xv.out in the element files.
-	elementin = mercury.Element(format_sortie=" a8.5 e8.6 i8.4 g8.4 n8.4 l8.4 m13e ", coord="Cen", 
-	output_interval=aei_time, time_format=time_format, relative_time=relative_time)
-	elementin.write()
+  # Setting the output interval to 0 ensure that we will have every output written in the xv.out in the element files.
+  elementin = mercury.Element(format_sortie=" a8.5 e8.6 i8.4 g8.4 n8.4 l8.4 m13e ", coord="Cen", 
+  output_interval=aei_time, time_format=time_format, relative_time=relative_time)
+  elementin.write()
 
-	closein = mercury.Close(time_format=time_format, relative_time=relative_time)
-	closein.write()
+  closein = mercury.Close(time_format=time_format, relative_time=relative_time)
+  closein.write()
 
-	paramin = mercury.Param(algorithme="HYBRID", start_time=0, stop_time=integration_time, output_interval=output_interval, 
-	h=timestep, accuracy=1.e-12, stop_integration="no", collisions="yes", fragmentation="no", 
-	time_format=time_format, relative_time=relative_time, output_precision="medium", relativity="no", 
-	user_force=user_force, ejection_distance=EJECTION_DISTANCE, radius_star=radius_star, central_mass=1.0, 
-	J2=0, J4=0, J6=0, changeover=3., data_dump=data_dump, periodic_effect=100)
-	paramin.write()
+  paramin = mercury.Param(algorithme="HYBRID", start_time=0, stop_time=integration_time, output_interval=output_interval, 
+  h=timestep, accuracy=1.e-12, stop_integration="no", collisions="yes", fragmentation="no", 
+  time_format=time_format, relative_time=relative_time, output_precision="medium", relativity="no", 
+  user_force=user_force, ejection_distance=EJECTION_DISTANCE, radius_star=radius_star, central_mass=1.0, 
+  J2=0, J4=0, J6=0, changeover=3., data_dump=data_dump, periodic_effect=100)
+  paramin.write()
 
-	filesin = mercury.Files()
-	filesin.write()
+  filesin = mercury.Files()
+  filesin.write()
 
-	messagein = mercury.Message()
-	messagein.write()
+  messagein = mercury.Message()
+  messagein.write()
 
-	if (user_force == "yes"):
-		diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
-		              disk_edges=disk_edges, viscosity=viscosity, sample=sample, dissipation_type=dissipation_type, 
-		              is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing, inner_smoothing_width=inner_smoothing_width,
-		              tau_viscous=tau_viscous, tau_photoevap=tau_photoevap, dissipation_time_switch=dissipation_time_switch, 
-		              disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
-		              inner_boundary_condition=inner_boundary_condition, outer_boundary_condition=outer_boundary_condition,
-	                torque_profile_steepness=torque_profile_steepness, indep_cz=indep_cz, mass_dep_m_min=mass_dep_m_min, 
-	                saturation_torque=saturation_torque,
-	                mass_dep_m_max=mass_dep_m_max, mass_dep_cz_m_min=mass_dep_cz_m_min, mass_dep_cz_m_max=mass_dep_cz_m_max)
-		diskin.write()
-		
-		# If we want to use a manual torque profile, we copy the torque profile from the current working directory
-		if (torque_type == 'manual'):
-			if (os.path.isfile("../"+torque_file)):
-				shutil.copy2("../"+torque_file, "./"+torque_file)
-			else:
-				raise NameError("The file "+torque_file+" does not exist in the parent directory\n keep in mind to delete the created folder.")
-				
-				
-		# If we want to use a manual surface density profile, we copy the density profile from the current working directory
-		if (surface_density == 'manual'):
-			if (os.path.isfile("../"+density_file)):
-				shutil.copy2("../"+density_file, "./"+density_file)
-			else:
-				raise NameError("The file "+density_file+" does not exist in the parent directory\n keep in mind to delete the created folder.")
-				
-	
-	# We store a log file of the simulation parameters
-	f = open(SUB_FOLDER_LOG, 'w')
-	f.write(PARAMETERS)
-	f.close()
-	
-	# We reset the counters for planet names
-	mercury.Body.resetCounter()
+  if (user_force == "yes"):
+    diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
+                  disk_edges=disk_edges, viscosity=viscosity, sample=sample, dissipation_type=dissipation_type, 
+                  is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing, inner_smoothing_width=inner_smoothing_width,
+                  tau_viscous=tau_viscous, tau_photoevap=tau_photoevap, dissipation_time_switch=dissipation_time_switch, 
+                  disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
+                  inner_boundary_condition=inner_boundary_condition, outer_boundary_condition=outer_boundary_condition,
+                  torque_profile_steepness=torque_profile_steepness, indep_cz=indep_cz, mass_dep_m_min=mass_dep_m_min, 
+                  saturation_torque=saturation_torque,
+                  mass_dep_m_max=mass_dep_m_max, mass_dep_cz_m_min=mass_dep_cz_m_min, mass_dep_cz_m_max=mass_dep_cz_m_max)
+    diskin.write()
+    
+    # If we want to use a manual torque profile, we copy the torque profile from the current working directory
+    if (torque_type == 'manual'):
+      if (os.path.isfile("../"+torque_file)):
+        shutil.copy2("../"+torque_file, "./"+torque_file)
+      else:
+        raise NameError("The file "+torque_file+" does not exist in the parent directory\n keep in mind to delete the created folder.")
+        
+        
+    # If we want to use a manual surface density profile, we copy the density profile from the current working directory
+    if (surface_density == 'manual'):
+      if (os.path.isfile("../"+density_file)):
+        shutil.copy2("../"+density_file, "./"+density_file)
+      else:
+        raise NameError("The file "+density_file+" does not exist in the parent directory\n keep in mind to delete the created folder.")
+        
+  
+  # We store a log file of the simulation parameters
+  f = open(SUB_FOLDER_LOG, 'w')
+  f.write(PARAMETERS)
+  f.close()
+  
+  # We reset the counters for planet names
+  mercury.Body.resetCounter()
 
 #    .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-. 
 #  .'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `.
@@ -604,25 +604,25 @@ problem_message = "The script can take various arguments :" + "\n" + \
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
-	try:
-		(key, value) = arg.split("=")
-	except:
-		key = arg
-	if (key == 'norun'):
-		toLaunch = False
-	elif (key == 'demo'):
-		print("A demo file 'meta_simulation.in' is being generated...")
-		generate_meta_simulationin()
-		exit()
-	elif (key == 'help'):
-		isProblem = True
-	else:
-		print("the key '"+key+"' does not match")
-		isProblem = True
+  try:
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+  if (key == 'norun'):
+    toLaunch = False
+  elif (key == 'demo'):
+    print("A demo file 'meta_simulation.in' is being generated...")
+    generate_meta_simulationin()
+    exit()
+  elif (key == 'help'):
+    isProblem = True
+  else:
+    print("the key '"+key+"' does not match")
+    isProblem = True
 
 if isProblem:
-	print(problem_message)
-	exit()
+  print(problem_message)
+  exit()
 
 # We try to read parameters from the file
 readParameterFile("meta_simulation.in")
@@ -634,37 +634,37 @@ simus = [dir for dir in os.listdir(".") if (os.path.isdir(dir) and dir.count(FOL
 
 index_simu = []
 for dir in simus:
-	try:
-		index_simu.append(int(dir.strip(FOLDER_PREFIX)))
-	except:
-		pass
+  try:
+    index_simu.append(int(dir.strip(FOLDER_PREFIX)))
+  except:
+    pass
 
 # Just in case there is no simulation at all, we add '0', then the first simulation will be 0+1 = 1
 if (len(index_simu) > 0):
-	starting_index = max(index_simu) + 1
+  starting_index = max(index_simu) + 1
 else:
-	starting_index = 1
+  starting_index = 1
 
 for index_simu in range(starting_index, starting_index+NB_SIMULATIONS):
-	folder_name = "%s%05i" % (FOLDER_PREFIX, index_simu)
-	
-	if not(os.path.exists(folder_name)):
-		os.mkdir(folder_name)
+  folder_name = "%s%05i" % (FOLDER_PREFIX, index_simu)
+  
+  if not(os.path.exists(folder_name)):
+    os.mkdir(folder_name)
 
-	os.chdir(folder_name)
-	
-	generation_simulation_parameters()
-	
-	mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
-	
-	# We launch the job
-	if toLaunch:
-		print("We launch the job in "+folder_name)
-		job = subprocess.Popen("./runjob", shell=True)
-		returncode = job.wait()
-	
-	
-	# We get back in the parent directory
-	os.chdir("..")
+  os.chdir(folder_name)
+  
+  generation_simulation_parameters()
+  
+  mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
+  
+  # We launch the job
+  if toLaunch:
+    print("We launch the job in "+folder_name)
+    job = subprocess.Popen("./runjob", shell=True)
+    returncode = job.wait()
+  
+  
+  # We get back in the parent directory
+  os.chdir("..")
 
 
