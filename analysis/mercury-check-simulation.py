@@ -175,7 +175,7 @@ for meta in meta_list:
       print("%s/%s : NaN are present" % (absolute_parent_path, simu))
     
     
-    if (simulation_status != 0 or (isForcedStart or isForcedContinue)):
+    if (((simulation_status != 0) and (isContinue or isRestart)) or (isForcedStart or isForcedContinue)):
       mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
     
     # If the option 'start' is given, we force the run of the simulation, whatever there is an old simulation or not in the folder.
