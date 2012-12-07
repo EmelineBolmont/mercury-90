@@ -95,6 +95,7 @@ mass_dep_cz_m_min = None
 mass_dep_cz_m_max = None
 is_turbulence = None
 turbulent_forcing = None
+is_irradiation = None
 
 #-------------------------------------------------------------------------------
 # Definition of functions
@@ -145,7 +146,8 @@ TOTAL_MASS = 20 # earth mass, only used if FIXED_TOTAL_MASS = True
 # _ parameters = (1., 0.3, 'gaussian') : values will follow a gaussian law of mean value 1 and standard deviation 0.3
 # _ parameters = (1., 3, 'uniform') : value will be randomly generated following a uniform law between 1 and 3
 # _ parameters = ([10.], (1., 3, 'uniform')) we copy the first list and complete it given the other parameters. 
-    /!\ For mass, this only works if FIXED_TOTAL_MASS = False
+
+#/!\ For mass, this only works if FIXED_TOTAL_MASS = False
 mass_parameters = (0.1, 1, "uniform") # the mass (in earth mass)
 
 # For 'a', there is a special option that allow us to define a hill radii separation. (a_0, delta, 'rh')
@@ -202,6 +204,7 @@ mass_dep_m_max = 20 # (earth mass) help to define a CZ(m) by defining two points
 mass_dep_cz_m_min = 50 # (AU)      help to define a CZ(m) by defining two points
 mass_dep_cz_m_max = 5 # (AU)       help to define a CZ(m) by defining two points
 
+is_irradiation = 0 # is there stellar irradiation or not?
 is_turbulence = 0 # is there turbulence or not?
 turbulent_forcing = 1e-4 # the turbulence forcing associated with turbulence, if any
 """
@@ -227,7 +230,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
   global integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
   global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
   global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_smoothing_width
-  global tau_viscous, tau_photoevap, dissipation_time_switch
+  global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation
   global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
   global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
   global is_turbulence, turbulent_forcing, saturation_torque
@@ -297,6 +300,11 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
           surface_density = value
         else:
           surface_density = eval(value)
+      elif (key == "is_irradiation"):
+        try:
+          is_irradiation = int(value)
+        except ValueError:
+          raise ValueError("'is_irradiation' must be equal to 0 or 1")
       elif (key == "disk_edges"):
         disk_edges = eval(value)
       elif (key == "inner_smoothing_width"):
@@ -391,6 +399,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
     PARAMETERS += "surface_density = manual\n"
   else:
     PARAMETERS += "sigma_0 = %f g/cm^2 ; negative power law index = %f\n" % surface_density
+  PARAMETERS += "is_irradiation = "+str(is_irradiation)+"\n"
   PARAMETERS += "sample = "+str(sample)+"\n"
   PARAMETERS += "disk_edges = "+str(disk_edges)+" AU\n"
   PARAMETERS += "inner_smoothing_width = "+str(inner_smoothing_width)+" AU\n"
@@ -543,6 +552,7 @@ def generation_simulation_parameters():
 
   if (user_force == "yes"):
     diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
+                  is_irradiation=is_irradiation,
                   disk_edges=disk_edges, viscosity=viscosity, sample=sample, dissipation_type=dissipation_type, 
                   is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing, inner_smoothing_width=inner_smoothing_width,
                   tau_viscous=tau_viscous, tau_photoevap=tau_photoevap, dissipation_time_switch=dissipation_time_switch, 
