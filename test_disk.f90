@@ -1050,7 +1050,9 @@ program test_disk
       write(j,*) 'set nokey'
     end do
     
+    write(10,*) 'set logscale y'
     write(10,*) 'set ylabel "Temperature [K]"'
+    
     
     write(11,*) 'set ylabel "Temperature law index"'
     
