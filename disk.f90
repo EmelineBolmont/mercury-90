@@ -593,7 +593,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   
   !------------------------------------------------------------------------------
   ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
-  p_prop%scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(p_prop%temperature) / p_prop%omega
+  p_prop%scaleheight = get_scaleheight(temperature=p_prop%temperature, angular_speed=p_prop%omega)
 !~   p_prop%scaleheight = 0.05 * p_prop%semi_major_axis
 
   !------------------------------------------------------------------------------
@@ -612,6 +612,18 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 !~   p_prop%chi = 1.d-5 * p_prop%radius**2 * p_prop%omega ! comment if you want to use the thermal diffusivity calculated from the temperature profile
   
 end subroutine get_planet_properties
+
+function get_scaleheight(temperature, angular_speed)
+
+implicit none
+real(double_precision), intent(in) :: temperature ! the temperature in K
+real(double_precision), intent(in) :: angular_speed ! the angular rotation [day-1]
+
+real(double_precision) :: get_scaleheight
+
+get_scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(temperature) / angular_speed
+
+end function get_scaleheight
 
 function get_corotation_damping(e, x_s)
 	! Function that return the prefactor, between 0 and 1, to apply on the corotation torque due to the value of the eccentricity
@@ -821,6 +833,12 @@ subroutine init_globals(stellar_mass, time)
 				write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
 				stop 'Error in user_module, subroutine init_globals' 
     end select
+    
+    if (IS_IRRADIATION) then
+      zero_finding_temperature => temperature_with_irradiation
+    else
+      zero_finding_temperature => temperature_pure_viscous
+    end if
     
     if (.not.allocated(distance_sample)) then
 			allocate(distance_sample(NB_SAMPLE_PROFILES))
@@ -1377,6 +1395,7 @@ end subroutine initial_density_profile
 
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
     real(double_precision) :: a_old, temperature_old, tmp
+    real(double_precision) :: scaleheight_old ! The scaleheight of the previous point
     
     integer :: i,j ! for loops
     
@@ -1387,28 +1406,24 @@ end subroutine initial_density_profile
     ! stellar mass
     stellar_mass = 1.d0 * K2  
   
-    
-    a = distance_sample(1)
+    ! We create a fantom point after the last point
+    a = distance_sample(NB_SAMPLE_PROFILES)*1.1
     ! We generate cartesian coordinate for the given semi major axis
     position(1) = a
     
     ! We generate cartesian coordinate for the given mass and semi major axis
     velocity(2) = sqrt((stellar_mass + mass) / position(1))
     
-    
     ! we store in global parameters various properties of the planet
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
     
-    call zbrent(x_min=1.d-5, x_max=1.d5, tolerance=1d-4, p_prop=p_prop, & ! Input
-                            temperature=temperature, optical_depth=tau_profile(1)) ! Output    
-
-    temperature_profile(1) = temperature
-    chi_profile(1) = 0.75d0 * p_prop%nu * ADIABATIC_INDEX * (ADIABATIC_INDEX - 1.d0) * &
-                      (1.5d0 + sqrt(3.d0) / tau_profile(1) + 1 / tau_profile(1)**2)
-    do j=2,NB_SAMPLE_PROFILES
+    temperature = 10.d0 ! we force the temperature to be 10K for this fantom point
+  
+    do j=NB_SAMPLE_PROFILES, 1, -1 ! We loop backward
       a_old = a
       temperature_old = temperature
+      scaleheight_old = get_scaleheight(temperature=temperature_old, angular_speed=p_prop%omega)
       
       a = distance_sample(j) ! Be carefull, the step between 'a' values is not constant !
       ! We generate cartesian coordinate for the given semi major axis
@@ -1420,19 +1435,25 @@ end subroutine initial_density_profile
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
-      call zbrent(x_min=1.d-5, x_max=1.d5, tolerance=1d-4, p_prop=p_prop, & ! Input
+      call zbrent(x_min=1.d-5, x_max=1.d5, tolerance=1d-4, p_prop=p_prop, scaleheight_old=scaleheight_old, & ! Input
+                            distance_old=a_old, & ! Input
                               temperature=temperature, optical_depth=tau_profile(j)) ! Output
       
       temperature_profile(j) = temperature
-      temp_profile_index(j) = - (log(temperature_profile(j)) - log(temperature_profile(j-1))) / &
-                                (log(distance_sample(j)) - log(distance_sample(j-1)))
+      if (j.ne.NB_SAMPLE_PROFILES) then
+      temp_profile_index(j) = - (log(temperature_profile(j)) - log(temperature_profile(j+1))) / &
+                                (log(distance_sample(j)) - log(distance_sample(j+1)))
+      end if
+      
       chi_profile(j) = 0.75d0 * p_prop%nu * ADIABATIC_INDEX * (ADIABATIC_INDEX - 1.d0) * &
                       (1.5d0 + sqrt(3.d0) / tau_profile(j) + 1 / tau_profile(j)**2)
       
+      
     end do
     
-    temp_profile_index(2) = temp_profile_index(3)! We do this because the first two values are polluted by boundary conditions
-    temp_profile_index(1) = temp_profile_index(2) ! the first element of the index array is forced to be equal to the second one because else, we can't calculate it.
+    ! we force the last value to be equal to the previous one, because this 
+    ! last value is the first calculated, and the steepness cannot be defined yet
+    temp_profile_index(NB_SAMPLE_PROFILES) = temp_profile_index(NB_SAMPLE_PROFILES-1)
     
   end subroutine calculate_temperature_profile
   
@@ -1765,7 +1786,7 @@ end subroutine initial_density_profile
   
   end subroutine store_scaleheight_profile
 
-subroutine zbrent(x_min, x_max, tolerance, p_prop, temperature, optical_depth)
+subroutine zbrent(x_min, x_max, tolerance, p_prop, scaleheight_old, distance_old, temperature, optical_depth)
 ! Using Brent's method, find the root of a function 'func' known to lie between 'x_min' and 'x_max'. 
 ! The root, returned as 'zero_finding_zbrent', will be refined until its accuray is 'tolerance'. 
 
@@ -1782,6 +1803,8 @@ real(double_precision), intent(out) :: optical_depth
 ! Input 
 real(double_precision), intent(in) :: tolerance, x_min, x_max
 type(PlanetProperties), intent(in) :: p_prop ! various properties of a planet
+real(double_precision), intent(in) :: scaleheight_old ! aspect ratio of the previous point
+real(double_precision), intent(in) :: distance_old ! orbital distance of the previous point [AU]
 
 ! Parameters
 ! the routine zbrent works best when PES is exactly the machine precision. 
@@ -1827,11 +1850,14 @@ prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 32.d0)
 
 a = x_min
 b = x_max
-call zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor,& ! Input
+call zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=prefactor,& ! Input
                               funcv=fa, optical_depth=tau_a) ! Output
-call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor,& ! Input
+call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=prefactor,& ! Input
                               funcv=fb, optical_depth=tau_b) ! Output
-
+!~ (temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
+!~                                           prefactor, funcv, optical_depth)
 !~ fa = zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
 !~ fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
 
@@ -1839,11 +1865,14 @@ if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
   write(*,*) 'subroutine zbrent: root must be bracketed.'
   write(*,*) '  T_min =', x_min, 'f(T_min) =', fa
   write(*,*) '  T_max =', x_max, 'f(T_max) =', fb
-  write(*,*) 'properties of the disk at the location of the planet that influence the value of the temperature'
-  write(*,'(a,f5.1,a)')     '   Radial position of the planet : ', p_prop%radius, ' [AU]'
-  write(*,'(a,es10.2e2,a)') '   Viscosity : ', p_prop%nu, ' [AU^2.day^-1]'
-  write(*,'(a,es10.2e2,a)') '   Surface density : ', p_prop%sigma , ' [Msun.AU^-2]'
-  write(*,'(a,es10.2e2,a)') '   Angular Velocity : ', p_prop%omega , ' [day-1]'
+  call print_planet_properties(p_prop)
+  write(*,*) 'distance_old = ', distance_old
+  write(*,*) 'scaleheight_old = ', scaleheight_old
+!~   write(*,*) 'properties of the disk at the location of the planet that influence the value of the temperature'
+!~   write(*,'(a,f5.1,a)')     '   Radial position of the planet : ', p_prop%radius, ' [AU]'
+!~   write(*,'(a,es10.2e2,a)') '   Viscosity : ', p_prop%nu, ' [AU^2.day^-1]'
+!~   write(*,'(a,es10.2e2,a)') '   Surface density : ', p_prop%sigma , ' [Msun.AU^-2]'
+!~   write(*,'(a,es10.2e2,a)') '   Angular Velocity : ', p_prop%omega , ' [day-1]'
   stop
 endif
 
@@ -1915,7 +1944,8 @@ do iter=1,ITMAX
   ! evaluate new trial root
   b = b + merge(d, sign(tol1,xm), abs(d) .gt. tol1)
   
-  call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor,& ! Input
+  call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=prefactor,& ! Input
                                 funcv=fb, optical_depth=tau_b) ! Output
 end do
 write(*,*) 'Warning: zbrent exceeding maximum iterations'
@@ -1924,7 +1954,8 @@ optical_depth = tau_b
 return
 end subroutine zbrent
 
-subroutine zero_finding_temperature(temperature, sigma, omega, prefactor, funcv, optical_depth)
+subroutine temperature_pure_viscous(temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
+                                    prefactor, funcv, optical_depth)
 ! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
 ! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
 ! We also use the opacity given in Bell & lin 1994. 
@@ -1942,14 +1973,17 @@ real(double_precision), intent(out) :: optical_depth ! the optical depth at a gi
 ! Input
 real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
 real(double_precision), intent(in) :: sigma ! the surface density at a given position (in MS/AU**2)
+real(double_precision), intent(in) :: distance_new ! current orbital distance [AU]
 real(double_precision), intent(in) :: omega ! the angular velocity of the disk at a given position
+real(double_precision), intent(in) :: scaleheight_old ! aspect ratio of the previous point
+real(double_precision), intent(in) :: distance_old ! orbital distance of the previous point [AU]
 real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 32.d0)
 
 ! Local
 real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
 real(double_precision) :: rho ! the bulk density of the disk at a given position
 !------------------------------------------------------------------------------
-scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(temperature) / omega
+scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
 rho = 0.5d0 * sigma / scaleheight
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
 
@@ -1958,7 +1992,60 @@ funcv = SIGMA_STEFAN * temperature**4 + prefactor * &
                            (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1 / (optical_depth))
 
 return
-end subroutine zero_finding_temperature
+end subroutine temperature_pure_viscous
+
+subroutine temperature_with_irradiation(temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
+                                        prefactor, funcv, optical_depth)
+! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
+! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
+! We also use the opacity given in Bell & lin 1994. 
+
+! REMARKS : The scaleheight of the disk is determined directly in the function, because it depends on the temperature
+
+! Global parameters
+! SCALEHEIGHT_PREFACTOR : prefactor for the scaleheight
+
+
+! Output
+real(double_precision), intent(out) :: funcv ! the value of the function
+real(double_precision), intent(out) :: optical_depth ! the optical depth at a given position
+
+! Input
+real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
+real(double_precision), intent(in) :: sigma ! the surface density at a given position (in MS/AU**2)
+real(double_precision), intent(in) :: distance_new ! current orbital distance [AU]
+real(double_precision), intent(in) :: omega ! the angular velocity of the disk at a given position
+real(double_precision), intent(in) :: scaleheight_old ! aspect ratio of the previous point
+real(double_precision), intent(in) :: distance_old ! orbital distance of the previous point [AU]
+real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 32.d0)
+
+! Local
+real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
+real(double_precision) :: rho ! the bulk density of the disk at a given position
+real(double_precision) :: flaring_angle ! the angle of the protoplanetary disk at the current orbital distance
+real(double_precision) :: aspect_ratio_new, aspect_ratio_old
+real(double_precision) :: prefactor_irradiation
+real(double_precision) :: R_STAR = 4.6491d-3 ! Solar radius in AU
+real(double_precision) :: T_STAR = 5700 ! in K
+real(double_precision) :: DISK_ALBEDO = 0.5d0
+!------------------------------------------------------------------------------
+prefactor_irradiation = - R_STAR**2 * T_STAR**4 * (1.d0 - DISK_ALBEDO)
+scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
+aspect_ratio_new = scaleheight / distance_new
+aspect_ratio_old = scaleheight_old / distance_old
+!~ flaring_angle = distance_new * (aspect_ratio_old - aspect_ratio_new) / (distance_old - distance_new)
+flaring_angle = aspect_ratio_new * (log(aspect_ratio_old) - log(aspect_ratio_new)) / (log(distance_old) - log(distance_new) - 1.d0)
+
+rho = 0.5d0 * sigma / scaleheight
+optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
+
+! 1.7320508075688772d0 = sqrt(3)
+funcv = SIGMA_STEFAN * temperature**4 + &
+        prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1 / (optical_depth)) + &
+        prefactor_irradiation * flaring_angle / distance_new**2
+
+return
+end subroutine temperature_with_irradiation
 
 subroutine get_temperature(radius, temperature, temperature_index, chi)
 ! subroutine that interpolate a value of the temperature at a given radius with input arrays of radius (x) and temperature (y)
