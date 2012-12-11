@@ -14,3 +14,4 @@ simu_test
 unitary_tests
 *.bak
 *~
+*.pdf
