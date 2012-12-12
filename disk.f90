@@ -1424,7 +1424,6 @@ end subroutine initial_density_profile
       a_old = a
       temperature_old = temperature
       scaleheight_old = get_scaleheight(temperature=temperature_old, angular_speed=p_prop%omega)
-      
       a = distance_sample(j) ! Be carefull, the step between 'a' values is not constant !
       ! We generate cartesian coordinate for the given semi major axis
       position(1) = a
@@ -1989,7 +1988,7 @@ optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if ther
 
 ! 1.7320508075688772d0 = sqrt(3)
 funcv = SIGMA_STEFAN * temperature**4 + prefactor * &
-                           (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1 / (optical_depth))
+                           (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
 
 return
 end subroutine temperature_pure_viscous
@@ -2025,25 +2024,28 @@ real(double_precision) :: rho ! the bulk density of the disk at a given position
 real(double_precision) :: flaring_angle ! the angle of the protoplanetary disk at the current orbital distance
 real(double_precision) :: aspect_ratio_new, aspect_ratio_old
 real(double_precision) :: prefactor_irradiation
+real(double_precision) :: envelope_heating
 real(double_precision) :: R_STAR = 4.6491d-3 ! Solar radius in AU
-real(double_precision) :: T_STAR = 5700 ! in K
+real(double_precision) :: T_STAR = 5700.d0 ! in K
 real(double_precision) :: DISK_ALBEDO = 0.5d0
 !------------------------------------------------------------------------------
 prefactor_irradiation = - R_STAR**2 * T_STAR**4 * (1.d0 - DISK_ALBEDO)
 scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
 aspect_ratio_new = scaleheight / distance_new
 aspect_ratio_old = scaleheight_old / distance_old
-!~ flaring_angle = distance_new * (aspect_ratio_old - aspect_ratio_new) / (distance_old - distance_new)
-flaring_angle = aspect_ratio_new * (log(aspect_ratio_old) - log(aspect_ratio_new)) / (log(distance_old) - log(distance_new) - 1.d0)
+flaring_angle = distance_new * (aspect_ratio_old - aspect_ratio_new) / (distance_old - distance_new) + &
+                0.4d0 * R_STAR / distance_new
+!~ flaring_angle = aspect_ratio_new * ((log(scaleheight_old) - log(scaleheight)) / (log(distance_old) - log(distance_new)) - 1.d0)
+
+envelope_heating = SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
 
 rho = 0.5d0 * sigma / scaleheight
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
 
 ! 1.7320508075688772d0 = sqrt(3)
 funcv = SIGMA_STEFAN * temperature**4 + &
-        prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1 / (optical_depth)) + &
-        prefactor_irradiation * flaring_angle / distance_new**2
-
+        prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth)) + &
+        prefactor_irradiation * flaring_angle / distance_new**2 - envelope_heating
 return
 end subroutine temperature_with_irradiation
 
