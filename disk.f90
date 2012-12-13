@@ -1815,7 +1815,7 @@ integer, parameter :: ITMAX=100
 ! Locals
 integer :: iter
 real(double_precision) :: a, b, c, d, e, fa, fb, fc, p, q, r, s, tol1, xm
-real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
+real(double_precision) :: viscous_prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
 real(double_precision) :: tau_a, tau_b
 
 if (isnan(p_prop%sigma)) then
@@ -1845,15 +1845,15 @@ end if
 !------------------------------------------------------------------------------
 
 ! We calculate this value outside the function because we only have to do this once per step (per radial position)
-prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 32.d0)
+viscous_prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 32.d0)
 
 a = x_min
 b = x_max
 call zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
-                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=prefactor,& ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
                               funcv=fa, optical_depth=tau_a) ! Output
 call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
-                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=prefactor,& ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
                               funcv=fb, optical_depth=tau_b) ! Output
 !~ (temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
 !~                                           prefactor, funcv, optical_depth)
@@ -1944,7 +1944,7 @@ do iter=1,ITMAX
   b = b + merge(d, sign(tol1,xm), abs(d) .gt. tol1)
   
   call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
-                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=prefactor,& ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
                                 funcv=fb, optical_depth=tau_b) ! Output
 end do
 write(*,*) 'Warning: zbrent exceeding maximum iterations'
@@ -1998,6 +1998,9 @@ subroutine temperature_with_irradiation(temperature, sigma, omega, distance_new,
 ! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
 ! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
 ! We also use the opacity given in Bell & lin 1994. 
+! the irradiation comes from equation (5) and (7) of (menou & goodman, 2004)
+! the expression of the flaring angle used is not from equation (5) of 
+! menou & goodman (2004) but instead with use equation (2) from (Dullemond, 2000), which is striclty equivalent.
 
 ! REMARKS : The scaleheight of the disk is determined directly in the function, because it depends on the temperature
 
@@ -2024,28 +2027,28 @@ real(double_precision) :: rho ! the bulk density of the disk at a given position
 real(double_precision) :: flaring_angle ! the angle of the protoplanetary disk at the current orbital distance
 real(double_precision) :: aspect_ratio_new, aspect_ratio_old
 real(double_precision) :: prefactor_irradiation
-real(double_precision) :: envelope_heating
-real(double_precision) :: R_STAR = 4.6491d-3 ! Solar radius in AU
-real(double_precision) :: T_STAR = 5700.d0 ! in K
-real(double_precision) :: DISK_ALBEDO = 0.5d0
+real(double_precision) :: envelope_heating, viscous_heating, irradiation
+
 !------------------------------------------------------------------------------
-prefactor_irradiation = - R_STAR**2 * T_STAR**4 * (1.d0 - DISK_ALBEDO)
+prefactor_irradiation = - SIGMA_STEFAN * R_STAR**2 * T_STAR**4 * (1.d0 - DISK_ALBEDO)
 scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
+!------------------------------------------------------------------------------
 aspect_ratio_new = scaleheight / distance_new
 aspect_ratio_old = scaleheight_old / distance_old
-flaring_angle = distance_new * (aspect_ratio_old - aspect_ratio_new) / (distance_old - distance_new) + &
-                0.4d0 * R_STAR / distance_new
-!~ flaring_angle = aspect_ratio_new * ((log(scaleheight_old) - log(scaleheight)) / (log(distance_old) - log(distance_new)) - 1.d0)
-
-envelope_heating = SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
-
+!------------------------------------------------------------------------------
 rho = 0.5d0 * sigma / scaleheight
+!------------------------------------------------------------------------------
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
-
+!------------------------------------------------------------------------------
+envelope_heating = -SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
+irradiation = prefactor_irradiation * ((aspect_ratio_old - aspect_ratio_new) / (distance_old - distance_new) + &
+              0.4d0 * R_STAR / distance_new) / distance_new
 ! 1.7320508075688772d0 = sqrt(3)
-funcv = SIGMA_STEFAN * temperature**4 + &
-        prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth)) + &
-        prefactor_irradiation * flaring_angle / distance_new**2 - envelope_heating
+viscous_heating = prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
+!------------------------------------------------------------------------------
+
+funcv = SIGMA_STEFAN * temperature**4 + irradiation + viscous_heating + envelope_heating
+
 return
 end subroutine temperature_with_irradiation
 

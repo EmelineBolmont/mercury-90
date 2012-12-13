@@ -26,6 +26,11 @@ module disk_properties
   implicit none
   
   !------------------------------------------------------------------------------
+  ! Star parameters :
+  real(double_precision) :: R_STAR = 4.6491d-3 ! Solar radius in AU
+  real(double_precision) :: T_STAR = 5700.d0 ! in K
+  
+  !------------------------------------------------------------------------------
   ! Default values for parameters that are to be read in the parameter file 'disk.in'
   real(double_precision) :: B_OVER_H = 0.4 ! the smoothing length for the planet's potential
   real(double_precision) :: ADIABATIC_INDEX = 1.4 ! the adiabatic index for the gas equation of state
@@ -39,7 +44,10 @@ module disk_properties
   real(double_precision), parameter :: SIGMA_CGS2NUM = AU**2 / MSUN ! The factor to convert surface density from g/cm^2 to MSUN/AU^2 (the numerical units)
   real(double_precision), parameter :: SIGMA_NUM2CGS = MSUN / AU**2 ! The factor to convert surface density from MSUN/AU^2 (numerical units) to g/cm^2 (CGS)
   
+  !------------------------------------------------------------------------------
+  ! Irradiation Parameters
   logical :: IS_IRRADIATION = .false. ! if there is irradiation or not for the calculation of the temperature profile
+  real(double_precision) :: DISK_ALBEDO = 0.5d0
   
   integer :: DISSIPATION_TYPE = 0 ! integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile. 3 for mixed dissipation, both viscously and with photoevaporation, with two timescales
   real(double_precision) :: TAU_DISSIPATION = -1.d0 ! the characteristic time for the exponential decay of the surface density (in years) (dissipation_type=2)
