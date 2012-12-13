@@ -27,14 +27,14 @@ OUTPUT_EXTENSION = 'pdf'
 fig = pl.figure(1)
 # On crée des sous plots. Pour subplot(231), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
 plot_T = fig.add_subplot(211)
-plot_T.plot(a, T)
+plot_T.loglog(a, T)
 
 plot_T.set_xlabel("a [UA]")
 plot_T.set_ylabel("Temperature [K]")
 plot_T.grid(True)
 
 plot_idx = fig.add_subplot(212, sharex=plot_T)
-plot_idx.plot(a, index)
+plot_idx.semilogx(a, index)
 
 plot_idx.set_xlabel("a [UA]")
 plot_idx.set_ylabel("Temperature power law")
