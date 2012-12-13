@@ -193,6 +193,15 @@ subroutine read_disk_properties()
 						write(*,*) "         value(s)='", trim(value),"'"
 					end if
         
+        case('disk_albedo')
+          read(value, *) DISK_ALBEDO
+        
+        case('r_star')
+          read(value, *) R_STAR
+          
+        case('t_star')
+          read(value, *) T_STAR
+        
         case('disk_edges')
           read(value, *) INNER_BOUNDARY_RADIUS, OUTER_BOUNDARY_RADIUS
         
@@ -452,6 +461,11 @@ subroutine write_disk_properties()
   end if
   write(10,*) ''
   write(10,'(a,l,a)') 'is irradiation = ', IS_IRRADIATION, ' (T:True;F:False)'
+  if (IS_IRRADIATION) then
+    write(10,'(a,f8.1,a)') 'Stellar surface temperature = ',T_STAR, ' K'
+    write(10,'(a,es7.2e1,a)') 'Stellar radius = ',R_STAR, ' AU'
+    write(10,'(a,f5.3)') 'Disk Albedo = ',DISK_ALBEDO
+  end if
   write(10,*) ''
   write(10,'(a)') 'Possible values : &
   0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile'
