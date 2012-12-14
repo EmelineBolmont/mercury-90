@@ -1421,7 +1421,7 @@ end subroutine initial_density_profile
     stellar_mass = 1.d0 * K2  
   
     ! We create a fantom point after the last point
-    a = distance_sample(NB_SAMPLE_PROFILES)*1.1
+    a = 1000.d0 ! We place the fantom point at 1000 AU to limit the influence of the outer edge 
     ! We generate cartesian coordinate for the given semi major axis
     position(1) = a
     
