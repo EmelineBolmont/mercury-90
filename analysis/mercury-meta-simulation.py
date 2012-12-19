@@ -156,7 +156,6 @@ def planet_from_dust(surface_density, edges, dust_to_gas_ratio, icelines, planet
 		mass_of_the_ring = prefactor * current_dtg / (2. - index) * \
 		                   (iceline**(2. - index) - current_position**(2. - index))
 		
-		pdb.set_trace()
 		# We substract the mass of the ring if the planet is going to be far away. 
 		# But if the planet is inside this ring we stop the loop
 		if (mass_of_the_ring < desired_mass):
