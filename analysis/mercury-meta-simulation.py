@@ -102,72 +102,75 @@ is_irradiation = None
 #-------------------------------------------------------------------------------
 # Definition of functions
 
-def planet_from_dust(surface_density, edges, dust_to_gas_ratio, icelines, planet_mass, previous_position):
-	""" The aim is to get the surface densitiy profile, and derive a dust density profile, integrated to have a linear density. 
-	Based on the list of mass we want, we get the positions of the planets, integrating the dust surface profile. When the mass of 
-	the first object is attained, the position wil be the position of the object, and so on, moving on the cumulated mass profile, 
-	that is an integration of the linear density profile of dust
+def planet_from_dust(surface_density, edges, dust_to_gas_ratio, iceline_prop, planet_mass, previous_position):
+  """ The aim is to get the surface densitiy profile, and derive a dust density profile, integrated to have a linear density. 
+  Based on the list of mass we want, we get the positions of the planets, integrating the dust surface profile. When the mass of 
+  the first object is attained, the position wil be the position of the object, and so on, moving on the cumulated mass profile, 
+  that is an integration of the linear density profile of dust
 
-	Parameters : 
-	surface_density : (Sigma_0, index) Sigma_0 in g/cm^2
-	icelines : a tuple of tuples. Each sub-tuple is : (radius_of_the_iceline [AU], factor). 
-	           After the given radius, the innermost dust to gas 
-	           ratio will have to be multiplied by 'factor'
-	dust_to_gas_ratio : The ratio that allow us to get the dust density from the gas density
-	planet_mass : the desired planet mass, in earth_mass
-	previous_position : the position of the previous planet (or the inner edge of the disk, for the first planet)
-	
-	Distances are in AU, and masses in earth mass
+  Parameters : 
+  surface_density : (Sigma_0, index) Sigma_0 in g/cm^2
+  iceline_prop : a tuple of the shape : (radius_of_the_iceline [AU], factor). 
+             After the given radius, the original dust to gas 
+             ratio will have to be multiplied by 'factor'
+  dust_to_gas_ratio : The ratio that allow us to get the dust density from the gas density
+  planet_mass : the desired planet mass, in earth_mass
+  previous_position : the position of the previous planet (or the inner edge of the disk, for the first planet)
+  
+  Distances are in AU, and masses in earth mass
 
-	Surface density(R) = Sigma_0 * R**(-index)
-	linear_density of dust = prefactor * DGR(R) * R**(1. - index)
+  Surface density(R) = Sigma_0 * R**(-index)
+  linear_density of dust = prefactor * DGR(R) * R**(1. - index)
 
-	"""
-	
-	(Sigma_0, index) = surface_density
-	
-	prefactor = 2 * pi * Sigma_0 * ((AU * 1e2)**2) / (MT * 1e3)
-	
-	# We generate a list of position and dust to gas ratio in the disk
-	# The first element is the inner edge and the last the outer edge
-	# Between each consecutive radius, the good dust to gas ratio is 
-	# the one of the first inner radius of the couple
-	dust_radius = [edges[0]]
-	dust = [dust_to_gas_ratio]
-	for (iceline, factor) in icelines:
-		dust_radius.append(iceline)
-		dust.append(dust[0] * factor)
-	dust_radius.append(edges[-1])
-	dust.append(dust[-1])
+  """
+  
+  (Sigma_0, index) = surface_density
+  
+  prefactor = 2 * pi * Sigma_0 * ((AU * 1e2)**2) / (MT * 1e3)
+  
+  # We generate a list of position and dust to gas ratio in the disk
+  # The first element is the inner edge and the last the outer edge
+  # Between each consecutive radius, the good dust to gas ratio is 
+  # the one of the first inner radius of the couple
+  (iceline, factor) = iceline_prop
+  
+  dust_radius = [edges[0]]
+  dust = [dust_to_gas_ratio]
+  
+  dust_radius.append(iceline)
+  dust.append(dust[0] * factor)
+  
+  dust_radius.append(edges[-1])
+  dust.append(dust[-1])
 
-	# We search for the position of the next planet, given its mass, 
-	#  and the position of the previous planet
-	# Since the dust to gas ratio varies inside the disk, we check in 
-	#  which step of the step function the planet will lies
-	
-	# We search for the first step to start with
-	step_index = np.searchsorted(dust_radius, previous_position)
-	
-	
-	desired_mass = planet_mass
-	current_position = previous_position
-	current_dtg = dust[max(step_index - 1, 0)]
-	for (dtg, iceline) in zip(dust[step_index:], dust_radius[step_index:]):
-		mass_of_the_ring = prefactor * current_dtg / (2. - index) * \
-		                   (iceline**(2. - index) - current_position**(2. - index))
-		
-		# We substract the mass of the ring if the planet is going to be far away. 
-		# But if the planet is inside this ring we stop the loop
-		if (mass_of_the_ring < desired_mass):
-			desired_mass -= mass_of_the_ring
-			current_position = iceline
-			current_dtg = dtg
-		else:
-			break
-	new_position = (desired_mass * (2. - index) / (prefactor * current_dtg)
-	              + current_position**(2. - index))**(1./(2. - index))
-	
-	return new_position
+  # We search for the position of the next planet, given its mass, 
+  #  and the position of the previous planet
+  # Since the dust to gas ratio varies inside the disk, we check in 
+  #  which step of the step function the planet will lies
+  
+  # We search for the first step to start with
+  step_index = np.searchsorted(dust_radius, previous_position)
+  
+  
+  desired_mass = planet_mass
+  current_position = previous_position
+  current_dtg = dust[max(step_index - 1, 0)]
+  for (dtg, iceline) in zip(dust[step_index:], dust_radius[step_index:]):
+    mass_of_the_ring = prefactor * current_dtg / (2. - index) * \
+                       (iceline**(2. - index) - current_position**(2. - index))
+    
+    # We substract the mass of the ring if the planet is going to be far away. 
+    # But if the planet is inside this ring we stop the loop
+    if (mass_of_the_ring < desired_mass):
+      desired_mass -= mass_of_the_ring
+      current_position = iceline
+      current_dtg = dtg
+    else:
+      break
+  new_position = (desired_mass * (2. - index) / (prefactor * current_dtg)
+                + current_position**(2. - index))**(1./(2. - index))
+  
+  return new_position
 
 
 def generate_meta_simulationin():
@@ -227,7 +230,7 @@ mass_parameters = (0.1, 1, "uniform") # the mass (in earth mass)
 # (dust_to_gas_ratio, icelines, 'from-dust'), where 'icelines' is a tuple of tuples. 
 # Each tuple is : (radius [AU], factor), which means that from the original dtg (for the innermost region)
 # , at this point you have to apply the given factor
-# a_parameters = (0.01, ((6., 2.)), "from-dust")
+# a_parameters = (0.01, (4., 2.), "from-dust")
 a_parameters = ((1, 1.5), (4., 6.), "rh") # the semi major axis (in AU)
 
 e_parameters = (1e-3, 1e-5, "uniform") # the eccentricity
@@ -537,6 +540,9 @@ def generation_simulation_parameters():
     m = simulations_utilities.setParameter(mass_parameters, nb_planets)
     m = [mi * MT / MS for mi in m]
   
+  # By default, we do not specify density
+  d = [None for mi in m]
+  
   #~ # To add manually one massive planet in the set of planets.
   #~ random_index = random.randint(0, nb_planets)
   #~ random_mass = random.uniform(4, 5)
@@ -563,24 +569,33 @@ def generation_simulation_parameters():
       ai = a[i-1] * (1 + chi) / (1 - chi)
       a.append(ai)
   elif (type(a_parameters) in [list, tuple] and a_parameters[-1] == 'from-dust'):
-	  a = []
-	  previous_position = disk_edges[0]
-	  dust_to_gas_ratio = a_parameters[0]
-	  icelines = a_parameters[1]
-	  
-	  if (type(icelines[0]) != tuple):
-		  icelines = (icelines, )
-	  
-	  for mi in m:
-		  planet_mass = mi * (MS/MT) # m in solar mass, we want it in earth mass
-		  ai = planet_from_dust(surface_density, disk_edges, dust_to_gas_ratio, icelines, planet_mass, previous_position)
-		  a.append(ai)
-		  previous_position = ai
-	  #~ prefactor = 2 * pi * 500. * ((AU * 1e2)**2) / (MT * 1e3)
-	  #~ total_mass = prefactor / 1.5 * 0.01 * (ai**1.5 - 0.1**1.5)
-	  #~ print(np.sum(m) * (MS/MT))
-	  #~ print("total_mass=%f" % total_mass)
-	  
+    a = []
+    previous_position = disk_edges[0]
+    dust_to_gas_ratio = a_parameters[0]
+    iceline = a_parameters[1]
+    HIGH_DENSITY = 3.0 # g/cm^3
+    LOW_DENISTY  = 1.0 # g/cm^3
+    
+    # We will define densities
+    d = []
+    
+    for mi in m:
+      planet_mass = mi * (MS/MT) # m in solar mass, we want it in earth mass
+      ai = planet_from_dust(surface_density, disk_edges, dust_to_gas_ratio, iceline, planet_mass, previous_position)
+      a.append(ai)
+
+      if (ai < iceline[0]):
+        di = HIGH_DENSITY
+      else:
+        di = LOW_DENISTY
+      d.append(di)
+      previous_position = ai
+    #~ prefactor = 2 * pi * 500. * ((AU * 1e2)**2) / (MT * 1e3)
+    #~ total_mass = prefactor / 1.5 * 0.01 * (iceline[0]**1.5 - 0.1**1.5)
+    #~ total_mass += prefactor / 1.5 * 0.01 * iceline[1] * (ai**1.5 - iceline[0]**1.5)
+    #~ print(np.sum(m) * (MS/MT))
+    #~ print("total_mass=%f" % total_mass)
+    
   else:
     a = simulations_utilities.setParameter(a_parameters, nb_planets)
     
@@ -612,7 +627,7 @@ def generation_simulation_parameters():
   if ((len_m != len_a) or (len_a != len_e) or (len_e != len_I)):
     raise TypeError("The size of {m,a,e,I} is not the same")
 
-  system = mercury_utilities.definePlanetarySystem(m=m, a=a, e=e, I=I)
+  system = mercury_utilities.definePlanetarySystem(m=m, a=a, e=e, I=I, d=d)
 
   # We write the files
 
@@ -644,6 +659,8 @@ def generation_simulation_parameters():
 
   messagein = mercury.Message()
   messagein.write()
+  
+  
 
   if (user_force == "yes"):
     diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
