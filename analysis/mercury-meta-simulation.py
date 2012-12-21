@@ -283,7 +283,7 @@ mass_dep_m_max = 20 # (earth mass) help to define a CZ(m) by defining two points
 mass_dep_cz_m_min = 50 # (AU)      help to define a CZ(m) by defining two points
 mass_dep_cz_m_max = 5 # (AU)       help to define a CZ(m) by defining two points
 
-is_irradiation = 0 # is there stellar irradiation or not?
+is_irradiation = 1 # is there stellar irradiation or not?
 is_turbulence = 0 # is there turbulence or not?
 turbulent_forcing = 1e-4 # the turbulence forcing associated with turbulence, if any
 """
