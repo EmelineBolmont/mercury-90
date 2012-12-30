@@ -17,7 +17,8 @@ rep_exec = os.getcwd()
 # Get the machine hostname
 hostname = simulations_utilities.getHostname()
 
-
+scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
+binaryPath = os.path.join(scriptFolder, os.path.pardir)
 
 #    .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-. 
 #  .'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `.
@@ -176,7 +177,7 @@ for meta in meta_list:
     
     
     if (((simulation_status != 0) and (isContinue or isRestart)) or (isForcedStart or isForcedContinue)):
-      mercury_utilities.prepareSubmission(hostname, walltime=WALLTIME)
+      mercury_utilities.prepareSubmission(BinaryPath=binaryPath, walltime=WALLTIME)
     
     # If the option 'start' is given, we force the run of the simulation, whatever there is an old simulation or not in the folder.
     if (isForcedStart):
