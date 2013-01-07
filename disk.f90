@@ -1344,6 +1344,7 @@ end subroutine initial_density_profile
     real(double_precision) :: get_opacity
     
     ! Local
+    real(double_precision), parameter :: temp12 = 166.81d0, temp23 = 202.677d0
     real(double_precision) :: temp34, temp45, temp56, temp67
     real(double_precision) :: bulk_density ! [g/cm^3] (in physical units needed for the expression of the opacity)
     real(double_precision), parameter :: num_to_phys_bulk_density = MSUN / AU**3
@@ -1359,19 +1360,26 @@ end subroutine initial_density_profile
     temp56 = 10000.d0 * bulk_density**(1.d0/21.d0)
     temp67 = 30000.d0 * bulk_density**(4.d0/75.d0)
     
-    if (temperature.le.166.81d0) then ! regime 1
+    if (temperature.le.temp12) then
+      ! regime 1 : ice grains
       get_opacity = 2d-4 * temperature * temperature
-    elseif ((temperature.gt.166.81d0).and.(temperature.le.202.677d0)) then ! regime 2
+    elseif ((temperature.gt.temp12).and.(temperature.le.temp23)) then
+      ! regime 2 : evaporation of ice grains
       get_opacity = 2.d16 / temperature**7.d0
-    elseif ((temperature.gt.202.677d0).and.(temperature.le.temp34)) then ! regime 3
+    elseif ((temperature.gt.temp23).and.(temperature.le.temp34)) then
+      ! regime 3 : metal grains
       get_opacity = 0.1d0 * sqrt(temperature)
-    elseif ((temperature.gt.temp34).and.(temperature.le.temp45)) then ! regime 4
+    elseif ((temperature.gt.temp34).and.(temperature.le.temp45)) then
+      ! regime 4 : evaporation of metal grains
       get_opacity = 2.d81 * bulk_density / temperature**24.d0
-    elseif ((temperature.gt.temp45).and.(temperature.le.temp56)) then ! regime 5
+    elseif ((temperature.gt.temp45).and.(temperature.le.temp56)) then
+      ! regime 5 : molecules
       get_opacity = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
-    elseif ((temperature.gt.temp56).and.(temperature.le.temp67)) then ! regime 6
+    elseif ((temperature.gt.temp56).and.(temperature.le.temp67)) then
+      ! regime 6 : H-scattering
       get_opacity = 1.d-36 * bulk_density**THIRD * temperature**10
-    else ! regime 7
+    else
+      ! regime 7 : bound-free and free-free
       get_opacity = 1.5d20 * bulk_density / temperature**2.5d0
     endif
     
