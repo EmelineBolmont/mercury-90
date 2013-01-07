@@ -1448,7 +1448,7 @@ end subroutine initial_density_profile
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
-      call zbrent(x_min=1.d-1, x_max=1.d4, tolerance=1d-4, p_prop=p_prop, scaleheight_old=scaleheight_old, & ! Input
+      call zbrent(x_min=1.d-1, x_max=1.d5, tolerance=1d-4, p_prop=p_prop, scaleheight_old=scaleheight_old, & ! Input
                             distance_old=a_old, & ! Input
                               temperature=temperature, optical_depth=tau_profile(j)) ! Output
       

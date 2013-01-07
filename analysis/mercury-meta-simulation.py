@@ -777,7 +777,7 @@ for index_simu in range(starting_index, starting_index+NB_SIMULATIONS):
   
   generation_simulation_parameters()
   
-  mercury_utilities.prepareSubmission(binaryPath, walltime=WALLTIME)
+  mercury_utilities.prepareSubmission(BinaryPath=binaryPath, walltime=WALLTIME)
   
   # We launch the job
   if toLaunch:
