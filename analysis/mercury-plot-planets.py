@@ -219,6 +219,7 @@ for planet in range(nb_planete):
 
 if isXS:
   for planet in range(nb_planete):
+    print("At the end, %s has x_s=%f" % (liste_aei[planet], x_s[planet][id_max]))
     plot(t[planet][id_min:id_max+1], x_s[planet][id_min:id_max+1], color=colors[planet])
 
 
