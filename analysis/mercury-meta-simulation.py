@@ -258,7 +258,7 @@ inner_smoothing_width = 0.05 # (in unit of the inner boundary radius)
 
 b/h = 0.4 # The smoothing width for gravitational effects
 
-sample = 200 # The number of points for the surface density profile
+sample = 400 # The number of points for the surface density profile
 
 dissipation_type = 0 # The type of dissipation for the disk (0 for none)
 inner_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
