@@ -63,6 +63,7 @@ module disk_properties
   ! values possible to change the properties of the torque. 'real', 'mass_independant', 'mass_dependant', 'manual'. 
   ! If 'manual' is chosen, the code will read the file 'torque_profile.dat' that must exist and the first column must be semi major axis in AU, and the second one is the torque (in units of \Gamma_0 for the moment)
   character(len=80) :: TORQUE_TYPE = 'real' 
+  character(len=80) :: OPACITY_TYPE = 'bell' 
   ! Here we define the constant value of the viscosity of the disk
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s] (must not be used directly into the code, use get_viscosity(radius) instead)
   logical :: IS_TURBULENCE = .False. ! if there is turbulence or not inside the disk
