@@ -17,16 +17,11 @@ import random
 import numpy as np
 import sys
 
-# Mass threshold
-MASS_THRESHOLD = 5 # Earth mass
-
-CONVERGENCE_ZONE = 2.5 # in AU, the location of the convergence zone (as a reference for plotting period ratios)
-
 DELTA_RATIO = 0.005
 DELTA_M = 0.1
 
 PREFIX = "simu" # the prefix for the directories we want to take into the statistic.
-t_max = 1e7 # the integration time of the simulations
+t_max = None # the integration time of the simulations. Assumed to be the final time of the first simulation read
 
 #######################
 # On prépare le fichier log
@@ -34,7 +29,7 @@ t_max = 1e7 # the integration time of the simulations
 # Get current working directory
 rep_exec = os.getcwd()
 
-resonances = ["4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
+resonances = ["2:1", "3:2", "4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 
 #######################
 # On prépare les plots
@@ -155,6 +150,11 @@ for simu in liste_simu:
   tmp = dataFile.readline()
   tmp = tmp.split(":")[1]
   t_max0 = float(tmp)
+  
+  if (t_max == None):
+    # we set the t_max with the first simulation
+    t_max = t_max0
+  
   if (t_max0 != t_max):
     print("folder "+simu+" output time is "+tmp+" instead of "+str(t_max))
     continue
@@ -179,10 +179,10 @@ for simu in liste_simu:
     e_system.append(ei)
     I_system.append(Ii)
     m_system.append(mi)
-    if (ai < 23 and ai > 19 and mi > 16 and mi < 20):
-      print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
-    if (ai>2.5) and (mi > 10.):
-      print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
+    #~ if (ai < 23 and ai > 19 and mi > 16 and mi < 20):
+      #~ print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
+    #~ if (ai>2.5) and (mi > 10.):
+      #~ print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
     #~ if (a_system[-1]> 20.):
       #~ print("in "+simu+" "+datas[0]+" has a="+datas[1])
   
@@ -198,8 +198,6 @@ for simu in liste_simu:
   if (final_nb_planets[-1]>1):
     # We search for the most massive planet of the system
     a_system = np.array(a_system)
-    #~ a_temp = abs(a_system - CONVERGENCE_ZONE)
-    #~ idx_clo = a_temp.argmin()
     m_system = np.array(m_system)
     idx_clo = m_system.argmax()
     a_ref = a_system[idx_clo]
@@ -341,8 +339,8 @@ pl.ylabel("density of probability")
 pl.hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step')
 
 nom_fichier_plot4 = "most_massives"
-most_massive = [mi + random.uniform(-0.5, 0.5) for mi in most_massive]
-second_massive = [mi + random.uniform(-0.5, 0.5) for mi in second_massive]
+#~ most_massive = [mi + random.uniform(-0.5, 0.5) for mi in most_massive]
+#~ second_massive = [mi + random.uniform(-0.5, 0.5) for mi in second_massive]
 
 pl.figure(4)
 #~ pl.clf()
@@ -352,10 +350,10 @@ pl.plot(most_massive, second_massive, 'o', markersize=5)
 
 
 pl.figure(5)
-m_first = [mi + random.uniform(-0.25,0.25) for mi in m_first]
-m_second = [mi + random.uniform(-0.25,0.25) for mi in m_second]
-m_clo_first = [mi + random.uniform(-0.25,0.25) for mi in m_clo_first]
-m_clo_second = [mi + random.uniform(-0.25,0.25) for mi in m_clo_second]
+#~ m_first = [mi + random.uniform(-0.25,0.25) for mi in m_first]
+#~ m_second = [mi + random.uniform(-0.25,0.25) for mi in m_second]
+#~ m_clo_first = [mi + random.uniform(-0.25,0.25) for mi in m_clo_first]
+#~ m_clo_second = [mi + random.uniform(-0.25,0.25) for mi in m_clo_second]
 nom_fichier_plot5 = "coorbital_pl_mass"
 pl.title("Mass of the coorbital planets")
 pl.xlabel("mass of the first planet (m_earth)")

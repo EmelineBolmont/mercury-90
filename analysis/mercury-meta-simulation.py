@@ -179,24 +179,24 @@ def generate_meta_simulationin():
   
   DEMO_FILE = \
 """#!/usr/bin/env python
-# for a shortened parameter file, only "integration_time", 
-# "mass_parameters", "a_parameters", "e_parameters", "I_parameters", 
-# "FIXED_TOTAL_MASS" (and TOTAL_MASS or NB_PLANETS) are absolutely needed. 
-# Other parameters contains default values inside the original script.
-#-------------------------------------------------------------------------------
-# Definition of parameters of the script
+## for a shortened parameter file, only "integration_time", 
+## "mass_parameters", "a_parameters", "e_parameters", "I_parameters", 
+## "FIXED_TOTAL_MASS" (and TOTAL_MASS or NB_PLANETS) are absolutely needed. 
+## Other parameters contains default values inside the original script.
+##-------------------------------------------------------------------------------
+## Definition of parameters of the script
 
-#----------------------------------
-# Parameters for the meta simulation
+##----------------------------------
+## Parameters for the meta simulation
 
-# Number of simulations we want to launch with the same properties
+## Number of simulations we want to launch with the same properties
 NB_SIMULATIONS = 2
 
-# The limited time above which the simulation will be stopped in avakas (useless for other servers)
+## The limited time above which the simulation will be stopped in avakas (useless for other servers)
 WALLTIME = 119 # in hours
 
-#----------------------------------
-# Parameters for mercury
+##----------------------------------
+## Parameters for mercury
 
 integration_time = 1e7 # in years
 time_format = "years" # days or years
@@ -206,32 +206,32 @@ nb_dumps = 1000 # number of outputs contained in generated .aei files by element
 user_force = "yes" # yes or no, if we use user_module
 timestep = 0.4 # days
 
-#----------------------------------
-# Parameters for the planetary systems
+##----------------------------------
+## Parameters for the planetary systems
 
-# If FIXED_TOTAL_MASS = True, then it's the parameter TOTAL_MASS which is important, else, it's NB_PLANETS that is important.
+## If FIXED_TOTAL_MASS = True, then it's the parameter TOTAL_MASS which is important, else, it's NB_PLANETS that is important.
 FIXED_TOTAL_MASS = True
 TOTAL_MASS = 20 # earth mass, only used if FIXED_TOTAL_MASS = True
 # NB_PLANETS = 5 # (number) only used if FIXED_TOTAL_MASS = False
 
 
-# To define parameters, you currently have 3 possibilities :
-# _ parameters = 3 : all the planets will have the same value
-# _ parameters = (1., 0.3, 'gaussian') : values will follow a gaussian law of mean value 1 and standard deviation 0.3
-# _ parameters = (1., 3, 'uniform') : value will be randomly generated following a uniform law between 1 and 3
-# _ parameters = ([10.], (1., 3, 'uniform')) we copy the first list and complete it given the other parameters. 
+## To define parameters, you currently have 3 possibilities :
+## _ parameters = 3 : all the planets will have the same value
+## _ parameters = (1., 0.3, 'gaussian') : values will follow a gaussian law of mean value 1 and standard deviation 0.3
+## _ parameters = (1., 3, 'uniform') : value will be randomly generated following a uniform law between 1 and 3
+## _ parameters = ([10.], (1., 3, 'uniform')) we copy the first list and complete it given the other parameters. 
 
-#/!\ For mass, this only works if FIXED_TOTAL_MASS = False
+##/!\ For mass, this only works if FIXED_TOTAL_MASS = False
 mass_parameters = (0.1, 1, "uniform") # the mass (in earth mass)
 
-#  For 'a', there is a special option that allow us to define a hill radii separation. (a_0, delta, 'rh')
-# a_0 and delta can be calculated randomly for each planet if, instead of a value, a tuple of two values is given
-# a_parameters = ((1, 1.5), (4., 6.), "rh")
-#  Another one is 'from-dust' that will generate the positions of the planets using the masses
-# (dust_to_gas_ratio, icelines, 'from-dust'), where 'icelines' is a tuple of tuples. 
-# Each tuple is : (radius [AU], factor), which means that from the original dtg (for the innermost region)
-# , at this point you have to apply the given factor
-# a_parameters = (0.01, (4., 2.), "from-dust")
+##  For 'a', there is a special option that allow us to define a hill radii separation. (a_0, delta, 'rh')
+## a_0 and delta can be calculated randomly for each planet if, instead of a value, a tuple of two values is given
+## a_parameters = ((1, 1.5), (4., 6.), "rh")
+##  Another one is 'from-dust' that will generate the positions of the planets using the masses
+## (dust_to_gas_ratio, icelines, 'from-dust'), where 'icelines' is a tuple of tuples. 
+## Each tuple is : (radius [AU], factor), which means that from the original dtg (for the innermost region)
+## , at this point you have to apply the given factor
+## a_parameters = (0.01, (4., 2.), "from-dust")
 a_parameters = ((1, 1.5), (4., 6.), "rh") # the semi major axis (in AU)
 
 e_parameters = (1e-3, 1e-5, "uniform") # the eccentricity
@@ -240,14 +240,14 @@ I_parameters = (-1, 1, "uniform") # The inclination (in degrees)
 
 radius_star = 0.05 # The radius of the central star in AU
 
-#----------------------------------
-# Parameters for the disk
+##----------------------------------
+## Parameters for the disk
 
-# Surface density. We can define a power law through :
-#    surface_density =  (sigma_0, alpha) : Sigma(R) = Sigma_0 * R**(-alpha)
-#  But we can also define a manual surface density profile with 
-#    surface_density =  "manual"
-#  then, the file 'surface_density_profile.dat' must exist in the folder of meta_simulation.in so that it can be copied
+## Surface density. We can define a power law through :
+##    surface_density =  (sigma_0, alpha) : Sigma(R) = Sigma_0 * R**(-alpha)
+##  But we can also define a manual surface density profile with 
+##    surface_density =  "manual"
+##  then, the file 'surface_density_profile.dat' must exist in the folder of meta_simulation.in so that it can be copied
 surface_density = (500, 0.5) # g/cm^2 (sigma_0, alpha) help to define a power law : Sigma(R) = Sigma_0 * R**(-alpha)
 
 adiabatic_index = 1.4 # The adiabatic index of the disk
@@ -257,7 +257,7 @@ viscosity = 1.e15 # cm^2/s
 opacity_type = bell # bell or zhu
 
 disk_edges = (0.1, 100.) # (the inner and outer edge of the disk in AU)
-# The width of the region where the surface density decay to become 0 at the inner edge
+## The width of the region where the surface density decay to become 0 at the inner edge
 inner_smoothing_width = 0.05 # (in unit of the inner boundary radius)
 
 b/h = 0.4 # The smoothing width for gravitational effects
@@ -265,31 +265,31 @@ b/h = 0.4 # The smoothing width for gravitational effects
 sample = 400 # The number of points for the surface density profile
 
 dissipation_type = 0 # The type of dissipation for the disk (0 for none)
-inner_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
-outer_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
-disk_exponential_decay = 1e6 # years (for dissipation_type=2)
-tau_viscous = 1e7 # years (for dissipation_type=3)
-tau_photoevap = 1e5 # years (for dissipation_type=3)
-dissipation_time_switch = 2e6 # years (for dissipation_type=3)
+#inner_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
+#outer_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
+#disk_exponential_decay = 1e6 # years (for dissipation_type=2)
+#tau_viscous = 1e7 # years (for dissipation_type=3)
+#tau_photoevap = 1e5 # years (for dissipation_type=3)
+#dissipation_time_switch = 2e6 # years (for dissipation_type=3)
 
-# We define the type of torque profile : 
-# real : the profile defined by paardekooper formulas, nothing else to add in parameters here, everything is in the code
-# manual : the file 'torque_profile.dat' must exist in the folder of meta_simulation.in and 
-#          will contains two colums (first distance in AU, second the torque in units of Gamma_0)
-# other options : linear_indep, tanh_indep, mass_dependant
+## We define the type of torque profile : 
+## real : the profile defined by paardekooper formulas, nothing else to add in parameters here, everything is in the code
+## manual : the file 'torque_profile.dat' must exist in the folder of meta_simulation.in and 
+##          will contains two colums (first distance in AU, second the torque in units of Gamma_0)
+## other options : linear_indep, tanh_indep, mass_dependant
 torque_type = real # real, linear_indep, tanh_indep, mass_dependant, manual
-indep_cz = 3.0 # in AU, the position of the convergence zone (for linear or tanh_indep)
-torque_profile_steepness = 1.0 # the steepness for linear torque dependance (for linear_indep and mass_dependant)
-saturation_torque = 1.0 # (in Gamma_0) the torque saturation value (for tanh_indep)
-# help to define a CZ(m) by defining two points (for mass_dependant)
-mass_dep_m_min = 5 # (earth mass)  help to define a CZ(m) by defining two points
-mass_dep_m_max = 20 # (earth mass) help to define a CZ(m) by defining two points
-mass_dep_cz_m_min = 50 # (AU)      help to define a CZ(m) by defining two points
-mass_dep_cz_m_max = 5 # (AU)       help to define a CZ(m) by defining two points
+#indep_cz = 3.0 # in AU, the position of the convergence zone (for linear or tanh_indep)
+#torque_profile_steepness = 1.0 # the steepness for linear torque dependance (for linear_indep and mass_dependant)
+#saturation_torque = 1.0 # (in Gamma_0) the torque saturation value (for tanh_indep)
+## help to define a CZ(m) by defining two points (for mass_dependant)
+#mass_dep_m_min = 5 # (earth mass)  help to define a CZ(m) by defining two points
+#mass_dep_m_max = 20 # (earth mass) help to define a CZ(m) by defining two points
+#mass_dep_cz_m_min = 50 # (AU)      help to define a CZ(m) by defining two points
+#mass_dep_cz_m_max = 5 # (AU)       help to define a CZ(m) by defining two points
 
 is_irradiation = 1 # is there stellar irradiation or not?
 is_turbulence = 0 # is there turbulence or not?
-turbulent_forcing = 1e-4 # the turbulence forcing associated with turbulence, if any
+#turbulent_forcing = 1e-4 # the turbulence forcing associated with turbulence, if any
 """
 
   demo_parameter_file = open("meta_simulation.in", 'w')
