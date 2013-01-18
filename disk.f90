@@ -2030,25 +2030,25 @@ call zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%om
 call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
                               scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
                               funcv=fb, optical_depth=tau_b) ! Output
-!~ (temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
-!~                                           prefactor, funcv, optical_depth)
-!~ fa = zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
-!~ fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
 
 if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
-  write(error_unit,*) 'subroutine zbrent: root must be bracketed.'
-  write(error_unit,*) '  T_min =', x_min, 'f(T_min) =', fa
-  write(error_unit,*) '  T_max =', x_max, 'f(T_max) =', fb
-  call print_planet_properties(p_prop, output=error_unit)
-  write(error_unit,*) 'distance_old = ', distance_old
-  write(error_unit,*) 'scaleheight_old = ', scaleheight_old
-!~   write(*,*) 'properties of the disk at the location of the planet that influence the value of the temperature'
-!~   write(*,'(a,f5.1,a)')     '   Radial position of the planet : ', p_prop%radius, ' [AU]'
-!~   write(*,'(a,es10.2e2,a)') '   Viscosity : ', p_prop%nu, ' [AU^2.day^-1]'
-!~   write(*,'(a,es10.2e2,a)') '   Surface density : ', p_prop%sigma , ' [Msun.AU^-2]'
-!~   write(*,'(a,es10.2e2,a)') '   Angular Velocity : ', p_prop%omega , ' [day-1]'
+  write(error_unit,'(a)')            '------------------------------------------------'
+  write(error_unit,'(a)') 'subroutine zbrent: There is no sign change.'
+  write(error_unit,'(a)') 'Unable to retrieve the temperature for the current position.'
+  write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_min : f(',a,') = ', fa
+  write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_max : f(',b,') = ', fb
+  write(error_unit,'(a)')            '------------------------------------------------'
+  write(error_unit,'(a,f6.1,a)') 'Previous Orbital Distance = ', distance_old, ' [AU]'
+  write(error_unit,'(a,f6.1,a)') 'Previous Scaleheight = ', scaleheight_old, ' [AU]'
+  write(error_unit,'(a)')            '------------------------------------------------'
+  write(error_unit,'(a,f6.1,a)')     '| Orbital Distance : ', p_prop%radius, ' [AU]'
+  write(error_unit,'(a,es10.2e2,a)') '| Angular Speed : ', p_prop%omega , ' [day-1]'
+  write(error_unit,'(a,es10.2e2,a)') '| Surface density : ', p_prop%sigma , ' [Msun.AU^-2]'
+  write(error_unit,'(a,f5.2)')       '| Local Surface density index : ', p_prop%sigma_index
+  write(error_unit,'(a,es10.2e2,a)') '| Viscosity : ', p_prop%nu, ' [AU^2.day^-1]'
+  write(error_unit,'(a)')            '------------------------------------------------'
   call exit(6)
-endif
+end if
 
 ! these values force the code to go into the first 'if' statement. 
 c = b
