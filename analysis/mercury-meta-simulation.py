@@ -228,10 +228,10 @@ mass_parameters = (0.1, 1, "uniform") # the mass (in earth mass)
 ## a_0 and delta can be calculated randomly for each planet if, instead of a value, a tuple of two values is given
 ## a_parameters = ((1, 1.5), (4., 6.), "rh")
 ##  Another one is 'from-dust' that will generate the positions of the planets using the masses
-## (dust_to_gas_ratio, icelines, 'from-dust'), where 'icelines' is a tuple of tuples. 
-## Each tuple is : (radius [AU], factor), which means that from the original dtg (for the innermost region)
+## (dust_to_gas_ratio, iceline, 'from-dust'), where 'icelines' is a tuple of 2 values (radius [AU], factor), 
+## which means that from the original dtg (for the innermost region)
 ## , at this point you have to apply the given factor
-## a_parameters = (0.01, (4., 2.), "from-dust")
+#a_parameters = (0.01, (4., 2.), "from-dust")
 a_parameters = ((1, 1.5), (4., 6.), "rh") # the semi major axis (in AU)
 
 e_parameters = (1e-3, 1e-5, "uniform") # the eccentricity
