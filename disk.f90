@@ -883,10 +883,12 @@ subroutine init_globals(stellar_mass, time)
 			case('zhu') ! a defined torque profile to get a mass independant convergence zone
 				get_opacity => get_opacity_zhu_2009
 			
+      case('chambers')
+        get_opacity => get_opacity_chambers
 				
 			case default
         write (error_unit,*) 'The opacity type="', OPACITY_TYPE,'" cannot be found.'
-				write(error_unit,*) 'Values possible : zhu ; bell'
+				write(error_unit,*) 'Values possible : zhu ; bell ; chambers'
 				write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
         call exit(8)
     end select
@@ -1429,6 +1431,39 @@ end subroutine initial_density_profile
 
     return
   end function get_opacity_bell_lin_1994
+  
+  function get_opacity_chambers(temperature, num_bulk_density)
+  ! subroutine that return the opacity of the disk at the location of the planet given various parameters
+    implicit none
+    
+    ! Inputs 
+    real(double_precision), intent(in) :: temperature & ! temperature of the disk [K]
+                                          , num_bulk_density ! bulk density of the gas disk [MSUN/AU^3] (in numerical units)
+    
+    ! Output
+    real(double_precision) :: get_opacity_chambers
+    
+    ! Local
+    real(double_precision), parameter :: temp_e = 1380. ! K
+    real(double_precision), parameter :: kappa_0 = 3. ! cm^2/g
+    real(double_precision), parameter :: num_to_phys_bulk_density = MSUN / AU**3
+    real(double_precision), parameter :: phys_to_num_opacity = MSUN / AU**2
+
+    
+
+    if (temperature.le.temp_e) then
+      get_opacity_chambers = kappa_0
+    else
+      get_opacity_chambers = kappa_0 * (temperature / temp_e)**(-14.d0)
+    endif
+    
+    ! we change the opacity from physical units to numerical units
+    get_opacity_chambers = phys_to_num_opacity * get_opacity_chambers
+    
+    !------------------------------------------------------------------------------
+
+    return
+  end function get_opacity_chambers
   
   function get_opacity_zhu_2009(temperature, num_bulk_density)
   ! subroutine that return the opacity of the disk at the location of the planet given various parameters
