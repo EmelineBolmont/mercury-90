@@ -877,7 +877,6 @@ subroutine init_globals(stellar_mass, time)
       zero_finding_temperature => temperature_pure_viscous
     end if
     
-    ! TODO make a 'if' here to determine the opacity function if the zhu function works
     select case(OPACITY_TYPE)
 			case('bell') ! The normal torque profile, calculated form properties of the disk
 				get_opacity => get_opacity_bell_lin_1994
