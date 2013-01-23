@@ -87,7 +87,7 @@ program test_disk
     call study_optical_depth_profile()
     call study_thermal_diffusivity_profile()
     call study_scaleheight_profile()
-    call study_dissipation_at_one_location()
+!~     call study_dissipation_at_one_location()
     
     ! Test dissipation
     ! EVERYTHING ABOVE MUST BE COMMENTED BEFORE DECOMMENTING 'ONE' AND ONE ALONE OF THESES ONES
