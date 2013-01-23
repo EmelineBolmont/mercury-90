@@ -1609,12 +1609,12 @@ end subroutine initial_density_profile
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
-      call zbrent(x_min=1.d-1, x_max=1.d4, tolerance=1d-4, p_prop=p_prop, scaleheight_old=scaleheight_old, & ! Input
+      call zbrent(tolerance=1d-4, p_prop=p_prop, scaleheight_old=scaleheight_old, & ! Input
                             distance_old=a_old, & ! Input
                               temperature=temperature, optical_depth=tau_profile(j)) ! Output
       
       temperature_profile(j) = temperature
-
+      
       if (j.ne.NB_SAMPLE_PROFILES) then
       temp_profile_index(j) = - (log(temperature_profile(j)) - log(temperature_profile(j+1))) / &
                                 (log(distance_sample(j)) - log(distance_sample(j+1)))
@@ -1963,7 +1963,7 @@ end subroutine initial_density_profile
   
   end subroutine store_scaleheight_profile
 
-subroutine zbrent(x_min, x_max, tolerance, p_prop, scaleheight_old, distance_old, temperature, optical_depth)
+subroutine zbrent(tolerance, p_prop, scaleheight_old, distance_old, temperature, optical_depth)
 ! Using Brent's method, find the root of a function 'func' known to lie between 'x_min' and 'x_max'. 
 ! The root, returned as 'zero_finding_zbrent', will be refined until its accuray is 'tolerance'. 
 
@@ -1978,7 +1978,7 @@ real(double_precision), intent(out) :: temperature
 real(double_precision), intent(out) :: optical_depth
 
 ! Input 
-real(double_precision), intent(in) :: tolerance, x_min, x_max
+real(double_precision), intent(in) :: tolerance
 type(PlanetProperties), intent(in) :: p_prop ! various properties of a planet
 real(double_precision), intent(in) :: scaleheight_old ! aspect ratio of the previous point
 real(double_precision), intent(in) :: distance_old ! orbital distance of the previous point [AU]
@@ -1986,7 +1986,7 @@ real(double_precision), intent(in) :: distance_old ! orbital distance of the pre
 ! Parameters
 ! the routine zbrent works best when PES is exactly the machine precision. 
 ! The fortran 90 intrinsic function epsilon allows us to code this in a portable fashion.
-real(double_precision), parameter :: EPS=epsilon(x_min) 
+real(double_precision), parameter :: EPS=epsilon(temperature) 
 
 integer, parameter :: ITMAX=100
 
@@ -1995,8 +1995,13 @@ integer :: iter
 real(double_precision) :: a, b, c, d, e, fa, fb, fc, p, q, r, s, tol1, xm
 real(double_precision) :: viscous_prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
 real(double_precision) :: tau_a, tau_b
-integer, parameter :: TOO_MANY_ATTEMPTS = 5
-integer :: nb_attempts
+
+integer, parameter :: nb_boundaries = 13
+real(double_precision), dimension(nb_boundaries), parameter :: boundaries_list = (/1.d0, 100.d0, 150.d0, 200.d0, 400.d0, &
+                                                         1000.d0, 1500.d0, 2500.d0, 5000.d0, 10000.d0, 20000.d0, 50000.d0, &
+                                                         100000.d0/)
+
+integer :: i ! For loops
 logical :: no_sign_change
 
 if (isnan(p_prop%sigma)) then
@@ -2028,41 +2033,50 @@ end if
 ! We calculate this value outside the function because we only have to do this once per step (per radial position)
 viscous_prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 32.d0)
 
-a = x_min
-call zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
+b = boundaries_list(1)
+call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
                               scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
-                              funcv=fa, optical_depth=tau_a) ! Output
+                              funcv=fb, optical_depth=tau_b) ! Output
+
+
 
 no_sign_change = .true.
-nb_attempts = 0
-b = 0 ! The max temperature is set to 0, because in the while loop, we increase this value by x_max each time.
-do while (no_sign_change)
-  b = b + x_max
-  nb_attempts = nb_attempts + 1
+i = 1
+do while ((i.lt.nb_boundaries).and.no_sign_change)
+  a = b
+  fa = fb
+  
+  i = i + 1
+  
+  b = boundaries_list(i)
   call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
                               scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
                               funcv=fb, optical_depth=tau_b) ! Output
+  
+  
   no_sign_change = ((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))
   
-  if (nb_attempts.gt.TOO_MANY_ATTEMPTS) then
-    write(error_unit,'(a)')            '------------------------------------------------'
-    write(error_unit,'(a)') 'subroutine zbrent: There is no sign change.'
-    write(error_unit,'(a)') 'Unable to retrieve the temperature for the current position.'
-    write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_min : f(',a,') = ', fa
-    write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_max : f(',b,') = ', fb
-    write(error_unit,'(a)')            '------------------------------------------------'
-    write(error_unit,'(a,f6.1,a)') 'Previous Orbital Distance = ', distance_old, ' [AU]'
-    write(error_unit,'(a,f6.1,a)') 'Previous Scaleheight = ', scaleheight_old, ' [AU]'
-    write(error_unit,'(a)')            '------------------------------------------------'
-    write(error_unit,'(a,f6.1,a)')     '| Orbital Distance : ', p_prop%radius, ' [AU]'
-    write(error_unit,'(a,es10.2e2,a)') '| Angular Speed : ', p_prop%omega , ' [day-1]'
-    write(error_unit,'(a,es10.2e2,a)') '| Surface density : ', p_prop%sigma , ' [Msun.AU^-2]'
-    write(error_unit,'(a,f5.2)')       '| Local Surface density index : ', p_prop%sigma_index
-    write(error_unit,'(a,es10.2e2,a)') '| Viscosity : ', p_prop%nu, ' [AU^2.day^-1]'
-    write(error_unit,'(a)')            '------------------------------------------------'
-    call exit(6)
-  end if
+
 end do
+
+if (no_sign_change) then
+  write(error_unit,'(a)')            '------------------------------------------------'
+  write(error_unit,'(a)') 'subroutine zbrent: There is no sign change.'
+  write(error_unit,'(a)') 'Unable to retrieve the temperature for the current position.'
+  write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_min : f(',a,') = ', fa
+  write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_max : f(',b,') = ', fb
+  write(error_unit,'(a)')            '------------------------------------------------'
+  write(error_unit,'(a,f6.1,a)') 'Previous Orbital Distance = ', distance_old, ' [AU]'
+  write(error_unit,'(a,f6.1,a)') 'Previous Scaleheight = ', scaleheight_old, ' [AU]'
+  write(error_unit,'(a)')            '------------------------------------------------'
+  write(error_unit,'(a,f6.1,a)')     '| Orbital Distance : ', p_prop%radius, ' [AU]'
+  write(error_unit,'(a,es10.2e2,a)') '| Angular Speed : ', p_prop%omega , ' [day-1]'
+  write(error_unit,'(a,es10.2e2,a)') '| Surface density : ', p_prop%sigma , ' [Msun.AU^-2]'
+  write(error_unit,'(a,f5.2)')       '| Local Surface density index : ', p_prop%sigma_index
+  write(error_unit,'(a,es10.2e2,a)') '| Viscosity : ', p_prop%nu, ' [AU^2.day^-1]'
+  write(error_unit,'(a)')            '------------------------------------------------'
+  call exit(6)
+end if
 
 ! these values force the code to go into the first 'if' statement. 
 c = b
