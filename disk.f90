@@ -1995,10 +1995,9 @@ real(double_precision) :: a, b, c, d, e, fa, fb, fc, p, q, r, s, tol1, xm
 real(double_precision) :: viscous_prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
 real(double_precision) :: tau_a, tau_b
 
-integer, parameter :: nb_boundaries = 13
-real(double_precision), dimension(nb_boundaries), parameter :: boundaries_list = (/1.d0, 100.d0, 150.d0, 200.d0, 400.d0, &
-                                                         1000.d0, 1500.d0, 2500.d0, 5000.d0, 10000.d0, 20000.d0, 50000.d0, &
-                                                         100000.d0/)
+integer, parameter :: nb_boundaries = 11
+real(double_precision), dimension(nb_boundaries), parameter :: boundaries_list = (/1.d0, 1000.d0, 1500.d0, 2000.d0, 2500.d0, &
+                                                         3000.d0, 3500.d0, 4000.d0, 5000.d0, 10000.d0, 50000.d0/)
 
 integer :: i ! For loops
 logical :: no_sign_change
