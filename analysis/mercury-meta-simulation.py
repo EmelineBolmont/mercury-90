@@ -262,12 +262,14 @@ inner_smoothing_width = 0.05 # (in unit of the inner boundary radius)
 
 b/h = 0.4 # The smoothing width for gravitational effects
 
-sample = 400 # The number of points for the surface density profile
+sample = 1000 # The number of points for the surface density profile
 
 dissipation_type = 0 # The type of dissipation for the disk (0 for none)
 #inner_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
 #outer_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
+
 #disk_exponential_decay = 1e6 # years (for dissipation_type=2)
+
 #tau_viscous = 1e7 # years (for dissipation_type=3)
 #tau_photoevap = 1e5 # years (for dissipation_type=3)
 #dissipation_time_switch = 2e6 # years (for dissipation_type=3)
@@ -278,9 +280,11 @@ dissipation_type = 0 # The type of dissipation for the disk (0 for none)
 ##          will contains two colums (first distance in AU, second the torque in units of Gamma_0)
 ## other options : linear_indep, tanh_indep, mass_dependant
 torque_type = real # real, linear_indep, tanh_indep, mass_dependant, manual
+
 #indep_cz = 3.0 # in AU, the position of the convergence zone (for linear or tanh_indep)
-#torque_profile_steepness = 1.0 # the steepness for linear torque dependance (for linear_indep and mass_dependant)
 #saturation_torque = 1.0 # (in Gamma_0) the torque saturation value (for tanh_indep)
+#torque_profile_steepness = 1.0 # the steepness for linear torque dependance (for linear_indep and mass_dependant)
+
 ## help to define a CZ(m) by defining two points (for mass_dependant)
 #mass_dep_m_min = 5 # (earth mass)  help to define a CZ(m) by defining two points
 #mass_dep_m_max = 20 # (earth mass) help to define a CZ(m) by defining two points
