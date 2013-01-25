@@ -232,7 +232,7 @@ real*8 function orbel_flon(e,capn)
 
   !  Set iflag nonzero if capn < 0., in which case solve for -capn
   !  and change the sign of the final answer for F.
-  !  Begin with a reasonable guess based on solving the cubic for small F	
+  !  Begin with a reasonable guess based on solving the cubic for small F  
 
 
   a = 6.d0*(e-1.d0)/e
@@ -241,7 +241,7 @@ real*8 function orbel_flon(e,capn)
   biga = (-0.5*b + sq)**0.3333333333333333d0
   bigb = -(+0.5*b + sq)**0.3333333333333333d0
   x = biga + bigb
-  !	write(6,*) 'cubic = ',x**3 +a*x +b
+  !  write(6,*) 'cubic = ',x**3 +a*x +b
   orbel_flon = x
   ! If capn is tiny (or zero) no need to go further than cubic even for
   ! e =1.
@@ -252,8 +252,8 @@ real*8 function orbel_flon(e,capn)
      f = a0 +x*(a1+x2*(a3+x2*(a5+x2*(a7+x2*(a9+x2*(a11+x2))))))
      fp = b1 +x2*(b3+x2*(b5+x2*(b7+x2*(b9+x2*(b11 + 13.d0*x2)))))   
      dx = -f/fp
-     !	  write(6,*) 'i,dx,x,f : '
-     !	  write(6,432) i,dx,x,f
+     !    write(6,*) 'i,dx,x,f : '
+     !    write(6,432) i,dx,x,f
 432  format(1x,i3,3(2x,1p1e22.15))
      orbel_flon = x + dx
      !   If we have converged here there's no point in going on
@@ -323,7 +323,7 @@ real*8 function orbel_fget(e,capn)
   ! Function to solve "Kepler's eqn" for F (here called
   ! x) for given e and CAPN. 
 
-  !  begin with a guess proposed by Danby	
+  !  begin with a guess proposed by Danby  
   if( capn .lt. 0.d0) then
      tmp = -2.d0*capn/e + 1.8d0
      x = -log(tmp)
@@ -341,7 +341,7 @@ real*8 function orbel_fget(e,capn)
      esh = e*shx
      ech = e*chx
      f = esh - x - capn
-     !	  write(6,*) 'i,x,f : ',i,x,f
+     !    write(6,*) 'i,x,f : ',i,x,f
      fp = ech - 1.d0  
      fpp = esh 
      fppp = ech 
@@ -372,7 +372,7 @@ end function orbel_fget   ! orbel_fget
 !*               orbel_fhybrid ==>  eccentric anomaly. (real scalar)
 !*
 !*     ALGORITHM: For abs(N) < 0.636*ecc -0.6 , use FLON 
-!*	         For larger N, uses FGET
+!*           For larger N, uses FGET
 !*     REMARKS: 
 !*     AUTHOR: M. Duncan 
 !*     DATE WRITTEN: May 26,1992.
@@ -427,7 +427,7 @@ end function orbel_fhybrid  ! orbel_fhybrid
 !*     AUTHOR: M. Duncan 
 !*     DATE WRITTEN: May 11, 1992.
 !*     REVISIONS: May 27 - corrected it for negative Q and use power
-!*	      series for small Q.
+!*        series for small Q.
 !***********************************************************************
 
 real*8 function orbel_zget(q)

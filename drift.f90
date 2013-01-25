@@ -102,7 +102,7 @@ end subroutine drift_one    ! drift_one
 !                 vx0,vy0,vz0      ==>  final position in jacobi coord 
 !                                       (real scalars)
 !                 iflg             ==>  integer :: flag (zero if satisfactory)
-!					      (non-zero if nonconvergence)
+!                (non-zero if nonconvergence)
 
 ! Authors:  Hal Levison & Martin Duncan  
 ! Date:    2/10/93
@@ -231,9 +231,9 @@ end subroutine drift_dan   ! drift_dan
 !  EQUATION IS SOLVED! (CAN DO THAT IN THE CALLING ROUTINE BY
 !  CHECKING HOW CLOSE (x - ec*s +es*(1.-c) - dm) IS TO ZERO.
 
-!	Input:
-!	    dm		==> increment in mean anomaly M (real*8 scalar)
-!	    es,ec       ==> ecc. times sin and cos of E_0 (real*8 scalars)
+!  Input:
+!      dm    ==> increment in mean anomaly M (real*8 scalar)
+!      es,ec       ==> ecc. times sin and cos of E_0 (real*8 scalars)
 
 !       Output:
 !            x          ==> solution to Kepler's difference eqn (real*8 scalar)
@@ -249,7 +249,7 @@ subroutine drift_kepmd(dm,es,ec,x,s,c)
   !...    Inputs
   real(double_precision) :: dm,es,ec
 
-  !...	Outputs
+  !...  Outputs
   real(double_precision) :: x,s,c
 
   !...    Internals
