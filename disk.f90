@@ -1446,7 +1446,6 @@ end subroutine initial_density_profile
     ! Local
     real(double_precision), parameter :: temp_e = 1380. ! K
     real(double_precision), parameter :: kappa_0 = 3. ! cm^2/g
-    real(double_precision), parameter :: num_to_phys_bulk_density = MSUN / AU**3
     real(double_precision), parameter :: phys_to_num_opacity = MSUN / AU**2
 
     
@@ -1454,7 +1453,7 @@ end subroutine initial_density_profile
     if (temperature.le.temp_e) then
       get_opacity_chambers = kappa_0
     else
-      get_opacity_chambers = kappa_0 * (temperature / temp_e)**(-14.d0)
+      get_opacity_chambers = kappa_0 * (temp_e / temperature)**(14.d0)
     endif
     
     ! we change the opacity from physical units to numerical units
@@ -1607,7 +1606,7 @@ end subroutine initial_density_profile
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
-      call zbrent(x_min=1.d-1, x_max=1.d5, tolerance=1d-4, p_prop=p_prop, scaleheight_old=scaleheight_old, & ! Input
+      call zbrent(x_min=1.d-1, x_max=1.d4, tolerance=1d-4, p_prop=p_prop, scaleheight_old=scaleheight_old, & ! Input
                             distance_old=a_old, & ! Input
                               temperature=temperature, optical_depth=tau_profile(j)) ! Output
       
@@ -2035,8 +2034,8 @@ if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
   write(error_unit,'(a)')            '------------------------------------------------'
   write(error_unit,'(a)') 'subroutine zbrent: There is no sign change.'
   write(error_unit,'(a)') 'Unable to retrieve the temperature for the current position.'
-  write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_min : f(',a,') = ', fa
-  write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_max : f(',b,') = ', fb
+  write(error_unit,'(a,es8.2e2,a,es9.1e3)') '  For T_min : f(',a,') = ', fa
+  write(error_unit,'(a,es8.2e2,a,es9.1e3)') '  For T_max : f(',b,') = ', fb
   write(error_unit,'(a)')            '------------------------------------------------'
   write(error_unit,'(a,f6.1,a)') 'Previous Orbital Distance = ', distance_old, ' [AU]'
   write(error_unit,'(a,f6.1,a)') 'Previous Scaleheight = ', scaleheight_old, ' [AU]'
