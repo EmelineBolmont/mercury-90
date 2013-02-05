@@ -2015,6 +2015,7 @@ subroutine temperature_with_irradiation(temperature, sigma, omega, distance_new,
 ! the irradiation comes from equation (5) and (7) of (menou & goodman, 2004)
 ! the expression of the flaring angle used is not from equation (5) of 
 ! menou & goodman (2004) but instead with use equation (2) from (Dullemond, 2000), which is striclty equivalent.
+! the extra term for the flaring angle, expressing the non ponctuality of the star comes from Chiang & Goldreich, 1997, ApJ, 490, 368
 
 ! REMARKS : The scaleheight of the disk is determined directly in the function, because it depends on the temperature
 
