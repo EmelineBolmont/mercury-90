@@ -15,7 +15,7 @@ module turbulence
   implicit none
     
   integer, parameter :: nb_modes = 50 ! The total number of mode existing at the same time and that represent the turbulence in the disk at any time.
-  integer :: wavenumber_min = 1
+  integer :: wavenumber_min = 2
   integer :: wavenumber_max = 96
   integer :: wavenumber_cutoff = 6 ! If the wavenumber if greater than this number, then we set the gravitational potential of this mode to 0, to gain computational time.
   real(double_precision) :: lifetime_prefactor = 1.0 ! a security factor to limit the lifetime of a mode and fit more accurately to hydro simulations
@@ -37,23 +37,31 @@ module turbulence
 
   contains
 
-subroutine print_turbulencemode_properties(mode)
+subroutine print_turbulencemode_properties(mode, unit)
 ! subroutine that display in the terminal all the values 
 ! contained in the instance of turbulenceMode given in parameters
 !
 ! Parameters
 ! mode : an object of type 'TurbulenceMode'
+! unit : the unit where to write the informations. By default, if nothing 
+!        specified, the information are displayed on the screen
   implicit none
   type(TurbulenceMode), intent(in) :: mode
+  integer, optional :: unit
+  !------------------------------------------------------------------------------
   
-  write(*,'(a)')               '________________________________________________'
-  write(*,'(a,es10.3e2,a)')    '| Time of creation of the mode : ', mode%t_init, ' days'
-  write(*,'(a,f9.2,a)')        '| Lifetime of the mode : ', mode%lifetime, ' days'
-  write(*,'(a,I2)')            '| Wavenumber : ', mode%wavenumber
-  write(*,'(a,f4.1,a)')        '| Radial extent : ', mode%radial_extent, ' AU'
-  write(*,'(a,f4.1,a,f5.1,a)') '| Position in the disk (r,theta) : (', mode%r , ' AU, ', mode%phi * 180./PI, ' degrees)'
-  write(*,'(a,f5.2)')          '| Chi : ', mode%chi 
-  write(*,'(a)')               '------------------------------------------------'
+  if (.not.present(unit)) then
+    unit = 6
+  end if
+  
+  write(unit,'(a)')               '________________________________________________'
+  write(unit,'(a,es10.3e2,a)')    '| Time of creation of the mode : ', mode%t_init, ' days'
+  write(unit,'(a,f9.2,a)')        '| Lifetime of the mode : ', mode%lifetime, ' days'
+  write(unit,'(a,I2)')            '| Wavenumber : ', mode%wavenumber
+  write(unit,'(a,f4.1,a)')        '| Radial extent : ', mode%radial_extent, ' AU'
+  write(unit,'(a,f4.1,a,f5.1,a)') '| Position in the disk (r,theta) : (', mode%r , ' AU, ', mode%phi * 180./PI, ' degrees)'
+  write(unit,'(a,f5.2)')          '| Chi : ', mode%chi 
+  write(unit,'(a)')               '------------------------------------------------'
 
 end subroutine print_turbulencemode_properties
 
@@ -114,15 +122,17 @@ subroutine init_turbulence(time)
   integer :: i
   
   !------------------------------------------------------------------------------
-  
-  allocate(turbulence_mode(nb_modes))
-  
-  ! We initialize the random seed
-  call init_random_seed()
-  
-  do i=1, nb_modes
-	call init_mode(time, turbulence_mode(i))
-  end do
+  ! We initialize only if turbulence_mode is not allocated yet (which would mean that the initialisation has already been done).
+  if (.not.allocated(turbulence_mode)) then
+	allocate(turbulence_mode(nb_modes))
+	
+	! We initialize the random seed
+	call init_random_seed()
+	
+	do i=1, nb_modes
+	  call init_mode(time, turbulence_mode(i))
+	end do
+  end if
   
 end subroutine init_turbulence
 
@@ -180,6 +190,13 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
 	if (relative_time.ge.turbulence_mode(k)%lifetime) then
 	  call init_mode(time, turbulence_mode(k))
 	  relative_time = 0.d0
+	  
+!~ 	  open(10, file='turbulence_modes.out', access='append')
+!~ 	  write(10,*) 'time=', time, 'creation of mode ',k
+!~ 
+!~ 	  call print_turbulencemode_properties(turbulence_mode(k), unit=10)
+!~ 	  
+!~ 	  close(10)
 	end if
 
 	if (turbulence_mode(k)%wavenumber.le.wavenumber_cutoff) then
@@ -268,7 +285,7 @@ do k=1,nb_modes
 enddo
 
 ! We apply at the end the prefactor of the gravitational potential
-full_gravitational_potential = turbulent_forcing * p_prop%radius**2 * p_prop%omega**2 * full_gravitational_potential
+full_gravitational_potential = TURBULENT_FORCING * p_prop%radius**2 * p_prop%omega**2 * full_gravitational_potential
 
 end subroutine get_turbulence_potential
 
