@@ -1810,7 +1810,7 @@ end if
 !------------------------------------------------------------------------------
 
 ! We calculate this value outside the function because we only have to do this once per step (per radial position)
-prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 16.d0)
+prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 32.d0)
 
 a = x_min
 b = x_max
@@ -1930,7 +1930,7 @@ real(double_precision), intent(out) :: optical_depth ! the optical depth at a gi
 real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
 real(double_precision), intent(in) :: sigma ! the surface density at a given position (in MS/AU**2)
 real(double_precision), intent(in) :: omega ! the angular velocity of the disk at a given position
-real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 16.d0)
+real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 32.d0)
 
 ! Local
 real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
@@ -1941,7 +1941,7 @@ rho = 0.5d0 * sigma / scaleheight
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
 
 ! 1.7320508075688772d0 = sqrt(3)
-funcv = 2.d0 * SIGMA_STEFAN * temperature**4 + prefactor * &
+funcv = SIGMA_STEFAN * temperature**4 + prefactor * &
                            (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1 / (optical_depth))
 
 return
