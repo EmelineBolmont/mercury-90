@@ -30,8 +30,19 @@ program test_disk
     implicit none
     
     real(double_precision) :: stellar_mass ! [Msun * K2]
+    
+    logical :: isDefined
 
     stellar_mass = 1.d0 * K2 ! [Msun * K2]
+    
+    
+    
+    inquire(file='unitary_tests', exist=isDefined)
+    
+    ! We create the folder 'dissipation' if he doesn't exists.
+    if (.not.isDefined) then
+      call system("mkdir unitary_tests")
+    end if
     
     write(*,*) 'Initialisation'
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
@@ -74,7 +85,7 @@ program test_disk
     ! Test dissipation
 !~     call test_viscous_dissipation()
 !~     call test_disk_dissipation()
-!~     call study_influence_of_dissipation_on_torque(stellar_mass)
+    call study_influence_of_dissipation_on_torque(stellar_mass)
 
     
   end subroutine unitary_tests
@@ -748,8 +759,16 @@ program test_disk
     integer :: nb_time ! The total number of 't' values. 
     integer :: error ! to retrieve error, especially during allocations
     real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
+    logical :: isDefined
     !------------------------------------------------------------------------------
     write(*,*) 'Test dissipation of the disk'
+    
+    inquire(file='unitary_tests/dissipation', exist=isDefined)
+    
+    ! We create the folder 'dissipation' if he doesn't exists.
+    if (.not.isDefined) then
+      call system("mkdir unitary_tests/dissipation")
+    end if
     
     call system("rm unitary_tests/dissipation/*")
     
@@ -2032,7 +2051,7 @@ program test_disk
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
-    real(double_precision), parameter :: t_max = 1.d6 ! time in years
+    real(double_precision), parameter :: t_max = 2.5d6 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
     
@@ -2055,8 +2074,16 @@ program test_disk
     integer :: i,j,k ! for loops
     integer :: nb_time ! The total number of 't' values. 
     integer :: error ! to retrieve error, especially during allocations
+    logical :: isDefined
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total torque during the dissipation of the disk'
+    
+    inquire(file='dissipation', exist=isDefined)
+    
+    ! We create the folder 'dissipation' if he doesn't exists.
+    if (.not.isDefined) then
+      call system("mkdir dissipation")
+    end if
     
     position(:) = 0.d0
     velocity(:) = 0.d0
