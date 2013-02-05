@@ -195,16 +195,16 @@ subroutine read_disk_properties()
           read(value, *) TAU_DISSIPATION
           DISSIPATION_TYPE = 2
         
-        case('r_viscous')
-          read(value, *) R_VISCOUS
+        case('tau_viscous')
+          read(value, *) TAU_VISCOUS
           DISSIPATION_TYPE = 3
           
-        case('r_photoevap')
-          read(value, *) R_PHOTOEVAP
+        case('tau_photoevap')
+          read(value, *) TAU_PHOTOEVAP
           DISSIPATION_TYPE = 3
           
-        case('photoevap_massloss')
-          read(value, *) PHOTOEVAP_MASSLOSS
+        case('dissipation_time_switch')
+          read(value, *) DISSIPATION_TIME_SWITCH
           
         case('inner_smoothing_width')
           read(value, *) INNER_SMOOTHING_WIDTH
@@ -275,22 +275,25 @@ subroutine read_disk_properties()
     
     if (DISSIPATION_TYPE.eq.3) then
 			! problem is we want the exponential decay for viscous dissipation to be set if dissipation_type equal to 3
-			if (R_VISCOUS.lt.0.d0) then
+			if (TAU_VISCOUS.lt.0.d0) then
 				write(*,*) 'Error: since dissipation_type=3, "r_viscous" is expected to be set.'
 				stop
 			end if
 			
 			! problem is we want the exponential decay for photoevaporation to be set if dissipation_type equal to 3
-			if (R_PHOTOEVAP.lt.0.d0) then
+			if (TAU_PHOTOEVAP.lt.0.d0) then
 				write(*,*) 'Error: since dissipation_type=3, "r_photoevap" is expected to be set.'
 				stop
 			end if
 			
 			! problem is we want the exponential decay for photoevaporation to be set if dissipation_type equal to 3
-			if (PHOTOEVAP_MASSLOSS.lt.0.d0) then
+			if (DISSIPATION_TIME_SWITCH.lt.0.d0) then
 				write(*,*) 'Error: since dissipation_type=3, "PHOTOEVAP_MASSLOSS" is expected to be set.'
 				stop
 			end if
+			
+			! We initialize TAU_DISSIPATION for the first phase of dissipation of this mixed dissipation
+			TAU_DISSIPATION = TAU_VISCOUS
     end if
     
   else
@@ -403,6 +406,7 @@ subroutine write_disk_properties()
   write(10,'(a)') '------------------------------------'
   write(10,'(a,a)') 'branch = ', branch
   write(10,'(a,a)') 'commit = ', commit
+  write(10,'(a,a)') 'tags = ', tags
   write(10,'(a)') modifs
   write(10,'(a)') '------------------------------------'
   write(10,'(a)') '|   Properties of the disk         |'
@@ -451,12 +455,10 @@ subroutine write_disk_properties()
 		
 		case(3)
 			write(10,'(a)') '  3 : mixed dissipation, both viscously and with photoevaporation, with two timescales'
-			write(10,'(a,f6.1,a)') '    radius at which the viscous decay is calculated = ',R_VISCOUS, ' AU'
-			write(10,'(a,es10.1e2,a)') '    characteristic time for viscous decay = ',TAU_VISCOUS, ' years'
-			write(10,'(a,f6.1,a)') '    radius at which the photoevaporation decay is calculated = ',R_PHOTOEVAP, ' AU'
-			write(10,'(a,es10.1e2,a)') '    characteristic time for photoevaporation decay = ',TAU_PHOTOEVAP, ' years'
-			write(10,'(a,es10.1e2,a)') '    photoevaporation mass loss (when viscous loss is inferior, the photoevaporation start) = ',&
-			                           PHOTOEVAP_MASSLOSS, ' Msun/yr'
+			write(10,'(a,es8.1e2,a)') '    characteristic time for viscous decay = ',TAU_VISCOUS, ' years'
+			write(10,'(a,es8.1e2,a)') '    characteristic time for photoevaporation decay = ',TAU_PHOTOEVAP, ' years'
+			write(10,'(a,es8.1e2,a)') '    switch time from viscous to photoevap = ', &
+			                            DISSIPATION_TIME_SWITCH, ' years'
 
 		case default
 			write(10,'(a)') 'Warning: The dissipation type cannot be found.'
@@ -773,14 +775,6 @@ subroutine init_globals(stellar_mass, time)
     
     call read_disk_properties()
     
-    ! Valid only for mixed exponantial decay for the disk surface density
-    if (DISSIPATION_TYPE.eq.3) then
-      TAU_VISCOUS = (R_VISCOUS**2) / (get_viscosity(R_VISCOUS) * 365.25d0) ! in years
-      TAU_PHOTOEVAP = (R_PHOTOEVAP**2) / (get_viscosity(R_PHOTOEVAP) * 365.25d0) ! in years
-    
-      TAU_DISSIPATION = TAU_VISCOUS
-    end if
-    
     select case(TORQUE_TYPE)
 			case('real') ! The normal torque profile, calculated form properties of the disk
 				get_torques => get_corotation_torque
@@ -906,7 +900,6 @@ subroutine initial_density_profile()
   character(len=80) :: line
   character(len=80) :: filename
   character(len=1), parameter :: comment_character = '#'
-  real(double_precision) :: ground_surface_density = 5. ! g/cm^2, the minimum surface density
   
   real(double_precision), dimension(:), allocatable :: radius, manual_surface_profile
   
@@ -1015,7 +1008,7 @@ subroutine initial_density_profile()
 			surface_density_profile(i) = smoothing * surface_density_profile(i)
 			
 			if (surface_density_profile(i).eq.0.d0) then
-				surface_density_profile(i) = ground_surface_density * SIGMA_CGS2NUM
+				surface_density_profile(i) = GROUND_SURFACE_DENSITY * SIGMA_CGS2NUM
 			end if
 		end do
 		i_smooth = i
@@ -1423,7 +1416,6 @@ end subroutine initial_density_profile
   
   ! Locals
   real(double_precision) :: sigma, sigma_index
-  real(double_precision) :: viscous_accretion
   !------------------------------------------------------------------------------
   
   select case(DISSIPATION_TYPE)
@@ -1444,21 +1436,23 @@ end subroutine initial_density_profile
 			! we want 1% variation : timestep = - tau * ln(1e-2)
 			dissipation_timestep = 4.6 * TAU_DISSIPATION
 			next_dissipation_step = time + dissipation_timestep
-
-			call get_surface_density(radius=R_PHOTOEVAP, sigma=sigma, sigma_index=sigma_index)
 			
-			viscous_accretion = (3 * PI * 365.25d0) * get_viscosity(R_PHOTOEVAP) * sigma
-			
-			if (viscous_accretion.lt.PHOTOEVAP_MASSLOSS) then
+			if ((time/365.25).gt.DISSIPATION_TIME_SWITCH) then
 				TAU_DISSIPATION = TAU_PHOTOEVAP
 			end if
 			
 			call exponential_decay_density_profile()
 		case default
 				stop 'Error in user_module : The "dissipation_type" cannot be found. &
-						 &Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay'
+						 &Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay ; &
+						 &3 for mixed exponentiel decay'
 
 	end select
+	
+	! When the surface density is to low, we suppress the dissipation of the disk.
+	if (maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)).lt.(GROUND_SURFACE_DENSITY*SIGMA_CGS2NUM)) then
+		DISSIPATION_TYPE = 0
+	end if
   
   end subroutine dissipate_disk
   

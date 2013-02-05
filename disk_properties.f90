@@ -33,6 +33,7 @@ module disk_properties
   
   ! Here we define the power law for surface density sigma(R) = INITIAL_SIGMA_0 * R^(-INITIAL_SIGMA_INDEX)
   logical :: IS_MANUAL_SURFACE_DENSITY = .false. ! If true, the surface density profile is read from the file 'surface_density_profile.dat' instead of being a power law following the 2 next parameters.
+  real(double_precision) :: GROUND_SURFACE_DENSITY = 5. ! (g/cm^2) the minimum surface density (for dissipation or for inner edge smoothing)
   real(double_precision) :: INITIAL_SIGMA_0 = 450 ! the surface density at (R=1AU) [g/cm^2]
   real(double_precision) :: INITIAL_SIGMA_INDEX = 0.5! the negative slope of the surface density power law (alpha in the paper)
   real(double_precision), parameter :: SIGMA_CGS2NUM = AU**2 / MSUN ! The factor to convert surface density from g/cm^2 to MSUN/AU^2 (the numerical units)
@@ -42,11 +43,9 @@ module disk_properties
   real(double_precision) :: TAU_DISSIPATION = -1.d0 ! the characteristic time for the exponential decay of the surface density (in years) (dissipation_type=2)
   
   
-  real(double_precision) :: PHOTOEVAP_MASSLOSS = 1e-9 ! solar mass per year
-  real(double_precision) :: R_PHOTOEVAP = 2. ! (AU) the location in the disk where the photoevaporation is the most important (where the photoevaporation gap is created)
-  real(double_precision) :: R_VISCOUS = 40. ! (AU) the location in the disk used to evaluate the characteristique time for photo
-  real(double_precision) :: TAU_VISCOUS ! (years) the characteristic time for the viscous exponential decay (calculated at R_VISCOUS)
-  real(double_precision) :: TAU_PHOTOEVAP ! (years) the characteristic time for the photoevaporation exponential decay (calculated at R_PHOTOEVAP)
+  real(double_precision) :: DISSIPATION_TIME_SWITCH = 2e6 ! (years) the time at which we switch from viscous to photoevaporation exponential decrease (dissipatio_type=3)
+  real(double_precision) :: TAU_VISCOUS = 1.d7 ! (years) the characteristic time for the viscous exponential decay
+  real(double_precision) :: TAU_PHOTOEVAP = 3.d4 ! (years) the characteristic time for the photoevaporation exponential decay
   
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
   
