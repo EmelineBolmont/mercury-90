@@ -133,7 +133,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       ! we get the density profile.
       call dissipate_disk(time, next_dissipation_step)
       
-      
       ! we get the temperature profile.
       call calculate_temperature_profile()
       

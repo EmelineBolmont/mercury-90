@@ -69,11 +69,13 @@ program test_disk
     call study_optical_depth_profile()
     call study_thermal_diffusivity_profile()
     call study_scaleheight_profile()
+    call study_dissipation_at_one_location()
     
     ! Test dissipation
 !~     call test_viscous_dissipation()
-    call test_disk_dissipation()
-!~     call study_dissipation_of_the_disk(stellar_mass)
+!~     call test_disk_dissipation()
+!~     call study_influence_of_dissipation_on_torque(stellar_mass)
+
     
   end subroutine unitary_tests
 
@@ -534,7 +536,7 @@ program test_disk
     integer :: error ! to retrieve error, especially during allocations
     real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
     !------------------------------------------------------------------------------
-    write(*,*) 'Evolution of the total torque during the dissipation of the disk'
+    write(*,*) 'Test viscous dissipation of the disk'
     
     ! we force the dissipation type 
     DISSIPATION_TYPE = 1
@@ -747,7 +749,7 @@ program test_disk
     integer :: error ! to retrieve error, especially during allocations
     real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
     !------------------------------------------------------------------------------
-    write(*,*) 'Evolution of the total torque during the dissipation of the disk'
+    write(*,*) 'Test dissipation of the disk'
     
     call system("rm unitary_tests/dissipation/*")
     
@@ -1861,7 +1863,133 @@ program test_disk
     
   end subroutine study_torques
   
-  subroutine study_dissipation_of_the_disk(stellar_mass)
+  subroutine study_dissipation_at_one_location()
+  ! Plot the evolution of the surface density at one location through the dissipation
+  
+  ! Global parameters
+  ! dissipation_timestep : the timestep between two computation of the disk [in days]
+  ! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+  ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+  ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+  ! surface_density_profile : values of the density in MSUN/AU^2 for each value of the 'a' sample
+  ! distance_sample : values of 'a' in AU
+  ! viscosity : the viscosity of the disk in [cm^2/s] /!\ This parameter is modified here (which must not be done otherwise)
+  
+    ! Return: evolution of density at one location with time
+    
+  implicit none
+    
+    ! time sample
+    real(double_precision), parameter :: t_min = 0. ! time in years
+    real(double_precision), parameter :: t_max = 1.d7 ! time in years
+    real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
+    real(double_precision), dimension(:), allocatable :: density, density_temp ! surface density in MSUN/AU^2
+    integer :: nb_dissipation_per_step
+    integer :: time_size ! the size of the array 'time'. 
+    
+    real(double_precision) :: density_position = 2. ! in AU
+    real(double_precision) :: x_radius
+    integer :: density_idx ! the closest index to get around 1 AU
+    
+    real(double_precision) :: next_dissipation_step
+    
+    integer :: i,k ! for loops
+    integer :: nb_time
+    integer :: error ! to retrieve error, especially during allocations
+    real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
+    !------------------------------------------------------------------------------
+    write(*,*) 'Evolution of surface density at one location through dissipation'
+    
+    
+    if ((density_position .gt. INNER_BOUNDARY_RADIUS) .and. (density_position .lt. distance_sample(NB_SAMPLE_PROFILES-1))) then
+      
+      x_radius = 2.d0 * sqrt(density_position)
+      ! in the range
+      density_idx = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
+      density_position = distance_sample(density_idx)
+      
+    else
+      write(*,*) 'Error: "density_position" is not in the disk range'
+      stop
+    end if
+    
+    
+    !------------------------------------------------------------------------------
+    k = 1
+    time_size = 512 ! the size of the array. 
+    allocate(time(time_size), stat=error)
+    allocate(density(time_size), stat=error)
+    time(1) = t_min * 365.25d0 ! days
+    
+    
+    do while (time(k).lt.(t_max*365.d0))
+      ! We calculate the temperature profile for the current time (because the surface density change in function of time)
+      
+      
+      ! we get the new dissipated surface density profile. For that goal, we dissipate as many times as needed to reach the required time for the next frame.
+      
+      if (DISSIPATION_TYPE.ne.0) then
+        call dissipate_disk(time(k), next_dissipation_step)
+      else
+        next_dissipation_step = t_max*365.d0
+      end if
+      
+      density(k) = surface_density_profile(density_idx)
+      
+      ! we expand the 'time' array if the limit is reached
+      if (k.eq.time_size) then
+        ! If the limit of the 'time' array is reach, we copy the values in a temporary array, allocate with a double size, et paste the 
+        ! old values in the new bigger array
+        allocate(time_temp(time_size), stat=error)
+        allocate(density_temp(time_size), stat=error)
+        time_temp(1:time_size) = time(1:time_size)
+        density_temp(1:time_size) = density(1:time_size)
+        
+        deallocate(time, stat=error)
+        deallocate(density, stat=error)
+        time_size = time_size * 2
+        
+        allocate(time(time_size), stat=error)
+        allocate(density(time_size), stat=error)
+        time(1:time_size/2) = time_temp(1:time_size/2)
+        density(1:time_size/2) = density_temp(1:time_size/2)
+        deallocate(time_temp, stat=error)
+        deallocate(density_temp, stat=error)
+      end if
+      
+      time(k+1) = next_dissipation_step ! days
+      
+      
+      k = k + 1 ! We increment the integer that point the time in the array (since it's a 'while' and not a 'do' loop)
+    end do
+
+    nb_time = k - 1 ! since for the last step with incremented 'k' by one step that is beyond the limit.
+    
+    open(13, file="unitary_tests/local_density_dissipation.dat")
+    write(13,*) '# time (years) ; surface density (g/cm^2)'
+    do k=1,nb_time
+      write(13,*) time(k)/365.25d0, density(k) * SIGMA_NUM2CGS
+    end do
+    close(13)
+    
+    !------------------------------------------------------------------------------
+    ! Gnuplot script to output the frames of the density
+    open(13, file="unitary_tests/local_density_dissipation.gnuplot")
+    write(13,*) 'set terminal pdfcairo enhanced'
+    write(13,*) 'set output "local_density_dissipation.pdf"'
+    write(13,*) 'set xlabel "Time (years)"'
+    write(13,*) 'set ylabel "Surface density (g/cm^2)"'
+    write(13,*) 'set grid'
+!~     write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'
+!~     write(13,*) 'set yrange [', density_min, ':', density_max, ']'
+    
+    write(13,'(a,f5.1,a)') 'set title "a=', density_position,' AU"'
+    write(13,*) "plot 'local_density_dissipation.dat' using 1:2 with lines linetype 0 linewidth 4 notitle"
+    close(13)
+  
+  end subroutine study_dissipation_at_one_location
+  
+  subroutine study_influence_of_dissipation_on_torque(stellar_mass)
   ! subroutine that plot several values depending on the properties of the disk during its dissipation
   
   ! Global parameters
@@ -1919,6 +2047,8 @@ program test_disk
     character(len=80) :: filename_density_ref, filename_temperature_ref
     character(len=80) :: output_torque, output_density, output_temperature, output_time, time_format, purcent_format
     integer :: time_length ! the length of the displayed time, usefull for a nice display
+    real(double_precision) :: next_dissipation_step
+
     
     integer :: i,j,k ! for loops
     integer :: nb_time ! The total number of 't' values. 
@@ -1980,21 +2110,8 @@ program test_disk
       
       open(11, file=filename_torque)
       
-      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
-      ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
-      
-      ! we get the density profile.
-      select case(DISSIPATION_TYPE)
-        case(1)
-          call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
-        
-        case(2)
-          call exponential_decay_density_profile()
-          
-        case default
-          write(*,*) 'Warning: The dissipation rule cannot be found.'
-          write(*,*) 'Given value :',DISSIPATION_TYPE
-      end select
+      ! we get the new dissipated surface density profile. For that goal, we dissipate as many times as needed to reach the required time for the next frame.
+      call dissipate_disk(time(k), next_dissipation_step)
       
       if (k.eq.time_size) then
         ! If the limit of the array is reach, we copy the values in a temporary array, allocate with a double size, et paste the 
@@ -2139,6 +2256,6 @@ program test_disk
     end do
     close(13)
   
-  end subroutine study_dissipation_of_the_disk
+  end subroutine study_influence_of_dissipation_on_torque
 
 end program test_disk
