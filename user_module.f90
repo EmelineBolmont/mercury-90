@@ -49,8 +49,8 @@ module user_module
   real(double_precision) :: INITIAL_SIGMA_0_NUM ! the surface density at (R=1AU) [Msun/AU^2]
   logical :: IS_DISSIPATION = .True. ! boolean to tell if there is dissipation of the disk or not.
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
-  character(len=80) :: INNER_BOUNDARY_CONDITION = 'closed'!open' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-  character(len=80) :: OUTER_BOUNDARY_CONDITION = 'closed'!open' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
+  character(len=80) :: INNER_BOUNDARY_CONDITION = 'open' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+  character(len=80) :: OUTER_BOUNDARY_CONDITION = 'open' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
   
   ! Here we define the constant value of the viscosity of the disk
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s]
@@ -62,9 +62,9 @@ module user_module
   
   !------------------------------------------------------------------------------
   ! Here we define properties common to the profiles
-  real(double_precision) :: INNER_BOUNDARY_RADIUS = 30d0
-  real(double_precision) :: OUTER_BOUNDARY_RADIUS = 60.d0
-  integer :: NB_SAMPLE_PROFILES = 50 ! number of points for the sample of radius of the temperature profile
+  real(double_precision) :: INNER_BOUNDARY_RADIUS = 1.d0
+  real(double_precision) :: OUTER_BOUNDARY_RADIUS = 100.d0
+  integer :: NB_SAMPLE_PROFILES = 200 ! number of points for the sample of radius of the temperature profile
   real(double_precision) :: X_SAMPLE_STEP ! the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
 
   real(double_precision), dimension(:), allocatable :: distance_log_sample ! values of 'a' in log()
@@ -1023,10 +1023,12 @@ end subroutine initial_density_profile
     ! CONDITION AT THE INNER EDGE
     select case(INNER_BOUNDARY_CONDITION)
       case('closed') 
-      ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
-        flux_ip12 = 0.d0
+!~       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
+!~         flux_ip12 = 0.d0
         ! If closed condition, the surface density at the boundary 'surface_density_profile(1)' doesn't change. So we do not compute anything.
-        
+        tmp = (f_i + dissipation_timestep * flux_ip12 / X_SAMPLE_STEP) / (1.5d0 * x_sample(1))
+      
+        surface_density_profile(1) = log(tmp) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
       case('open') 
       ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
       ! condition. Density is free to dissipate outside the grid.
@@ -1068,24 +1070,28 @@ end subroutine initial_density_profile
     f_i = f_ip1
     
     flux_im12 = flux_ip12
+    
+    a_ip12 = 0.125d0 * (x_sample(i) * x_sample(i) + x_sample(i+1) * x_sample(i+1))
+
+    f_ip1 = 1.5d0 * x_sample(i+1) * exp(surface_density_profile(i+1))
+
+    flux_ip12 = 3.d0 * get_viscosity(a_ip12) / a_ip12 * (f_ip1 - f_i) / X_SAMPLE_STEP
         
     ! The boundary condition is computed here because some values are needed by "i=NB_SAMPLE_PROFILES-1 surface density value".
     select case(OUTER_BOUNDARY_CONDITION)
       case('closed') 
       ! here i=NB_SAMPLE_PROFILES-2
-      ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
-        flux_ip12 = 0.d0
+!~       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
+!~         flux_ip12 = 0.d0
         ! If closed condition, the surface density at the boundary 'surface_density_profile(1)' doesn't change. So we do not compute anything.
+        tmp = (f_i - dissipation_timestep * flux_im12 / X_SAMPLE_STEP) / (1.5d0 * x_sample(NB_SAMPLE_PROFILES))
+      
+        surface_density_profile(NB_SAMPLE_PROFILES) = log(tmp) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
       case('open') 
       ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
       ! condition. Density is free to dissipate outside the grid.
         surface_density_profile(NB_SAMPLE_PROFILES) = log(TINY) ! in log, '0' is not defined, so we put a huge negative value to get close to 0
         
-        a_ip12 = 0.125d0 * (x_sample(i) * x_sample(i) + x_sample(i+1) * x_sample(i+1))
-        
-        f_ip1 = 1.5d0 * x_sample(i+1) * exp(surface_density_profile(i+1))
-        
-        flux_ip12 = 3.d0 * get_viscosity(a_ip12) / a_ip12 * (f_ip1 - f_i) / X_SAMPLE_STEP
       case default
         write(*,*) 'Warning: An unknown outer boundary condition has been found'
         write(*,*) "outer_boundary_condition=", trim(OUTER_BOUNDARY_CONDITION)
@@ -1829,7 +1835,7 @@ end subroutine print_planet_properties
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
-    real(double_precision), parameter :: t_max = 1.d8 ! time in years
+    real(double_precision), parameter :: t_max = 1.d9 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer, parameter :: max_frames = 100 ! Parameter to have a control over the number of output frames. (I had near 80 000 once)
     integer :: nb_dissipation_per_step
@@ -1862,8 +1868,12 @@ end subroutine print_planet_properties
     write(filename_density_ref, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',0,'.dat'
     call store_density_profile(filename=filename_density_ref)
     
+    ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
+    density_min = exp(minval(surface_density_profile(1:NB_SAMPLE_PROFILES))) * MSUN / AU**2
+    density_max = exp(maxval(surface_density_profile(1:NB_SAMPLE_PROFILES))) * MSUN / AU**2
+    
     ! We want to know the max size of the time display in order to have a nice display, with filled spaces in the final plots
-    write(output_time, '(i0)') int(t_max)
+    write(output_time, '(i0)') int(t_max, kind=8)
     time_length = len(trim(output_time))
     write(time_format, *) '(i',time_length,'.',time_length,')'
     write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years")'
@@ -1912,7 +1922,7 @@ end subroutine print_planet_properties
         deallocate(time_temp, stat=error)
       end if
       
-      write(*,purcent_format) int(time(k)/365.25d0), int(t_max) ! We display on the screen how far we are from the end of the integration.
+      write(*,purcent_format) int(time(k)/365.25d0, kind=8), int(t_max, kind=8) ! We display on the screen how far we are from the end of the integration.
       
       
       time(k+1) = time(k) + dfloat(nb_dissipation_per_step) * dissipation_timestep * 365.25d0 ! days
@@ -1921,7 +1931,7 @@ end subroutine print_planet_properties
       call store_density_profile(filename=filename_density)
       
       if (k.eq.1) then
-      ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
+        ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
         density_min = exp(minval(surface_density_profile(1:NB_SAMPLE_PROFILES))) * MSUN / AU**2
         density_max = exp(maxval(surface_density_profile(1:NB_SAMPLE_PROFILES))) * MSUN / AU**2
       end if
@@ -1945,7 +1955,7 @@ end subroutine print_planet_properties
     do k=1, nb_time
       write(filename_density, '(a,i0.5,a)') 'surface_density',k,'.dat'
       write(output_density, '(a,i0.5,a)') 'surface_density',k,'.png'
-      write(output_time, time_format) int(time(k)/365.25)
+      write(output_time, time_format) int(time(k)/365.25, kind=8)
       
       write(13,*) "set output '",trim(output_density),"'"
       write(13,*) 'set title "T=', trim(output_time),' years"'
