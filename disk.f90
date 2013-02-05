@@ -856,6 +856,9 @@ subroutine init_globals(stellar_mass, time)
       zero_finding_temperature => temperature_pure_viscous
     end if
     
+    ! TODO make a 'if' here to determine the opacity function if the zhu function works
+    get_opacity => get_opacity_zhu_2009
+    
     if (.not.allocated(distance_sample)) then
 			allocate(distance_sample(NB_SAMPLE_PROFILES))
 		end if
@@ -1335,7 +1338,7 @@ end subroutine initial_density_profile
   
   end subroutine init_turbulence_forcing
   
-  function get_opacity(temperature, num_bulk_density)
+  function get_opacity_bell_lin_1994(temperature, num_bulk_density)
   ! subroutine that return the opacity of the disk at the location of the planet given various parameters
     implicit none
     
@@ -1344,7 +1347,7 @@ end subroutine initial_density_profile
                                           , num_bulk_density ! bulk density of the gas disk [MSUN/AU^3] (in numerical units)
     
     ! Output
-    real(double_precision) :: get_opacity
+    real(double_precision) :: get_opacity_bell_lin_1994
     
     ! Local
     real(double_precision), parameter :: temp12 = 166.81d0, temp23 = 202.677d0
@@ -1365,34 +1368,111 @@ end subroutine initial_density_profile
     
     if (temperature.le.temp12) then
       ! regime 1 : ice grains
-      get_opacity = 2d-4 * temperature * temperature
+      get_opacity_bell_lin_1994 = 2d-4 * temperature * temperature
     elseif ((temperature.gt.temp12).and.(temperature.le.temp23)) then
       ! regime 2 : evaporation of ice grains
-      get_opacity = 2.d16 / temperature**7.d0
+      get_opacity_bell_lin_1994 = 2.d16 / temperature**7.d0
     elseif ((temperature.gt.temp23).and.(temperature.le.temp34)) then
       ! regime 3 : metal grains
-      get_opacity = 0.1d0 * sqrt(temperature)
+      get_opacity_bell_lin_1994 = 0.1d0 * sqrt(temperature)
     elseif ((temperature.gt.temp34).and.(temperature.le.temp45)) then
       ! regime 4 : evaporation of metal grains
-      get_opacity = 2.d81 * bulk_density / temperature**24.d0
+      get_opacity_bell_lin_1994 = 2.d81 * bulk_density / temperature**24.d0
     elseif ((temperature.gt.temp45).and.(temperature.le.temp56)) then
       ! regime 5 : molecules
-      get_opacity = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
+      get_opacity_bell_lin_1994 = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
     elseif ((temperature.gt.temp56).and.(temperature.le.temp67)) then
       ! regime 6 : H-scattering
-      get_opacity = 1.d-36 * bulk_density**THIRD * temperature**10
+      get_opacity_bell_lin_1994 = 1.d-36 * bulk_density**THIRD * temperature**10
     else
       ! regime 7 : bound-free and free-free
-      get_opacity = 1.5d20 * bulk_density / temperature**2.5d0
+      get_opacity_bell_lin_1994 = 1.5d20 * bulk_density / temperature**2.5d0
     endif
     
     ! we change the opacity from physical units to numerical units
-    get_opacity = phys_to_num_opacity * get_opacity
+    get_opacity_bell_lin_1994 = phys_to_num_opacity * get_opacity_bell_lin_1994
     
     !------------------------------------------------------------------------------
 
     return
-  end function get_opacity
+  end function get_opacity_bell_lin_1994
+  
+  function get_opacity_zhu_2009(temperature, num_bulk_density)
+  ! subroutine that return the opacity of the disk at the location of the planet given various parameters
+    implicit none
+    
+    ! Inputs 
+    real(double_precision), intent(in) :: temperature & ! temperature of the disk [K]
+                                          , num_bulk_density ! bulk density of the gas disk [MSUN/AU^3] (in numerical units)
+    
+    ! Output
+    real(double_precision) :: get_opacity_zhu_2009
+    
+    ! Local
+    real(double_precision) :: temp12, temp23, temp34, temp45, temp56, temp67, temp78
+    real(double_precision) :: bulk_density ! [g/cm^3] (in physical units needed for the expression of the opacity)
+    real(double_precision), parameter :: num_to_phys_bulk_density = MSUN / AU**3
+    real(double_precision), parameter :: phys_to_num_opacity = MSUN / AU**2
+    real(double_precision) :: tmp
+
+    ! we convert the bulk_density from numerical units(AU, MS, DAY) to physical units (CGS)
+    bulk_density = num_to_phys_bulk_density * num_bulk_density
+    
+    ! /!\ Transition point and function calculated with mu=2.35
+    
+    ! We get the transition point between the various regimes
+    temp12 = 2.817504d03 * bulk_density**(0.030928)
+    temp23 = 3.156868d03 * bulk_density**(0.028807)
+    temp34 = 4.119201d03 * bulk_density**(0.030928)
+    temp45 = 3.176256d03 * bulk_density**(0.008390)
+    temp56 = 7.434522d03 * bulk_density**(0.015228)
+    temp67 = 2.439593d04 * bulk_density**(0.041667)
+    temp78 = 1.146587d08 * bulk_density**(0.388889)
+    
+    
+    if (temperature.le.temp12) then
+      ! regime 1 : ice grains
+      get_opacity_zhu_2009 = 5.284453d-02 * temperature**(0.738000)
+    elseif ((temperature.gt.temp12).and.(temperature.le.temp23)) then
+      ! regime 2 : evaporation of ice grains
+      get_opacity_zhu_2009 = 9.996570d144 * temperature**(-41.668000) * bulk_density**(1.312000)
+    elseif ((temperature.gt.temp23).and.(temperature.le.temp34)) then
+      ! regime 3 : metal grains
+      get_opacity_zhu_2009 = 9.705100d-16 * temperature**(4.063000)
+    elseif ((temperature.gt.temp34).and.(temperature.le.temp45)) then
+      ! regime 4 : evaporation of metal grains
+      get_opacity_zhu_2009 = 1.073589d64 * temperature**(-17.804000) * bulk_density**(0.676000)
+    elseif ((temperature.gt.temp45).and.(temperature.le.temp56)) then
+      ! regime 5 : molecules
+      get_opacity_zhu_2009 = 5.790524d-11 * temperature**(3.403000) * bulk_density**(0.498000)
+    elseif ((temperature.gt.temp56).and.(temperature.le.temp67)) then
+      ! regime 6 : H-scattering
+      get_opacity_zhu_2009 = 8.839468d-39 * temperature**(10.572000) * bulk_density**(0.382000)
+    elseif ((temperature.gt.temp67).and.(temperature.le.temp78)) then
+      ! regime 7 : bound-free and free-free
+      get_opacity_zhu_2009 = 1.067416d19 * temperature**(-2.432000) * bulk_density**(0.928000)
+    else
+      ! regime 8 : ?
+      get_opacity_zhu_2009 = 0.33113112
+    endif
+    
+    
+    tmp = 1.4125375446227496d-17 * temperature**(3.586)
+    if ((get_opacity_zhu_2009.lt.tmp).and.(temperature.lt.1d4)) then
+      get_opacity_zhu_2009 = tmp
+    end if
+    
+    if (temperature.lt.794.33) then
+      get_opacity_zhu_2009 = 0.05284452517751805 * temperature**(0.738)
+    end if
+    
+    ! we change the opacity from physical units to numerical units
+    get_opacity_zhu_2009 = phys_to_num_opacity * get_opacity_zhu_2009
+    
+    !------------------------------------------------------------------------------
+
+    return
+  end function get_opacity_zhu_2009
 
   subroutine calculate_temperature_profile()
 ! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
