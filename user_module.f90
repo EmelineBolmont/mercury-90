@@ -194,9 +194,9 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
   
   !------------------------------------------------------------------------------
   ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
-  scaleheight_p = scaleheight_prefactor * sqrt(temperature_p) / omega_p
+  scaleheight_p = 0.05 * radius_p!scaleheight_prefactor * sqrt(temperature_p) / omega_p
   !------------------------------------------------------------------------------
-  nu_p = alpha * omega_p * scaleheight_p**2 ! [AU^2.day-1]
+  nu_p = 1.d-15 * AU**2 / DAY!alpha * omega_p * scaleheight_p**2 ! [AU^2.day-1]
   aspect_ratio_p = scaleheight_p / radius_p
 !~     write(*,'(e12.4)') nu_p * AU**2 / DAY 
   !------------------------------------------------------------------------------
@@ -208,7 +208,7 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * aspect_ratio_p))**2 * sigma_p * radius_p**4 * omega_p**2
   
-  chi_p = chi_p_prefactor * temperature_p**4 / (opacity_p * sigma_p**2 * omega_p**2)
+  chi_p = 1.d-5 * radius_p**2 * omega_p!chi_p_prefactor * temperature_p**4 / (opacity_p * sigma_p**2 * omega_p**2)
   
   !------------------------------------------------------------------------------
   ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
@@ -412,7 +412,7 @@ end subroutine init_globals
     
     call test_functions_FGK()
     call test_get_opacity()
-!~     call test_torques()
+    call test_torques()
     call test_torques_fixed_a()
     call test_torques_fixed_m()
     
@@ -544,8 +544,8 @@ end subroutine init_globals
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     
     integer, parameter :: nb_points = 200
-    real(double_precision), parameter :: a_min = 0.1
-    real(double_precision), parameter :: a_max = 30.
+    real(double_precision), parameter :: a_min = 0.01
+    real(double_precision), parameter :: a_max = 1.
     ! step for log sampling
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
     
@@ -566,16 +566,16 @@ end subroutine init_globals
     open(10, file='test_corotation_torque.dat')
     open(11, file='test_total_torque.dat')
     open(12, file='test_lindblad_torque.dat')
-    open(13, file='test_ref_torque.dat')
-    open(14, file='test_gamma_eff.dat')
-    open(15, file='test_total_torque_units.dat')
+    open(14, file='test_ref_torque.dat')
+    open(15, file='test_gamma_eff.dat')
+    open(13, file='test_total_torque_units.dat')
     
     write(10,*) 'semi major axis (AU) ; mass in earth mass ; corotation torque (no dim)'
     write(11,*) 'semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
     write(12,*) 'semi major axis (AU) ; mass in earth mass ; lindblad torque (no dim)'
-    write(13,*) 'semi major axis (AU) ; mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
-    write(14,*) 'semi major axis (AU) ; mass in earth mass ; gamma effective'
-    write(15,*) 'semi major axis (AU) ; mass in earth mass ; total torque in M_s.AU^2.day^{-2}'
+    write(14,*) 'semi major axis (AU) ; mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
+    write(15,*) 'semi major axis (AU) ; mass in earth mass ; gamma effective'
+    write(13,*) 'semi major axis (AU) ; mass in earth mass ; total torque in M_s.AU^2.day^{-2}'
     
     do i=1, nb_points ! loop on the position
       a = a_min + a_step * (i-1)
@@ -599,9 +599,9 @@ end subroutine init_globals
         write(10,*) a, mass / EARTH_MASS, corotation_torque
         write(11,*) a, mass / EARTH_MASS, total_torque
         write(12,*) a, mass / EARTH_MASS, torque_lindblad
-        write(13,*) a, mass / EARTH_MASS, torque_ref
-        write(14,*) a, mass / EARTH_MASS, gamma_eff
-        write(15,*) a, mass / EARTH_MASS, total_torque_units
+        write(14,*) a, mass / EARTH_MASS, torque_ref
+        write(15,*) a, mass / EARTH_MASS, gamma_eff
+        write(13,*) a, mass / EARTH_MASS, total_torque_units
       end do
       
       do j=10,15
@@ -619,9 +619,34 @@ end subroutine init_globals
     open(10, file="corotation_torque.gnuplot")
     open(11, file="total_torque.gnuplot")
     open(12, file="lindblad_torque.gnuplot")
-    open(13, file="ref_torque.gnuplot")
-    open(14, file="gamma_eff.gnuplot")
-    open(15, file="total_torque_units.gnuplot")
+    open(14, file="ref_torque.gnuplot")
+    open(15, file="gamma_eff.gnuplot")
+    open(13, file="total_torque_units.gnuplot")
+    
+    ! --------------------------------------------
+    ! Part for contour for only a part of the plots. We want an isoline for zero torque
+    do j=10,13
+      write(j,*) 'set contour base; set cntrparam levels discret 0.'
+      write(j,*) 'unset surface'
+      write(j,*) 'set table "contour.dat"'
+      write(j,*) 'set dgrid3d'
+    end do
+    
+    write(10,*) "splot 'test_corotation_torque.dat'"
+    write(11,*) "splot 'test_total_torque.dat'"
+    write(12,*) "splot 'test_lindblad_torque.dat'"
+    write(13,*) "splot 'test_total_torque_units.dat'"
+    
+    do j=10,13
+      write(j,*) 'unset table'
+
+      write(j,*) '# Change single blank lines to double blank lines'
+      write(j,*) '!awk "NF<2{printf\"\n\"}{print}" <contour.dat >contour1.dat'
+
+      write(j,*) '# Draw the plot'
+      write(j,*) 'reset'
+    end do
+    ! --------------------------------------------
     
     do j=10,15
       write(j,*) 'set terminal x11 enhanced'
@@ -632,37 +657,44 @@ end subroutine init_globals
     write(10,*) 'set title "Evolution of the corotation torque {/Symbol g}_{eff}{/Symbol G}_c/{/Symbol G}_0"'
     write(11,*) 'set title "Evolution of the total torque {/Symbol g}_{eff}{/Symbol G}_{tot}/{/Symbol G}_0 "'
     write(12,*) 'set title "Evolution of the lindblad torque {/Symbol g}_{eff}{/Symbol G}_L/{/Symbol G}_0 "'
-    write(13,*) 'set title "Evolution of the reference torque {/Symbol G}_0 [M_s.AU^2.day^{-2}]"'
-    write(14,*) 'set title "Evolution of {/Symbol g}_{eff}"'
-    write(15,*) 'set title "Evolution of the total torque {/Symbol G}_{tot} [M_s.AU^2.day^{-2}]"'
+    write(14,*) 'set title "Evolution of the reference torque {/Symbol G}_0 [M_s.AU^2.day^{-2}]"'
+    write(15,*) 'set title "Evolution of {/Symbol g}_{eff}"'
+    write(13,*) 'set title "Evolution of the total torque {/Symbol G}_{tot} [M_s.AU^2.day^{-2}]"'
     
     do j=10,15
       write(j,*) 'set pm3d map'
+      write(j,*) 'set pm3d explicit'
+      write(j,*) 'set palette rgbformulae 22,13,-31'
 !~     write(j,*) 'set xrange [', a_min, ':', a_max, '] noreverse'
 !~     write(j,*) 'set yrange [', mass_min, ':', mass_max, '] noreverse'
     end do
 
-    write(10,*) "splot 'test_corotation_torque.dat' title ''"
-    write(11,*) "splot 'test_total_torque.dat' title ''"
-    write(12,*) "splot 'test_lindblad_torque.dat' title ''"
-    write(13,*) "splot 'test_ref_torque.dat' title ''"
-    write(14,*) "splot 'test_gamma_eff.dat' title ''"
-    write(15,*) "splot 'test_total_torque_units.dat' title ''"
+    write(10,*) "splot 'test_corotation_torque.dat' with pm3d title '', 'contour1.dat' with line lt -1 title ''"
+    write(11,*) "splot 'test_total_torque.dat' with pm3d title '', 'contour1.dat' with line lt -1 title ''"
+    write(12,*) "splot 'test_lindblad_torque.dat' with pm3d title '', 'contour1.dat' with line lt -1 title ''"
+    write(13,*) "splot 'test_total_torque_units.dat' with pm3d title '', 'contour1.dat' with line lt -1 title ''"
+    write(14,*) "splot 'test_ref_torque.dat' with pm3d title ''"
+    write(15,*) "splot 'test_gamma_eff.dat' with pm3d title ''"
+
     
     do j=10,15
-      write(j,*) "#pause -1 # wait until a carriage return is hit"
+      write(j,*) "pause -1 # wait until a carriage return is hit"
       write(j,*) "set terminal pngcairo enhanced"
     end do
     
     write(10,*) "set output 'corotation_torque.png'"
     write(11,*) "set output 'total_torque.png'"
     write(12,*) "set output 'lindblad_torque.png'"
-    write(13,*) "set output 'ref_torque.png'"
-    write(14,*) "set output 'gamma_eff.png'"
-    write(15,*) "set output 'total_torque_units.png'"
+    write(14,*) "set output 'ref_torque.png'"
+    write(15,*) "set output 'gamma_eff.png'"
+    write(13,*) "set output 'total_torque_units.png'"
     
     do j=10,15
       write(j,*) "replot # pour générer le fichier d'output"
+    end do
+    
+    do j=10,15
+      write(j,*) '!rm contour.dat contour1.dat'!to delete the two temporary files
     end do
     
     close(10)
