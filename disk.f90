@@ -194,6 +194,9 @@ subroutine read_disk_properties()
 						write(*,*) "         value(s)='", trim(value),"'"
 					end if
         
+        case('opacity_type')
+          read(value, *) OPACITY_TYPE
+        
         case('disk_albedo')
           read(value, *) DISK_ALBEDO
         
@@ -440,6 +443,20 @@ subroutine write_disk_properties()
   write(10,'(a,f4.2)') 'adiabatic index = ', ADIABATIC_INDEX
   write(10,'(a,f4.2)') 'mean molecular weight = ', MEAN_MOLECULAR_WEIGHT
   write(10,'(a,es10.1e2,a)') 'viscosity = ', viscosity, ' (cm^2/s)'
+  write(10,'(a, a)') 'opacity = ', trim(OPACITY_TYPE)
+  select case(OPACITY_TYPE)
+		case('bell') ! The normal torque profile, calculated form properties of the disk
+			write(10,'(a)') '  bell : Opacity table from (Bell & Lin, 1994)'
+		
+		! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+		case('zhu') ! a defined torque profile to get a mass independant convergence zone
+			write(10,'(a)') '  zhu : Opacity table from (Zhu & Hartmann, 2009)'
+		
+		case default
+			write(10,'(a)') 'Warning: The opacity rule cannot be found.'
+			write(10,'(a,a)') '  Given value : ', trim(OPACITY_TYPE)
+			write(10,'(a)') '  Values possible : zhu ; bell'
+	end select
   write(10,*) ''
   write(10,'(a,l,a)') 'is turbulence = ', IS_TURBULENCE, ' (T:True;F:False)'
   if (IS_TURBULENCE) then
@@ -857,7 +874,22 @@ subroutine init_globals(stellar_mass, time)
     end if
     
     ! TODO make a 'if' here to determine the opacity function if the zhu function works
-    get_opacity => get_opacity_zhu_2009
+    select case(OPACITY_TYPE)
+			case('bell') ! The normal torque profile, calculated form properties of the disk
+				get_opacity => get_opacity_bell_lin_1994
+			
+			! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+			case('zhu') ! a defined torque profile to get a mass independant convergence zone
+				get_opacity => get_opacity_zhu_2009
+			
+				
+			case default
+        write (error_unit,*) 'The opacity type="', OPACITY_TYPE,'" cannot be found.'
+				write(error_unit,*) 'Values possible : zhu ; bell'
+				write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
+        call exit(8)
+    end select
+    
     
     if (.not.allocated(distance_sample)) then
 			allocate(distance_sample(NB_SAMPLE_PROFILES))
