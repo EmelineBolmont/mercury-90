@@ -16,6 +16,7 @@ module user_module
   
   real(double_precision), parameter :: b_over_h = 0.4 ! the smoothing length for the planet's potential
   real(double_precision), parameter :: adiabatic_index = 1.4 ! the adiabatic index for the gas equation of state
+  real(double_precision), parameter :: scaleheight = 0.05 ! the scaleheight of the disk. Is used by the function get_scaleheight
   
   ! Here we define the power law for surface density sigma(R) = sigma_0 * R^sigma_index
   real(double_precision), parameter :: sigma_0 = 1700 ! the surface density at (R=1) [g/cm^2]
@@ -42,10 +43,10 @@ module user_module
 ! ===
 !------------------------------------------------------------------------------
 
-subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acceleration)
+subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acceleration)!,spin)
 !  mass      = mass (in solar masses)
 !  position     = coordinates (x,y,z) with respect to the central body [AU]
-!  speed     = velocities (vx,vy,vz) with respect to the central body [AU/day]
+!  velocity     = velocities (vx,vy,vz) with respect to the central body [AU/day]
 !  n_bodies  = current number of bodies (INCLUDING the central object)
 !  n_big_bodies  =    "       "    " big bodies (ones that perturb everything else)
 !  time  = current epoch [days]
@@ -63,87 +64,61 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   ! Output
   real(double_precision),intent(out) :: acceleration(3,n_bodies)
   
-  ! Local
-  integer :: planet ! index for the planet loop
-  real(double_precision) :: gamma_0 ! Normalization factor for all the torques.
+  !------------------------------------------------------------------------------ 
+  !------Local-------
   
   ! Properties of the planet
-  real(double_precision), dimension(n_bodies) :: radius_p ! the radial position of the planet [AU]
-  real(double_precision), dimension(n_bodies) :: velocity_p ! the norm of the speed [AU/day]
-  real(double_precision), dimension(n_bodies) :: omega_p ! the angular rotation [day-1]
+  real(double_precision), dimension(n_bodies-1) :: radius_p ! the radial position of the planet [AU]
+  real(double_precision), dimension(n_bodies-1) :: velocity_p ! the norm of the speed [AU/day]
+  real(double_precision), dimension(n_bodies-1) :: omega_p ! the angular rotation [day-1]
+  real(double_precision), dimension(n_bodies-1) :: gamma_0 ! Normalization factor for all the torques. [?]
+  real(double_precision), dimension(n_bodies-1) :: torque ! the torque exerted by the disk on the planet [?]
+  real(double_precision), dimension(n_bodies-1) :: sigma_p ! the surface density of the gas disk at the planet location [?]
+  real(double_precision), dimension(n_bodies-1) :: scaleheight_p ! the scaleheight of the gas disk at the location of the planet [no dim]
+  real(double_precision), dimension(n_bodies-1) :: time_mig ! The migration timescale for the planet [day]
+  real(double_precision), dimension(n_bodies-1) :: angular_momentum ! the angular momentum of the planet [?]
   !------------------------------------------------------------------------------
   ! Setup
   acceleration(:,:) = 0.d0
   !------------------------------------------------------------------------------
   
+  ! WE CALCULATE PROPERTIES OF THE PLANETS
   ! Not for all the bodies because there might be problem to divide by radial position of the star.
-  radius_p(2:) = sqrt(position(1,2:)**2 + position(2,2:)**2)
-  velocity_p(2:) = sqrt(velocity(1,2:)**2 + velocity(2,2:)**2)
+  radius_p(:) = sqrt(position(1,2:)**2 + position(2,2:)**2)
+  velocity_p(:) = sqrt(velocity(1,2:)**2 + velocity(2,2:)**2)
   
   ! \vect{v} = \vect{\omega} \wedge \vect{x}
   ! By assuming that the planet is in the plane of the disk (which is false) we get =
-  omega_p(2:) = velocity_p(2:) / radius_p(2:)
+  omega_p(:) = velocity_p(:) / radius_p(:) ! TODO UNITS!!!!!!!!!
+  write(*,*) "Warning: Units for omega_p are currently not verified"
   
-  ! For every object except the central one
-  do planet = 2,n_bodies
-    
-    
-  !TODO loop for planets, but we might not apply the acceleration to all the bodies, we must also do a test regarding their masses for exemple.
-    gamma_0 = (mass(planet) * get_scaleheight(radius_p(planet), time))**2 * get_sigma(radius_p(planet), time) &
-            * radius_p(planet)**4 * omega_p(planet)**2
-  end do
+  sigma_p(:) = sigma_0 * radius_p(:) ** sigma_index ! need to be in numerical units, not the case for the moment
+  scaleheight_p(:) = scaleheight
   
+  !------------------------------------------------------------------------------
+  ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
+  gamma_0(:) = (mass(2:) / (mass(1) * scaleheight_p(:)))**2 * sigma_p(:) * radius_p(:)**4 * omega_p(:)**2
+  
+  !------------------------------------------------------------------------------
+
+  
+  time_mig(:) = angular_momentum(:) / torque(:)
+  
+  acceleration(1,:) = - (0.5d0 / time_mig(:)) * velocity(1,:)
+  acceleration(2,:) = - (0.5d0 / time_mig(:)) * velocity(2,:)
+  acceleration(3,:) = - (0.5d0 / time_mig(:)) * velocity(3,:)
   !------------------------------------------------------------------------------
   
   return
 end subroutine mfo_user
 
-function get_sigma(radius, time)
-  ! Function that return the surface density at the given radius.
-  ! Maybe a next version will include dissipation of the disk with time.
-  
-  ! Parameter:
-  !  radius : the radius at which we want the surface density [AU]
-  !  time  = current epoch [days]
-  
-  ! Return:
-  ! get_sigma: the surface density at R=radius [solar masses / AU^2]
-
-  implicit none
-  
-  real(double_precision), intent(in) :: radius
-  real(double_precision), intent(in) :: time
-  real(double_precision) :: get_sigma
-  
-  get_sigma = sigma_0 * radius ** sigma_index
-  
-  return
-end function get_sigma
-
-function get_scaleheight(radius, time)
-  ! Function that return the surface density at the given radius.
-  ! Maybe a next version will include dissipation of the disk with time.
-  
-  ! Parameter:
-  !  radius : the radius at which we want the surface density [AU]
-  !  time  = current epoch [days]
-  
-  ! Return:
-  ! scaleheight: the scaleheight at R=radius [AU]
-
-  implicit none
-  
-  real(double_precision), intent(in) :: radius
-  real(double_precision), intent(in) :: time
-  
-  real(double_precision) :: get_scaleheight
-  
-  get_scaleheight = 0.05 ! TODO for the moment, constant, but must be changed afterwards
-  
-  return
-end function get_scaleheight
 
 end module user_module
 
 ! TODO utiliser la masse des objets pour ne pas faire le calcul si trop massif, il faut respecter le domaine de validité des formules des couples
 ! TODO routine générale de conversion des couples en accélération afin de pouvoir réutiliser ailleurs
+
+!TODO : 
+!_ amortissement de l'eccentricité
+!_ amortissement de l'inclinaison
+!_rajouter le spin comme variable d'entrée de la routine mfo_user
