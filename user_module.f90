@@ -15,7 +15,7 @@ module user_module
   
   public :: mfo_user, unitary_tests ! unitary_tests must be used only to test function, you should not use it out of the debug phase
   
-  integer, parameter :: nb_a_sample = 400 ! number of points for the sample of radius of the temperature profile
+
   
   !------------------------------------------------------------------------------
   ! Default values for parameters that are to be read in the parameter file 'disk.in'
@@ -36,7 +36,7 @@ module user_module
 !~   real(double_precision) :: temperature_index = 1.6! the negativeslope of the temperature power law (beta in the paper)
   real(double_precision) :: radius_min = 1.d0
   real(double_precision) :: radius_max = 60.d0
-  
+  integer :: nb_a_sample = 400 ! number of points for the sample of radius of the temperature profile
   !------------------------------------------------------------------------------
   ! prefactors
   real(double_precision) :: x_s_prefactor ! prefactor for the half width of the corotation region
@@ -50,9 +50,9 @@ module user_module
   real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
   
   !------------------------------------------------------------------------------
-  real(double_precision), dimension(nb_a_sample), save :: temp_profile_y ! values of the temperature in log() for each value of the 'a' sample
-  real(double_precision), dimension(nb_a_sample), save :: temp_profile_x ! values of 'a' in log()
-  real(double_precision), dimension(nb_a_sample), save :: temp_profile_index ! values of the local negative slope of the temperature profile
+  real(double_precision), dimension(:), allocatable :: temp_profile_y ! values of the temperature in log() for each value of the 'a' sample
+  real(double_precision), dimension(:), allocatable :: temp_profile_x ! values of 'a' in log()
+  real(double_precision), dimension(:), allocatable :: temp_profile_index ! values of the local negative slope of the temperature profile
   
   ! We define a new type for the properties of the planet
   type PlanetProperties
@@ -72,9 +72,7 @@ module user_module
     real(double_precision) :: chi ! the thermal diffusion coefficient at the location of the planet [AU^2.day^-1]
     real(double_precision) :: nu ! the viscosity of the disk at the location of the planet [AU^2.day^-1]
     real(double_precision) :: temperature ! the temperature of the disk at the location of the planet [K] 
-    real(double_precision) :: temperature_index ! the negative temperature index of the disk at the location of the planet [no dim]
-    real(double_precision) :: bulk_density ! the bulk_density of the disk at the location of the planet [MSUN.AU^-3]
-    real(double_precision) :: opacity ! the opacity of the disk at the location of the planet [?]   
+    real(double_precision) :: temperature_index ! the negative temperature index of the disk at the location of the planet [no dim] 
   end type PlanetProperties
 
   
@@ -185,6 +183,11 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       call get_planet_properties(stellar_mass=mass(1), mass=mass(planet), & ! input
       position=position(1:3, planet), velocity=velocity(1:3,planet),& ! input
       p_prop=p_prop) ! Output
+      
+      if (FirstCall) then
+        FirstCall = .False.
+        call print_planet_properties(p_prop)
+      end if
       
       !------------------------------------------------------------------------------
       ! prefactor calculation for eccentricity and inclination damping
@@ -406,6 +409,9 @@ subroutine read_disk_properties()
 
         case('temperature')
           read(value, *) radius_min, radius_max
+        
+        case('sample')
+          read(value, *) nb_a_sample
           
         case('alpha')
           read(value, *) alpha
@@ -461,11 +467,12 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   call mco_x2ae(gm,position(1),position(2),position(3),velocity(1),velocity(2),velocity(3),&
                 p_prop%semi_major_axis,p_prop%eccentricity,p_prop%inclination,p_prop%radius,velocity2_p,h_p)
   
-  
   !------------------------------------------------------------------------------
   p_prop%sigma = sigma_0_num / p_prop%radius ** sigma_index ! [Msun/AU^3]
+!~   call print_planet_properties(p_prop)
   call get_temperature(ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, radius=p_prop%radius, & ! Input
                        temperature=p_prop%temperature, temperature_index=p_prop%temperature_index) ! Output
+  
 !~   p_prop%temperature = temperature_0 / p_prop%radius**temperature_index ! [K]
 
   ! We calculate the angular momentum
@@ -589,12 +596,12 @@ subroutine init_globals(stellar_mass)
     
     call read_disk_properties()
     
-    open(15, file="leak.out", status="replace")
-    write(15,*) "various data for debuguing that are output when the acceleration get NaN in mfo_user"
-    close(15)
-!~     open(15, file="migration_time.out", status="replace")
-!~     write(15,*) "# The migration time in days, to be compared with real migration time mesured on the plot."
-!~     close(15)
+    allocate(temp_profile_y(nb_a_sample))
+    allocate(temp_profile_x(nb_a_sample))
+    allocate(temp_profile_index(nb_a_sample))
+    temp_profile_x(1:nb_a_sample) = 0.d0
+    temp_profile_y(1:nb_a_sample) = 0.d0
+    temp_profile_index(1:nb_a_sample) = 0.d0
     
     x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
 
@@ -604,9 +611,6 @@ subroutine init_globals(stellar_mass)
     ! division of k_B by m_H is done separately for exponant and value to have more precision
     ! sqrt(k_B/m_H) in numerical units, knowing that [k_B]=[m^2.kg.s^-2K^-1] and [m_H]=[kg]. 
     scaleheight_prefactor = sqrt(1.3806503d0/(1.67262158d0 * mean_molecular_weight) * 1.d4) * DAY / (AU * 1.d-2) 
-    
-    
-    write(*,*) 'Warning: lindblad torque prefactor need to be calculated at each step if the temperature index change'
     
     torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
     torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
@@ -1456,11 +1460,11 @@ end subroutine init_globals
     real(double_precision) :: a_old, temperature_old 
     
     integer :: i,j ! for loops
-    
+        
     a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    position(:) = 0.d0
-    velocity(:) = 0.d0
+    position(1:3) = 0.d0
+    velocity(1:3) = 0.d0
     
     ! stellar mass
     stellar_mass = 1.d0 * K2  
@@ -1468,7 +1472,7 @@ end subroutine init_globals
     ! We open the file where we want to write the outputs
     open(10, file='temperature_profile.dat', status='replace')
     
-    write(10,*) '# a in AU ; temperature (in K) ; exponant ; log(a) ; log(T)'    
+    write(10,*) '# a in AU ; temperature (in K) ; exponant ; log(a) ; log(T)'
     
     a = 0.9d0 * a_min
     ! We generate cartesian coordinate for the given semi major axis
@@ -1477,12 +1481,14 @@ end subroutine init_globals
     ! We generate cartesian coordinate for the given mass and semi major axis
     velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
     
+!~     call print_planet_properties(p_prop)
     ! we store in global parameters various properties of the planet
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
      
     
     temperature = zero_finding_zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop)
+    
 
     do j=1,nb_a
       a_old = a
@@ -1496,6 +1502,8 @@ end subroutine init_globals
       velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
+
+!~       call print_planet_properties(p_prop)
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
@@ -1723,7 +1731,6 @@ if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
   write(*,*) '  radial position of the planet (in AU) :', p_prop%radius
   write(*,*) '  viscosity :', p_prop%nu
   write(*,*) '  surface density :', p_prop%sigma
-  write(*,*) '  bulk density :', p_prop%bulk_density
   write(*,*) '  angular velocity :', P_prop%omega
   stop
 endif
@@ -1864,7 +1871,8 @@ id_max = ubound(ln_x,1)
 x_min = exp(ln_x(1))
 x_max = exp(ln_x(id_max))
 
-if ((radius .ge. x_min) .and. (radius .le. x_max)) then
+if ((radius .ge. x_min) .and. (radius .lt. x_max)) then
+
   ! in the range
   radius_step = exp(ln_x(2)) - x_min ! Only valid if the separation between radial values is linear. (equal space between the values, but not their logarithm)
   closest_low_id = 1 + int((radius - x_min) / radius_step)
@@ -1873,7 +1881,7 @@ if ((radius .ge. x_min) .and. (radius .le. x_max)) then
   ln_x2 = ln_x(closest_low_id + 1)
   ln_y1 = ln_y(closest_low_id)
   ln_y2 = ln_y(closest_low_id + 1)
-  
+
   temperature = exp(ln_y2 + (ln_y1 - ln_y2) * (log(radius) - ln_x2) / (ln_x1 - ln_x2))
   temperature_index = idx(closest_low_id) ! for the temperature index, no interpolation.
 else if (radius .lt. x_min) then
@@ -1884,7 +1892,35 @@ else if (radius .gt. x_max) then
   temperature_index = idx(id_max)
 end if
 
+
+
 end subroutine get_temperature
+
+subroutine print_planet_properties(p_prop)
+! subroutine that display in the terminal all the values 
+! contained in the instance of planet properties given in parameters
+!
+! Parameters
+! p_prop : an object of type 'PlanetProperties'
+  implicit none
+  type(PlanetProperties), intent(in) :: p_prop
+  
+  write (*,*) 'angular_momentum :', p_prop%angular_momentum 
+  write (*,*) 'radius :', p_prop%radius 
+  write (*,*) 'velocity :', p_prop%velocity 
+  write (*,*) 'omega :', p_prop%omega 
+  write (*,*) 'semi_major_axis :', p_prop%semi_major_axis 
+  write (*,*) 'eccentricity :', p_prop%eccentricity 
+  write (*,*) 'inclination :', p_prop%inclination 
+  write (*,*) 'sigma :', p_prop%sigma 
+  write (*,*) 'scaleheight :', p_prop%scaleheight 
+  write (*,*) 'aspect_ratio :', p_prop%aspect_ratio 
+  write (*,*) 'chi :', p_prop%chi 
+  write (*,*) 'nu :', p_prop%nu 
+  write (*,*) 'temperature :', p_prop%temperature 
+  write (*,*) 'temperature_index:', p_prop%temperature_index
+end subroutine print_planet_properties
+
 end module user_module
 
 ! TODO utiliser la masse des objets pour ne pas faire le calcul si trop massif, il faut respecter le domaine de validité des formules des couples
