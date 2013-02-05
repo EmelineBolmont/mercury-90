@@ -54,7 +54,8 @@ program test_disk
     call test_manual_torque_interpolation()
     call test_density_interpolation()
     call test_retrieval_of_orbital_elements(stellar_mass=stellar_mass)
-    call test_turbulence(stellar_mass=stellar_mass)
+    call test_turbulence_torque(stellar_mass=stellar_mass)
+    call test_turbulence_mode()
 
     
     ! Physical values and plots
@@ -510,7 +511,7 @@ program test_disk
     write(12,*) 'set output "retrieval_I.pdf"'
     
     do j=10, 12
-      write(10,*) 'replot'
+      write(j,*) 'replot'
       close(j)
     end do
     
@@ -881,10 +882,10 @@ program test_disk
   
   end subroutine test_exponential_dissipation
   
-  subroutine test_turbulence(stellar_mass)
+  subroutine test_turbulence_torque(stellar_mass)
   
   use turbulence
-  use utilities, only : get_polar_coordinates, get_mean, get_stdev
+  use utilities, only : get_polar_coordinates, get_mean, get_stdev, get_histogram
   
   implicit none
   
@@ -905,15 +906,14 @@ program test_disk
   real(double_precision), dimension(nb_points) :: turbulence_torque ! in AU^2/DAY^2
   
   ! planet parameters
-  real(double_precision), parameter :: a = 4. ! in AU
-  real(double_precision), parameter :: mass = 15. * K2 * EARTH_MASS ! in [Msun * K2]
+  real(double_precision), parameter :: a = 100. ! in AU
+  real(double_precision), parameter :: mass = 1. * K2 * EARTH_MASS ! in [Msun * K2]
   real(double_precision) :: delta_t = 365.25d0 * a**1.5d0 ! the timestep in days between two calculation of the turbulence torque. Must be greater than the coherence time of the turbulence to make the test of the turbulence usefull
 
   
   ! histogram temp values
-  real(double_precision) :: delta_bin, max_value, min_value
+  real(double_precision) :: delta_bin
   real(double_precision), dimension(nb_bins) :: bin_x_values, bin_y_values, gauss_fit
-  integer :: index_bin
   real(double_precision) :: mean, stdev, y_max
 
   integer :: i ! For loops
@@ -941,57 +941,22 @@ program test_disk
     time = initial_time + i * delta_t
     
     call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
-    turbulence_torque(i) = (- sin(theta_planet) * turbulence_acceleration(1) + cos(theta_planet) * turbulence_acceleration(2)) * a ! * &
-!~                           DAY**2 / AU**2
+    turbulence_torque(i) = (- sin(theta_planet) * turbulence_acceleration(1) + cos(theta_planet) * turbulence_acceleration(2)) * a 
     
     write(10,*) time, turbulence_torque(i)
   end do
   close(10)
   
-  ! We initialize the values of the counting array
-  bin_y_values(1:nb_bins) = 0
-
-  ! From the list of values, we get the values for the histogram
-  max_value = maxval(turbulence_torque(1:nb_points))
-  min_value = minval(turbulence_torque(1:nb_points))
-  
-  delta_bin = (max_value - min_value) / float(nb_bins)
-  
-  if (delta_bin.eq.0.d0) then
-    write(*,'(a, es6.0e2,a, es7.0e2,a, es7.0e2,a)') 'For ', float(nb_points), ' values, the turbulent torque is between [',&
-                                                        min_value, ' ; ', max_value, ']'
-    write(*,'(a, i5, a, es7.0e2)') 'Thus, for ', nb_bins, ' bins in the histogram, the single width of a bin is : ', delta_bin
-    write(*,'(a)') 'Program excited.'
-    stop
-  end if
-  
-  do i=1,nb_bins
-    bin_x_values(i) = min_value + (i - 0.5d0) * delta_bin
-  end do
-    
-  do i=1, nb_points
-    ! if the value is exactly equal to max_value, we force the index to be nb_bins
-    index_bin = min(floor((turbulence_torque(i) - min_value) / delta_bin)+1, nb_bins)
-    
-    ! With floor, we get the immediate integer below the value. Since the index start at 1, we add 1 to the value, because the 
-    ! calculation will get from 0 to the number of bins. Thus, for the max value, we will get nb_bins +1, which is not possible. 
-    ! As a consequence, we take the lower value between the index and nb_bins, to ensure that for the max value, we get an index 
-    ! of nb_bins.
-!~     write(*,*) i, index_bin, min_value, delta_bin, turbulence_torque(i)
-    bin_y_values(index_bin) = bin_y_values(index_bin) + 1
-  end do
-
-  ! We normalize the histogram
-  bin_y_values(1:nb_bins) = bin_y_values(1:nb_bins) / float(nb_points)
-  
-
+  call get_histogram(turbulence_torque(1:nb_points), nb_bins, bin_x_values(1:nb_bins), bin_y_values(1:nb_bins)) 
   
   ! We calculate the mean and stdev value of the data set and then generate a supposed gaussian to see if this function fit the datas
+  ! the mean of the data set must be 0. So in order to check that, the mean is fixed to 0, to see if the gaussian looks nice.
+  delta_bin = (bin_x_values(2) - bin_x_values(1))
   mean = get_mean(turbulence_torque(1:nb_points))
   stdev = get_stdev(turbulence_torque(1:nb_points))
   y_max = 1. / (stdev * sqrt(TWOPI)) * delta_bin
   do i=1,nb_bins
-    gauss_fit(i) = y_max * exp(-(bin_x_values(i) - mean)**2 / (2. * stdev**2))
+    gauss_fit(i) = y_max * exp(-(bin_x_values(i))**2 / (2. * stdev**2))
   end do
   
   open(10, file="unitary_tests/turbulence_torque.hist")
@@ -1002,18 +967,55 @@ program test_disk
     
   open(10, file="unitary_tests/turbulence_torque.gnuplot")
   write(10,'(a)') 'set terminal pdfcairo enhanced'
+  write(10,'(a)') 'set output "turbulence_torque.pdf"'
   write(10,'(a)') '!rm "turbulence_torque.pdf"'
   write(10,'(a)') 'set xlabel "torque [AU^2/DAY^2]"'
   write(10,'(a)') 'set ylabel "density of probability"'
-  write(10,'(4(a,es10.2e2))') 'set label "{/Symbol m}=',mean,', {/Symbol s}=',stdev,'" at ',min_value,',', y_max
-  write(10,'(a)') 'plot "turbulence_torque.hist" using 1:3 with lines title "gaussian fit", \'
-  write(10,'(a)') '"turbulence_torque.hist" using 1:2 with boxes title "turbulence torque"'
-  write(10,'(a)') 'set output "turbulence_torque.pdf"'
-  write(10,'(a)') 'replot'
+  write(10,'(a)') 'set grid'
+  write(10,'(5(a,es10.2e2))') 'set label " data : {/Symbol m}=',mean,', {/Symbol s}=',stdev,'\n&
+                                         & fit  : {/Symbol m}=0, {/Symbol s}=',stdev,'" at graph 0, graph 0.9'
+  write(10,'(a)') 'plot "turbulence_torque.hist" using 1:2 with boxes linestyle 3 title "turbulence torque", \'
+  write(10,'(a)') '"turbulence_torque.hist" using 1:3 with lines linestyle 1 title "gaussian fit"'
   close(10)
   
-  end subroutine test_turbulence
+  end subroutine test_turbulence_torque
   
+  subroutine test_turbulence_mode()
+  
+  use turbulence
+  
+  implicit none
+    
+  integer, parameter :: nb_points = 10000 ! the time through which we compute the turbulence
+  
+  real(double_precision) :: initial_time = 0.d0
+  type(TurbulenceMode) :: turb_mode ! a turbulence mode
+  integer :: i ! For loops
+  !------------------------------------------------------------------------------
+  
+  call init_turbulence(initial_time)
+  
+  open(10, file="unitary_tests/turbulence_mode.dat")
+  write(10,*) '# wavenumber, r, phi, lifetime, radial_extent, chi'
+  
+  do i=1, nb_points
+    call init_mode(initial_time, turb_mode)
+    write(10,*) turb_mode%wavenumber, turb_mode%r, turb_mode%phi, turb_mode%lifetime, &
+                turb_mode%radial_extent, turb_mode%chi
+  end do
+  close(10)
+  
+!~   open(10, file="unitary_tests/turbulence_mode.gnuplot")
+!~   write(10,'(a)') 'set terminal pdfcairo enhanced'
+!~   write(10,'(a)') '!rm "turbulence_mode.pdf"'
+!~   write(10,'(a)') 'set output "turbulence_mode.pdf"'
+!~   write(10,'(a)') 'set xlabel "torque [AU^2/DAY^2]"'
+!~   write(10,'(a)') 'set ylabel "density of probability"'
+!~   write(10,'(a)') 'set grid'
+!~   write(10,'(a)') 'plot "turbulence_mode.dat" using 1:2 with lines '
+!~   close(10)
+  
+  end subroutine test_turbulence_mode
 
 ! %%% Physical behaviour %%%
   subroutine study_temperature_profile(stellar_mass)

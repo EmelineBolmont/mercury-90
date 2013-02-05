@@ -648,11 +648,13 @@ subroutine init_globals(stellar_mass, time)
       call read_torque_profile()
     end if
     
+    ! We initialize the value even if there is no turbulence declared, because in the tests, turbulence is not always declared, even if we test it.
+    call init_turbulence_forcing() 
+    
     if (IS_TURBULENCE) then
       call init_turbulence(time)
     end if
-    ! We initialize the value even if there is no turbulence declared, because in the tests, turbulence is not always declared, even if we test it.
-    call init_turbulence_forcing()     
+    
     
     ! we write all the values used by user_module, those given by the user, and the default ones, in 'disk.out' file
     call write_disk_properties() 
@@ -809,7 +811,7 @@ end subroutine initial_density_profile
 
 		!------------------------------------------------------------------------------
 
-    if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. OUTER_BOUNDARY_RADIUS)) then
+    if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. distance_sample(NB_SAMPLE_PROFILES-1))) then
       
       x_radius = 2.d0 * sqrt(radius)
       ! in the range
@@ -825,7 +827,7 @@ end subroutine initial_density_profile
     else if (radius .lt. INNER_BOUNDARY_RADIUS) then
       sigma = surface_density_profile(1)
       sigma_index = surface_density_index(1)
-    else if (radius .gt. OUTER_BOUNDARY_RADIUS) then
+    else if (radius .ge. distance_sample(NB_SAMPLE_PROFILES-1)) then
       sigma = surface_density_profile(NB_SAMPLE_PROFILES)
       sigma_index = surface_density_index(NB_SAMPLE_PROFILES)
     end if
@@ -1538,7 +1540,7 @@ real(double_precision) :: ln_x1, ln_x2, ln_y1, ln_y2
 real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
 
 
-if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. OUTER_BOUNDARY_RADIUS)) then
+if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. distance_sample(NB_SAMPLE_PROFILES-1))) then
   
   x_radius = 2.d0 * sqrt(radius)
   ! in the range
@@ -1556,7 +1558,7 @@ else if (radius .lt. INNER_BOUNDARY_RADIUS) then
   temperature = temperature_profile(1)
   temperature_index = temp_profile_index(1)
   chi = chi_profile(1)
-else if (radius .gt. OUTER_BOUNDARY_RADIUS) then
+else if (radius .ge. distance_sample(NB_SAMPLE_PROFILES-1)) then
   temperature = temperature_profile(NB_SAMPLE_PROFILES)
   temperature_index = temp_profile_index(NB_SAMPLE_PROFILES)
   chi = chi_profile(NB_SAMPLE_PROFILES)

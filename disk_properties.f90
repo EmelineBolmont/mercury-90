@@ -97,40 +97,47 @@ module disk_properties
 
 contains
 
-subroutine print_planet_properties(p_prop)
+subroutine print_planet_properties(p_prop, unit)
 ! subroutine that display in the terminal all the values 
 ! contained in the instance of planet properties given in parameters
 !
 ! Parameters
 ! p_prop : an object of type 'PlanetProperties'
+! unit : the unit where to write the informations. By default, if nothing 
+!        specified, the information are displayed on the screen
   implicit none
   type(PlanetProperties), intent(in) :: p_prop
-  
-  write(*,'(a)')            '________________________________________________'
-  write(*,'(a)')            '|####################################'
-  write(*,'(a)')            '|#   Properties of the planet       #'
-  write(*,'(a)')            '|####################################'
-  write(*,'(a,es10.2e2,a)') '| Mass : ', p_prop%mass, ' [Msun * K2]' 
-  write(*,'(a,f5.1,a)')     '| Semi_major_axis : ', p_prop%semi_major_axis, ' [AU]'
-  write(*,'(a,f9.7)')       '| Eccentricity : ', p_prop%eccentricity 
-  write(*,'(a,f5.1,a)')     '| Inclination : ', p_prop%inclination*180./PI, ' [degrees]'
-  write(*,'(a,f5.1,a)')     '| Radius : ', p_prop%radius, ' [AU]'
-  write(*,'(a,es10.2e2,a)') '| Velocity : ', p_prop%velocity , ' [AU/day]'
-  write(*,'(a,es10.2e2,a)') '| Omega : ', p_prop%omega , ' [day-1]'
-  write(*,'(a,es10.2e2,a)') '| Angular_momentum : ', p_prop%angular_momentum, ' [Ms.AU^2.day^-1]'
-  write(*,'(a)')            '|####################################'
-  write(*,'(a)')            '|#  Properties of the disk at the   #'
-  write(*,'(a)')            '|#     location of the planet       #'
-  write(*,'(a)')            '|####################################'
-  write(*,'(a,f9.2,a)')     '| Sigma : ', p_prop%sigma , ' [Msun.AU^-2]'
-  write(*,'(a,f9.2)')       '| Sigma_index : ', p_prop%sigma_index
-  write(*,'(a,f9.2,a)')     '| Scaleheight : ', p_prop%scaleheight , ' [AU]'
-  write(*,'(a,f6.4)')       '| Aspect_ratio : ', p_prop%aspect_ratio 
-  write(*,'(a,f9.2,a)')     '| Chi : ', p_prop%chi , ' [AU^2.day^-1]'
-  write(*,'(a,es10.2e2,a)') '| Nu : ', p_prop%nu, ' [AU^2.day^-1]'
-  write(*,'(a,f7.2,a)')     '| Temperature : ', p_prop%temperature , ' [K]'
-  write(*,'(a,f6.3)')       '| Temperature_index : ', p_prop%temperature_index
-  write(*,'(a)')            '------------------------------------------------'
+  integer, optional :: unit
+
+  if (.not.present(unit)) then
+    unit = 6
+  end if
+
+  write(unit,'(a)')            '________________________________________________'
+  write(unit,'(a)')            '|####################################'
+  write(unit,'(a)')            '|#     Properties of the planet     #'
+  write(unit,'(a)')            '|####################################'
+  write(unit,'(a,es10.2e2,a)') '| Mass : ', p_prop%mass, ' [Msun * K2]' 
+  write(unit,'(a,f5.1,a)')     '| Semi-major axis : ', p_prop%semi_major_axis, ' [AU]'
+  write(unit,'(a,f9.7)')       '| Eccentricity : ', p_prop%eccentricity 
+  write(unit,'(a,f5.1,a)')     '| Inclination : ', p_prop%inclination*180./PI, ' [degrees]'
+  write(unit,'(a,f5.1,a)')     '| Radius : ', p_prop%radius, ' [AU]'
+  write(unit,'(a,es10.2e2,a)') '| Velocity : ', p_prop%velocity , ' [AU/day]'
+  write(unit,'(a,es10.2e2,a)') '| Omega : ', p_prop%omega , ' [day-1]'
+  write(unit,'(a,es10.2e2,a)') '| Angular_momentum : ', p_prop%angular_momentum, ' [Ms.AU^2.day^-1]'
+  write(unit,'(a)')            '|####################################'
+  write(unit,'(a)')            '|#  Properties of the disk at the   #'
+  write(unit,'(a)')            '|#     location of the planet       #'
+  write(unit,'(a)')            '|####################################'
+  write(unit,'(a,f9.2,a)')     '| Sigma : ', p_prop%sigma , ' [Msun.AU^-2]'
+  write(unit,'(a,f9.2)')       '| Sigma_index : ', p_prop%sigma_index
+  write(unit,'(a,f9.2,a)')     '| Scaleheight : ', p_prop%scaleheight , ' [AU]'
+  write(unit,'(a,f6.4)')       '| Aspect_ratio : ', p_prop%aspect_ratio 
+  write(unit,'(a,f9.2,a)')     '| Chi : ', p_prop%chi , ' [AU^2.day^-1]'
+  write(unit,'(a,es10.2e2,a)') '| Nu : ', p_prop%nu, ' [AU^2.day^-1]'
+  write(unit,'(a,f7.2,a)')     '| Temperature : ', p_prop%temperature , ' [K]'
+  write(unit,'(a,f6.3)')       '| Temperature_index : ', p_prop%temperature_index
+  write(unit,'(a)')            '------------------------------------------------'
 
 end subroutine print_planet_properties
 
