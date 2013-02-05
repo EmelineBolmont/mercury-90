@@ -1049,8 +1049,8 @@ subroutine initial_density_profile()
 		do while ((smoothing.lt.1.d0).and.(i.lt.NB_SAMPLE_PROFILES)) 
 			i = i + 1
 			smoothing = tanh((distance_sample(i) - INNER_BOUNDARY_RADIUS) / (INNER_SMOOTHING_WIDTH * INNER_BOUNDARY_RADIUS))
+      
 			surface_density_profile(i) = smoothing * surface_density_profile(i)
-			
 			if (surface_density_profile(i).eq.0.d0) then
 				surface_density_profile(i) = GROUND_SURFACE_DENSITY * SIGMA_CGS2NUM
 			end if
