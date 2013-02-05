@@ -146,18 +146,28 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 !~   ! modif pour amortissement de e et I
 !~   real(double_precision) :: rad, ang, angold
   
+  ! counter to check how many time the routine have been called
+  integer :: counter = 0
   
   !------------------------------------------------------------------------------
   ! Setup
-  acceleration(:,:) = 0.d0
+  
+  counter = counter + 1
+  
+  do planet=1,n_bodies
+    acceleration(1,planet) = 0.d0
+    acceleration(2,planet) = 0.d0
+    acceleration(3,planet) = 0.d0
+  end do
+!~   acceleration(:,:) = 0.d0
 !~   eccentricity_acceleration(:) = 0.d0 8might activate this when I turn eccentricity damping off
   !------------------------------------------------------------------------------
   call init_globals(stellar_mass=mass(1))
   
-  if (FirstCall) then
-    FirstCall = .False.
-    write(*,*) 'Warning: the torque is specified manually'
-  end if
+!~   if (FirstCall) then
+!~     FirstCall = .False.
+!~     write(*,*) 'Warning: the torque is specified manually'
+!~   end if
   
   
   do planet=2,n_big_bodies
@@ -265,9 +275,44 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   !~     acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
   !~     acceleration(3,planet) = migration_acceleration(3) + inclination_acceleration_z
 !~ 		write(*,*) p_prop%semi_major_axis, time_mig, time_ecc, time_inc
+      if (isnan(acceleration(1,planet))) then
+        open(15, file="leak.out", status="old", access="append")
+        write(15,*) counter, time, planet, mass(planet)
+        write(15,*) 'position:', position(1,planet), position(2,planet), position(3,planet)
+        write(15,*) 'velocity:', velocity(1,planet), velocity(2,planet), velocity(3,planet)
+        write(15,*) 'acceleration:', acceleration(1,planet), acceleration(2,planet), acceleration(3,planet)
+        write(15,*) 'times:', time_mig, time_ecc, time_inc
+        write(15,*) 'torques:', torque, lindblad_torque, corotation_torque
+        write(15,*) 'angular momentum:', p_prop%angular_momentum, 'radius:', p_prop%radius, 'velocity:', p_prop%velocity
+        write(15,*) 'omega:', p_prop%omega, 'semi_major_axis:', p_prop%semi_major_axis, 'eccentricity:', p_prop%eccentricity
+        write(15,*) 'inclination:', p_prop%inclination, 'sigma:', p_prop%sigma, 'scaleheight:', p_prop%scaleheight
+        write(15,*) 'aspect_ratio:', p_prop%aspect_ratio, 'chi:', p_prop%chi, 'nu:', p_prop%nu
+        write(15,*) 'temperature:', p_prop%temperature, 'bulk_density:', p_prop%bulk_density, 'opacity:', p_prop%opacity
+        close(15)
+      end if
+
+!~       if (isnan(time_mig)) then
+!~         open(15, file="leak_after.out", status="old", access="append")
+!~         write(15,*) counter, time, planet, mass(planet), position(1,planet), position(2,planet), position(3,planet)
+!~         write(15,*) 'velocity:', velocity(1,planet), velocity(2,planet), velocity(3,planet)
+!~         write(15,*) 'acceleration:', acceleration(1,planet), acceleration(2,planet), acceleration(3,planet)
+!~         close(15)
+!~       end if
     end if
   end do
-
+  
+  
+  if (minval(mass(2:n_big_bodies)).lt.TINY) then
+    open(16, file="instant_output.out")
+    write(16,*) ''
+    do planet=2,n_big_bodies
+      write(16,*) time, planet, mass(planet), position(1,planet), position(2,planet), position(3,planet), &
+                  velocity(1,planet), velocity(2,planet), velocity(3,planet), &
+                  acceleration(1,planet), acceleration(2,planet), acceleration(3,planet)
+    end do
+    close(16)
+    stop
+  end if
 !~   stop
   
   !------------------------------------------------------------------------------
@@ -555,6 +600,10 @@ subroutine init_globals(stellar_mass)
     FirstCall = .False.
     
     call read_disk_properties()
+    
+    open(15, file="leak.out", status="replace")
+    write(15,*) "various data for debuguing that are output when the acceleration get NaN in mfo_user"
+    close(15)
     
     x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
 
