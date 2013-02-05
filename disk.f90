@@ -54,6 +54,22 @@ module disk
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s]
   
   !------------------------------------------------------------------------------
+  ! Values for manual torque profiles (mass dependant or independant for instance)
+  real(double_precision) :: TORQUE_PROFILE_STEEPNESS = 1. ! increase, in units of Gamma_0 of the torque per 10AU
+  
+  ! For mass independant convergence zone
+  real(double_precision) :: INDEP_CZ = 8. ! Position of the mass independant convergence zone in AU
+  
+  ! For mass dependant convergence zone
+  ! boundary mass values that have a zero torque zone
+  real(double_precision) :: MASS_DEP_M_MIN = 1.  ! Minimum mass for the mass dependant convergence zone (in earth mass)
+  real(double_precision) :: MASS_DEP_M_MAX = 60. ! Maximum mass for the mass dependant convergence zone (in earth mass)
+  
+  ! position of the zero torque zone for the minimum and maximum mass
+  real(double_precision) :: MASS_DEP_CZ_M_MIN = 4.  ! position of the mass dependant convergence zone for the minimum mass (in AU)
+  real(double_precision) :: MASS_DEP_CZ_M_MAX = 30. ! position of the mass dependant convergence zone for the maximum mass (in AU)
+  
+  !------------------------------------------------------------------------------
   ! prefactors
   real(double_precision) :: X_S_PREFACTOR ! prefactor for the half width of the corotation region
   real(double_precision) :: SCALEHEIGHT_PREFACTOR ! prefactor for the scaleheight
@@ -303,8 +319,15 @@ subroutine write_disk_properties()
   write(10,*) ''
   write(10,'(a)') "Possible values : 'real', 'mass_independant', 'mass_dependant'"
   write(10,'(a, a)') 'torque type = ', trim(TORQUE_TYPE)
+  write(10,'(a)') '  Case(mass_independant) : manual torque profile with a mass independant convergence zone'
+  write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
+  write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
+  write(10,'(a)') '  Case(mass_dependant) : manual torque profile with a mass independant convergence zone'
+  write(10,'(a,f6.1,a)') '    minimum mass = ', MASS_DEP_M_MIN, ' (earth mass)'
+  write(10,'(a,f6.1,a)') '    maximum mass = ', MASS_DEP_M_MAX, ' (earth mass)'
+  write(10,'(a,f6.1,a)') '    CZ for minimum mass = ', MASS_DEP_CZ_M_MIN, ' (AU)'
+  write(10,'(a,f6.1,a)') '    CZ for maximum mass = ', MASS_DEP_CZ_M_MAX, ' (AU)'
   write(10,*) ''
-  
   close(10)
   
 end subroutine write_disk_properties
@@ -1446,6 +1469,9 @@ subroutine get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corot
 ! Global parameters
 ! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
 ! X_S_PREFACTOR : prefactor for the half width of the corotation region
+! TORQUE_PROFILE_STEEPNESS : increase, in units of Gamma_0 of the torque per 10AU
+! INDEP_CZ : Position of the mass independant convergence zone in AU
+
 
   implicit none
   real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
@@ -1458,10 +1484,6 @@ subroutine get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corot
   real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
   real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
   
-  ! Local
-  real(double_precision), parameter :: steepness = 1. !increase, in units of Gamma_0 of the torque per 10AU
-  real(double_precision), parameter :: position_of_CZ = 8. ! in AU
-  
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
@@ -1471,7 +1493,7 @@ subroutine get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corot
   
   !------------------------------------------------------------------------------
 
-  corotation_torque = steepness * 0.1d0 * (position_of_CZ - p_prop%radius)
+  corotation_torque = TORQUE_PROFILE_STEEPNESS * 0.1d0 * (INDEP_CZ - p_prop%radius)
   
 
   return
@@ -1483,6 +1505,11 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
 ! Global parameters
 ! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
 ! X_S_PREFACTOR : prefactor for the half width of the corotation region
+! TORQUE_PROFILE_STEEPNESS : increase, in units of Gamma_0 of the torque per 10AU
+! MASS_DEP_M_MIN = 1.  ! Minimum mass for the mass dependant convergence zone (in earth mass)
+! MASS_DEP_M_MAX = 60. ! Maximum mass for the mass dependant convergence zone (in earth mass)
+! MASS_DEP_CZ_M_MIN = 4.  ! position of the mass dependant convergence zone for the minimum mass (in AU)
+! MASS_DEP_CZ_M_MAX = 30. ! position of the mass dependant convergence zone for the maximum mass (in AU)
 
   implicit none
   real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
@@ -1494,21 +1521,10 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   real(double_precision), intent(out) :: corotation_torque
   real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
   real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
-  
-  ! parameters
-  real(double_precision), parameter :: a_steepness = 1. !increase, in units of Gamma_0 of the torque per 10AU
-  
-  ! boundary mass values that have a zero torque zone
-  real(double_precision), parameter :: m_min = 1.  ! mass in earth mass
-  real(double_precision), parameter :: m_max = 60. ! mass in earth mass
-  
-  ! position of the zero torque zone for the minimum and maximum mass
-  real(double_precision), parameter :: CZ_m_min = 4.  ! in AU
-  real(double_precision), parameter :: CZ_m_max = 30. ! in AU
-  
+   
   ! coeff for the function that give the position of the convergence zone in function of mass
-  real(double_precision), parameter :: a = (CZ_m_max - CZ_m_min) / ((m_max - m_min)) ! The mass will be given in solar mass. So we add a corrective factor to get planet mass in earth mass
-  real(double_precision), parameter :: b = CZ_m_min - m_min * a
+  real(double_precision) :: a ! The mass will be given in solar mass. So we add a corrective factor to get planet mass in earth mass
+  real(double_precision) :: b
   
   ! Local 
   real(double_precision) :: planet_mass ! the mass of the current planet in earth mass
@@ -1521,6 +1537,9 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   ! a = (a_max - a_min) / (m_max - m_min)
   ! b = a_min - m_min * a
   
+  a = (MASS_DEP_CZ_M_MAX - MASS_DEP_CZ_M_MIN) / ((MASS_DEP_M_MAX - MASS_DEP_M_MIN))
+  b = MASS_DEP_CZ_M_MIN - MASS_DEP_M_MIN * a
+  
   planet_mass = mass / (3.00374072d-6 * K2)
   
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
@@ -1529,7 +1548,7 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   lindblad_torque = 0.
   
   !------------------------------------------------------------------------------
-  corotation_torque = a_steepness * 0.1d0 * ((a * planet_mass + b) - p_prop%radius)
+  corotation_torque = TORQUE_PROFILE_STEEPNESS * 0.1d0 * ((a * planet_mass + b) - p_prop%radius)
 
 
   return
