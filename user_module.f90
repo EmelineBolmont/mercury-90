@@ -49,8 +49,8 @@ module user_module
   real(double_precision) :: INITIAL_SIGMA_0_NUM ! the surface density at (R=1AU) [Msun/AU^2]
   logical :: IS_DISSIPATION = .True. ! boolean to tell if there is dissipation of the disk or not.
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
-  character(len=80) :: INNER_BOUNDARY_CONDITION = 'open' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-  character(len=80) :: OUTER_BOUNDARY_CONDITION = 'open' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
+  character(len=80) :: INNER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+  character(len=80) :: OUTER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
   
   ! Here we define the constant value of the viscosity of the disk
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s]
@@ -1823,8 +1823,6 @@ end subroutine print_planet_properties
   !    surface_density*.dat : each file correspond to a data file of the surface density at one timestep (the number correspond to the index)
   ! IN ADDITION : There are 1 gnuplot scripts to generate the output files for the surface density.
   
-  use mercury_constant ! for 'HUGE' value
-  
   implicit none
   
   real(double_precision), intent(in) :: stellar_mass
@@ -1861,8 +1859,8 @@ end subroutine print_planet_properties
     call system("rm unitary_tests/dissipation/*")
 
     ! Before dissipating the disk, we erase the 'normal' density profile with a dirac one. 
-    surface_density_profile(1:NB_SAMPLE_PROFILES) = log(TINY)
-    surface_density_profile(int(sqrt(NB_SAMPLE_PROFILES**2/2.))) = log(HUGE)
+    surface_density_profile(1:NB_SAMPLE_PROFILES) = log(0.1)
+    surface_density_profile(int(sqrt(NB_SAMPLE_PROFILES**2/2.))) = log(100.)
     
     ! We store the initial profile of the surface density in a reference file.
     write(filename_density_ref, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',0,'.dat'
