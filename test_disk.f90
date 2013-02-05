@@ -1667,6 +1667,7 @@ program test_disk
     a_min = INNER_BOUNDARY_RADIUS + INNER_SMOOTHING_WIDTH
     a_max = 20.
     a_step = (a_max - a_min) / (nb_points-1.d0)
+!~     a_step = (a_max / a_min)**(1 / (nb_points - 1.d0))
     
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total, lindblad and corotation torques depending on the planet mass and distance'
@@ -1698,6 +1699,7 @@ program test_disk
     
     do i=1, nb_points ! loop on the position
       a(i) = a_min + a_step * (i-1)
+!~       a(i) = a_min * a_step**(i - 1)
       
       ! We generate cartesian coordinate for the given semi major axis
       position(1) = a(i)
