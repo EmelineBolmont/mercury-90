@@ -128,14 +128,14 @@ subroutine init_turbulence(time)
   !------------------------------------------------------------------------------
   ! We initialize only if turbulence_mode is not allocated yet (which would mean that the initialisation has already been done).
   if (.not.allocated(turbulence_mode)) then
-	allocate(turbulence_mode(nb_modes))
+  allocate(turbulence_mode(nb_modes))
   end if
   
   ! We initialize the random seed
   call init_random_seed()
   
   do i=1, nb_modes
-	call init_mode(time, turbulence_mode(i))
+  call init_mode(time, turbulence_mode(i))
   end do
   
 end subroutine init_turbulence
@@ -187,28 +187,28 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   ! la on calcule le potentiel turbulent, on fait la smme de tous les
   ! modes en tenant compte de leur evolution temporelle
   do k=1,nb_modes
-	relative_time = time - turbulence_mode(k)%t_init ! c'est le temps relatif au temps d 'origine du mode
-	
-	! If needed, we replace an old mode by a new one
-	if (relative_time.ge.turbulence_mode(k)%lifetime) then
-	  call init_mode(time, turbulence_mode(k))
-	  relative_time = 0.d0
-	end if
+  relative_time = time - turbulence_mode(k)%t_init ! c'est le temps relatif au temps d 'origine du mode
+  
+  ! If needed, we replace an old mode by a new one
+  if (relative_time.ge.turbulence_mode(k)%lifetime) then
+    call init_mode(time, turbulence_mode(k))
+    relative_time = 0.d0
+  end if
 
-	! if the mode is too faint, we neglect it, instead of calculating a very small number
-	if (turbulence_mode(k)%wavenumber.le.wavenumber_cutoff) then
-	  single_prefactor = turbulence_mode(k)%chi * sin(PI * relative_time / turbulence_mode(k)%lifetime) * &
-						 exp(-((r - turbulence_mode(k)%r) / turbulence_mode(k)%radial_extent)**2)
-	  argument = turbulence_mode(k)%wavenumber * phi - turbulence_mode(k)%phi - p_prop%omega * relative_time
-	
-	  lambda_cm = single_prefactor * cos(argument) ! equation (7) (Ogihara, 2007)
-	  lambda_sm = single_prefactor * sin(argument) ! equation (10) (Ogihara, 2007)
-	
-	  sum_element_r = sum_element_r + (1.d0 + 2.d0 * r * (r - turbulence_mode(k)%r) / turbulence_mode(k)%radial_extent**2) * &
-	                  lambda_cm
-	  sum_element_theta = sum_element_theta + turbulence_mode(k)%wavenumber * lambda_sm
+  ! if the mode is too faint, we neglect it, instead of calculating a very small number
+  if (turbulence_mode(k)%wavenumber.le.wavenumber_cutoff) then
+    single_prefactor = turbulence_mode(k)%chi * sin(PI * relative_time / turbulence_mode(k)%lifetime) * &
+             exp(-((r - turbulence_mode(k)%r) / turbulence_mode(k)%radial_extent)**2)
+    argument = turbulence_mode(k)%wavenumber * phi - turbulence_mode(k)%phi - p_prop%omega * relative_time
+  
+    lambda_cm = single_prefactor * cos(argument) ! equation (7) (Ogihara, 2007)
+    lambda_sm = single_prefactor * sin(argument) ! equation (10) (Ogihara, 2007)
+  
+    sum_element_r = sum_element_r + (1.d0 + 2.d0 * r * (r - turbulence_mode(k)%r) / turbulence_mode(k)%radial_extent**2) * &
+                    lambda_cm
+    sum_element_theta = sum_element_theta + turbulence_mode(k)%wavenumber * lambda_sm
 
-	endif
+  endif
   enddo
 
   ! We apply at the end the prefactor of the gravitational potential
@@ -254,11 +254,11 @@ subroutine normal(x)
 
   r = 1.5d0
   do while ((r.gt.1.d0).or.(r.eq.0.d0))
-	call random_number(v1)
-	call random_number(v2)
-	v11 = 2.d0 * v1 - 1.d0
-	v22 = 2.d0 * v2 - 1.d0
-	r = v11**2 + v22**2
+  call random_number(v1)
+  call random_number(v2)
+  v11 = 2.d0 * v1 - 1.d0
+  v22 = 2.d0 * v2 - 1.d0
+  r = v11**2 + v22**2
   enddo
   
   x = v11 * dsqrt(-2.d0 * dlog(r) / r)
