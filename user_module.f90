@@ -256,16 +256,18 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 !~         end if
 
       end if
-!~       if (time.gt.9.825225e6) then
-!~         if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%radius.gt.INNER_BOUNDARY_RADIUS)) then
-!~         
-!~           call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
-!~                        time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
-!~                        turbulence_acceleration)
-!~         end if
-!~         write (*,*) "time = ", time, " ; planet", planet
-!~         call print_planet_properties(p_prop)
-!~       end if
+      if (time.gt.9.825225e6) then
+        if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%radius.gt.INNER_BOUNDARY_RADIUS)) then
+        
+          call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
+                       time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
+                       turbulence_acceleration)
+        end if
+        open(12, file="debug.out", access='append')
+        write (12,*) "time = ", time, " ; planet", planet
+        close(12)
+        call print_planet_properties(p_prop)
+      end if
     end if
   end do
   
@@ -299,34 +301,35 @@ character(len=80) :: single_format = 'es10.3e2'
 !------------------------------------------------------------------------------
 write(output_format, *) '(a,',trim(single_format),'," ",a,',trim(single_format),'," ",a,',trim(single_format),')'
 
-write(*,'(a)') '################################'
-write(*,'(a, f10.2, a)') 'time = ', time, ' days'
-write(*,'(a)') '################################'
-write(*,output_format) ' x = ', position(1, planet), ' y = ', position(2, planet), ' z = ', position(3, planet)
-write(*,output_format) 'vx = ', velocity(1, planet), 'vy = ', velocity(2, planet), 'vz = ', velocity(3, planet)
-write(*,output_format) 'ax = ', acceleration(1, planet), 'ay = ', acceleration(2, planet), 'az = ', acceleration(3, planet)
-write(*,'(a)') '------------------------------------'
-write(*,'(a)') '|            Migration             |'
-write(*,'(a)') '------------------------------------'
-write(*,'(a,es10.3e2,a)') 'migration timescale =', time_mig, ' days'
-write(*,output_format) 'amx = ', migration_acceleration(1), &
+open(12, file="debug.out", access='append')
+write(12,'(a)') '################################'
+write(12,'(a, f10.2, a)') 'time = ', time, ' days'
+write(12,'(a)') '################################'
+write(12,output_format) ' x = ', position(1, planet), ' y = ', position(2, planet), ' z = ', position(3, planet)
+write(12,output_format) 'vx = ', velocity(1, planet), 'vy = ', velocity(2, planet), 'vz = ', velocity(3, planet)
+write(12,output_format) 'ax = ', acceleration(1, planet), 'ay = ', acceleration(2, planet), 'az = ', acceleration(3, planet)
+write(12,'(a)') '------------------------------------'
+write(12,'(a)') '|            Migration             |'
+write(12,'(a)') '------------------------------------'
+write(12,'(a,es10.3e2,a)') 'migration timescale =', time_mig, ' days'
+write(12,output_format) 'amx = ', migration_acceleration(1), &
                        'amy = ', migration_acceleration(2), &
                        'amz = ', migration_acceleration(3)
-write(*,'(a)') '------------------------------------'
-write(*,'(a)') '|       Eccentricity damping       |'
-write(*,'(a)') '------------------------------------'
-write(*,'(a,es10.3e2,a)') 'Eccentricity timescale = ', time_ecc, ' days'
-write(*,output_format) 'aex = ', eccentricity_acceleration(1), &
+write(12,'(a)') '------------------------------------'
+write(12,'(a)') '|       Eccentricity damping       |'
+write(12,'(a)') '------------------------------------'
+write(12,'(a,es10.3e2,a)') 'Eccentricity timescale = ', time_ecc, ' days'
+write(12,output_format) 'aex = ', eccentricity_acceleration(1), &
                        'aey = ', eccentricity_acceleration(2), &
                        'aez = ', eccentricity_acceleration(3)
-write(*,'(a)') '------------------------------------'
-write(*,'(a)') '|           Turbulence             |'
-write(*,'(a)') '------------------------------------'
-write(*,output_format) 'atx = ', turbulence_acceleration(1), &
+write(12,'(a)') '------------------------------------'
+write(12,'(a)') '|           Turbulence             |'
+write(12,'(a)') '------------------------------------'
+write(12,output_format) 'atx = ', turbulence_acceleration(1), &
                        'aty = ', turbulence_acceleration(2), &
                        'atz = ', turbulence_acceleration(3)
-write(*,'(a)') '____________________________________'
-
+write(12,'(a)') '____________________________________'
+close(12)
 
 end subroutine debug_infos
 
