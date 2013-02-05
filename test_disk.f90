@@ -1695,8 +1695,6 @@ program test_disk
     write(10,'(a,f4.1,3a)') 'title "mass = ',mass / (EARTH_MASS * K2),' m_{earth} ; a = ',a ,&
                             '; torque type = ', trim(TORQUE_TYPE),'"'
 
-!~     write(10,*) 'set lmargin 10'
-!~     write(10,*) 'set rmargin 2'
     write(10,*) 'set xlabel "eccentricity"'
     write(10,*) 'set logscale x'
     write(10,*) 'set grid'
