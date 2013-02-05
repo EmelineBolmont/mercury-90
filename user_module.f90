@@ -8,6 +8,8 @@ module user_module
 !*************************************************************
   use types_numeriques
 
+  implicit none
+  
   private
   
   public :: mfo_user
