@@ -82,35 +82,35 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   acceleration(:,:) = 0.d0
   !------------------------------------------------------------------------------
   
-!~   ! WE CALCULATE PROPERTIES OF THE PLANETS
-!~   ! Not for all the bodies because there might be problem to divide by radial position of the star.
-!~   radius_p(:) = sqrt(position(1,2:)**2 + position(2,2:)**2)
-!~   velocity_p(:) = sqrt(velocity(1,2:)**2 + velocity(2,2:)**2)
-!~   
-!~   ! \vect{v} = \vect{\omega} \wedge \vect{x}
-!~   ! By assuming that the planet is in the plane of the disk (which is false) we get =
-!~   omega_p(:) = velocity_p(:) / radius_p(:) ! TODO UNITS!!!!!!!!!
-!~   write(*,*) "Warning: Units for omega_p are currently not verified"
-!~   
-!~   sigma_p(:) = sigma_0 * radius_p(:) ** sigma_index ! need to be in numerical units, not the case for the moment
-!~   scaleheight_p(:) = scaleheight
-!~   
-!~   !------------------------------------------------------------------------------
-!~   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
-!~   gamma_0(:) = (mass(2:) / (mass(1) * scaleheight_p(:)))**2 * sigma_p(:) * radius_p(:)**4 * omega_p(:)**2
-!~   torque(:) = get_total_torque(n_bodies, mass(:), radius_p(:))
-!~   !------------------------------------------------------------------------------
-!~   
-!~   ! We calculate the angular momentum, that is, the z-composant. We assume that the x and y composant are negligible (to be tested)
-!~   angular_momentum(:) = mass(2:) * (position(1,:) * velocity(2,:) - position(2,:) * velocity(1,:))
-!~!   angular_momentum_x(:) = mass(2:) * (position(2,:) * velocity(3,:) - position(3,:) * velocity(2,:))
-!~ !  angular_momentum_y(:) = mass(2:) * (position(3,:) * velocity(1,:) - position(1,:) * velocity(3,:))
-!~   
-!~   time_mig(:) = 0.5d0 * angular_momentum(:) / torque(:)
-!~   
-!~   acceleration(1,:) = - velocity(1,:) / time_mig(:)
-!~   acceleration(2,:) = - velocity(2,:) / time_mig(:)
-!~   acceleration(3,:) = - velocity(3,:) / time_mig(:)
+  ! WE CALCULATE PROPERTIES OF THE PLANETS
+  ! Not for all the bodies because there might be problem to divide by radial position of the star.
+  radius_p(:) = sqrt(position(1,2:)**2 + position(2,2:)**2)
+  velocity_p(:) = sqrt(velocity(1,2:)**2 + velocity(2,2:)**2)
+  
+  ! \vect{v} = \vect{\omega} \wedge \vect{x}
+  ! By assuming that the planet is in the plane of the disk (which is false) we get =
+  omega_p(:) = velocity_p(:) / radius_p(:) ! TODO UNITS!!!!!!!!!
+  write(*,*) "Warning: Units for omega_p are currently not verified"
+  
+  sigma_p(:) = sigma_0 * radius_p(:) ** sigma_index ! need to be in numerical units, not the case for the moment
+  scaleheight_p(:) = scaleheight
+  
+  !------------------------------------------------------------------------------
+  ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
+  gamma_0(:) = (mass(2:) / (mass(1) * scaleheight_p(:)))**2 * sigma_p(:) * radius_p(:)**4 * omega_p(:)**2
+  torque(:) = get_total_torque(n_bodies, mass(:), radius_p(:))
+  !------------------------------------------------------------------------------
+  
+  ! We calculate the angular momentum, that is, the z-composant. We assume that the x and y composant are negligible (to be tested)
+  angular_momentum(:) = mass(2:) * (position(1,:) * velocity(2,:) - position(2,:) * velocity(1,:))
+!~   angular_momentum_x(:) = mass(2:) * (position(2,:) * velocity(3,:) - position(3,:) * velocity(2,:))
+!~   angular_momentum_y(:) = mass(2:) * (position(3,:) * velocity(1,:) - position(1,:) * velocity(3,:))
+  
+  time_mig(:) = 0.5d0 * angular_momentum(:) / torque(:)
+  
+  acceleration(1,:) = - velocity(1,:) / time_mig(:)
+  acceleration(2,:) = - velocity(2,:) / time_mig(:)
+  acceleration(3,:) = - velocity(3,:) / time_mig(:)
   !------------------------------------------------------------------------------
   
   return
