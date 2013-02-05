@@ -22,10 +22,14 @@ module user_module
   ! Here we define the power law for surface density sigma(R) = sigma_0 * R^(-sigma_index)
   real(double_precision), parameter :: sigma_0 = 1700 ! the surface density at (R=1AU) [g/cm^2]
   real(double_precision), parameter :: sigma_index = 0.5! the negative slope of the surface density power law (alpha in the paper)
-  real(double_precision), parameter :: sigma_0_num = sigma_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Numerical Units]
+  real(double_precision), parameter :: sigma_0_num = sigma_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
+  
+  ! Here we define the power law for viscosity viscosity(R) = viscosity_0 * R^(sigma_index-1/2)
+  real(double_precision), parameter :: viscosity_0 = 1.6d12 ! the viscosity of the disk at (R=1AU) [cm^2.s^-1]
+  real(double_precision), parameter :: viscosity_0_num = viscosity_0 * DAY / AU**2 ! the viscosity of the disk at (R=1AU) [AU^2.day^-1]
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
-  real(double_precision), parameter :: temperature_0 = 300. ! the temperature at (R=1AU) [K]
+  real(double_precision), parameter :: temperature_0 = 150. ! the temperature at (R=1AU) [K]
   real(double_precision), parameter :: temperature_index = 1.! the negativeslope of the temperature power law (beta in the paper)
   
   !prefactors
@@ -89,6 +93,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   
   
   real(double_precision) :: torque ! the torque exerted by the disk on the planet [Ms.AU^2]
+  real(double_precision) :: corotation_torque ! the corotation torque exerted by the disk on the planet in unit of torque_ref [No dim]
+  real(double_precision) :: torque_ref ! a ref torque that depends on the properties of the planet [Ms.AU^2]
+  real(double_precision) :: gamma_eff ! effective adiabatic coefficient [No dim]
   real(double_precision) :: time_mig ! The migration timescale for the planet [day]
   real(double_precision) :: angular_momentum ! the angular momentum of the planet [Ms.AU^2.day^-1]
 
@@ -100,7 +107,10 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   
   
   do planet=2,n_big_bodies
-    torque = get_total_torque(mass(1), mass(planet), position(3,planet), velocity(3,planet))
+    call get_corotation_torque(mass(1), mass(planet), position(3,planet), velocity(3,planet),&
+         corotation_torque, torque_ref, gamma_eff)
+    
+    torque = (torque_ref / gamma_eff) * (torque_lindblad + corotation_torque)
       ! We calculate the angular momentum, that is, the z-composant. We assume that the x and y composant are negligible (to be tested)
   angular_momentum = mass(planet) * (position(1,planet) * velocity(2,planet) - position(2,planet) * velocity(1,planet))
 !~   angular_momentum_x = mass(planet) * (position(2,planet) * velocity(3,planet) - position(3,planet) * velocity(2,planet))
@@ -123,7 +133,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   return
 end subroutine mfo_user
 
-function get_total_torque(stellar_mass, mass, position, velocity)
+subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, Gamma_0, gamma_eff)
 ! function that return the total torque exerted by the disk on the planet 
 !
 ! Parameter:
@@ -133,7 +143,9 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   implicit none
   real(double_precision), intent(in) :: stellar_mass, mass, position(3), velocity(3)
   
-  real(double_precision) :: get_total_torque
+  real(double_precision), intent(out) :: corotation_torque
+  real(double_precision), intent(out) :: Gamma_0 ! Normalization factor for all the torques [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
+  real(double_precision), intent(out) :: gamma_eff ! effective adiabatic index depending on several parameters [no dim]
 
   !Local
   
@@ -150,13 +162,11 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   
   !Properties of the disk at the location of the planet
 
-  real(double_precision) :: Gamma_0 ! Normalization factor for all the torques. [?](equation (8) of Paardekooper, Baruteau, 2009)
   real(double_precision) :: sigma_p ! the surface density of the gas disk at the planet location [MSUN.AU^-2]
   real(double_precision) :: bulk_density_p ! the bulk_density of the disk at the location of the planet [MSUN.AU^-3]
   real(double_precision) :: scaleheight_p ! the scaleheight of the disk at the location of the planet [AU]
   real(double_precision) :: aspect_ratio_p ! the aspect_ratio of the gas disk at the location of the planet [no dim]
   real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
-  real(double_precision) :: gamma_eff ! effective adiabatic index depending on several parameters [no dim]
   real(double_precision) :: zeta_eff ! effective entropy index depending on gamma_eff [no dim]
   real(double_precision) :: chi_p ! the thermal diffusion coefficient at the location of the planet [AU^2.day^-1]
   real(double_precision) :: nu_p ! the viscosity of the disk at the location of the planet [AU^2.day^-1]
@@ -169,15 +179,16 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   real(double_precision) :: torque_hs_ent ! entropy related part of the horseshoe drag
   real(double_precision) :: torque_c_lin_ent ! entropy related part of the linear corotation torque
   
+  
   ! WE CALCULATE PROPERTIES OF THE PLANETS
   gm = K2 * (stellar_mass + mass)
   ! We get semi_major_axis, radius_p and vel_squared
   call mco_x2a (gm,position(1), position(2), position(3), velocity(1),velocity(2), velocity(3),semi_major_axis,radius_p,vel_squared)
   
-  
   !------------------------------------------------------------------------------
   sigma_p = sigma_0_num / radius_p ** sigma_index ! [N.U.]
   temperature_p = temperature_0 / radius_p**temperature_index ! [K]
+  nu_p = viscosity_0_num * radius_p**(sigma_index - 0.5d0)
   
   velocity_p = sqrt(vel_squared)
   omega_p = sqrt(gm / (semi_major_axis * semi_major_axis * semi_major_axis)) ! [day-1]
@@ -217,7 +228,6 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   k_p = radius_p * radius_p * omega_p * x_s * x_s * x_s / (2.d0 * PI)
   
   !------------------------------------------------------------------------------
-  
   p_nu = TWOTHIRD * sqrt(k_p / nu_p)
   
   p_chi = sqrt(k_p / chi_p)
@@ -227,13 +237,17 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   
   !------------------------------------------------------------------------------
 
-  get_total_torque = (Gamma_0 / gamma_eff) * (torque_lindblad &
-    + torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
+  corotation_torque =  torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
     + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
-    + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi))))
+    + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi)))
+      
+!~     get_corotation_torque = (Gamma_0 / gamma_eff) * (torque_lindblad &
+!~     + torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
+!~     + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
+!~     + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi))))
 
   return
-end function get_total_torque
+end subroutine get_corotation_torque
 
 subroutine init_globals(stellar_mass)
 ! subroutine that initialize global values that define prefactors or values for torque that does not depend on the planet properties
@@ -399,7 +413,7 @@ end subroutine init_globals
     call test_get_G()
     call test_get_K()
     call test_get_opacity()
-    call test_get_total_torque()
+    call test_torques()
     
   end subroutine unitary_tests
 
@@ -444,11 +458,11 @@ end subroutine init_globals
     write(10,*) 'set nokey' ! Les 'keys' sont les indications permettant de savoir quelle courbe est tracÃÂ©e. (la lÃÂ©gende quoi)
     write(10,*) 'set grid'
     write(10,*) 'set xrange [', p_min, ':', p_max, ']'
-    write(10,*) "plot 'test_F(p).dat' using 1:2 with lines"  
-    write(10,*) "pause -1 # wait until a carriage return is hit"
-  !~   write(10,*) "set terminal svg rounded size 450,360"
-  !~   write(10,*) "set output 'corotation.svg'"
-  !~   write(10,*) "plot 'test_corotation_torque.dat' using 1:2 with lines"  
+    write(10,*) 'plot "test_F(p).dat" using 1:2 with lines'  
+    write(10,*) '#pause -1 # wait until a carriage return is hit'
+    write(10,*) 'set terminal pdfcairo enhanced'
+    write(10,*) 'set output "fp.pdf"'
+    write(10,*) 'replot' 
     
     close(10)
       
@@ -491,14 +505,14 @@ end subroutine init_globals
     write(10,*) 'set xlabel "p"'
     write(10,*) 'set ylabel "G(p)"'
     write(10,*) 'set logscale x'
-    write(10,*) 'set nokey' ! Les 'keys' sont les indications permettant de savoir quelle courbe est tracÃÂÃÂ©e. (la lÃÂÃÂ©gende quoi)
+    write(10,*) 'set nokey' ! Les 'keys' sont les indications permettant de savoir quelle courbe est tracée (la légende quoi)
     write(10,*) 'set grid'
     write(10,*) 'set xrange [', p_min, ':', p_max, ']'
-    write(10,*) "plot 'test_G(p).dat' using 1:2 with lines"  
-    write(10,*) "pause -1 # wait until a carriage return is hit"
-  !~   write(10,*) "set terminal svg rounded size 450,360"
-  !~   write(10,*) "set output 'corotation.svg'"
-  !~   write(10,*) "plot 'test_corotation_torque.dat' using 1:2 with lines"  
+    write(10,*) 'plot "test_G(p).dat" using 1:2 with lines'  
+    write(10,*) '#pause -1 # wait until a carriage return is hit'
+    write(10,*) 'set terminal pdfcairo enhanced'
+    write(10,*) 'set output "gp.pdf"'
+    write(10,*) 'replot' 
     
     close(10)
       
@@ -541,14 +555,14 @@ end subroutine init_globals
     write(10,*) 'set xlabel "p"'
     write(10,*) 'set ylabel "K(p)"'
     write(10,*) 'set logscale x'
-    write(10,*) 'set nokey' ! Les 'keys' sont les indications permettant de savoir quelle courbe est tracÃÂÃÂÃÂÃÂ©e. (la lÃÂÃÂÃÂÃÂ©gende quoi)
+    write(10,*) 'set nokey' ! Les 'keys' sont les indications permettant de savoir quelle courbe est tracée (la légende quoi)
     write(10,*) 'set grid'
     write(10,*) 'set xrange [', p_min, ':', p_max, ']'
-    write(10,*) "plot 'test_K(p).dat' using 1:2 with lines"  
-    write(10,*) "pause -1 # wait until a carriage return is hit"
-  !~   write(10,*) "set terminal svg rounded size 450,360"
-  !~   write(10,*) "set output 'corotation.svg'"
-  !~   write(10,*) "plot 'test_corotation_torque.dat' using 1:2 with lines"  
+    write(10,*) 'plot "test_K(p).dat" using 1:2 with lines'  
+    write(10,*) '#pause -1 # wait until a carriage return is hit'
+    write(10,*) 'set terminal pdfcairo enhanced'
+    write(10,*) 'set output "kp.pdf"'
+    write(10,*) 'replot'  
     
     close(10)
       
@@ -611,17 +625,17 @@ end subroutine init_globals
     
   end subroutine test_get_opacity
   
-  subroutine test_get_total_torque
-  ! subroutine that test the function 'get_total_torque'
+  subroutine test_torques
+  ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
   !  a data file 'test_total_torque.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_total_torque for a range of semi major axis.
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
     implicit none
     
     integer, parameter :: nb_mass = 100
     real(double_precision), parameter :: mass_min = 1. * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 10. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     
     integer, parameter :: nb_points = 100
@@ -630,7 +644,7 @@ end subroutine init_globals
     ! step for log sampling
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
     
-    real(double_precision) :: a, mass, torque
+    real(double_precision) :: a, mass, torque, corotation_torque, gamma_eff, torque_ref
     real(double_precision) :: stellar_mass, position(3), velocity(3)
     
     integer :: i,j ! for loops
@@ -644,8 +658,17 @@ end subroutine init_globals
     call init_globals(stellar_mass)
     
     ! We open the file where we want to write the outputs
-    open(10, file='test_total_torque.dat')
-    write(10,*) 'semi major axis (AU) ; mass in earth mass ; torque'
+    open(10, file='test_corotation_torque.dat')
+    open(11, file='test_total_torque.dat')
+    open(12, file='test_lindblad_torque.dat')
+    open(13, file='test_ref_torque.dat')
+    open(14, file='test_gamma_eff.dat')
+    
+    write(10,*) 'semi major axis (AU) ; mass in earth mass ; corotation torque'
+    write(11,*) 'semi major axis (AU) ; mass in earth mass ; total torque'
+    write(12,*) 'semi major axis (AU) ; mass in earth mass ; lindblad torque'
+    write(13,*) 'semi major axis (AU) ; mass in earth mass ; reference torque'
+    write(14,*) 'semi major axis (AU) ; mass in earth mass ; gamma effective'
     
     do i=1, nb_points ! loop on the position
       a = a_min + a_step * (i-1)
@@ -660,33 +683,84 @@ end subroutine init_globals
         ! We generate cartesian coordinate for the given mass and semi major axis
         velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
         
-        torque = get_total_torque(stellar_mass, mass, position, velocity)
+        call get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, torque_ref, gamma_eff)
+    
+        torque = torque_lindblad + corotation_torque
         
-        write(10,*) a, mass / EARTH_MASS, torque
+!~         corotation_torque = torque_ref / gamma_eff * corotation_torque
+!~         torque_lindblad = torque_ref / gamma_eff * torque_lindblad
+        torque = torque_ref / gamma_eff * torque
+                
+        write(10,*) a, mass / EARTH_MASS, corotation_torque
+        write(11,*) a, mass / EARTH_MASS, torque
+        write(12,*) a, mass / EARTH_MASS, torque_lindblad
+        write(13,*) a, mass / EARTH_MASS, torque_ref
+        write(14,*) a, mass / EARTH_MASS, gamma_eff
       end do
-      write(10,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
+      
+      do j=10,14
+        write(j,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
+      end do
     end do
     close(10)
+    close(11)
+    close(12)
+    close(13)
+    close(14)
     
     
-    open(10, file="total_torque.gnuplot")
-    write(10,*) 'set terminal x11 enhanced'
-    write(10,*) 'set xlabel "semi major axis (AU)"'
-    write(10,*) 'set ylabel "Planet mass (m_{earth})"'
-    write(10,*) 'set title "Evolution of the total torque {/Symbol G}"'
-    write(10,*) "set pm3d map"
-!~     write(10,*) 'set xrange [', a_min, ':', a_max, '] noreverse'
-!~     write(10,*) 'set yrange [', mass_min, ':', mass_max, '] noreverse'
+    open(10, file="corotation_torque.gnuplot")
+    open(11, file="total_torque.gnuplot")
+    open(12, file="lindblad_torque.gnuplot")
+    open(13, file="ref_torque.gnuplot")
+    open(14, file="gamma_eff.gnuplot")
+    
+    do j=10,14
+      write(j,*) 'set terminal x11 enhanced'
+      write(j,*) 'set xlabel "semi major axis (AU)"'
+      write(j,*) 'set ylabel "Planet mass (m_{earth})" center'
+    end do
+    
+    write(10,*) 'set title "Evolution of the corotation torque {/Symbol g}_{eff}{/Symbol G}_c/{/Symbol G}_0"'
+    write(11,*) 'set title "Evolution of the total torque {/Symbol g}_{eff}{/Symbol G}_{tot}/{/Symbol G}_0 "'
+    write(12,*) 'set title "Evolution of the lindblad torque {/Symbol g}_{eff}{/Symbol G}_L/{/Symbol G}_0 "'
+    write(13,*) 'set title "Evolution of the reference torque {/Symbol G}_0 [M_s.AU^2.day^{-2}]"'
+    write(14,*) 'set title "Evolution of {/Symbol g}_{eff}"'
+    
+    do j=10,14
+      write(j,*) 'set pm3d map'
+!~     write(j,*) 'set xrange [', a_min, ':', a_max, '] noreverse'
+!~     write(j,*) 'set yrange [', mass_min, ':', mass_max, '] noreverse'
+    end do
 
-    write(10,*) "splot 'test_total_torque.dat' title ''"
-    write(10,*) "pause -1 # wait until a carriage return is hit"
-    write(10,*) "set terminal pngcairo enhanced"
-    write(10,*) "set output 'total_torque.png'"
-    write(10,*) "replot # pour générer le fichier d'output"  
+    write(10,*) "splot 'test_corotation_torque.dat' title ''"
+    write(11,*) "splot 'test_total_torque.dat' title ''"
+    write(12,*) "splot 'test_lindblad_torque.dat' title ''"
+    write(13,*) "splot 'test_ref_torque.dat' title ''"
+    write(14,*) "splot 'test_gamma_eff.dat' title ''"
+    
+    do j=10,14
+      write(j,*) "#pause -1 # wait until a carriage return is hit"
+      write(j,*) "set terminal pngcairo enhanced"
+    end do
+    
+    write(10,*) "set output 'corotation_torque.png'"
+    write(11,*) "set output 'total_torque.png'"
+    write(12,*) "set output 'lindblad_torque.png'"
+    write(13,*) "set output 'ref_torque.png'"
+    write(14,*) "set output 'gamma_eff.png'"
+    
+    do j=10,14
+      write(j,*) "replot # pour générer le fichier d'output"
+    end do
     
     close(10)
+    close(11)
+    close(12)
+    close(13)
+    close(14)
     
-  end subroutine test_get_total_torque
+  end subroutine test_torques
 
 end module user_module
 
