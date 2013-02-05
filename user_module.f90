@@ -66,6 +66,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 ! DISSIPATION_TYPE : boolean to tell if there is dissipation of the disk or not.
 ! dissipation_timestep : the timestep between two computation of the disk [in days]
 ! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
+!
+! Errors : 
+! Return 1 : Bad value for migration torque type
   use physical_constant
   use mercury_constant
   use turbulence
@@ -91,11 +94,12 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   ! loop integers
   integer :: planet
   
-  
   real(double_precision) :: torque ! the torque exerted by the disk on the planet [Ms.AU^2]
   real(double_precision) :: corotation_torque ! the corotation torque exerted by the disk on the planet in unit of torque_ref [No dim]
   real(double_precision) :: lindblad_torque ! the lindblad torque exerted by the disk on the planet in unit of torque_ref [No dim]
   real(double_precision) :: torque_ref ! a ref torque that depends on the properties of the planet [Ms.AU^2]
+  real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
+  
   real(double_precision) :: time_mig ! The migration timescale for the planet [day]
   real(double_precision) :: time_wave ! A timescale for the planet that I don't understand for the moment [day]
   real(double_precision) :: time_ecc ! The eccentricity damping timescale for the planet [day]
@@ -192,33 +196,34 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         select case(TORQUE_TYPE)
           case('real') ! The normal torque profile, calculated form properties of the disk
             call get_corotation_torque(mass(1), mass(planet), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
           
           ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
           case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
             call get_corotation_torque_linear_indep(mass(1), mass(planet), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
           
-          case('arctan_indep') ! a defined torque profile to get a mass independant convergence zone
-            call get_corotation_torque_arctan_indep(mass(1), mass(planet), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+          case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
+            call get_corotation_torque_tanh_indep(mass(1), mass(planet), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
           
           case('mass_dependant')
             call get_corotation_torque_mass_dep_CZ(mass(1), mass(planet), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
             
           case('manual')
             call get_corotation_torque_manual(mass(1), mass(planet), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
             
           case default
             write(*,*) 'Warning: The torque rule cannot be found.'
             write(*,*) 'Given value :', TORQUE_TYPE
-            write(*,*) 'Values possible : real ; linear_indep ; arctan_indep ; manual'
+            write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
+            return 1
         end select
         
 
-        torque = torque_ref * (lindblad_torque + corotation_torque)      
+        torque = torque_ref * (lindblad_torque + ecc_corot * corotation_torque)      
         
         time_mig = 0.5d0 * p_prop%angular_momentum / torque
         

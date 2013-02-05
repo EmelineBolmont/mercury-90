@@ -37,7 +37,7 @@ program test_disk
     ! Note that the initial density profile and temperature profile are calculated inside the 'init_globals' routine.
 
 !~     ! We force the value to be interesting for our tests
-!~     TORQUE_TYPE = 'arctan_indep' ! 'real', 'linear_indep', 'arctan_indep', 'mass_dependant', 'manual'
+!~     TORQUE_TYPE = 'tanh_indep' ! 'real', 'linear_indep', 'tanh_indep', 'mass_dependant', 'manual'
     
     ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
     call study_torques(stellar_mass)
@@ -1290,6 +1290,7 @@ program test_disk
     real(double_precision), parameter :: a = 5.2
     
     real(double_precision) :: mass, total_torque, corotation_torque, lindblad_torque, torque_ref
+    real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
     real(double_precision) :: lindblad_torque_units, corotation_torque_units, total_torque_units
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
@@ -1331,25 +1332,30 @@ program test_disk
       ! Calculation of the acceleration due to migration
       select case(TORQUE_TYPE)
         case('real') ! The normal torque profile, calculated form properties of the disk
-          call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+          call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
         
         ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
         case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+          call get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
         
-        case('arctan_indep') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_arctan_indep(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
         
         case('mass_dependant')
-          call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+          call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
         
         case('manual')
-          call get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+          call get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
           
         case default
           write(*,*) 'Warning: The torque rule cannot be found.'
           write(*,*) 'Given value :', TORQUE_TYPE
-          write(*,*) 'Values possible : real ; linear_indep ; arctan_indep ; manual'
+          write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
       end select
       
       total_torque = lindblad_torque + corotation_torque
@@ -1450,6 +1456,7 @@ program test_disk
     real(double_precision), parameter :: mass = 15. * EARTH_MASS * K2
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
+    real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
     real(double_precision) :: lindblad_torque_units, corotation_torque_units, total_torque_units
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
@@ -1491,25 +1498,30 @@ program test_disk
       ! Calculation of the acceleration due to migration
       select case(TORQUE_TYPE)
         case('real') ! The normal torque profile, calculated form properties of the disk
-          call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+          call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
         
         ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
         case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+          call get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
         
-        case('arctan_indep') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_arctan_indep(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
         
         case('mass_dependant')
-          call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+          call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
         
         case('manual')
-          call get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+          call get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
           
         case default
           write(*,*) 'Warning: The torque rule cannot be found.'
           write(*,*) 'Given value :', TORQUE_TYPE
-          write(*,*) 'Values possible : real ; linear_indep ; arctan_indep ; manual'
+          write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
       end select
       
       total_torque = lindblad_torque + corotation_torque
@@ -1612,6 +1624,7 @@ program test_disk
     real(double_precision), dimension(nb_points, nb_mass) :: total_torque, total_torque_units
     
     real(double_precision) :: corotation_torque, lindblad_torque, torque_ref
+    real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     
@@ -1678,29 +1691,29 @@ program test_disk
         select case(TORQUE_TYPE)
           case('real') ! The normal torque profile, calculated form properties of the disk
             call get_corotation_torque(stellar_mass, mass(j), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
           
           ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
           case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
             call get_corotation_torque_linear_indep(stellar_mass, mass(j), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
           
-          case('arctan_indep') ! a defined torque profile to get a mass independant convergence zone
-            call get_corotation_torque_arctan_indep(stellar_mass, mass(j), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+          case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
+            call get_corotation_torque_tanh_indep(stellar_mass, mass(j), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
           
           case('mass_dependant')
             call get_corotation_torque_mass_dep_CZ(stellar_mass, mass(j), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
           
           case('manual')
             call get_corotation_torque_manual(stellar_mass, mass(j), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
             
           case default
             write(*,*) 'Warning: The torque rule cannot be found.'
             write(*,*) 'Given value :', TORQUE_TYPE
-            write(*,*) 'Values possible : real ; linear_indep ; arctan_indep ; manual'
+            write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
         end select
         
         total_torque(i,j) = lindblad_torque + corotation_torque
@@ -1850,6 +1863,7 @@ program test_disk
     real(double_precision), dimension(nb_points, nb_mass) :: total_torque
     
     real(double_precision) :: corotation_torque, lindblad_torque, torque_ref
+    real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     
@@ -1975,7 +1989,7 @@ program test_disk
           call get_planet_properties(stellar_mass=stellar_mass, & ! Input
            mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! Input
            p_prop=p_prop) ! Output
-          call get_corotation_torque(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref)
+          call get_corotation_torque(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref, ecc_corot)
           
           total_torque(i,j) = lindblad_torque + corotation_torque        
           
