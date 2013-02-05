@@ -17,20 +17,21 @@ module user_module
   
   real(double_precision), parameter :: b_over_h = 0.4 ! the smoothing length for the planet's potential
   real(double_precision), parameter :: adiabatic_index = 1.4 ! the adiabatic index for the gas equation of state
-  real(double_precision), parameter :: aspect_ratio = 0.05 ! the aspect_ratio of the disk. Is used by the function get_aspect_ratio
+  real(double_precision), parameter :: mean_molecular_weight = 2.35 ! the mean molecular weight in mass of a proton
   
-  ! Here we define the power law for surface density sigma(R) = sigma_0 * R^sigma_index
+  ! Here we define the power law for surface density sigma(R) = sigma_0 * R^(-sigma_index)
   real(double_precision), parameter :: sigma_0 = 1700 ! the surface density at (R=1AU) [g/cm^2]
-  real(double_precision), parameter :: sigma_index = 0.5! the slope of the surface density power law (alpha in the paper)
+  real(double_precision), parameter :: sigma_index = 0.5! the negative slope of the surface density power law (alpha in the paper)
   real(double_precision), parameter :: sigma_0_num = sigma_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Numerical Units]
   
-  ! Here we define the power law for temperature T(R) = temperature_0 * R^temperature_index
-  real(double_precision), parameter :: temperature_0 = 150 ! the temperature at (R=1AU) [K]
-  real(double_precision), parameter :: temperature_index = 1.! the slope of the temperature power law (beta in the paper)
+  ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
+  real(double_precision), parameter :: temperature_0 = 300. ! the temperature at (R=1AU) [K]
+  real(double_precision), parameter :: temperature_index = 1.! the negativeslope of the temperature power law (beta in the paper)
   
   !prefactors
   real(double_precision) :: x_s_prefactor
   real(double_precision) :: chi_p_prefactor
+  real(double_precision) :: scaleheight_prefactor
   
   real(double_precision) :: torque_lindblad ! prefactor for the lindblad torque
   real(double_precision) :: torque_hs_baro ! barotropic part of the horseshoe drag
@@ -87,42 +88,36 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   integer :: planet
   
   
-  real(double_precision), dimension(n_bodies) :: torque ! the torque exerted by the disk on the planet [?]
-  real(double_precision), dimension(n_bodies) :: time_mig ! The migration timescale for the planet [day]
-  real(double_precision), dimension(n_bodies) :: angular_momentum ! the angular momentum of the planet [?]
+  real(double_precision) :: torque ! the torque exerted by the disk on the planet [Ms.AU^2]
+  real(double_precision) :: time_mig ! The migration timescale for the planet [day]
+  real(double_precision) :: angular_momentum ! the angular momentum of the planet [Ms.AU^2.day^-1]
 
   !------------------------------------------------------------------------------
   ! Setup
   acceleration(:,:) = 0.d0
   !------------------------------------------------------------------------------
+  call init_globals(mass(1))
   
-  x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(mass(1)) ! mass(1) is here for the ratio of mass q
-
-  chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
-  
-  torque_lindblad = -2.5d0 - 1.7d0 * temperature_index + 0.1d0 * sigma_index
-  torque_hs_baro = 1.1d0 * (3.d0/2.d0 - sigma_index)
-  torque_c_lin_baro = 0.7d0 * (3.d0/2.d0 - sigma_index)
   
   do planet=2,n_big_bodies
-    torque(planet) = get_total_torque(mass(1), mass(planet), position(3,planet), velocity(3,planet))
-    
+    torque = get_total_torque(mass(1), mass(planet), position(3,planet), velocity(3,planet))
+      ! We calculate the angular momentum, that is, the z-composant. We assume that the x and y composant are negligible (to be tested)
+  angular_momentum = mass(planet) * (position(1,planet) * velocity(2,planet) - position(2,planet) * velocity(1,planet))
+!~   angular_momentum_x = mass(planet) * (position(2,planet) * velocity(3,planet) - position(3,planet) * velocity(2,planet))
+!~   angular_momentum_y = mass(planet) * (position(3,planet) * velocity(1,planet) - position(1,planet) * velocity(3,planet))
+  
+  time_mig = 0.5d0 * angular_momentum / torque
+  
+  acceleration(1,planet) = - velocity(1,planet) / time_mig
+  acceleration(2,planet) = - velocity(2,planet) / time_mig
+  acceleration(3,planet) = - velocity(3,planet) / time_mig
     
   end do
   
 
   !------------------------------------------------------------------------------
   
-  ! We calculate the angular momentum, that is, the z-composant. We assume that the x and y composant are negligible (to be tested)
-  angular_momentum(:) = mass(:) * (position(1,:) * velocity(2,:) - position(2,:) * velocity(1,:))
-!~   angular_momentum_x(:) = mass(2:) * (position(2,2:) * velocity(3,2:) - position(3,2:) * velocity(2,2:))
-!~   angular_momentum_y(:) = mass(2:) * (position(3,2:) * velocity(1,2:) - position(1,2:) * velocity(3,2:))
-  
-  time_mig(:) = 0.5d0 * angular_momentum(:) / torque(:)
-  
-  acceleration(1,:) = - velocity(1,:) / time_mig(:)
-  acceleration(2,:) = - velocity(2,:) / time_mig(:)
-  acceleration(3,:) = - velocity(3,:) / time_mig(:)
+
   !------------------------------------------------------------------------------
   
   return
@@ -156,18 +151,19 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   !Properties of the disk at the location of the planet
 
   real(double_precision) :: Gamma_0 ! Normalization factor for all the torques. [?](equation (8) of Paardekooper, Baruteau, 2009)
-  real(double_precision) :: sigma_p ! the surface density of the gas disk at the planet location [?]
-  real(double_precision) :: bulk_density_p ! the bulk_density of the disk at the location of the planet [?]
+  real(double_precision) :: sigma_p ! the surface density of the gas disk at the planet location [MSUN.AU^-2]
+  real(double_precision) :: bulk_density_p ! the bulk_density of the disk at the location of the planet [MSUN.AU^-3]
+  real(double_precision) :: scaleheight_p ! the scaleheight of the disk at the location of the planet [AU]
   real(double_precision) :: aspect_ratio_p ! the aspect_ratio of the gas disk at the location of the planet [no dim]
   real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
-  real(double_precision) :: gamma_eff ! effective adiabatic index depending on several parameters
-  real(double_precision) :: zeta_eff ! effective entropy index depending on gamma_eff
-  real(double_precision) :: chi_p ! the thermal diffusion coefficient at the location of the planet [?]
-  real(double_precision) :: nu_p ! the viscosity of the disk at the location of the planet [?]
+  real(double_precision) :: gamma_eff ! effective adiabatic index depending on several parameters [no dim]
+  real(double_precision) :: zeta_eff ! effective entropy index depending on gamma_eff [no dim]
+  real(double_precision) :: chi_p ! the thermal diffusion coefficient at the location of the planet [AU^2.day^-1]
+  real(double_precision) :: nu_p ! the viscosity of the disk at the location of the planet [AU^2.day^-1]
   real(double_precision) :: opacity_p ! the opacity of the disk at the location of the planet [?]
   real(double_precision) :: temperature_p ! the temperature of the disk at the location of the planet [K]
-  real(double_precision) :: p_nu ! parameter for saturation due to viscosity at the location of the planet
-  real(double_precision) :: p_chi ! parameter for saturation due to thermal diffusion at the location of the planet
+  real(double_precision) :: p_nu ! parameter for saturation due to viscosity at the location of the planet [no dim]
+  real(double_precision) :: p_chi ! parameter for saturation due to thermal diffusion at the location of the planet [no dim]
   
   !Torques (some depends of the planet)
   real(double_precision) :: torque_hs_ent ! entropy related part of the horseshoe drag
@@ -180,15 +176,19 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   
   
   !------------------------------------------------------------------------------
-  sigma_p = sigma_0_num * radius_p ** sigma_index ! [N.U.]
-  temperature_p = temperature_0 * radius_p**temperature_index ! [K]
-  aspect_ratio_p = aspect_ratio
+  sigma_p = sigma_0_num / radius_p ** sigma_index ! [N.U.]
+  temperature_p = temperature_0 / radius_p**temperature_index ! [K]
   
   velocity_p = sqrt(vel_squared)
   omega_p = sqrt(gm / (semi_major_axis * semi_major_axis * semi_major_axis)) ! [day-1]
   
   !------------------------------------------------------------------------------
-  bulk_density_p = 0.5d0 * sigma_p / (aspect_ratio_p * radius_p)
+  ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
+  scaleheight_p = scaleheight_prefactor * sqrt(temperature_p) / omega_p
+  !------------------------------------------------------------------------------
+  aspect_ratio_p = scaleheight_p / radius_p
+  !------------------------------------------------------------------------------
+  bulk_density_p = 0.5d0 * sigma_p / scaleheight_p
   !------------------------------------------------------------------------------
   opacity_p = get_opacity(temperature_p, bulk_density_p)
   
@@ -200,7 +200,7 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   
   !------------------------------------------------------------------------------
   ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
-  Q_p = TWOTHIRD * chi_p / (aspect_ratio_p**3 * radius_p**2 * omega_p)
+  Q_p = TWOTHIRD * chi_p / (aspect_ratio_p * scaleheight_p**2 * omega_p) ! aspect_ratio_p**3 * radius_p**2 = aspect_ratio * scaleheight**2
   !------------------------------------------------------------------------------
   
   gamma_eff = 2.d0 * Q_p * adiabatic_index / (adiabatic_index * Q_p + 0.5d0 * &
@@ -232,9 +232,31 @@ function get_total_torque(stellar_mass, mass, position, velocity)
     + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
     + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi))))
 
-  
   return
 end function get_total_torque
+
+subroutine init_globals(stellar_mass)
+! subroutine that initialize global values that define prefactors or values for torque that does not depend on the planet properties
+! Parameters
+! stellar_mass : the mass of the central object in solar mass
+  
+  implicit none
+  real(double_precision), intent(in) :: stellar_mass
+  
+  x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
+
+  chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
+  
+  ! AU is in cm, so we must turn into meter before doing the conversion
+  ! division of k_B by m_H is done separately for exponant and value to have more precision
+  ! sqrt(k_B/m_H) in numerical units, knowing that [k_B]=[m^2.kg.s^-2K^-1] and [m_H]=[kg]. 
+  scaleheight_prefactor = sqrt(1.3806503d0/(1.67262158d0 * mean_molecular_weight) * 1.d4) * DAY / (AU * 1.d-2) 
+  
+  torque_lindblad = -2.5d0 - 1.7d0 * temperature_index + 0.1d0 * sigma_index
+  torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
+  torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
+
+end subroutine init_globals
 
   function get_F(p)
   ! F function (22) of the paper : "A torque formula for non-isothermal Type I planetary migration - II Effects of diffusion"
@@ -377,6 +399,7 @@ end function get_total_torque
     call test_get_G()
     call test_get_K()
     call test_get_opacity()
+    call test_get_total_torque()
     
   end subroutine unitary_tests
 
@@ -587,6 +610,83 @@ end function get_total_torque
     close(10)
     
   end subroutine test_get_opacity
+  
+  subroutine test_get_total_torque
+  ! subroutine that test the function 'get_total_torque'
+  
+  ! Return:
+  !  a data file 'test_total_torque.dat' 
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_total_torque for a range of semi major axis.
+    implicit none
+    
+    integer, parameter :: nb_mass = 100
+    real(double_precision), parameter :: mass_min = 1. * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
+    real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
+    
+    integer, parameter :: nb_points = 100
+    real(double_precision), parameter :: a_min = 0.1
+    real(double_precision), parameter :: a_max = 50.
+    ! step for log sampling
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
+    
+    real(double_precision) :: a, mass, torque
+    real(double_precision) :: stellar_mass, position(3), velocity(3)
+    
+    integer :: i,j ! for loops
+    
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    ! stellar mass
+    stellar_mass = 1.d0
+    
+    call init_globals(stellar_mass)
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='test_total_torque.dat')
+    write(10,*) 'semi major axis (AU) ; mass in earth mass ; torque'
+    
+    do i=1, nb_points ! loop on the position
+      a = a_min + a_step * (i-1)
+      
+      ! We generate cartesian coordinate for the given semi major axis
+      position(1) = a
+      
+      
+      do j=1,nb_mass
+        mass = mass_min + mass_step * (j - 1.d0)
+        
+        ! We generate cartesian coordinate for the given mass and semi major axis
+        velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+        
+        torque = get_total_torque(stellar_mass, mass, position, velocity)
+        
+        write(10,*) a, mass / EARTH_MASS, torque
+      end do
+      write(10,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
+    end do
+    close(10)
+    
+    
+    open(10, file="total_torque.gnuplot")
+    write(10,*) 'set terminal x11 enhanced'
+    write(10,*) 'set xlabel "semi major axis (AU)"'
+    write(10,*) 'set ylabel "Planet mass (m_{earth})"'
+    write(10,*) 'set title "Evolution of the total torque {/Symbol G}"'
+    write(10,*) "set pm3d map"
+!~     write(10,*) 'set xrange [', a_min, ':', a_max, '] noreverse'
+!~     write(10,*) 'set yrange [', mass_min, ':', mass_max, '] noreverse'
+
+    write(10,*) "splot 'test_total_torque.dat' title ''"
+    write(10,*) "pause -1 # wait until a carriage return is hit"
+    write(10,*) "set terminal pngcairo enhanced"
+    write(10,*) "set output 'total_torque.png'"
+    write(10,*) "replot # pour générer le fichier d'output"  
+    
+    close(10)
+    
+  end subroutine test_get_total_torque
 
 end module user_module
 
