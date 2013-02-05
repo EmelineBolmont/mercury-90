@@ -55,7 +55,9 @@ module disk
   real(double_precision), dimension(:), allocatable :: tau_profile ! optical depth 
   
   real(double_precision), dimension(:), allocatable :: torque_profile ! The torque profile of the disk, if the option 'manual' is specified for the type of the torque
-
+	
+	logical :: disk_effect = .true. ! When false, we consider there is no disk anymore.
+	
   contains
 
 subroutine get_parameter_value(line, isParameter, id, value)
@@ -1433,13 +1435,13 @@ end subroutine initial_density_profile
 			call exponential_decay_density_profile()
 		
 		case(3) ! both (slow then fast decay)
-			! we want 1% variation : timestep = - tau * ln(1e-2)
-			dissipation_timestep = 4.6 * TAU_DISSIPATION
-			next_dissipation_step = time + dissipation_timestep
-			
 			if ((time/365.25).gt.DISSIPATION_TIME_SWITCH) then
 				TAU_DISSIPATION = TAU_PHOTOEVAP
 			end if
+			
+			! we want 1% variation : timestep = - tau * ln(1e-2)
+			dissipation_timestep = 4.6 * TAU_DISSIPATION
+			next_dissipation_step = time + dissipation_timestep
 			
 			call exponential_decay_density_profile()
 		case default
@@ -1451,7 +1453,7 @@ end subroutine initial_density_profile
 	
 	! When the surface density is to low, we suppress the dissipation of the disk.
 	if (maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)).lt.(GROUND_SURFACE_DENSITY*SIGMA_CGS2NUM)) then
-		DISSIPATION_TYPE = 0
+		disk_effect = .false.
 	end if
   
   end subroutine dissipate_disk
