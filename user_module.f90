@@ -611,8 +611,9 @@ subroutine init_globals(stellar_mass)
     torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
     torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
     
-    call calculate_temperature_profile(a_min=radius_min, a_max=radius_max, nb_a=nb_a_sample)!, ln_a, ln_T, temperature_index)
-    
+    call calculate_temperature_profile(a_min=radius_min, a_max=radius_max, nb_a=nb_a_sample, & ! Input
+                                       ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index)
+
   !~   write(*,*) 'Warning: il y a un offset au couple de corotation'
 !~     write(*,*) 'Warning: h est fixé à 0.05'
     write(*,*) 'Warning: nu est fixé à la main à 10^15'
@@ -772,16 +773,98 @@ end subroutine init_globals
     
     implicit none
     
-!~     call test_functions_FGK()
-!~     call test_get_opacity()
-!~     call test_torques()
-!~     call test_torques_fixed_a()
-!~     call test_torques_fixed_m()
-!~     call test_paardekooper_corotation()
-!~     call test_function_zero_temperature()
+    call test_functions_FGK()
+    call test_get_opacity()
+    call test_torques()
+    call test_torques_fixed_a()
+    call test_torques_fixed_m()
+    call test_function_zero_temperature()
     call test_temperature_profile()
+    call test_temperature_interpolation()
     
   end subroutine unitary_tests
+  
+  subroutine test_temperature_interpolation()
+  
+    implicit none
+    
+    ! Input
+    integer, parameter :: nb_a = 1000
+    real(double_precision), parameter :: a_min = 0.d0 ! in AU
+    real(double_precision), parameter :: a_max = 100.d0! in AU
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    
+    real(double_precision) :: stellar_mass
+    
+    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
+    
+    real(double_precision) :: a
+    real(double_precision) :: position(3), velocity(3)
+    type(PlanetProperties) :: p_prop
+    
+    integer :: j ! for loops
+    
+    ! stellar mass
+    stellar_mass = 1.d0 * K2
+    
+    call init_globals(stellar_mass)
+    
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    open(10, file='unitary_tests/test_temperature_interpolation.dat')
+    do j=1,nb_a
+      a = (a_min + a_step * (j - 1.d0))
+      ! We generate cartesian coordinate for the given semi major axis
+      position(1) = a
+      
+      ! We generate cartesian coordinate for the given mass and semi major axis
+      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      
+      ! we store in global parameters various properties of the planet
+      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+       p_prop=p_prop) ! Output
+      
+      
+      write(10,*) p_prop%radius, p_prop%temperature, p_prop%temperature_index
+    end do
+    close(10)
+    
+    ! We create associated gnuplot files
+    open(10, file="unitary_tests/temperature_interpolation.gnuplot")
+    
+
+    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set nokey'
+
+    
+    write(10,*) 'set ylabel "interpolated temperature [K]"'
+      
+    write(10,*) 'set grid'
+
+
+    write(10,*) "plot 'test_temperature_interpolation.dat' using 1:2 with lines notitle"
+        
+
+    
+    write(10,*) "#pause -1 # wait until a carriage return is hit"
+    write(10,*) "set terminal pdfcairo enhanced"
+
+    
+    write(10,*) '!rm "temperature_interpolation.pdf"'
+    write(10,*) "set output 'temperature_interpolation.pdf'"
+
+    
+    
+    do j=10,11
+      write(j,*) "replot # pour générer le fichier d'output"
+    end do
+    
+    close(10)
+    close(11)
+  
+  end subroutine test_temperature_interpolation
 
   subroutine test_functions_FGK
   ! subroutine that test the functions 'get_F', 'get_G' and 'get_K' and 
@@ -1335,22 +1418,23 @@ end subroutine init_globals
     
   end subroutine test_torques_fixed_m
   
-  subroutine calculate_temperature_profile(a_min, a_max, nb_a)                                                                                              
-! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.                       
-!                                                                                                                                                     
-! Parameters                                                                                                                                          
-! a_min : the left boundary radius of the temperature profile. Must be close to 0 (1 AU for example)                                                  
-! a_max : the outer boundary radius of the temperature profile. Must be quite huge, on order of tens AU (for a first test I took 60AU)                
-! nb_a : the number of point for the radius sample (and thus the temperature sample). For example 400                                                 
+  subroutine calculate_temperature_profile(a_min, a_max, nb_a, ln_x, ln_y, idx)
+! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
+! 
+! Parameters 
+! a_min : the left boundary radius of the temperature profile. Must be close to 0 (1 AU for example)
+! a_max : the outer boundary radius of the temperature profile. Must be quite huge, on order of tens AU (for a first test I took 60AU)
+! nb_a : the number of point for the radius sample (and thus the temperature sample). For example 400
 
     implicit none
 
-    ! Input                                                                                                                                           
-    integer, intent(in) :: nb_a                                                                                                                       
-    real(double_precision), intent(in) :: a_min! in AU                                                                                                
-    real(double_precision), intent(in) :: a_max! in AU                                                                                                
-                                                                                                                                                      
-                                                                                                                                                      
+    ! Input                                           
+    integer, intent(in) :: nb_a                       
+    real(double_precision), intent(in) :: a_min! in AU
+    real(double_precision), intent(in) :: a_max! in AU
+    
+    real(double_precision), intent(out), dimension(nb_a) :: ln_x, ln_y, idx
+    
     real(double_precision) :: a_step ! step between values of 'a'.   
 !~ ! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
 !~ ! A gnuplot file and a data file are created to display the temperature profile.
@@ -1384,7 +1468,7 @@ end subroutine init_globals
     ! We open the file where we want to write the outputs
     open(10, file='temperature_profile.dat', status='replace')
     
-    write(10,*) '# log(a) ; log(T) ; exponant ; a in AU ; temperature (in K)'    
+    write(10,*) '# a in AU ; temperature (in K) ; exponant ; log(a) ; log(T)'    
     
     a = 0.9d0 * a_min
     ! We generate cartesian coordinate for the given semi major axis
@@ -1417,12 +1501,16 @@ end subroutine init_globals
       
       temperature = zero_finding_zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop)
       
-      exponant = - (log(temperature) - log(temperature_old)) / (log(a) - log(a_old))
+      idx(j) = - (log(temperature) - log(temperature_old)) / (log(a) - log(a_old))
       
-      write(10,*) log(a), log(temperature), exponant, a, temperature
+      ln_x(j) = log(a)
+      ln_y(j) = log(temperature)
+      
+      write(10,*) a, temperature, idx(j), ln_x(j), ln_y(j)
     end do
     
     close(10)
+    
   end subroutine calculate_temperature_profile
   
   subroutine test_temperature_profile()
@@ -1461,9 +1549,9 @@ end subroutine init_globals
 !~       write(j,*) 'set xrange [', a_min, ':', a_max, ']'
     end do
 
-    write(10,*) "plot 'temperature_profile.dat' using 4:5 with lines notitle"
+    write(10,*) "plot 'temperature_profile.dat' using (exp($4)):(exp($5)) with lines notitle"
     
-    write(11,*) "plot 'temperature_profile.dat' using 4:3 with lines notitle"
+    write(11,*) "plot 'temperature_profile.dat' using (exp($4)):3 with lines notitle"
     
 
     
@@ -1759,7 +1847,7 @@ subroutine get_temperature(ln_x, ln_y, idx, radius, temperature, temperature_ind
 ! Return : 
 ! temperature : the temperature (in K) at the radius 'radius'
 
-real(double_precision), dimension(:), intent(in) :: ln_x, ln_y, idx
+real(double_precision), dimension(nb_a_sample), intent(in) :: ln_x, ln_y, idx
 real(double_precision), intent(in) :: radius
 
 real(double_precision), intent(out) :: temperature
@@ -1776,8 +1864,7 @@ id_max = ubound(ln_x,1)
 x_min = exp(ln_x(1))
 x_max = exp(ln_x(id_max))
 
-
-if ((radius .gt. x_min) .and. (radius .gt. x_max)) then
+if ((radius .ge. x_min) .and. (radius .le. x_max)) then
   ! in the range
   radius_step = exp(ln_x(2)) - x_min ! Only valid if the separation between radial values is linear. (equal space between the values, but not their logarithm)
   closest_low_id = 1 + int((radius - x_min) / radius_step)
