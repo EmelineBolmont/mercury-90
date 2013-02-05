@@ -181,7 +181,18 @@ subroutine read_disk_properties()
             IS_MANUAL_SURFACE_DENSITY = .false.
 						read(value, *) INITIAL_SIGMA_0, INITIAL_SIGMA_INDEX
 					end select
-
+        
+        case('is_irradiation')
+          read(value, *) boolean
+          if (boolean.eq.1) then
+						IS_IRRADIATION = .True.
+          else if (boolean.eq.0) then
+						IS_IRRADIATION = .False.
+          else
+						write(*,*) "Warning: An unknown value for identificator='", trim(identificator), " has been found'"
+						write(*,*) "         value(s)='", trim(value),"'"
+					end if
+        
         case('disk_edges')
           read(value, *) INNER_BOUNDARY_RADIUS, OUTER_BOUNDARY_RADIUS
         
@@ -439,6 +450,8 @@ subroutine write_disk_properties()
     write(10,'(a,f6.1,a,f4.2 ,a)') 'initial surface density = ',INITIAL_SIGMA_0, ' * R^(-',INITIAL_SIGMA_INDEX,') (g/cm^2)'
     write(10,'(a,f6.4,a)') 'inner smoothing width = ',INNER_SMOOTHING_WIDTH * INNER_BOUNDARY_RADIUS, ' (AU)'
   end if
+  write(10,*) ''
+  write(10,'(a,l,a)') 'is irradiation = ', IS_IRRADIATION, ' (T:True;F:False)'
   write(10,*) ''
   write(10,'(a)') 'Possible values : &
   0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile'
