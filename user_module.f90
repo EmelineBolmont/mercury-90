@@ -35,44 +35,38 @@ module user_module
   ! The other idea behind this cutoff is to allow planets to come close, and pass one in front of the other without collision. 
   ! Hence, the idea is to have a cutoff sufficiently high to allow, at a given position, 
   ! 2 planet radius in the apperture of this cutoff (a triangle with angle, orbital distance and 2 planet radius)
-  real(double_precision), parameter :: inclination_cutoff = 5.d-4 ! (in rad) the value below whom there will be no inclination damping anymore.
+  real(double_precision), parameter :: INCLINATION_CUTOFF = 5.d-4 ! (in rad) the value below whom there will be no inclination damping anymore.
   
   !------------------------------------------------------------------------------
   ! Default values for parameters that are to be read in the parameter file 'disk.in'
-  real(double_precision) :: b_over_h = 0.4 ! the smoothing length for the planet's potential
-  real(double_precision) :: adiabatic_index = 1.4 ! the adiabatic index for the gas equation of state
-  real(double_precision) :: mean_molecular_weight = 2.35 ! the mean molecular weight in mass of a proton
+  real(double_precision) :: B_OVER_H = 0.4 ! the smoothing length for the planet's potential
+  real(double_precision) :: ADIABATIC_INDEX = 1.4 ! the adiabatic index for the gas equation of state
+  real(double_precision) :: MEAN_MOLECULAR_WEIGHT = 2.35 ! the mean molecular weight in mass of a proton
   
-  ! Here we define the power law for surface density sigma(R) = sigma_0 * R^(-sigma_index)
-  real(double_precision) :: sigma_0 = 450 ! the surface density at (R=1AU) [g/cm^2]
-  real(double_precision) :: sigma_index = 0.5! the negative slope of the surface density power law (alpha in the paper)
-  real(double_precision) :: sigma_0_num ! the surface density at (R=1AU) [Msun/AU^2]
-  logical :: isDissipation = .True.
+  ! Here we define the power law for surface density sigma(R) = INITIAL_SIGMA_0 * R^(-INITIAL_SIGMA_INDEX)
+  real(double_precision) :: INITIAL_SIGMA_0 = 450 ! the surface density at (R=1AU) [g/cm^2]
+  real(double_precision) :: INITIAL_SIGMA_INDEX = 0.5! the negative slope of the surface density power law (alpha in the paper)
+  real(double_precision) :: INITIAL_SIGMA_0_NUM ! the surface density at (R=1AU) [Msun/AU^2]
+  logical :: IS_DISSIPATION = .True. ! boolean to tell if there is dissipation of the disk or not.
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
-  character(len=80) :: inner_boundary_condition = 'open' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-  character(len=80) :: outer_boundary_condition = 'open' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
+  character(len=80) :: INNER_BOUNDARY_CONDITION = 'open' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+  character(len=80) :: OUTER_BOUNDARY_CONDITION = 'open' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
   
   ! Here we define the constant value of the viscosity of the disk
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s]
   
-  ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
-  real(double_precision) :: radius_min = 1.d0
-  real(double_precision) :: radius_max = 100.d0
-  integer :: nb_sample = 200 ! number of points for the sample of radius of the temperature profile
-  real(double_precision) :: x_step ! the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
   !------------------------------------------------------------------------------
   ! prefactors
-  real(double_precision) :: x_s_prefactor ! prefactor for the half width of the corotation region
-  real(double_precision) :: chi_p_prefactor ! prefactor for the thermal diffusivity
-  real(double_precision) :: scaleheight_prefactor ! prefactor for the scaleheight
-  real(double_precision) :: lindblad_prefactor ! prefactor for the lindblad torque
-  real(double_precision) :: migration_acc_prefactor ! prefactor for the migration acceleration
-  real(double_precision) :: eccentricity_acc_prefactor ! prefactor for the eccentricity acceleration
-  
-  real(double_precision) :: torque_hs_baro ! barotropic part of the horseshoe drag
-  real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
+  real(double_precision) :: X_S_PREFACTOR ! prefactor for the half width of the corotation region
+  real(double_precision) :: SCALEHEIGHT_PREFACTOR ! prefactor for the scaleheight
   
   !------------------------------------------------------------------------------
+  ! Here we define properties common to the profiles
+  real(double_precision) :: INNER_BOUNDARY_RADIUS = 1d0
+  real(double_precision) :: OUTER_BOUNDARY_RADIUS = 100.d0
+  integer :: NB_SAMPLE_PROFILES = 200 ! number of points for the sample of radius of the temperature profile
+  real(double_precision) :: X_SAMPLE_STEP ! the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
+
   real(double_precision), dimension(:), allocatable :: distance_log_sample ! values of 'a' in log()
   real(double_precision), dimension(:), allocatable :: x_sample ! values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
   real(double_precision), dimension(:), allocatable :: surface_density_profile ! values of the density in log() for each value of the 'a' sample
@@ -104,7 +98,6 @@ module user_module
     real(double_precision) :: temperature_index ! the negative temperature index of the disk at the location of the planet [no dim] 
   end type PlanetProperties
 
-  
   contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -136,6 +129,10 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 !  n_big_bodies  =    "       "    " big bodies (ones that perturb everything else)
 !  time          = current epoch [days]
 
+! Global parameters
+! IS_DISSIPATION : boolean to tell if there is dissipation of the disk or not.
+! dissipation_timestep : the timestep between two computation of the disk [in days]
+! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
   use physical_constant
   use mercury_constant  
 
@@ -151,7 +148,10 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   
   !------------------------------------------------------------------------------ 
   !------Local-------
-  
+
+  real(double_precision) :: migration_acc_prefactor ! prefactor for the migration acceleration
+  real(double_precision) :: eccentricity_acc_prefactor ! prefactor for the eccentricity acceleration
+
   ! loop integers
   integer :: planet
   
@@ -189,9 +189,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   !------------------------------------------------------------------------------
   ! If it's time (depending on the timestep we want between each calculation of the disk properties)
   ! The first 'next_step' is set to '-1' to force the calculation for the first timestep. In fact, the first timestep will be done fornothing, but we need this in order to have a clean code.
-  if (isDissipation) then
+  if (IS_DISSIPATION) then
     if (time.gt.next_step) then
-      dissipation_timestep = 0.5d0 * x_step**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
+      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
       ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
       next_step = time + dissipation_timestep
       
@@ -258,7 +258,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       
       ! Calculation of the acceleration due to the inclination damping
       
-      if (p_prop%inclination.gt.inclination_cutoff) then
+      if (p_prop%inclination.gt.INCLINATION_CUTOFF) then
         time_inc = time_wave / 0.544d0 * (1.d0 - 0.30d0 * i_h**2 + 0.24 * i_h**3 + 0.14 * e_h**2 * i_h)
         
         inclination_acceleration_z = - velocity(3,planet) / time_inc
@@ -322,10 +322,25 @@ end subroutine get_parameter_value
 subroutine read_disk_properties()
 ! subroutine that read the 'disk.in' file to retrieve disk properties. Default value exist, if a parameter is not defined
 
+! Global Parameters
+! B_OVER_H : the smoothing length for the planet's potential
+! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
+! MEAN_MOLECULAR_WEIGHT : the mean molecular weight in mass of a proton
+! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
+! INITIAL_SIGMA_INDEX : the negative slope of the surface density power law (alpha in the paper)
+! INITIAL_SIGMA_0_NUM : the surface density at (R=1AU) [Msun/AU^2]
+! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! viscosity : the viscosity of the disk in [cm^2/s]
+! IS_DISSIPATION : boolean to tell if there is dissipation of the disk or not.
+! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+
   implicit none
   
   character(len=80) :: line
-  character(len=1) :: comment_character = '!' ! character that will indicate that the reste of the line is a comment
+  character(len=1), parameter :: comment_character = '!' ! character that will indicate that the rest of the line is a comment
   integer :: comment_position ! the index of the comment character on the line. If zero, there is none on the current string
   integer :: error ! to store the state of a read instruction
   
@@ -355,34 +370,34 @@ subroutine read_disk_properties()
       if (isParameter) then
         select case(identificator)
         case('b/h')
-          read(value, *) b_over_h
+          read(value, *) B_OVER_H
         
-        case('adiabatic_index')
-          read(value, *) adiabatic_index
+        case('ADIABATIC_INDEX')
+          read(value, *) ADIABATIC_INDEX
           
-        case('mean_molecular_weight')
-          read(value, *) mean_molecular_weight
+        case('MEAN_MOLECULAR_WEIGHT')
+          read(value, *) MEAN_MOLECULAR_WEIGHT
           
         case('surface_density')
-          read(value, *) sigma_0, sigma_index
+          read(value, *) INITIAL_SIGMA_0, INITIAL_SIGMA_INDEX
 
         case('temperature')
-          read(value, *) radius_min, radius_max
+          read(value, *) INNER_BOUNDARY_RADIUS, OUTER_BOUNDARY_RADIUS
         
         case('sample')
-          read(value, *) nb_sample
+          read(value, *) NB_SAMPLE_PROFILES
           
         case('viscosity')
           read(value, *) viscosity
           
         case('is_dissipation')
-          read(value, *) isDissipation
+          read(value, *) IS_DISSIPATION
           
-        case('inner_boundary_condition')
-          read(value, *) inner_boundary_condition
+        case('INNER_BOUNDARY_CONDITION')
+          read(value, *) INNER_BOUNDARY_CONDITION
         
-        case('outer_boundary_condition')
-          read(value, *) outer_boundary_condition
+        case('OUTER_BOUNDARY_CONDITION')
+          read(value, *) OUTER_BOUNDARY_CONDITION
           
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
@@ -396,7 +411,7 @@ subroutine read_disk_properties()
     write (*,*) 'Warning: The file "disk.in" does not exist. Default values have been used'
   end if
   
-  sigma_0_num = sigma_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
+  INITIAL_SIGMA_0_NUM = INITIAL_SIGMA_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
   
 end subroutine read_disk_properties
 
@@ -404,6 +419,9 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 
 ! subroutine that return numerous properties of the planet and its environment given its mass, position and velocity
 ! Note that some parameters are global and accessed directly by the subroutine
+
+! Global parameters
+! SCALEHEIGHT_PREFACTOR : prefactor for the scaleheight
 
 ! Parameter:
 ! stellar_mass : the mass of the central star in [solar mass * K2]
@@ -440,8 +458,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 !~   p_prop%sigma = get_surface_density(radius=p_prop%radius) ! [Msun/AU^3]
   call get_surface_density(radius=p_prop%radius, sigma=p_prop%sigma, sigma_index=p_prop%sigma_index)
 !~   call print_planet_properties(p_prop)
-  call get_temperature(ln_x=distance_log_sample, ln_y=temperature_profile, idx=temp_profile_index, chi_prof=chi_profile, & ! Input
-                       radius=p_prop%radius, & ! Input
+  call get_temperature(radius=p_prop%radius, & ! Input
                        temperature=p_prop%temperature, temperature_index=p_prop%temperature_index, chi=p_prop%chi) ! Output
   
   ! We calculate the angular momentum
@@ -451,7 +468,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   
   !------------------------------------------------------------------------------
   ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
-  p_prop%scaleheight = scaleheight_prefactor * sqrt(p_prop%temperature) / p_prop%omega
+  p_prop%scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(p_prop%temperature) / p_prop%omega
 !~   p_prop%scaleheight = 0.05 * p_prop%radius
 
   !------------------------------------------------------------------------------
@@ -469,6 +486,9 @@ end subroutine get_planet_properties
 subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0)
 ! function that return the total torque exerted by the disk on the planet 
 !
+! Global parameters
+! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
+! X_S_PREFACTOR : prefactor for the half width of the corotation region
 
   implicit none
   real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
@@ -487,7 +507,7 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   ! Meaningless parameters (intermediate constant and so on that doesn't mean anything physically)
   real(double_precision) :: Q_p ! parameter for gamma_eff (equation (45) of Paardekooper, Baruteau, 2010 II. Effects of diffusion)
   real(double_precision) :: k_p ! parameter for p_nu and p_chi for example  !!! This is not 'k' from equation (15)!
-  real(double_precision) :: lindblad_parameter ! intermediate of calculation for the lindblad torque. 
+  real(double_precision) :: lindblad_prefactor ! prefactor for the lindblad torque
   
   !Properties of the disk at the location of the planet
   real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
@@ -499,6 +519,8 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   !Torques (some depends of the planet)
   real(double_precision) :: torque_hs_ent ! entropy related part of the horseshoe drag
   real(double_precision) :: torque_c_lin_ent ! entropy related part of the linear corotation torque
+  real(double_precision) :: torque_hs_baro ! barotropic part of the horseshoe drag
+  real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
   
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
@@ -509,14 +531,14 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
   !------------------------------------------------------------------------------
   
-  gamma_eff = 2.d0 * Q_p * adiabatic_index / (adiabatic_index * Q_p + 0.5d0 * &
-  sqrt(2.d0 * sqrt((adiabatic_index * adiabatic_index * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (adiabatic_index - 1.d0)) &
-  + 2.d0 * adiabatic_index * adiabatic_index * Q_p * Q_p - 2.d0))
+  gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
+  sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
+  + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
   
   !------------------------------------------------------------------------------
   zeta_eff = p_prop%temperature_index - (gamma_eff - 1.d0) * p_prop%sigma_index
   
-  x_s = x_s_prefactor / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
+  x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
   
   !------------------------------------------------------------------------------
   ! k_p is defined to limit the number of operation and to have a value independant from chi_p or nu_p
@@ -548,8 +570,29 @@ end subroutine get_corotation_torque
 
 subroutine init_globals(stellar_mass)
 ! subroutine that initialize global values that define prefactors or values for torque that does not depend on the planet properties
+!
+! Global Parameters
+! B_OVER_H : the smoothing length for the planet's potential
+! MEAN_MOLECULAR_WEIGHT : the mean molecular weight in mass of a proton
+! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
+! X_S_PREFACTOR : prefactor for the half width of the corotation region
+! SCALEHEIGHT_PREFACTOR : prefactor for the scaleheight
+! distance_log_sample : values of 'a' in log()
+! x_sample : values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
+! surface_density_profile : values of the density in log() for each value of the 'a' sample
+! surface_density_index : values of the local negative slope of the surface density profile
+! temperature_profile : values of the temperature in log() for each value of the 'a' sample
+! temp_profile_index : values of the local negative slope of the temperature profile
+! chi_profile : thermal diffusivity
+! tau_profile : optical depth 
+!
 ! Parameters
 ! stellar_mass : the mass of the central object in solar mass (times K2)
+
+
   
   implicit none
   real(double_precision), intent(in) :: stellar_mass
@@ -561,59 +604,55 @@ subroutine init_globals(stellar_mass)
     
     call read_disk_properties()
     
-    allocate(distance_log_sample(nb_sample))
-    distance_log_sample(1:nb_sample) = 0.d0
+    allocate(distance_log_sample(NB_SAMPLE_PROFILES))
+    distance_log_sample(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(x_sample(nb_sample))
-    x_sample(1:nb_sample) = 0.d0
+    allocate(x_sample(NB_SAMPLE_PROFILES))
+    x_sample(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(surface_density_profile(nb_sample))
-    allocate(surface_density_index(nb_sample))
-    surface_density_profile(1:nb_sample) = 0.d0
-    surface_density_index(1:nb_sample) = 0.d0
+    allocate(surface_density_profile(NB_SAMPLE_PROFILES))
+    allocate(surface_density_index(NB_SAMPLE_PROFILES))
+    surface_density_profile(1:NB_SAMPLE_PROFILES) = 0.d0
+    surface_density_index(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(temperature_profile(nb_sample))
-    allocate(temp_profile_index(nb_sample))
-    temperature_profile(1:nb_sample) = 0.d0
-    temp_profile_index(1:nb_sample) = 0.d0
+    allocate(temperature_profile(NB_SAMPLE_PROFILES))
+    allocate(temp_profile_index(NB_SAMPLE_PROFILES))
+    temperature_profile(1:NB_SAMPLE_PROFILES) = 0.d0
+    temp_profile_index(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(chi_profile(nb_sample))
-    allocate(tau_profile(nb_sample))
-    chi_profile(1:nb_sample) = 0.d0
-    tau_profile(1:nb_sample) = 0.d0
+    allocate(chi_profile(NB_SAMPLE_PROFILES))
+    allocate(tau_profile(NB_SAMPLE_PROFILES))
+    chi_profile(1:NB_SAMPLE_PROFILES) = 0.d0
+    tau_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     
     ! We calculate the initial surface density profile.
     ! First, we want a constant spaced x_sample (which is propto sqrt(r)). Because it is important for diffusion equation which is solved depending on X and not R
-    x_sample(1) = 2.d0 * sqrt(radius_min)
-    distance_log_sample(1) = log(radius_min)
+    x_sample(1) = 2.d0 * sqrt(INNER_BOUNDARY_RADIUS)
+    distance_log_sample(1) = log(INNER_BOUNDARY_RADIUS)
     
-    x_sample(nb_sample) = 2.d0 * sqrt(radius_max)
-    distance_log_sample(nb_sample) = log(radius_max)
+    x_sample(NB_SAMPLE_PROFILES) = 2.d0 * sqrt(OUTER_BOUNDARY_RADIUS)
+    distance_log_sample(NB_SAMPLE_PROFILES) = log(OUTER_BOUNDARY_RADIUS)
     
     ! We initialize the global variable (in the module) for the constant step of x_sample
-    x_step = (x_sample(nb_sample) - x_sample(1)) / (nb_sample - 1.d0)
+    X_SAMPLE_STEP = (x_sample(NB_SAMPLE_PROFILES) - x_sample(1)) / (NB_SAMPLE_PROFILES - 1.d0)
     
-    do i=2, nb_sample - 1
-      x_sample(i) = x_sample(1) + x_step * (i - 1.d0)
+    do i=2, NB_SAMPLE_PROFILES - 1
+      x_sample(i) = x_sample(1) + X_SAMPLE_STEP * (i - 1.d0)
       distance_log_sample(i) = log(0.25d0 * x_sample(i)**2)
     end do
     
-    
-    
-
-    
     ! The x_s value is corrected from (paardekooper, 2010). The expression used is the one from (paardekooper, 2009a)
-    x_s_prefactor = 1.1d0 * (0.4d0 / b_over_h)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
+    X_S_PREFACTOR = 1.1d0 * (0.4d0 / B_OVER_H)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
     
     ! AU is in cm, so we must turn into meter before doing the conversion
     ! division of k_B by m_H is done separately for exponant and value to have more precision
     ! sqrt(k_B/m_H) in numerical units, knowing that [k_B]=[m^2.kg.s^-2K^-1] and [m_H]=[kg]. 
-    scaleheight_prefactor = sqrt(1.3806503d0/(1.67262158d0 * mean_molecular_weight) * 1.d4) * DAY / (AU * 1.d-2) 
+    SCALEHEIGHT_PREFACTOR = sqrt(1.3806503d0/(1.67262158d0 * MEAN_MOLECULAR_WEIGHT) * 1.d4) * DAY / (AU * 1.d-2) 
     
     call initial_density_profile()
     
     ! we get the temperature profile, but we need the surface density profile before.
-    call calculate_temperature_profile() ! WARNING : scaleheight_prefactor must exist before the temperature profile is computed !
+    call calculate_temperature_profile() ! WARNING : SCALEHEIGHT_PREFACTOR must exist before the temperature profile is computed !
     
     ! we store in a .dat file the temperature profile
     call store_temperature_profile(filename='temperature_profile.dat')
@@ -621,22 +660,27 @@ subroutine init_globals(stellar_mass)
     call store_scaleheight_profile()
     
     ! Here we display various warning for specific modification of the code that must be kept in mind (because this is not the normal behaviour of the code)
-!~     write(*,*) 'Warning: le couple de corotation a été désactivé'
-    write(*,*) 'Warning: nu est fixé à la main à 10^15'
-    write(*,*) "WARNING: il faut implementer l'interpolation de la densite de surface"!, pour l'instant c'est amortissement exponentiel
+
   endif
 end subroutine init_globals
 
 subroutine initial_density_profile()
   ! subroutine that store in the global parameters the value of the initial surface density profile. 
+  !
+  ! Global parameters
+  ! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
+  ! INITIAL_SIGMA_INDEX : the negative slope of the surface density power law (alpha in the paper)
+  ! distance_log_sample : values of 'a' in log()
+  ! surface_density_profile : values of the density in log() for each value of the 'a' sample
+  ! surface_density_index : values of the local negative slope of the surface density profile
   
   implicit none
   
   integer :: i ! for loops
   
-  do i=1,nb_sample
-    surface_density_profile(i) = log(sigma_0_num * exp(distance_log_sample(i))**(-sigma_index))
-    surface_density_index(i) = sigma_index
+  do i=1,NB_SAMPLE_PROFILES
+    surface_density_profile(i) = log(INITIAL_SIGMA_0_NUM * exp(distance_log_sample(i))**(-INITIAL_SIGMA_INDEX))
+    surface_density_index(i) = INITIAL_SIGMA_INDEX
   end do
 end subroutine initial_density_profile
 
@@ -729,17 +773,26 @@ end subroutine initial_density_profile
   subroutine get_surface_density(radius, sigma, sigma_index)
     ! function that interpolate the value of the surface density at the given radius
     
+    ! Global parameter
+    ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+    ! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
+    ! INNER_BOUNDARY_RADIUS : the inner edge of the different profiles
+    ! OUTER_BOUNDARY_RADIUS : the outer edge of the different profiles
+    ! distance_log_sample : values of 'a' in log()
+    ! x_sample : values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
+    ! surface_density_profile : values of the density in log() for each value of the 'a' sample
+    ! surface_density_index : values of the local negative slope of the surface density profile
+    
     ! Parameters : 
     ! radius : the orbital distance [in AU]
 
     ! Warning : ! the surface density profile is a global parameter of the module. So nothing is given in parameter because it's 
     ! this global array that change whenever needed. 
 
-    ! If the given radius is out of the radius boundaries of the temperature profile, 
-    ! then the temperature of the closest bound of the temperature profile will be given.
-
     ! Return : 
     ! temperature : the temperature (in K) at the radius 'radius'
+    ! If the given radius is out of the radius boundaries of the temperature profile, 
+    ! then the temperature of the closest bound of the temperature profile will be given.
 
     real(double_precision), intent(in) :: radius
 
@@ -747,22 +800,15 @@ end subroutine initial_density_profile
     real(double_precision), intent(out) :: sigma_index ! the negative slope of the surface density profile at the location of the planet.
 
     ! Local
-    real(double_precision) :: radius_step ! the step between each radial values in the 'x' array
-    integer :: id_max ! the last index of arrays
     integer :: closest_low_id ! the index of the first closest lower value of radius regarding the radius value given in parameter of the subroutine. 
-    real(double_precision) :: x_min, x_max
     real(double_precision) :: ln_x1, ln_x2, ln_y1, ln_y2
     real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
 
-    id_max = ubound(distance_log_sample,1)
-    x_min = exp(distance_log_sample(1))
-    x_max = exp(distance_log_sample(id_max))
-
-    if ((radius .ge. x_min) .and. (radius .lt. x_max)) then
+    if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. OUTER_BOUNDARY_RADIUS)) then
       
       x_radius = 2.d0 * sqrt(radius)
       ! in the range
-      closest_low_id = 1 + int((x_radius - x_sample(1)) / x_step) ! x_step being a global value, x_sample also
+      closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
       
       ln_x1 = distance_log_sample(closest_low_id)
       ln_x2 = distance_log_sample(closest_low_id + 1)
@@ -771,17 +817,20 @@ end subroutine initial_density_profile
 
       sigma = exp(ln_y2 + (ln_y1 - ln_y2) * (log(radius) - ln_x2) / (ln_x1 - ln_x2))
       sigma_index = surface_density_index(closest_low_id) ! for the temperature index, no interpolation.
-    else if (radius .lt. x_min) then
+    else if (radius .lt. INNER_BOUNDARY_RADIUS) then
       sigma = exp(surface_density_profile(1))
       sigma_index = surface_density_index(1)
-    else if (radius .gt. x_max) then
-      sigma = exp(surface_density_profile(id_max))
-      sigma_index = surface_density_index(id_max)
+    else if (radius .gt. OUTER_BOUNDARY_RADIUS) then
+      sigma = exp(surface_density_profile(NB_SAMPLE_PROFILES))
+      sigma_index = surface_density_index(NB_SAMPLE_PROFILES)
     end if
   end subroutine get_surface_density
   
   function get_viscosity(radius)
   ! function that return the viscosity of the disk in [AU^2.day^-1]
+  
+  ! Global parameters
+  ! density : the viscosity of the disk in [cm^2/s]
   
   implicit none
   
@@ -848,15 +897,21 @@ end subroutine initial_density_profile
   subroutine calculate_temperature_profile()
 ! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
 ! 
-! Parameters 
-! a_min : the left boundary radius of the temperature profile. Must be close to 0 (1 AU for example)
-! a_max : the outer boundary radius of the temperature profile. Must be quite huge, on order of tens AU (for a first test I took 60AU)
-! nb_a : the number of point for the radius sample (and thus the temperature sample). For example 400
+! Global parameters
+! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! distance_log_sample : values of 'a' in log()
+! temperature_profile : values of the temperature in log() for each value of the 'a' sample
+! temp_profile_index : values of the local negative slope of the temperature profile
+! chi_profile : thermal diffusivity
+! tau_profile : optical depth 
+!
+! Return
+! Nothing, but store in the associated global variable the temperature profile
 
     implicit none
 
-    ! Input
-    
+    ! Local
     real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
     
     real(double_precision) :: a
@@ -891,9 +946,9 @@ end subroutine initial_density_profile
                             temperature=temperature, optical_depth=tau_profile(1)) ! Output    
 
     temperature_profile(1) = log(temperature)
-    chi_profile(1) = 1.5d0 * p_prop%nu * adiabatic_index * (adiabatic_index - 1.d0) * &
+    chi_profile(1) = 1.5d0 * p_prop%nu * ADIABATIC_INDEX * (ADIABATIC_INDEX - 1.d0) * &
                       (1.5d0 + sqrt(3.d0) / tau_profile(1) + 1 / tau_profile(1)**2)
-    do j=2,nb_sample
+    do j=2,NB_SAMPLE_PROFILES
       a_old = a
       temperature_old = temperature
       
@@ -913,7 +968,7 @@ end subroutine initial_density_profile
       temperature_profile(j) = log(temperature)
       temp_profile_index(j) = - (temperature_profile(j) - temperature_profile(j-1)) / &
                                 (distance_log_sample(j) - distance_log_sample(j-1))
-      chi_profile(j) = 1.5d0 * p_prop%nu * adiabatic_index * (adiabatic_index - 1.d0) * &
+      chi_profile(j) = 1.5d0 * p_prop%nu * ADIABATIC_INDEX * (ADIABATIC_INDEX - 1.d0) * &
                       (1.5d0 + sqrt(3.d0) / tau_profile(j) + 1 / tau_profile(j)**2)
       
     end do
@@ -927,20 +982,17 @@ end subroutine initial_density_profile
 ! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
 ! 
 ! Global Parameters 
-! inner_boundary_condition : inner edge boundary condition
-! outer_boundary_condition : outer edge boundary condition
-
-! Boundary conditions : for either inner_cond or outer_cond
-
+! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+! dissipation_timestep : the timestep between two computation of the disk [in days]
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! x_sample : values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
+! surface_density_profile : values of the density in log() for each value of the 'a' sample
+! surface_density_index : values of the local negative slope of the surface density profile
 
     use mercury_constant
 
     implicit none
-
-    ! Input
-    
-    real(double_precision) :: a_step ! step between values of 'a'.   
-    
 
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
     real(double_precision) :: a_im1, a_i, a_ip1, a_ip2 ! ip1 == (i+1) ; im1 == (i-1)
@@ -957,11 +1009,9 @@ end subroutine initial_density_profile
     ! On the first run, we compute the initial profile, but on the other ones, we run the diffusion equation to make it dissipate.
     
     if (.not.FirstCall) then
-      ! Warning : X_step is not constant because equally spaced a values does not mean equally spaced X values (due to the square root)
+      ! Warning : X_SAMPLE_STEP is not constant because equally spaced a values does not mean equally spaced X values (due to the square root)
             
       ! for i=1
-
-      
       ! surface_density_index(1) is to be defined later, using surface_density_index(2)
       
       ! We prepare values for the first step of the loop 
@@ -973,15 +1023,15 @@ end subroutine initial_density_profile
       f_ip1 = 1.5d0 * x_sample(2) * exp(surface_density_profile(2))
       f_ip2 = 1.5d0 * x_sample(3) * exp(surface_density_profile(3))
       
-      flux_i = 3.d0 * get_viscosity(a_i) / a_i * (f_ip1 - f_i) / x_step ! not a centered scheme, simple step, so 3 instead of 1.5 (because we divide by (x_step) instead of (2*x_step)
-      flux_ip1 = 1.5d0 * get_viscosity(a_ip1) / a_ip1 * (f_ip2 - f_i) / x_step
+      flux_i = 3.d0 * get_viscosity(a_i) / a_i * (f_ip1 - f_i) / X_SAMPLE_STEP ! not a centered scheme, simple step, so 3 instead of 1.5 (because we divide by (X_SAMPLE_STEP) instead of (2*X_SAMPLE_STEP)
+      flux_ip1 = 1.5d0 * get_viscosity(a_ip1) / a_ip1 * (f_ip2 - f_i) / X_SAMPLE_STEP
       
-      ! CONDITION AT THE INNER EDGE : Sigma = 0, i.e accretion. Hence, we get
-      select case(inner_boundary_condition)
+      ! CONDITION AT THE INNER EDGE
+      select case(INNER_BOUNDARY_CONDITION)
       case('closed') 
       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
         flux_i = 0.d0
-        surface_density_profile(1) = log((f_i + dissipation_timestep * flux_ip1 / x_step) / (1.5d0 * x_sample(i)))
+        surface_density_profile(1) = log((f_i + dissipation_timestep * flux_ip1 / X_SAMPLE_STEP) / (1.5d0 * x_sample(i)))
       case('open') 
       ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
       ! condition. Density is free to dissipate outside the grid.
@@ -989,12 +1039,12 @@ end subroutine initial_density_profile
         f_i = 0.d0 ! We impose the condition sigma=0 so in practice it should be equal to 0
       case default
         write(*,*) 'Warning: An unknown inner boundary condition has been found'
-        write(*,*) "inner_boundary_condition=", trim(inner_boundary_condition)
+        write(*,*) "inner_boundary_condition=", trim(INNER_BOUNDARY_CONDITION)
       end select
       
       ! We store the previous values in order to avoid the use of an array. 
       ! This way, it should more efficient, because we don't have to create several arrays with thousands of elements
-      do i=2,nb_sample-3
+      do i=2,NB_SAMPLE_PROFILES-3
         
         ! We shift the indexes by 1
         a_im1 = a_i
@@ -1007,9 +1057,9 @@ end subroutine initial_density_profile
         
         flux_im1 = flux_i
         flux_i = flux_ip1
-        flux_ip1 = 1.5d0 * get_viscosity(a_ip1) / a_ip1 * (f_ip2 - f_i) / x_step
+        flux_ip1 = 1.5d0 * get_viscosity(a_ip1) / a_ip1 * (f_ip2 - f_i) / X_SAMPLE_STEP
         
-        tmp = (f_i + dissipation_timestep * (flux_ip1 - flux_im1) / (2 * x_step)) / (1.5d0 * x_sample(i))
+        tmp = (f_i + dissipation_timestep * (flux_ip1 - flux_im1) / (2 * X_SAMPLE_STEP)) / (1.5d0 * x_sample(i))
         if (tmp.lt.0.) then
           write(*,*) 'ERROR: tmp is negative!!!!'
           write(*,*) a_i, a_ip1, f_i, f_ip1, f_ip2, flux_i, flux_ip1
@@ -1020,7 +1070,7 @@ end subroutine initial_density_profile
               
       end do
       !------------------------------------------------------------------------------
-      i=nb_sample-2
+      i=NB_SAMPLE_PROFILES-2
       ! We shift the indexes by 1
       a_im1 = a_i
       a_i = a_ip1
@@ -1032,36 +1082,37 @@ end subroutine initial_density_profile
       
       flux_im1 = flux_i
       flux_i = flux_ip1
-      flux_ip1 = 1.5d0 * get_viscosity(a_ip1) / a_ip1 * (f_ip2 - f_i) / x_step
+      flux_ip1 = 1.5d0 * get_viscosity(a_ip1) / a_ip1 * (f_ip2 - f_i) / X_SAMPLE_STEP
       
       
-      tmp = (f_i + dissipation_timestep * (flux_ip1 - flux_im1) / (2 * x_step)) / (1.5d0 * x_sample(i))
+      tmp = (f_i + dissipation_timestep * (flux_ip1 - flux_im1) / (2 * X_SAMPLE_STEP)) / (1.5d0 * x_sample(i))
       surface_density_profile(i) = log(tmp) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
       surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
                                     / (distance_log_sample(i) - distance_log_sample(i-1))
       
-      ! The boundary condition is computed here because some values are needed by "i=nb_sample-1 surface density value".
-      select case(outer_boundary_condition)
+      ! The boundary condition is computed here because some values are needed by "i=NB_SAMPLE_PROFILES-1 surface density value".
+      select case(OUTER_BOUNDARY_CONDITION)
       case('closed') 
-      ! here i=nb_sample-2
+      ! here i=NB_SAMPLE_PROFILES-2
       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
         flux_ip2 = 0.d0
         
-        surface_density_profile(nb_sample) = log((f_ip2 - dissipation_timestep * flux_ip1 / x_step) / (1.5d0 * x_sample(i+2)))
+        surface_density_profile(NB_SAMPLE_PROFILES) = log((f_ip2 - dissipation_timestep * flux_ip1 / X_SAMPLE_STEP) &
+                                                          / (1.5d0 * x_sample(i+2)))
       case('open') 
       ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
       ! condition. Density is free to dissipate outside the grid.
-        surface_density_profile(nb_sample) = -HUGE ! in log, '0' is not defined, so we put a huge negative value to get close to 0
+        surface_density_profile(NB_SAMPLE_PROFILES) = -HUGE ! in log, '0' is not defined, so we put a huge negative value to get close to 0
         
         a_ip2 = 0.25d0 * x_sample(i+2) * x_sample(i+2)
-        flux_ip2 = - 3.d0 * get_viscosity(a_ip2) / a_ip2 * f_ip1 / x_step ! simple step, so 3 instead of 1.5 (because we divide by (x_step) instead of (2*x_step)
+        flux_ip2 = - 3.d0 * get_viscosity(a_ip2) / a_ip2 * f_ip1 / X_SAMPLE_STEP ! simple step, so 3 instead of 1.5 (because we divide by (X_SAMPLE_STEP) instead of (2*X_SAMPLE_STEP)
       case default
         write(*,*) 'Warning: An unknown outer boundary condition has been found'
-        write(*,*) "outer_boundary_condition=", trim(outer_boundary_condition)
+        write(*,*) "outer_boundary_condition=", trim(OUTER_BOUNDARY_CONDITION)
       end select    
       
       !------------------------------------------------------------------------------
-      i=nb_sample-1
+      i=NB_SAMPLE_PROFILES-1
       ! We shift the indexes by 1
       f_i = f_ip1
       f_ip1 = f_ip2
@@ -1070,18 +1121,17 @@ end subroutine initial_density_profile
       flux_i = flux_ip1
       flux_ip1 = flux_ip2 ! The outer boundary condition determiner flux_ip2
       
-      surface_density_profile(i) = log((f_i + dissipation_timestep * (flux_ip1 - flux_im1) / (2 * x_step)) &
+      surface_density_profile(i) = log((f_i + dissipation_timestep * (flux_ip1 - flux_im1) / (2 * X_SAMPLE_STEP)) &
                                             / (1.5d0 * x_sample(i))) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
       surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
                                         / (distance_log_sample(i) - distance_log_sample(i-1))
       
       !------------------------------------------------------------------------------
-      ! And the last index nb_sample 
+      ! And the last index NB_SAMPLE_PROFILES 
       ! We DO NOT compute the surface density since it's ruled by the boundary condition. But we compute the index
       
       surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
                                       / (distance_log_sample(i) - distance_log_sample(i-1))
-                                      
   
       !------------------------------------------------------------------------------
       ! We copy paste the index for the first value because however it is not defined.
@@ -1093,12 +1143,17 @@ end subroutine initial_density_profile
       call initial_density_profile()
     end if
   
-
-    
   end subroutine calculate_density_profile
   
   subroutine store_temperature_profile(filename)
   ! subroutine that store in a '.dat' file the temperature profile and negative index of the local power law
+  
+  ! Global parameters
+  ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+  ! temperature_profile : values of the temperature in log() for each value of the 'a' sample
+  ! temp_profile_index : values of the local negative slope of the temperature profile
+  ! chi_profile : thermal diffusivity
+  ! tau_profile : optical depth 
   
   implicit none
   
@@ -1111,7 +1166,7 @@ end subroutine initial_density_profile
   write(10,*) '# a in AU            ;    temperature (in K)    ;       exponant   &
               &; chi (thermal diffusivity) ;    tau (optical depth)'
 
-  do j=1,nb_sample
+  do j=1,NB_SAMPLE_PROFILES
     write(10,*) exp(distance_log_sample(j)), exp(temperature_profile(j)), temp_profile_index(j), tau_profile(j), chi_profile(j)!, distance_log_sample(j), temperature_profile(j)
   end do
   
@@ -1121,6 +1176,11 @@ end subroutine initial_density_profile
   
   subroutine store_density_profile(filename)
   ! subroutine that store in a '.dat' file the temperature profile and negative index of the local power law
+  
+  ! Global parameters
+  ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+  ! surface_density_index : values of the local negative slope of the surface density profile
+  
   
   implicit none
   
@@ -1134,7 +1194,7 @@ end subroutine initial_density_profile
   open(10, file=filename, status='replace')
   write(10,*) '#       a in AU       ; surface density (in g/cm^2) ;    exponant'
 
-  do j=1,nb_sample
+  do j=1,NB_SAMPLE_PROFILES
     write(10,*) exp(distance_log_sample(j)), exp(surface_density_profile(j)) * NUM2PHYS, surface_density_index(j)
   end do
   
@@ -1144,6 +1204,9 @@ end subroutine initial_density_profile
   
   subroutine store_scaleheight_profile()
   ! subroutine that store in a '.dat' file the scaleheight profile
+  
+  ! Global parameters
+  ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
   
   implicit none
   
@@ -1163,7 +1226,7 @@ end subroutine initial_density_profile
   ! We open the file where we want to write the outputs
   open(10, file='scaleheight_profile.dat', status='replace')
   write(10,*) '# a in AU ; scaleheight (AU) ; aspect ratio'
-  do j=1,nb_sample
+  do j=1,NB_SAMPLE_PROFILES
     a = exp(distance_log_sample(j))
     ! We generate cartesian coordinate for the given semi major axis
     position(1) = a
@@ -1340,6 +1403,9 @@ subroutine zero_finding_temperature(temperature, sigma, omega, prefactor, funcv,
 
 ! REMARKS : The scaleheight of the disk is determined directly in the function, because it depends on the temperature
 
+! Global parameters
+! SCALEHEIGHT_PREFACTOR : prefactor for the scaleheight
+
 
 ! Output
 real(double_precision), intent(out) :: funcv ! the value of the function
@@ -1355,7 +1421,7 @@ real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega
 real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
 real(double_precision) :: rho ! the bulk density of the disk at a given position
 !------------------------------------------------------------------------------
-scaleheight = scaleheight_prefactor * sqrt(temperature) / omega
+scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(temperature) / omega
 rho = 0.5d0 * sigma / scaleheight
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
 
@@ -1366,8 +1432,18 @@ funcv = 2.d0 * SIGMA_STEFAN * temperature**4 + prefactor * &
 return
 end subroutine zero_finding_temperature
 
-subroutine get_temperature(ln_x, ln_y, idx, chi_prof, radius, temperature, temperature_index, chi)
+subroutine get_temperature(radius, temperature, temperature_index, chi)
 ! subroutine that interpolate a value of the temperature at a given radius with input arrays of radius (x) and temperature (y)
+
+! Global parameters
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r.
+! INNER_BOUNDARY_RADIUS : the inner edge of the different profiles
+! OUTER_BOUNDARY_RADIUS : the outer edge of the different profiles
+! distance_log_sample : values of 'a' in log()
+! temperature_profile : values of the temperature in log() for each value of the 'a' sample
+! temp_profile_index : values of the local negative slope of the temperature profile
+! chi_profile : thermal diffusivity
 
 ! Warning : 
 ! the 'x' array must contains equally spaced 'r' values in linear basis (but not thei logarithm values of course). 
@@ -1380,7 +1456,6 @@ subroutine get_temperature(ln_x, ln_y, idx, chi_prof, radius, temperature, tempe
 ! Return : 
 ! temperature : the temperature (in K) at the radius 'radius'
 
-real(double_precision), dimension(nb_sample), intent(in) :: ln_x, ln_y, idx, chi_prof
 real(double_precision), intent(in) :: radius
 
 real(double_precision), intent(out) :: temperature
@@ -1388,42 +1463,34 @@ real(double_precision), intent(out) :: temperature_index
 real(double_precision), intent(out) :: chi
 
 ! Local
-real(double_precision) :: radius_step ! the step between each radial values in the 'x' array
-integer :: id_max ! the last index of arrays
 integer :: closest_low_id ! the index of the first closest lower value of radius regarding the radius value given in parameter of the subroutine. 
-real(double_precision) :: x_min, x_max
 real(double_precision) :: ln_x1, ln_x2, ln_y1, ln_y2
 real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
 
-id_max = ubound(ln_x,1)
-x_min = exp(ln_x(1))
-x_max = exp(ln_x(id_max))
 
-if ((radius .ge. x_min) .and. (radius .lt. x_max)) then
+if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. OUTER_BOUNDARY_RADIUS)) then
   
   x_radius = 2.d0 * sqrt(radius)
   ! in the range
-  closest_low_id = 1 + int((x_radius - x_sample(1)) / x_step) ! x_step being a global value, x_sample also
+  closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
   
-  ln_x1 = ln_x(closest_low_id)
-  ln_x2 = ln_x(closest_low_id + 1)
-  ln_y1 = ln_y(closest_low_id)
-  ln_y2 = ln_y(closest_low_id + 1)
+  ln_x1 = distance_log_sample(closest_low_id)
+  ln_x2 = distance_log_sample(closest_low_id + 1)
+  ln_y1 = temperature_profile(closest_low_id)
+  ln_y2 = temperature_profile(closest_low_id + 1)
 
   temperature = exp(ln_y2 + (ln_y1 - ln_y2) * (log(radius) - ln_x2) / (ln_x1 - ln_x2))
-  temperature_index = idx(closest_low_id) ! for the temperature index, no interpolation.
-  chi = chi_prof(closest_low_id)
-else if (radius .lt. x_min) then
-  temperature = exp(ln_y(1))
-  temperature_index = idx(1)
-  chi = chi_prof(1)
-else if (radius .gt. x_max) then
-  temperature = exp(ln_y(id_max))
-  temperature_index = idx(id_max)
-  chi = chi_prof(id_max)
+  temperature_index = temp_profile_index(closest_low_id) ! for the temperature index, no interpolation.
+  chi = chi_profile(closest_low_id)
+else if (radius .lt. INNER_BOUNDARY_RADIUS) then
+  temperature = exp(temperature_profile(1))
+  temperature_index = temp_profile_index(1)
+  chi = chi_profile(1)
+else if (radius .gt. OUTER_BOUNDARY_RADIUS) then
+  temperature = exp(temperature_profile(NB_SAMPLE_PROFILES))
+  temperature_index = temp_profile_index(NB_SAMPLE_PROFILES)
+  chi = chi_profile(NB_SAMPLE_PROFILES)
 end if
-
-
 
 end subroutine get_temperature
 
@@ -1482,19 +1549,20 @@ end subroutine print_planet_properties
     call store_density_profile(filename='density_profile.dat')
     call store_scaleheight_profile()
     
-!~     call test_functions_FGK()
-!~     call test_opacity_profile()
-!~     call test_torques(stellar_mass)
-!~     call test_torques_fixed_a(stellar_mass)
-!~     call test_torques_fixed_m(stellar_mass)
-!~     call test_function_zero_temperature(stellar_mass)
-!~     call test_temperature_profile(stellar_mass)
-!~     call test_temperature_interpolation(stellar_mass)
-!~     call test_optical_depth_profile(stellar_mass)
-!~     call test_thermal_diffusivity_profile(stellar_mass)
-!~     call test_scaleheight_profile()
-    
-    call test_dissipation_of_the_disk(stellar_mass)
+    call test_functions_FGK()
+    call test_opacity_profile()
+    call test_torques(stellar_mass)
+    call test_torques_fixed_a(stellar_mass)
+    call test_torques_fixed_m(stellar_mass)
+    call test_function_zero_temperature(stellar_mass)
+    call test_temperature_profile(stellar_mass)
+    call test_temperature_interpolation()
+    call test_density_interpolation()
+    call test_optical_depth_profile(stellar_mass)
+    call test_thermal_diffusivity_profile(stellar_mass)
+    call test_scaleheight_profile()
+!~     
+!~     call test_dissipation_of_the_disk(stellar_mass)
     
   end subroutine unitary_tests
 
@@ -1638,24 +1706,16 @@ end subroutine print_planet_properties
     
   end subroutine test_function_zero_temperature
 
-  subroutine test_temperature_interpolation(stellar_mass)
+  subroutine test_temperature_interpolation()
   
     implicit none
-    
-    ! Input
-    real(double_precision), intent(in) :: stellar_mass
     
     integer, parameter :: nb_a = 1000
     real(double_precision), parameter :: a_min = 0.d0 ! in AU
     real(double_precision), parameter :: a_max = 100.d0! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
-    
     real(double_precision) :: a, temperature, temperature_index, chi
-    real(double_precision) :: position(3), velocity(3)
-    type(PlanetProperties) :: p_prop
-    real(double_precision) :: time
     
     integer :: j ! for loops
     
@@ -1666,9 +1726,8 @@ end subroutine print_planet_properties
       a = (a_min + a_step * (j - 1.d0))
       ! We generate cartesian coordinate for the given semi major axis
       
-      call get_temperature(ln_x=distance_log_sample, ln_y=temperature_profile, idx=temp_profile_index, chi_prof=chi_profile, & ! Input
-                       radius=p_prop%radius, & ! Input
-                       temperature=temperature, temperature_index=temperature_index, chi=chi) ! Output
+      call get_temperature(radius=a, & ! Input
+                           temperature=temperature, temperature_index=temperature_index, chi=chi) ! Output
       
       
       write(10,*) a, temperature, temperature_index, chi
@@ -1681,15 +1740,15 @@ end subroutine print_planet_properties
 
     write(10,*) 'set terminal wxt enhanced'
     write(10,*) 'set xlabel "semi major axis a (in AU)"'
-    write(10,*) 'set nokey'
 
     
-    write(10,*) 'set ylabel "interpolated temperature [K]"'
+    write(10,*) 'set ylabel "temperature [K]"'
       
     write(10,*) 'set grid'
 
 
-    write(10,*) "plot 'test_temperature_interpolation.dat' using 1:2 with lines notitle"
+    write(10,*) 'plot "test_temperature_interpolation.dat" using 1:2 with lines title "Interpolation",\'
+    write(10,*) '     "../temperature_profile.dat" using 1:2 with lines title "Profile"'
         
 
     
@@ -1708,64 +1767,48 @@ end subroutine print_planet_properties
   
   end subroutine test_temperature_interpolation
   
-  subroutine test_density_interpolation(stellar_mass)
+  subroutine test_density_interpolation()
   
     implicit none
-    
-    ! Input
-    real(double_precision), intent(in) :: stellar_mass
     
     integer, parameter :: nb_a = 1000
     real(double_precision), parameter :: a_min = 0.d0 ! in AU
     real(double_precision), parameter :: a_max = 100.d0! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
-    
-    real(double_precision) :: a
-    real(double_precision) :: position(3), velocity(3)
-    type(PlanetProperties) :: p_prop
+    real(double_precision) :: a, sigma, sigma_index
     
     integer :: j ! for loops
     
-    write(*,*) 'Test of the temperature interpolation'
+    write(*,*) 'Test of the surface density interpolation'
     
-    position(:) = 0.d0
-    velocity(:) = 0.d0
-    
-    open(10, file='unitary_tests/test_temperature_interpolation.dat')
+    open(10, file='unitary_tests/test_density_interpolation.dat')
     do j=1,nb_a
       a = (a_min + a_step * (j - 1.d0))
       ! We generate cartesian coordinate for the given semi major axis
-      position(1) = a
       
-      ! We generate cartesian coordinate for the given mass and semi major axis
-      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
-      
-      ! we store in global parameters various properties of the planet
-      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
-       p_prop=p_prop) ! Output
+      call get_surface_density(radius=a, sigma=sigma, sigma_index=sigma_index)
       
       
-      write(10,*) p_prop%radius, p_prop%sigma, p_prop%sigma_index
+      write(10,*) a, sigma, sigma_index
     end do
     close(10)
     
     ! We create associated gnuplot files
-    open(10, file="unitary_tests/temperature_interpolation.gnuplot")
+    open(10, file="unitary_tests/density_interpolation.gnuplot")
     
 
     write(10,*) 'set terminal wxt enhanced'
     write(10,*) 'set xlabel "semi major axis a (in AU)"'
-    write(10,*) 'set nokey'
 
     
-    write(10,*) 'set ylabel "interpolated surface density [g/cm^2]"'
+    write(10,*) 'set ylabel "density [g/cm^2]"'
       
     write(10,*) 'set grid'
 
 
-    write(10,*) "plot 'test_density_interpolation.dat' using 1:2 with lines notitle"
+    write(10,*) 'plot "test_density_interpolation.dat" using 1:2 with lines title "Interpolation",\'
+    write(10,*) '     "../density_profile.dat" using 1:2 with lines title "Profile"'
         
 
     
@@ -2467,6 +2510,13 @@ end subroutine print_planet_properties
   subroutine test_dissipation_of_the_disk(stellar_mass)
   ! subroutine that plot several values depending on the properties of the disk during its dissipation
   
+  ! Global parameters
+  ! dissipation_timestep : the timestep between two computation of the disk [in days]
+  ! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+  ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+  ! surface_density_profile : values of the density in log() for each value of the 'a' sample
+  ! temperature_profile : values of the temperature in log() for each value of the 'a' sample
+  
   ! Return:
   !  a data file 'test_total_torque.dat' 
   ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
@@ -2569,7 +2619,7 @@ end subroutine print_planet_properties
       
       write(*,purcent_format) time(k)/365.25d0, t_max
       
-      dissipation_timestep = 0.5d0 * x_step**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
+      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
       ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
       time(k+1) = time(k) + dissipation_timestep * 365.25d0 ! days
       ! we get the temperature profile.
@@ -2693,7 +2743,7 @@ end subroutine print_planet_properties
     write(13,*) 'set xlabel "semi major axis (AU)"'
     write(13,*) 'set ylabel "Surface density (g/cm^2)"'
     write(13,*) 'set grid'
-    write(13,*) 'set xrange [', radius_min, ':', radius_max, ']'
+    write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'
     write(13,*) 'set yrange [', density_min, ':', density_max, ']'
     
     do k=1, nb_time
