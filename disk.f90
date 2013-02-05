@@ -436,8 +436,8 @@ subroutine write_disk_properties()
 			write(10,'(a,f6.1,a)') '    CZ for maximum mass = ', MASS_DEP_CZ_M_MAX, ' (AU)'
 		
 		case('manual')
-			write(10,'(a)') '  manual : The torque profile, mass_independant, is read from a torque profile file that contains &
-			                &  distance and torque value (in Gamma_0) as two columns'
+			write(10,'(a)') '  manual : The torque profile, mass_independant, is read from a torque profile file that contains&
+			                & distance and torque value (in Gamma_0) as two columns'
 			
 		case default
 			write(10,'(a)') 'Warning: The torque rule cannot be found.'
