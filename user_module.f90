@@ -456,7 +456,7 @@ end subroutine init_globals
     ! We open the file where we want to write the outputs
     open(10, file='test_functions_FGK.dat')
     write(10,*) "Correspond to the figure 2 of II. Effects of diffusion"
-    write(10,*) 'p ; F(p) ; G(p) ; K(p)'
+    write(10,*) '# p ; F(p) ; G(p) ; K(p)'
     
     
     do i=1,nb_points
@@ -512,7 +512,7 @@ end subroutine init_globals
     ! We open the file where we want to write the outputs
     open(10, file='test_opacity.dat')
     write(10,*) "Correspond to the figure 9a of Bell & Lin 1994"
-    write(10,*) 'Temperature (K) ; Opacity for bulk density from 1e-5 to 1e-9 by power of ten'
+    write(10,*) '# Temperature (K) ; Opacity for bulk density from 1e-5 to 1e-9 by power of ten'
     
     do i=1, nb_points
       temperature = T_min * T_step ** (i-1)
@@ -587,11 +587,11 @@ end subroutine init_globals
     open(14, file='test_ref_torque.dat')
     
     
-    write(10,*) 'semi major axis (AU) ; mass in earth mass ; corotation torque (no dim)'
-    write(11,*) 'semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
-    write(12,*) 'semi major axis (AU) ; mass in earth mass ; total torque in M_s.AU^2.day^{-2}'
-    write(13,*) 'semi major axis (AU) ; mass in earth mass ; lindblad torque (no dim)'
-    write(14,*) 'semi major axis (AU) ; mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
+    write(10,*) '# semi major axis (AU) ; mass in earth mass ; corotation torque (no dim)'
+    write(11,*) '# semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
+    write(12,*) '# semi major axis (AU) ; mass in earth mass ; total torque in M_s.AU^2.day^{-2}'
+    write(13,*) '# semi major axis (AU) ; mass in earth mass ; lindblad torque (no dim)'
+    write(14,*) '# semi major axis (AU) ; mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
     
     
     do i=1, nb_points ! loop on the position
@@ -675,8 +675,11 @@ end subroutine init_globals
       write(j,*) 'set pm3d map'
       write(j,*) 'set pm3d explicit'
       write(j,*) 'set palette rgbformulae 22,13,-31'
-!~     write(j,*) 'set xrange [', a_min, ':', a_max, '] noreverse'
-!~     write(j,*) 'set yrange [', mass_min, ':', mass_max, '] noreverse'
+      write(j,*) 'set mxtics 5'
+      write(j,*) 'set mytics 5'
+      write(j,*) 'set grid xtics ytics mxtics mytics linetype -1, linetype 0'
+    write(j,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(j,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     end do
 
     write(10,*) "splot 'test_corotation_torque.dat' with pm3d notitle"
@@ -747,9 +750,9 @@ end subroutine init_globals
     open(11, file='test_ref_torque_fixed_a.dat')
     open(12, file='test_torques_fixed_a_units.dat')
     
-    write(10,*) 'mass in earth mass ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
-    write(11,*) 'mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
-    write(12,*) 'mass in earth mass ; corotation torque (M_s.AU^2.day^{-2}), lindblad torque (M_s.AU^2.day^{-2})&
+    write(10,*) '# mass in earth mass ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
+    write(11,*) '# mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
+    write(12,*) '# mass in earth mass ; corotation torque (M_s.AU^2.day^{-2}), lindblad torque (M_s.AU^2.day^{-2})&
                  &, total torque (M_s.AU^2.day^{-2})'
 
     ! We generate cartesian coordinate for the given semi major axis
@@ -868,9 +871,9 @@ end subroutine init_globals
     open(11, file='test_ref_torque_fixed_m.dat')
     open(12, file='test_torques_fixed_m_units.dat')
     
-    write(10,*) 'a in AU ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
-    write(11,*) 'a in AU ; reference torque in M_s.AU^2.day^{-2}'
-    write(12,*) 'a in AU ; corotation torque (M_s.AU^2.day^{-2}), lindblad torque (M_s.AU^2.day^{-2})&
+    write(10,*) '# a in AU ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
+    write(11,*) '# a in AU ; reference torque in M_s.AU^2.day^{-2}'
+    write(12,*) '# a in AU ; corotation torque (M_s.AU^2.day^{-2}), lindblad torque (M_s.AU^2.day^{-2})&
                  &, total torque (M_s.AU^2.day^{-2})'
 
     ! We generate cartesian coordinate for the given semi major axis
@@ -1045,7 +1048,7 @@ subroutine paardekooper_corotation(stellar_mass, mass, position, velocity)
   
   open(10, file='test_paardekooper_figure6.dat')
   write(10,*) "Correspond to the figure 6 of Paardekooper 2010"
-  write(10,*) 'p_nu ; corotation torque for chi=(1e-5, 2e-6, 1e-6, 1e-7)'
+  write(10,*) '# p_nu ; corotation torque for chi=(1e-5, 2e-6, 1e-6, 1e-7)'
   
   do i=1,nb_points
     do j=1,4 ! loop on chi
