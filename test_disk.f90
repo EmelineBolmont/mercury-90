@@ -42,18 +42,18 @@ program test_disk
     ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
     call study_torques(stellar_mass)
     
-    ! we store in a .dat file the temperature profile
-    call store_temperature_profile(filename='temperature_profile.dat')
-    call store_density_profile(filename='density_profile.dat')
-    call store_scaleheight_profile()
-    
-    ! Unitary tests
-    call test_functions_FGK()
-    call test_function_zero_temperature(stellar_mass)
-    call test_temperature_interpolation()
-    call test_manual_torque_interpolation()
-    call test_density_interpolation()
-    call test_retrieval_of_orbital_elements(stellar_mass)
+!~     ! we store in a .dat file the temperature profile
+!~     call store_temperature_profile(filename='temperature_profile.dat')
+!~     call store_density_profile(filename='density_profile.dat')
+!~     call store_scaleheight_profile()
+!~     
+!~     ! Unitary tests
+!~     call test_functions_FGK()
+!~     call test_function_zero_temperature(stellar_mass)
+!~     call test_temperature_interpolation()
+!~     call test_manual_torque_interpolation()
+!~     call test_density_interpolation()
+!~     call test_retrieval_of_orbital_elements(stellar_mass)
 
     
     ! Physical values and plots
@@ -1304,7 +1304,7 @@ program test_disk
     real(double_precision), parameter :: a_max = 60. ! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision), parameter :: mass = 5. * EARTH_MASS * K2
+    real(double_precision), parameter :: mass = 6. * EARTH_MASS * K2
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: lindblad_torque_units, corotation_torque_units, total_torque_units

@@ -168,94 +168,103 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       position=position(1:3, planet), velocity=velocity(1:3,planet),& ! input
       p_prop=p_prop) ! Output
       
-      !------------------------------------------------------------------------------
-      ! prefactor calculation for eccentricity and inclination damping
-      e_h = p_prop%eccentricity / p_prop%aspect_ratio
-      i_h = p_prop%inclination / p_prop%aspect_ratio
-      time_wave = mass(1)**2 * p_prop%aspect_ratio**4 / (mass(planet) * K2 * p_prop%sigma * &
-                  p_prop%semi_major_axis**2 * p_prop%omega)
+      if (p_prop%eccentricity.lt.1.d0) then
+        !------------------------------------------------------------------------------
+        ! prefactor calculation for eccentricity and inclination damping
+        e_h = p_prop%eccentricity / p_prop%aspect_ratio
+        i_h = p_prop%inclination / p_prop%aspect_ratio
+        time_wave = mass(1)**2 * p_prop%aspect_ratio**4 / (mass(planet) * K2 * p_prop%sigma * &
+                    p_prop%semi_major_axis**2 * p_prop%omega)
 
-      !------------------------------------------------------------------------------
-      ! Calculation of the acceleration due to migration
-      select case(TORQUE_TYPE)
-        case('real') ! The normal torque profile, calculated form properties of the disk
-          call get_corotation_torque(mass(1), mass(planet), p_prop, & ! input
-          corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
-        
-        case('mass_independant') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_mass_indep_CZ(mass(1), mass(planet), p_prop, & ! input
-          corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
-        
-        case('mass_dependant')
-          call get_corotation_torque_mass_dep_CZ(mass(1), mass(planet), p_prop, & ! input
-          corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+        !------------------------------------------------------------------------------
+        ! Calculation of the acceleration due to migration
+        select case(TORQUE_TYPE)
+          case('real') ! The normal torque profile, calculated form properties of the disk
+            call get_corotation_torque(mass(1), mass(planet), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
           
-        case('manual')
-          call get_corotation_torque_manual(mass(1), mass(planet), p_prop, & ! input
-          corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+          case('mass_independant') ! a defined torque profile to get a mass independant convergence zone
+            call get_corotation_torque_mass_indep_CZ(mass(1), mass(planet), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
           
-        case default
-          write(*,*) 'Warning: The torque rule cannot be found.'
-          write(*,*) 'Given value :', TORQUE_TYPE
-      end select
-      
+          case('mass_dependant')
+            call get_corotation_torque_mass_dep_CZ(mass(1), mass(planet), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            
+          case('manual')
+            call get_corotation_torque_manual(mass(1), mass(planet), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            
+          case default
+            write(*,*) 'Warning: The torque rule cannot be found.'
+            write(*,*) 'Given value :', TORQUE_TYPE
+        end select
+        
 
-      torque = torque_ref * (lindblad_torque + corotation_torque)      
-      
-      time_mig = 0.5d0 * p_prop%angular_momentum / torque
-      
-      migration_acc_prefactor = 1.d0 / time_mig
-      
-      migration_acceleration(1) = migration_acc_prefactor * velocity(1,planet)
-      migration_acceleration(2) = migration_acc_prefactor * velocity(2,planet)
-      migration_acceleration(3) = migration_acc_prefactor * velocity(3,planet)
-      
-      !------------------------------------------------------------------------------
-      ! Calculation of the acceleration due to eccentricity damping
-      
-      time_ecc = time_wave / 0.780d0 * (1.d0 - 0.14d0 * e_h**2 + 0.06 * e_h**3 + 0.18 * e_h * i_h**2)
-      
-      eccentricity_acc_prefactor = -2.d0 * (position(1,planet) * velocity(1,planet) + position(2,planet) * velocity(2,planet) + &
-      position(3,planet) * velocity(3,planet)) / (p_prop%radius**2 * time_ecc)
-      
-      eccentricity_acceleration(1) = eccentricity_acc_prefactor * position(1,planet)
-      eccentricity_acceleration(2) = eccentricity_acc_prefactor * position(2,planet)
-      eccentricity_acceleration(3) = eccentricity_acc_prefactor * position(3,planet)
-      
-      
-      !------------------------------------------------------------------------------
-      ! Calculation of the acceleration due to the inclination damping
-      
-      if (p_prop%inclination.gt.INCLINATION_CUTOFF) then
-        time_inc = time_wave / 0.544d0 * (1.d0 - 0.30d0 * i_h**2 + 0.24 * i_h**3 + 0.14 * e_h**2 * i_h)
+        torque = torque_ref * (lindblad_torque + corotation_torque)      
         
-        inclination_acceleration_z = - velocity(3,planet) / time_inc
-      else
-        time_inc = 0.d0
-        inclination_acceleration_z = 0.d0
+        time_mig = 0.5d0 * p_prop%angular_momentum / torque
+        
+        migration_acc_prefactor = 1.d0 / time_mig
+        
+        migration_acceleration(1) = migration_acc_prefactor * velocity(1,planet)
+        migration_acceleration(2) = migration_acc_prefactor * velocity(2,planet)
+        migration_acceleration(3) = migration_acc_prefactor * velocity(3,planet)
+        
+        !------------------------------------------------------------------------------
+        ! Calculation of the acceleration due to eccentricity damping
+        
+        time_ecc = time_wave / 0.780d0 * (1.d0 - 0.14d0 * e_h**2 + 0.06 * e_h**3 + 0.18 * e_h * i_h**2)
+        
+        eccentricity_acc_prefactor = -2.d0 * (position(1,planet) * velocity(1,planet) + position(2,planet) * velocity(2,planet) + &
+        position(3,planet) * velocity(3,planet)) / (p_prop%radius**2 * time_ecc)
+        
+        eccentricity_acceleration(1) = eccentricity_acc_prefactor * position(1,planet)
+        eccentricity_acceleration(2) = eccentricity_acc_prefactor * position(2,planet)
+        eccentricity_acceleration(3) = eccentricity_acc_prefactor * position(3,planet)
+        
+        
+        !------------------------------------------------------------------------------
+        ! Calculation of the acceleration due to the inclination damping
+        
+        if (p_prop%inclination.gt.INCLINATION_CUTOFF) then
+          time_inc = time_wave / 0.544d0 * (1.d0 - 0.30d0 * i_h**2 + 0.24 * i_h**3 + 0.14 * e_h**2 * i_h)
+          
+          inclination_acceleration_z = - velocity(3,planet) / time_inc
+        else
+          time_inc = 0.d0
+          inclination_acceleration_z = 0.d0
+        end if
+        
+        !------------------------------------------------------------------------------
+        ! Calculation of the acceleration due to turbulence, if needed
+        turbulence_acceleration(1) = 0.d0
+        turbulence_acceleration(2) = 0.d0
+        turbulence_acceleration(3) = 0.d0
+        
+        if (isTurbulence) then
+          call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
+        end if
+        
+        !------------------------------------------------------------------------------
+        ! Calculation of the total acceleration on the planet
+        
+        acceleration(1,planet) = migration_acceleration(1) + turbulence_acceleration(1) + & 
+                                 eccentricity_acceleration(1)
+        acceleration(2,planet) = migration_acceleration(2) + turbulence_acceleration(2) + & 
+                                 eccentricity_acceleration(2)
+        acceleration(3,planet) = migration_acceleration(3) + turbulence_acceleration(3) + & 
+                                 eccentricity_acceleration(3) + inclination_acceleration_z
+        
+        
+!~         if (time.gt.4109624) then
+!~           write(*,*) ""
+!~           write(*,*) "time=", time
+!~           write(*,*) "x = ", position(1:3, planet)
+!~           write(*,*) "v = ", velocity(1:3, planet)
+!~           call print_planet_properties(p_prop)
+!~         end if
       end if
-      
-      !------------------------------------------------------------------------------
-      ! Calculation of the acceleration due to turbulence, if needed
-      turbulence_acceleration(1) = 0.d0
-      turbulence_acceleration(2) = 0.d0
-      turbulence_acceleration(3) = 0.d0
-      
-      if (isTurbulence) then
-        call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
-      end if
-      
-      !------------------------------------------------------------------------------
-      ! Calculation of the total acceleration on the planet
-      
-      acceleration(1,planet) = migration_acceleration(1) + turbulence_acceleration(1) + & 
-                               eccentricity_acceleration(1)
-      acceleration(2,planet) = migration_acceleration(2) + turbulence_acceleration(2) + & 
-                               eccentricity_acceleration(2)
-      acceleration(3,planet) = migration_acceleration(3) + turbulence_acceleration(3) + & 
-                               eccentricity_acceleration(3) + inclination_acceleration_z
-      
-      
     end if
   end do
   

@@ -105,6 +105,9 @@ subroutine print_planet_properties(p_prop)
   implicit none
   type(PlanetProperties), intent(in) :: p_prop
   
+  write(*,'(a)') '------------------------------------'
+  write(*,'(a)') '|   Properties of the planet       |'
+  write(*,'(a)') '------------------------------------'
   write (*,*) 'angular_momentum :', p_prop%angular_momentum, ' [Ms.AU^2.day^-1]'
   write (*,*) 'radius :', p_prop%radius, ' [AU]'
   write (*,*) 'velocity :', p_prop%velocity , ' [AU/day]'
@@ -113,6 +116,10 @@ subroutine print_planet_properties(p_prop)
   write (*,*) 'semi_major_axis :', p_prop%semi_major_axis, ' [AU]'
   write (*,*) 'eccentricity :', p_prop%eccentricity 
   write (*,*) 'inclination :', p_prop%inclination, ' [rad]'
+  write(*,'(a)') '------------------------------------'
+  write(*,'(a)') '|  Properties of the disk at the   |'
+  write(*,'(a)') '|     location of the planet       |'
+  write(*,'(a)') '------------------------------------'
   write (*,*) 'sigma :', p_prop%sigma , ' [Msun.AU^-2]'
   write (*,*) 'sigma_index :', p_prop%sigma_index
   write (*,*) 'scaleheight :', p_prop%scaleheight , ' [AU]'
