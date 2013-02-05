@@ -1778,7 +1778,7 @@ end subroutine initial_density_profile
     ! we store in global parameters various properties of the planet
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
-    write(10,*) a, p_prop%scaleheight, p_prop%scaleheight/a
+    write(10,*) a, p_prop%scaleheight, p_prop%aspect_ratio
   end do
   
   close(10)
