@@ -82,35 +82,60 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   acceleration(:,:) = 0.d0
   !------------------------------------------------------------------------------
   
-  ! WE CALCULATE PROPERTIES OF THE PLANETS
-  ! Not for all the bodies because there might be problem to divide by radial position of the star.
-  radius_p(:) = sqrt(position(1,2:)**2 + position(2,2:)**2)
-  velocity_p(:) = sqrt(velocity(1,2:)**2 + velocity(2,2:)**2)
-  
-  ! \vect{v} = \vect{\omega} \wedge \vect{x}
-  ! By assuming that the planet is in the plane of the disk (which is false) we get =
-  omega_p(:) = velocity_p(:) / radius_p(:) ! TODO UNITS!!!!!!!!!
-  write(*,*) "Warning: Units for omega_p are currently not verified"
-  
-  sigma_p(:) = sigma_0 * radius_p(:) ** sigma_index ! need to be in numerical units, not the case for the moment
-  scaleheight_p(:) = scaleheight
-  
-  !------------------------------------------------------------------------------
-  ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
-  gamma_0(:) = (mass(2:) / (mass(1) * scaleheight_p(:)))**2 * sigma_p(:) * radius_p(:)**4 * omega_p(:)**2
-  
-  !------------------------------------------------------------------------------
-
-  
-  time_mig(:) = angular_momentum(:) / torque(:)
-  
-  acceleration(1,:) = - (0.5d0 / time_mig(:)) * velocity(1,:)
-  acceleration(2,:) = - (0.5d0 / time_mig(:)) * velocity(2,:)
-  acceleration(3,:) = - (0.5d0 / time_mig(:)) * velocity(3,:)
+!~   ! WE CALCULATE PROPERTIES OF THE PLANETS
+!~   ! Not for all the bodies because there might be problem to divide by radial position of the star.
+!~   radius_p(:) = sqrt(position(1,2:)**2 + position(2,2:)**2)
+!~   velocity_p(:) = sqrt(velocity(1,2:)**2 + velocity(2,2:)**2)
+!~   
+!~   ! \vect{v} = \vect{\omega} \wedge \vect{x}
+!~   ! By assuming that the planet is in the plane of the disk (which is false) we get =
+!~   omega_p(:) = velocity_p(:) / radius_p(:) ! TODO UNITS!!!!!!!!!
+!~   write(*,*) "Warning: Units for omega_p are currently not verified"
+!~   
+!~   sigma_p(:) = sigma_0 * radius_p(:) ** sigma_index ! need to be in numerical units, not the case for the moment
+!~   scaleheight_p(:) = scaleheight
+!~   
+!~   !------------------------------------------------------------------------------
+!~   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
+!~   gamma_0(:) = (mass(2:) / (mass(1) * scaleheight_p(:)))**2 * sigma_p(:) * radius_p(:)**4 * omega_p(:)**2
+!~   torque(:) = get_total_torque(n_bodies, mass(:), radius_p(:))
+!~   !------------------------------------------------------------------------------
+!~   
+!~   ! We calculate the angular momentum, that is, the z-composant. We assume that the x and y composant are negligible (to be tested)
+!~   angular_momentum(:) = mass(2:) * (position(1,:) * velocity(2,:) - position(2,:) * velocity(1,:))
+!~!   angular_momentum_x(:) = mass(2:) * (position(2,:) * velocity(3,:) - position(3,:) * velocity(2,:))
+!~ !  angular_momentum_y(:) = mass(2:) * (position(3,:) * velocity(1,:) - position(1,:) * velocity(3,:))
+!~   
+!~   time_mig(:) = 0.5d0 * angular_momentum(:) / torque(:)
+!~   
+!~   acceleration(1,:) = - velocity(1,:) / time_mig(:)
+!~   acceleration(2,:) = - velocity(2,:) / time_mig(:)
+!~   acceleration(3,:) = - velocity(3,:) / time_mig(:)
   !------------------------------------------------------------------------------
   
   return
 end subroutine mfo_user
+
+function get_total_torque(n_bodies, mass, radius_p)
+! function that return the total torque exerted by the disk on the planet in units of gamma_0 where 
+! gamma_0 = (q/h)^2 * \Sigma_p * (r_p)^4 * (\Omega_p)^2 where subscript 'X_p' indicates quantity X 
+! evaluated at the orbital radius of the planet r=r_p
+!
+! Parameter:
+! mass : an array will all the masses (including the central one as the first element [solar mass]
+! radius_p : the distance between the central body and each planet
+  implicit none
+  integer, intent(in) :: n_bodies
+  real(double_precision), intent(in) :: mass(n_bodies), radius_p(n_bodies-1)
+  real(double_precision) :: get_total_torque(n_bodies-1)
+
+  
+  get_total_torque(:) = 1
+  
+  return
+end function get_total_torque
+
+
 
 
 end module user_module
