@@ -44,8 +44,9 @@ subroutine mfo_user (time,jcen,nbod,nbig,m,x,v,a)
 
   
   ! Input/Output
-  integer :: nbod, nbig
-  real(double_precision) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),a(3,nbod)
+  integer, intent(in) :: nbod, nbig
+  real(double_precision),intent(in) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod)
+  real(double_precision),intent(out) :: a(3,nbod)
   
   ! Local
   integer :: j
