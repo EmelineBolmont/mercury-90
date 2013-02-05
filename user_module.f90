@@ -3399,10 +3399,8 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   lindblad_torque = 0.
   
   !------------------------------------------------------------------------------
-  corotation_torque = 0. ! if not in mass boundaries, the torque is 0
-  if ((planet_mass.gt.m_min).and.(planet_mass.lt.m_max)) then
-    corotation_torque = a_steepness * 0.1d0 * ((a * planet_mass + b) - p_prop%radius)
-  end if
+  corotation_torque = a_steepness * 0.1d0 * ((a * planet_mass + b) - p_prop%radius)
+
 
   return
 end subroutine get_corotation_torque_mass_dep_CZ
