@@ -1487,11 +1487,11 @@ program test_disk
     write(10,*) "splot 'test_corotation_torque.dat' with pm3d notitle"
     
     write(11,*) "splot 'test_total_torque.dat' with pm3d notitle, \"
-    write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 title '{/Symbol G}=0', \"
+    write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle, \"
     write(11,*) "      'test_vector_total_torque.dat' with vector notitle head filled linestyle -1"
     
     write(12,*) "splot 'test_total_torque_units.dat' with pm3d notitle, \"
-    write(12,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 title '{/Symbol G}=0', \"
+    write(12,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle, \"
     write(12,*) "      'test_vector_total_torque.dat' with vector notitle head filled linestyle -1"
     
     write(13,*) "splot 'test_lindblad_torque.dat' with pm3d notitle"
