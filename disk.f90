@@ -443,19 +443,22 @@ subroutine write_disk_properties()
   write(10,'(a,f4.2)') 'adiabatic index = ', ADIABATIC_INDEX
   write(10,'(a,f4.2)') 'mean molecular weight = ', MEAN_MOLECULAR_WEIGHT
   write(10,'(a,es10.1e2,a)') 'viscosity = ', viscosity, ' (cm^2/s)'
-  write(10,'(a, a)') 'opacity = ', trim(OPACITY_TYPE)
+  write(10,'(a, a)', advance='no') 'opacity type = ', trim(OPACITY_TYPE)
   select case(OPACITY_TYPE)
-		case('bell') ! The normal torque profile, calculated form properties of the disk
-			write(10,'(a)') '  bell : Opacity table from (Bell & Lin, 1994)'
+		case('bell')
+			write(10,'(a)') ' (Opacity table from (Bell & Lin, 1994))'
 		
 		! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-		case('zhu') ! a defined torque profile to get a mass independant convergence zone
-			write(10,'(a)') '  zhu : Opacity table from (Zhu & Hartmann, 2009)'
+		case('zhu')
+			write(10,'(a)') ' (Opacity table from (Zhu & Hartmann, 2009))'
+    
+    case('chambers') !
+			write(10,'(a)') ' (Opacity table from (Chambers, 2009))'
 		
 		case default
-			write(10,'(a)') 'Warning: The opacity rule cannot be found.'
+			write(10,'(a)') '/!\ \nWarning: The opacity rule cannot be found.'
 			write(10,'(a,a)') '  Given value : ', trim(OPACITY_TYPE)
-			write(10,'(a)') '  Values possible : zhu ; bell'
+			write(10,'(a)') '  Values possible : zhu ; bell ; chambers'
 	end select
   write(10,*) ''
   write(10,'(a,l,a)') 'is turbulence = ', IS_TURBULENCE, ' (T:True;F:False)'
@@ -1611,6 +1614,7 @@ end subroutine initial_density_profile
                               temperature=temperature, optical_depth=tau_profile(j)) ! Output
       
       temperature_profile(j) = temperature
+
       if (j.ne.NB_SAMPLE_PROFILES) then
       temp_profile_index(j) = - (log(temperature_profile(j)) - log(temperature_profile(j+1))) / &
                                 (log(distance_sample(j)) - log(distance_sample(j+1)))
@@ -2164,6 +2168,20 @@ optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if ther
 funcv = SIGMA_STEFAN * temperature**4 + prefactor * &
                            (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
 
+!if (distance_new.lt.0.4) then
+!  write(*,'(a)')            '------------------------------------------------'
+!  write(*,'(a,es10.3e2)')   '|Temperature = ', temperature
+!  write(*,'(a,es10.3e2)')   '|f(T) = ', funcv
+!  write(*,'(a,es10.3e2,a)') '|Scaleheight = ',scaleheight, ' AU'
+!  write(*,'(a,es10.3e2)')   '|optical depth = ', optical_depth
+!  write(*,'(a,es10.3e2,a)') '|bulk density = ',rho, ' MSUN/AU**3'
+!  write(*,'(a)')            '------------------------------------------------'
+!  write(*,'(a,es10.3e2)')   '|-9*nu*sigma*omega**2/32 = ',prefactor 
+!  write(*,'(a,es10.3e2)')   '|viscous heating = ', prefactor * &
+!                             (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
+!  write(*,'(a)')            '------------------------------------------------'
+!end if
+
 return
 end subroutine temperature_pure_viscous
 
@@ -2225,6 +2243,24 @@ viscous_heating = prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1
 !------------------------------------------------------------------------------
 
 funcv = SIGMA_STEFAN * temperature**4 + irradiation + viscous_heating + envelope_heating
+
+!~ write(error_unit,'(a)')            '------------------------------------------------'
+!~ write(error_unit,'(a,es10.3e2)') 'old aspect ratio = ',aspect_ratio_old
+!~ write(error_unit,'(a,es10.3e2)') 'temperature = ', temperature
+!~ write(error_unit,'(a)')            '------------------------------------------------'
+!~ write(error_unit,'(a,es10.3e2)') '-9*nu*sigma*omega**2/32 = ',prefactor 
+!~ write(error_unit,'(a,es10.3e2)') 'prefactor irradiation = ', prefactor_irradiation 
+!~ write(error_unit,'(a,es10.3e2)') 'flaring angle = ',flaring_angle
+!~ write(error_unit,'(a)')            '------------------------------------------------'
+!~ write(error_unit,'(a,es10.3e2,a)') '|scaleheight = ',scaleheight, ' AU'
+!~ write(error_unit,'(a,es10.3e2)')  '|optical depth = ', optical_depth
+!~ write(error_unit,'(a,es10.3e2,a)')'|bulk density = ',rho, ' MSUN/AU**3'
+!~ write(error_unit,'(a,es10.3e2)') '|aspect ratio = ',aspect_ratio_new 
+!~ write(error_unit,'(a)')            '------------------------------------------------'
+!~ write(error_unit,'(a,es10.3e2)') '|envelope_heating = ', envelope_heating 
+!~ write(error_unit,'(a,es10.3e2)') '|viscous heating = ', viscous_heating
+!~ write(error_unit,'(a,es10.3e2)') '|irradiation = ', irradiation 
+!~ write(error_unit,'(a)')            '------------------------------------------------'
 
 return
 end subroutine temperature_with_irradiation
