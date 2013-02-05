@@ -204,7 +204,7 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   !------------------------------------------------------------------------------
   
   gamma_eff = 2.d0 * Q_p * adiabatic_index / (adiabatic_index * Q_p + 0.5d0 * &
-  sqrt(2.d0 * sqrt((adiabatic_index * adiabatic_index * Q_p * Q_p + 1.d0)**2 + 16.d0 * Q_p * Q_p * (adiabatic_index - 1.d0)) &
+  sqrt(2.d0 * sqrt((adiabatic_index * adiabatic_index * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (adiabatic_index - 1.d0)) &
   + 2.d0 * adiabatic_index * adiabatic_index * Q_p * Q_p - 2.d0))
   
   !------------------------------------------------------------------------------
@@ -567,20 +567,20 @@ end function get_total_torque
     close(10)
     
     open(10, file="opacity.gnuplot")
-
-    write(10,*) 'set xlabel "Temperature $T$"'
-    write(10,*) 'set ylabel "Opacity $\kappa$"'
+    write(10,*) 'set terminal x11 enhanced'
+    write(10,*) 'set xlabel "Temperature T"'
+    write(10,*) 'set ylabel "Opacity {/Symbol k}"'
     write(10,*) 'set logscale x'
     write(10,*) 'set logscale y'
     write(10,*) 'set grid'
     write(10,*) 'set xrange [', T_min, ':', T_max, ']'
-    write(10,*) "plot 'test_opacity.dat' using 1:2 with lines title 'rho=1e-5',\"
-    write(10,*) "     '' using 1:3 with lines title 'rho=1e-6',\"
-    write(10,*) "     '' using 1:4 with lines title 'rho=1e-7',\"
-    write(10,*) "     '' using 1:5 with lines title 'rho=1e-8',\"
-    write(10,*) "     '' using 1:6 with lines title 'rho=1e-9'"
+    write(10,*) "plot 'test_opacity.dat' using 1:2 with lines title '{/Symbol r}=10^{-5'},\"
+    write(10,*) "     '' using 1:3 with lines title '{/Symbol r}=10^{-6}',\"
+    write(10,*) "     '' using 1:4 with lines title '{/Symbol r}=10^{-7}',\"
+    write(10,*) "     '' using 1:5 with lines title '{/Symbol r}=10^{-8}',\"
+    write(10,*) "     '' using 1:6 with lines title '{/Symbol r}=10^{-9}'"
     write(10,*) "pause -1 # wait until a carriage return is hit"
-    write(10,*) "set terminal pdfcairo"
+    write(10,*) "set terminal pdfcairo enhanced"
     write(10,*) "set output 'opacity.pdf'"
     write(10,*) "replot # pour générer le fichier d'output"  
     
