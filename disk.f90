@@ -723,6 +723,28 @@ subroutine init_globals(stellar_mass, time)
     
     call read_disk_properties()
     
+    select case(TORQUE_TYPE)
+			case('real') ! The normal torque profile, calculated form properties of the disk
+				get_torques => get_corotation_torque
+			
+			! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+			case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
+				get_torques => get_corotation_torque_linear_indep
+			
+			case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
+				get_torques => get_corotation_torque_tanh_indep
+			
+			case('mass_dependant')
+				get_torques => get_corotation_torque_mass_dep_CZ
+				
+			case('manual')
+				get_torques => get_corotation_torque_manual
+				
+			case default
+				stop 'Error in user_module : The "torque_type" cannot be found. &
+						 &Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
+    end select
+    
     allocate(distance_sample(NB_SAMPLE_PROFILES))
     distance_sample(1:NB_SAMPLE_PROFILES) = 0.d0
     

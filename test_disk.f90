@@ -1249,34 +1249,9 @@ program test_disk
        
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to migration
-      select case(TORQUE_TYPE)
-        case('real') ! The normal torque profile, calculated form properties of the disk
-          call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, &
+      call get_torques(stellar_mass, mass, p_prop, corotation_torque, &
           lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-        case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        case('mass_dependant')
-          call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        case('manual')
-          call get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-          
-        case default
-          write(*,*) 'Warning: The torque rule cannot be found.'
-          write(*,*) 'Given value :', TORQUE_TYPE
-          write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
-          stop
-      end select
+      
       
       total_torque = lindblad_torque + corotation_torque
 
@@ -1409,34 +1384,8 @@ program test_disk
       
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to migration
-      select case(TORQUE_TYPE)
-        case('real') ! The normal torque profile, calculated form properties of the disk
-          call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, &
+      call get_torques(stellar_mass, mass, p_prop, corotation_torque, &
           lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-        case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        case('mass_dependant')
-          call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        case('manual')
-          call get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-          
-        case default
-          write(*,*) 'Warning: The torque rule cannot be found.'
-          write(*,*) 'Given value :', TORQUE_TYPE
-          write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
-          stop
-      end select
       
       total_torque = lindblad_torque + corotation_torque
       
@@ -1557,34 +1506,9 @@ program test_disk
       
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to migration
-      select case(TORQUE_TYPE)
-        case('real') ! The normal torque profile, calculated form properties of the disk
-          call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, &
+      call get_torques(stellar_mass, mass, p_prop, corotation_torque, &
           lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-        case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
-          call get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        case('mass_dependant')
-          call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-        
-        case('manual')
-          call get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, &
-          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
-          
-        case default
-          write(*,*) 'Warning: The torque rule cannot be found.'
-          write(*,*) 'Given value :', TORQUE_TYPE
-          write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
-          stop
-      end select
+      
       
       !------------------------------------------------------------------------------
       ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
@@ -1727,34 +1651,9 @@ program test_disk
          
         !------------------------------------------------------------------------------
         ! Calculation of the acceleration due to migration
-        select case(TORQUE_TYPE)
-          case('real') ! The normal torque profile, calculated form properties of the disk
-            call get_corotation_torque(stellar_mass, mass(j), p_prop, & ! input
+        
+        call get_torques(stellar_mass, mass(j), p_prop, & ! input
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-          
-          ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-          case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
-            call get_corotation_torque_linear_indep(stellar_mass, mass(j), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-          
-          case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
-            call get_corotation_torque_tanh_indep(stellar_mass, mass(j), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-          
-          case('mass_dependant')
-            call get_corotation_torque_mass_dep_CZ(stellar_mass, mass(j), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-          
-          case('manual')
-            call get_corotation_torque_manual(stellar_mass, mass(j), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-            
-          case default
-            write(*,*) 'Warning: The torque rule cannot be found.'
-            write(*,*) 'Given value :', TORQUE_TYPE
-            write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
-            stop
-        end select
         
         total_torque(i,j) = lindblad_torque + corotation_torque
         total_torque_units(i,j) = torque_ref * total_torque(i,j)
