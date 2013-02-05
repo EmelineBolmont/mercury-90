@@ -297,7 +297,7 @@ subroutine write_disk_properties()
   write(10,'(a)') '  Case(mass_independant) : manual torque profile with a mass independant convergence zone'
   write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
   write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
-  write(10,'(a)') '  Case(mass_dependant) : manual torque profile with a mass independant convergence zone'
+  write(10,'(a)') '  Case(mass_dependant) : manual torque profile with a mass dependant convergence zone'
   write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
   write(10,'(a,f6.1,a)') '    minimum mass = ', MASS_DEP_M_MIN, ' (earth mass)'
   write(10,'(a,f6.1,a)') '    maximum mass = ', MASS_DEP_M_MAX, ' (earth mass)'
@@ -345,6 +345,8 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 
   gm = stellar_mass + mass
   
+  p_prop%mass = mass ! The mass of the planet
+  
   call mco_x2ae(gm,position(1),position(2),position(3),velocity(1),velocity(2),velocity(3),&
                 p_prop%semi_major_axis,p_prop%eccentricity,p_prop%inclination,p_prop%radius,velocity2_p,h_p)
 
@@ -371,11 +373,12 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 
   p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
-	if (abs(p_prop%radius-p_prop%semi_major_axis)/p_prop%radius.gt.1e-2) then
-		write(*,'(a,es10.1e2,a,es10.1e2,a)') 'r = ', p_prop%radius, ' (AU) and a = ', p_prop%semi_major_axis, ' (AU)'
-		call print_planet_properties(p_prop) 
-		stop
-	end if
+
+!~ 	if (abs(p_prop%radius-p_prop%semi_major_axis)/p_prop%radius.gt.1e-2) then
+!~ 		write(*,'(a,es10.1e2,a,es10.1e2,a)') 'r = ', p_prop%radius, ' (AU) and a = ', p_prop%semi_major_axis, ' (AU)'
+!~ 		call print_planet_properties(p_prop) 
+!~ 		stop
+!~ 	end if
   !------------------------------------------------------------------------------
 !~   p_prop%chi = 1.d-5 * p_prop%radius**2 * p_prop%omega ! comment if you want to use the thermal diffusivity calculated from the temperature profile
   
