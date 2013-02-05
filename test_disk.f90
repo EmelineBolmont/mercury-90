@@ -1930,7 +1930,9 @@ program test_disk
       
       if (DISSIPATION_TYPE.ne.0) then
         call dissipate_disk(time(k), next_dissipation_step)
-      else
+      end if
+      
+      if (.not.disk_effect) then
         next_dissipation_step = t_max*365.d0
       end if
       
@@ -1984,7 +1986,7 @@ program test_disk
 !~     write(13,*) 'set yrange [', density_min, ':', density_max, ']'
     
     write(13,'(a,f5.1,a)') 'set title "a=', density_position,' AU"'
-    write(13,*) "plot 'local_density_dissipation.dat' using 1:2 with lines linetype 0 linewidth 4 notitle"
+    write(13,*) "plot 'local_density_dissipation.dat' using 1:2 with lines notitle"
     close(13)
   
   end subroutine study_dissipation_at_one_location
