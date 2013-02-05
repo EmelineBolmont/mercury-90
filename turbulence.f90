@@ -18,7 +18,7 @@ module turbulence
   integer :: wavenumber_min = 1
   integer :: wavenumber_max = 96
   integer :: wavenumber_cutoff = 6 ! If the wavenumber if greater than this number, then we set the gravitational potential of this mode to 0, to gain computational time.
-  real(double_precision) :: lifetime_prefactor = 0.1 ! a security factor to limit the lifetime of a mode and fit more accurately to hydro simulations
+  real(double_precision) :: lifetime_prefactor = 1.0 ! a security factor to limit the lifetime of a mode and fit more accurately to hydro simulations
   
   ! We define a new type for the properties of the planet
   type TurbulenceMode
@@ -46,13 +46,14 @@ subroutine print_turbulencemode_properties(mode)
   implicit none
   type(TurbulenceMode), intent(in) :: mode
   
-  write(*,*) 'radius position of the mode :', mode%r 
-  write(*,*) 'angular position of the mode :', mode%phi 
-  write(*,*) 'wavenumber :', mode%wavenumber
-  write(*,*) 'time of creation of the mode :', mode%t_init
-  write(*,*) 'lifetime of the mode :', mode%lifetime
-  write(*,*) 'chi :', mode%chi 
-  write(*,*) 'radial extent :', mode%radial_extent 
+  write(*,'(a)')               '________________________________________________'
+  write(*,'(a,es10.3e2,a)')    '| Time of creation of the mode : ', mode%t_init, ' days'
+  write(*,'(a,f9.2,a)')        '| Lifetime of the mode : ', mode%lifetime, ' days'
+  write(*,'(a,I2)')            '| Wavenumber : ', mode%wavenumber
+  write(*,'(a,f4.1,a)')        '| Radial extent : ', mode%radial_extent, ' AU'
+  write(*,'(a,f4.1,a,f5.1,a)') '| Position in the disk (r,theta) : (', mode%r , ' AU, ', mode%phi * 180./PI, ' degrees)'
+  write(*,'(a,f5.2)')          '| Chi : ', mode%chi 
+  write(*,'(a)')               '------------------------------------------------'
 
 end subroutine print_turbulencemode_properties
 
@@ -98,6 +99,8 @@ subroutine init_mode(time, mode)
   ! The factor lifetime_prefactor is here to have a better agreement with mhd simulations. lifemode value has 0.1
   mode%lifetime = lifetime_prefactor * TWOPI * mode%r**(1.5d0) / (mode%wavenumber * 0.05) ! lifetime of the mode
   
+!~   call print_turbulencemode_properties(mode)
+  
 end subroutine init_mode
 
 subroutine init_turbulence(time)
@@ -121,6 +124,7 @@ subroutine init_turbulence(time)
 	call init_mode(time, turbulence_mode(i))
 !~ 	call print_turbulencemode_properties(turbulence_mode(i))
   end do
+!~   stop
 end subroutine init_turbulence
 
 subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
@@ -166,7 +170,7 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
 ! This radius must be used instead of p_prop%radius because p_prop is the same during the calculation of the derivative
 
   ! la on calcule le potentiel turbulent, on fait la smme de tous les
-  ! modes en tenant compte de leur evolution teporemlle
+  ! modes en tenant compte de leur evolution temporelle
   do k=1,nb_modes
 	relative_time = time - turbulence_mode(k)%t_init ! c'est le temps relatif au temps d 'origine du mode
 	
