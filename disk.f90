@@ -889,7 +889,7 @@ end subroutine initial_density_profile
       temperature_profile(j) = temperature
       temp_profile_index(j) = - (log(temperature_profile(j)) - log(temperature_profile(j-1))) / &
                                 (log(distance_sample(j)) - log(distance_sample(j-1)))
-      chi_profile(j) = 1.5d0 * p_prop%nu * ADIABATIC_INDEX * (ADIABATIC_INDEX - 1.d0) * &
+      chi_profile(j) = 0.75d0 * p_prop%nu * ADIABATIC_INDEX * (ADIABATIC_INDEX - 1.d0) * &
                       (1.5d0 + sqrt(3.d0) / tau_profile(j) + 1 / tau_profile(j)**2)
       
     end do
