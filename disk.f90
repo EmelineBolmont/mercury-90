@@ -188,6 +188,9 @@ subroutine read_disk_properties()
           
         case('torque_profile_steepness')
           read(value, *) TORQUE_PROFILE_STEEPNESS
+         
+        case('saturation_torque')
+          read(value, *) SATURATION_TORQUE
           
         case('indep_cz') ! For mass independant convergence zone
           read(value, *) INDEP_CZ
@@ -364,8 +367,8 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   
   !------------------------------------------------------------------------------
   ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
-  p_prop%scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(p_prop%temperature) / p_prop%omega
-!~   p_prop%scaleheight = 0.05 * p_prop%radius
+!~   p_prop%scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(p_prop%temperature) / p_prop%omega
+  p_prop%scaleheight = 0.05 * p_prop%radius
 
   !------------------------------------------------------------------------------
 !~   p_prop%nu = alpha * p_prop%omega * p_prop%scaleheight**2 ! [AU^2.day-1]
@@ -468,6 +471,35 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
 
   return
 end subroutine get_corotation_torque
+
+subroutine get_cresswell_migration_time(p_prop, time_wave, e_h, i_h, time_mig)
+! function that return the migration time, taken from (Cresswell, 2008), equation (13)
+!
+
+  implicit none
+  
+  ! Inputs
+  real(double_precision), intent(in) :: time_wave ! A timescale for the planet that I don't understand for the moment [day]
+  real(double_precision), intent(in) :: e_h ! the ratio between the eccentricity and the aspect ratio for a given planet [no dim]
+  real(double_precision), intent(in) :: i_h ! the ratio between the inclination and the aspect ratio for a given planet [no dim]
+  type(PlanetProperties), intent(in) :: p_prop ! various properties of the planet
+  
+  ! Output
+  real(double_precision), intent(out) :: time_mig ! The migration timescale for the planet [day]
+
+  !Local
+  real(double_precision) :: p_e ! an expression function of 'e', used for t-mig, from (cresswell, 2008) [no dim]
+  
+  p_e = (1.d0 + (p_prop%eccentricity / (2.25d0 * p_prop%aspect_ratio))**1.2d0 + &
+        (p_prop%eccentricity / (2.84d0 * p_prop%aspect_ratio))**6) / &
+        (1.d0 - (p_prop%eccentricity / 2.02d0 * p_prop%aspect_ratio)**4)
+  
+  ! the negative factor is due to the fact that the acceleration calculated by the other migration time does not take into 
+  ! account the minus sign, because the migration time can either be positive or negative.
+  time_mig = - 2 * time_wave / ((2.7d0 + 1.1d0 * p_prop%sigma_index) * p_prop%aspect_ratio**2) * &
+             (p_e + sign(1.d0, p_e) * (0.070d0 * i_h + 0.085d0 * i_h**4 - 0.080d0 * e_h * i_h**2))
+                   
+end subroutine get_cresswell_migration_time
 
 subroutine init_globals(stellar_mass, time)
 ! subroutine that initialize global values that define prefactors or values for torque that does not depend on the planet properties
@@ -1431,7 +1463,7 @@ end if
 end subroutine get_temperature
   
   ! %%% Local modifications of the code %%%
-subroutine get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0)
+subroutine get_corotation_torque_arctan_indep(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0)
 ! function that return the total torque exerted by the disk on the planet 
 !
 ! Global parameters
@@ -1452,20 +1484,84 @@ subroutine get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corot
   real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
   real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
   
+  ! Local
+  real(double_precision) :: Q_p, gamma_eff, lindblad_prefactor
+  
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
   
+    !------------------------------------------------------------------------------
+  ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
+  Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
+  !------------------------------------------------------------------------------
   
-  lindblad_torque = 0.
+  gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
+  sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
+  + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
+  
+  lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
+  lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
   
   !------------------------------------------------------------------------------
 
-  corotation_torque = TORQUE_PROFILE_STEEPNESS * 0.1d0 * (INDEP_CZ - p_prop%radius)
+  corotation_torque = SATURATION_TORQUE * atan(INDEP_CZ - p_prop%radius) / (PI / 2.d0)
   
+  corotation_torque = corotation_torque - lindblad_torque ! so that we can disable artificially the corotation part of the torque, even if the lindblad torque come from the paardekooper formulae
+
 
   return
-end subroutine get_corotation_torque_mass_indep_CZ
+end subroutine get_corotation_torque_arctan_indep
+
+subroutine get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0)
+! function that return the total torque exerted by the disk on the planet 
+!
+! Global parameters
+! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
+! X_S_PREFACTOR : prefactor for the half width of the corotation region
+! TORQUE_PROFILE_STEEPNESS : increase, in units of Gamma_0 of the torque per 10AU
+! INDEP_CZ : Position of the mass independant convergence zone in AU
+
+
+  implicit none
+  real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
+  ! Properties of the planet
+  real(double_precision), intent(in) :: mass ! the mass of the planet [Msun * K2]
+  type(PlanetProperties), intent(in) :: p_prop ! various properties of the planet
+  
+  
+  real(double_precision), intent(out) :: corotation_torque
+  real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
+  real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
+  
+  ! Local
+  real(double_precision) :: Q_p, gamma_eff, lindblad_prefactor
+  
+  !------------------------------------------------------------------------------
+  ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
+  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
+  
+    !------------------------------------------------------------------------------
+  ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
+  Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
+  !------------------------------------------------------------------------------
+  
+  gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
+  sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
+  + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
+  
+  lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
+  lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
+  
+  !------------------------------------------------------------------------------
+
+  corotation_torque = TORQUE_PROFILE_STEEPNESS * 0.1d0 * (INDEP_CZ - p_prop%radius) ! Linear torque
+  
+  corotation_torque = corotation_torque - lindblad_torque ! so that we can disable artificially the corotation part of the torque, even if the lindblad torque come from the paardekooper formulae
+
+
+  return
+end subroutine get_corotation_torque_linear_indep
 
 subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0)
 ! function that return the total torque exerted by the disk on the planet 
@@ -1496,6 +1592,7 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   
   ! Local 
   real(double_precision) :: planet_mass ! the mass of the current planet in earth mass
+  real(double_precision) :: Q_p, gamma_eff, lindblad_prefactor
   !------------------------------------------------------------------------------
   ! position of zero torque zone in function of the mass : 
   ! r(m_min) = a_min
@@ -1510,13 +1607,26 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   
   planet_mass = mass / (3.00374072d-6 * K2)
   
+  !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
   
-  lindblad_torque = 0.
+    !------------------------------------------------------------------------------
+  ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
+  Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
+  !------------------------------------------------------------------------------
+  
+  gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
+  sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
+  + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
+  
+  lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
+  lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
   
   !------------------------------------------------------------------------------
   corotation_torque = TORQUE_PROFILE_STEEPNESS * 0.1d0 * ((a * planet_mass + b) - p_prop%radius)
+  
+	corotation_torque = corotation_torque - lindblad_torque ! so that we can disable artificially the corotation part of the torque, even if the lindblad torque come from the paardekooper formulae
 
 
   return
@@ -1550,14 +1660,23 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
 	integer :: closest_low_id ! the index of the first closest lower value of radius regarding the radius value given in parameter of the subroutine. 
 	real(double_precision) :: x1, x2, y1, y2
 	real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
-
+	real(double_precision) :: Q_p, gamma_eff, lindblad_prefactor
   
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
   
-  lindblad_torque = 0.d0
+    !------------------------------------------------------------------------------
+  ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
+  Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
+  !------------------------------------------------------------------------------
   
+  gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
+  sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
+  + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
+  
+  lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
+  lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
   
   !------------------------------------------------------------------------------
 
@@ -1578,6 +1697,8 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
 	else if (p_prop%radius .gt. OUTER_BOUNDARY_RADIUS) then
 		corotation_torque = torque_profile(NB_SAMPLE_PROFILES)
 	end if
+	
+	corotation_torque = corotation_torque - lindblad_torque ! so that we can disable artificially the corotation part of the torque, even if the lindblad torque come from the paardekooper formulae
 
   return
 end subroutine get_corotation_torque_manual
