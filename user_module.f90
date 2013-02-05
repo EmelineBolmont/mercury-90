@@ -606,6 +606,7 @@ subroutine init_globals(stellar_mass)
     torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
     torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
     
+    call calculate_temperature_profile()
     
   !~   write(*,*) 'Warning: il y a un offset au couple de corotation'
 !~     write(*,*) 'Warning: h est fixé à 0.05'
@@ -1329,7 +1330,7 @@ end subroutine init_globals
     
   end subroutine test_torques_fixed_m
   
-  subroutine test_temperature_profile()
+  subroutine calculate_temperature_profile()
 ! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 ! TODO calculer aussi l'exposant local du profil de température
@@ -1355,12 +1356,10 @@ end subroutine init_globals
     velocity(:) = 0.d0
     
     ! stellar mass
-    stellar_mass = 1.d0 * K2
-    
-    call init_globals(stellar_mass)
-    
+    stellar_mass = 1.d0 * K2  
+  
     ! We open the file where we want to write the outputs
-    open(10, file='temperature_profile.dat')
+    open(10, file='temperature_profile.dat', status='replace')
     
     write(10,*) '# exponant ; a in AU ; temperature (in K)'    
     ! We generate cartesian coordinate for the given semi major axis
@@ -1402,6 +1401,38 @@ end subroutine init_globals
     end do
     
     close(10)
+  end subroutine calculate_temperature_profile
+  
+  subroutine test_temperature_profile()
+! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
+! A gnuplot file and a data file are created to display the temperature profile.
+! TODO calculer aussi l'exposant local du profil de température
+
+    implicit none
+    
+    integer, parameter :: nb_a = 400
+    real(double_precision), parameter :: a_min = 1 ! in AU
+    real(double_precision), parameter :: a_max = 60. ! in AU
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    
+    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
+    
+    real(double_precision) :: a
+    real(double_precision) :: stellar_mass, position(3), velocity(3), temperature, exponant
+    type(PlanetProperties) :: p_prop
+    ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
+    real(double_precision) :: a_old, temperature_old 
+    
+    integer :: i,j ! for loops
+    
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    ! stellar mass
+    stellar_mass = 1.d0 * K2
+    
+    call init_globals(stellar_mass)
+    
     
     open(10, file="unitary_tests/temperature_profile.gnuplot")
     open(11, file="unitary_tests/temperature_index.gnuplot")
@@ -1433,8 +1464,11 @@ end subroutine init_globals
       write(j,*) "set terminal pdfcairo enhanced"
     end do
     
+    write(10,*) '!rm "unitary_tests/temperature_profile.pdf"'
     write(10,*) "set output 'unitary_tests/temperature_profile.pdf'"
+    write(11,*) '!rm "unitary_tests/temperature_index.pdf"'
     write(11,*) "set output 'unitary_tests/temperature_index.pdf'"
+    
     
     do j=10,11
       write(j,*) "replot # pour générer le fichier d'output"
