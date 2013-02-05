@@ -123,28 +123,30 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     acceleration(3,planet) = 0.d0
   end do
   
-  call init_globals(stellar_mass=mass(1), time=time)
-  
-  !------------------------------------------------------------------------------
-  ! If it's time (depending on the timestep we want between each calculation of the disk properties)
-  ! The first 'next_dissipation_step' is set to '-1' to force the calculation for the first timestep. In fact, the first timestep will be done fornothing, but we need this in order to have a clean code.
-  if (DISSIPATION_TYPE.ne.0) then
-    if (time.gt.next_dissipation_step) then
-      ! we get the density profile.
-      call dissipate_disk(time, next_dissipation_step)
-      
-      ! we get the temperature profile.
-      call calculate_temperature_profile()
-      
-      ! we store in a .dat file the temperature profile
-      call store_temperature_profile(filename='temperature_profile.dat')
-      call store_density_profile(filename='density_profile.dat')
-      call store_scaleheight_profile()
-    end if
-  end if
-  !------------------------------------------------------------------------------
-
+  ! By default, there is disk effects. Be carefull, init_globals is only treated if there is disk effects, 
+  ! to increase the speed when the disk is no present anymore.
   if (disk_effect) then
+    call init_globals(stellar_mass=mass(1), time=time)
+    
+    !------------------------------------------------------------------------------
+    ! If it's time (depending on the timestep we want between each calculation of the disk properties)
+    ! The first 'next_dissipation_step' is set to '-1' to force the calculation for the first timestep. In fact, the first timestep will be done fornothing, but we need this in order to have a clean code.
+    if (DISSIPATION_TYPE.ne.0) then
+      if (time.gt.next_dissipation_step) then
+        ! we get the density profile.
+        call dissipate_disk(time, next_dissipation_step)
+        
+        ! we get the temperature profile.
+        call calculate_temperature_profile()
+        
+        ! we store in a .dat file the temperature profile
+        call store_temperature_profile(filename='temperature_profile.dat')
+        call store_density_profile(filename='density_profile.dat')
+        call store_scaleheight_profile()
+      end if
+    end if
+    !------------------------------------------------------------------------------
+  
     do planet=2,n_big_bodies
       ! because ongoing deletion of planets put their mass to 0 for a few steps, we must check. Else, we will have an error "NaN".
       if (mass(planet).gt.TINY) then
