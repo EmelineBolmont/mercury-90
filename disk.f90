@@ -25,6 +25,7 @@ module disk
   use physical_constant
   use turbulence
   use disk_properties
+  use iso_fortran_env, only : error_unit
 
   implicit none
   
@@ -292,27 +293,27 @@ subroutine read_disk_properties()
     
     ! problem is we want exponential decay of the surface density but we did not set the exponential decay timescale
     if ((TAU_DISSIPATION.lt.0.d0).and.(DISSIPATION_TYPE.eq.2)) then
-      write(*,*) 'Error: since dissipation_type=2, "disk_exponential_decay" is expected to be set.'
-      stop
+      write(error_unit,*) 'Error: since dissipation_type=2, "disk_exponential_decay" is expected to be set.'
+      call exit(7)
     end if
     
     if (DISSIPATION_TYPE.eq.3) then
 			! problem is we want the exponential decay for viscous dissipation to be set if dissipation_type equal to 3
 			if (TAU_VISCOUS.lt.0.d0) then
-				write(*,*) 'Error: since dissipation_type=3, "r_viscous" is expected to be set.'
-				stop
+				write(error_unit,*) 'Error: since dissipation_type=3, "r_viscous" is expected to be set.'
+				call exit(7)
 			end if
 			
 			! problem is we want the exponential decay for photoevaporation to be set if dissipation_type equal to 3
 			if (TAU_PHOTOEVAP.lt.0.d0) then
-				write(*,*) 'Error: since dissipation_type=3, "r_photoevap" is expected to be set.'
-				stop
+				write(error_unit,*) 'Error: since dissipation_type=3, "r_photoevap" is expected to be set.'
+				call exit(7)
 			end if
 			
 			! problem is we want the exponential decay for photoevaporation to be set if dissipation_type equal to 3
 			if (DISSIPATION_TIME_SWITCH.lt.0.d0) then
-				write(*,*) 'Error: since dissipation_type=3, "PHOTOEVAP_MASSLOSS" is expected to be set.'
-				stop
+				write(error_unit,*) 'Error: since dissipation_type=3, "PHOTOEVAP_MASSLOSS" is expected to be set.'
+				call exit(7)
 			end if
 			
 			! We initialize TAU_DISSIPATION for the first phase of dissipation of this mixed dissipation
@@ -378,8 +379,8 @@ subroutine read_paramin(timestep)
   end if
   
   if (isnan(timestep)) then
-    write(*,*) 'Error in "read_paramin": There was problem while reading the timestep in "param.in"'
-    stop
+    write(error_unit,*) 'Error in "read_paramin": There was problem while reading the timestep in "param.in"'
+    call exit(8)
   end if
   
 end subroutine read_paramin
@@ -843,9 +844,10 @@ subroutine init_globals(stellar_mass, time)
 				get_torques => get_corotation_torque_manual
 				
 			case default
-        write (*,*) 'The torque_type="', TORQUE_TYPE,'" cannot be found.'
-				write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
-				stop 'Error in user_module, subroutine init_globals' 
+        write (error_unit,*) 'The torque_type="', TORQUE_TYPE,'" cannot be found.'
+				write(error_unit,*) 'Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
+				write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
+        call exit(1)
     end select
     
     if (IS_IRRADIATION) then
@@ -1014,8 +1016,9 @@ subroutine initial_density_profile()
       inquire(file=filename, exist=isDefined)
       
       if (.not.isDefined) then
-        stop 'Error in "initial_density_profile" : the file "surface_density_profile.dat" does not exist. &
+        write(error_unit, '(a)') 'Error in "initial_density_profile" : the file "surface_density_profile.dat" does not exist. &
            &(and "density_profile.dat" neither).'
+        call exit(2)
       end if
 		end if
 		
@@ -1547,10 +1550,11 @@ end subroutine initial_density_profile
 			
 			call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
 		case default
-        write (*,*) 'The dissipation_type="', DISSIPATION_TYPE,'" cannot be found.'
-        write (*,*) 'Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay ; &
+        write (error_unit,*) 'The dissipation_type="', DISSIPATION_TYPE,'" cannot be found.'
+        write (error_unit,*) 'Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay ; &
 						 &3 for mixed exponentiel decay'
-				stop 'Error in user_module, subroutine dissipate_disk'
+				write(error_unit,'(a)') 'Error in user_module, subroutine dissipate_disk'
+        call exit(3)
 						 
 
 	end select
@@ -1641,9 +1645,9 @@ end subroutine initial_density_profile
       tmp = (f_i + dissipation_timestep * (flux_ip12 - flux_im12) / X_SAMPLE_STEP)
       
       if (tmp.lt.0.) then
-        write(*,*) 'ERROR: tmp and thus the surface density is negative!!!!'
-        write(*,*) a_ip12, f_i, f_ip1, flux_im12, flux_ip12
-        stop
+        write(error_unit,*) 'ERROR: tmp and thus the surface density is negative!!!!'
+        write(error_unit,*) a_ip12, f_i, f_ip1, flux_im12, flux_ip12
+        call exit(4)
       end if
       
       surface_density_profile(i) = tmp / (1.5d0 * x_sample(i)) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
@@ -1687,8 +1691,9 @@ end subroutine initial_density_profile
     tmp = (f_i + dissipation_timestep * (flux_ip12 - flux_im12) / X_SAMPLE_STEP) / (1.5d0 * x_sample(i))
       
     if (tmp.lt.0.) then
-      write(*,*) 'ERROR: tmp is negative!!!!'
-      write(*,*) a_ip12, f_i, f_ip1, flux_im12, flux_ip12
+      write(error_unit,*) 'ERROR: tmp is negative!!!!'
+      write(error_unit,*) a_ip12, f_i, f_ip1, flux_im12, flux_ip12
+      call exit(4)
     end if
     
     surface_density_profile(i) = tmp ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
@@ -1841,27 +1846,27 @@ real(double_precision) :: viscous_prefactor ! prefactor for the calculation of t
 real(double_precision) :: tau_a, tau_b
 
 if (isnan(p_prop%sigma)) then
-  write(*,*) 'Error: the surface density is equal to NaN when we want to calculate the temperature profile'
-  call print_planet_properties(p_prop)
-  stop
+  write(error_unit,*) 'Error: the surface density is equal to NaN when we want to calculate the temperature profile'
+  call print_planet_properties(p_prop, output=error_unit)
+  call exit(5)
 end if 
 
 if (isnan(p_prop%nu)) then
-  write(*,*) 'Error: the viscosity is equal to NaN when we want to calculate the temperature profile'
-  call print_planet_properties(p_prop)
-  stop
+  write(error_unit,*) 'Error: the viscosity is equal to NaN when we want to calculate the temperature profile'
+  call print_planet_properties(p_prop, output=error_unit)
+  call exit(5)
 end if 
 
 if (isnan(p_prop%omega)) then
-  write(*,*) 'Error: the angular velocity is equal to NaN when we want to calculate the temperature profile'
-  call print_planet_properties(p_prop)
-  stop
+  write(error_unit,*) 'Error: the angular velocity is equal to NaN when we want to calculate the temperature profile'
+  call print_planet_properties(p_prop, output=error_unit)
+  call exit(5)
 end if 
 
 if (isnan(p_prop%radius)) then
-  write(*,*) 'Error: the distance is equal to NaN when we want to calculate the temperature profile'
-  call print_planet_properties(p_prop)
-  stop
+  write(error_unit,*) 'Error: the distance is equal to NaN when we want to calculate the temperature profile'
+  call print_planet_properties(p_prop, output=error_unit)
+  call exit(5)
 end if
 
 !------------------------------------------------------------------------------
@@ -1883,18 +1888,18 @@ call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%om
 !~ fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
 
 if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
-  write(*,*) 'subroutine zbrent: root must be bracketed.'
-  write(*,*) '  T_min =', x_min, 'f(T_min) =', fa
-  write(*,*) '  T_max =', x_max, 'f(T_max) =', fb
-  call print_planet_properties(p_prop)
-  write(*,*) 'distance_old = ', distance_old
-  write(*,*) 'scaleheight_old = ', scaleheight_old
+  write(error_unit,*) 'subroutine zbrent: root must be bracketed.'
+  write(error_unit,*) '  T_min =', x_min, 'f(T_min) =', fa
+  write(error_unit,*) '  T_max =', x_max, 'f(T_max) =', fb
+  call print_planet_properties(p_prop, output=error_unit)
+  write(error_unit,*) 'distance_old = ', distance_old
+  write(error_unit,*) 'scaleheight_old = ', scaleheight_old
 !~   write(*,*) 'properties of the disk at the location of the planet that influence the value of the temperature'
 !~   write(*,'(a,f5.1,a)')     '   Radial position of the planet : ', p_prop%radius, ' [AU]'
 !~   write(*,'(a,es10.2e2,a)') '   Viscosity : ', p_prop%nu, ' [AU^2.day^-1]'
 !~   write(*,'(a,es10.2e2,a)') '   Surface density : ', p_prop%sigma , ' [Msun.AU^-2]'
 !~   write(*,'(a,es10.2e2,a)') '   Angular Velocity : ', p_prop%omega , ' [day-1]'
-  stop
+  call exit(6)
 endif
 
 ! these values force the code to go into the first 'if' statement. 
