@@ -1995,6 +1995,9 @@ integer :: iter
 real(double_precision) :: a, b, c, d, e, fa, fb, fc, p, q, r, s, tol1, xm
 real(double_precision) :: viscous_prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
 real(double_precision) :: tau_a, tau_b
+integer, parameter :: TOO_MANY_ATTEMPTS = 5
+integer :: nb_attempts
+logical :: no_sign_change
 
 if (isnan(p_prop%sigma)) then
   write(error_unit,*) 'Error: the surface density is equal to NaN when we want to calculate the temperature profile'
@@ -2026,32 +2029,40 @@ end if
 viscous_prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 32.d0)
 
 a = x_min
-b = x_max
 call zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
                               scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
                               funcv=fa, optical_depth=tau_a) ! Output
-call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
+
+no_sign_change = .true.
+nb_attempts = 0
+b = 0 ! The max temperature is set to 0, because in the while loop, we increase this value by x_max each time.
+do while (no_sign_change)
+  b = b + x_max
+  nb_attempts = nb_attempts + 1
+  call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
                               scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
                               funcv=fb, optical_depth=tau_b) ! Output
-
-if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
-  write(error_unit,'(a)')            '------------------------------------------------'
-  write(error_unit,'(a)') 'subroutine zbrent: There is no sign change.'
-  write(error_unit,'(a)') 'Unable to retrieve the temperature for the current position.'
-  write(error_unit,'(a,es8.2e2,a,es9.1e3)') '  For T_min : f(',a,') = ', fa
-  write(error_unit,'(a,es8.2e2,a,es9.1e3)') '  For T_max : f(',b,') = ', fb
-  write(error_unit,'(a)')            '------------------------------------------------'
-  write(error_unit,'(a,f6.1,a)') 'Previous Orbital Distance = ', distance_old, ' [AU]'
-  write(error_unit,'(a,f6.1,a)') 'Previous Scaleheight = ', scaleheight_old, ' [AU]'
-  write(error_unit,'(a)')            '------------------------------------------------'
-  write(error_unit,'(a,f6.1,a)')     '| Orbital Distance : ', p_prop%radius, ' [AU]'
-  write(error_unit,'(a,es10.2e2,a)') '| Angular Speed : ', p_prop%omega , ' [day-1]'
-  write(error_unit,'(a,es10.2e2,a)') '| Surface density : ', p_prop%sigma , ' [Msun.AU^-2]'
-  write(error_unit,'(a,f5.2)')       '| Local Surface density index : ', p_prop%sigma_index
-  write(error_unit,'(a,es10.2e2,a)') '| Viscosity : ', p_prop%nu, ' [AU^2.day^-1]'
-  write(error_unit,'(a)')            '------------------------------------------------'
-  call exit(6)
-end if
+  no_sign_change = ((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))
+  
+  if (nb_attempts.gt.TOO_MANY_ATTEMPTS) then
+    write(error_unit,'(a)')            '------------------------------------------------'
+    write(error_unit,'(a)') 'subroutine zbrent: There is no sign change.'
+    write(error_unit,'(a)') 'Unable to retrieve the temperature for the current position.'
+    write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_min : f(',a,') = ', fa
+    write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_max : f(',b,') = ', fb
+    write(error_unit,'(a)')            '------------------------------------------------'
+    write(error_unit,'(a,f6.1,a)') 'Previous Orbital Distance = ', distance_old, ' [AU]'
+    write(error_unit,'(a,f6.1,a)') 'Previous Scaleheight = ', scaleheight_old, ' [AU]'
+    write(error_unit,'(a)')            '------------------------------------------------'
+    write(error_unit,'(a,f6.1,a)')     '| Orbital Distance : ', p_prop%radius, ' [AU]'
+    write(error_unit,'(a,es10.2e2,a)') '| Angular Speed : ', p_prop%omega , ' [day-1]'
+    write(error_unit,'(a,es10.2e2,a)') '| Surface density : ', p_prop%sigma , ' [Msun.AU^-2]'
+    write(error_unit,'(a,f5.2)')       '| Local Surface density index : ', p_prop%sigma_index
+    write(error_unit,'(a,es10.2e2,a)') '| Viscosity : ', p_prop%nu, ' [AU^2.day^-1]'
+    write(error_unit,'(a)')            '------------------------------------------------'
+    call exit(6)
+  end if
+end do
 
 ! these values force the code to go into the first 'if' statement. 
 c = b
