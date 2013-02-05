@@ -599,6 +599,9 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
   + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
   
+!~   write(*,*) p_prop%chi, p_prop%aspect_ratio, p_prop%scaleheight, p_prop%omega
+!~   stop
+  
   !------------------------------------------------------------------------------
   zeta_eff = p_prop%temperature_index - (gamma_eff - 1.d0) * p_prop%sigma_index
   
@@ -806,7 +809,7 @@ subroutine initial_density_profile()
   character(len=80) :: line
   character(len=80) :: filename
   character(len=1), parameter :: comment_character = '#'
-  real(double_precision) :: ground_surface_density = 0.1 ! g/cm^2, the minimum surface density
+  real(double_precision) :: ground_surface_density = 5. ! g/cm^2, the minimum surface density
   
   real(double_precision), dimension(:), allocatable :: radius, manual_surface_profile
   
@@ -1041,6 +1044,8 @@ end subroutine initial_density_profile
 
     ! Warning : ! the surface density profile is a global parameter of the module. So nothing is given in parameter because it's 
     ! this global array that change whenever needed. 
+    ! When below the inner edge of the sample profile, the surface density will be equal to the surface density of the inner edge,
+    ! and the slope will be fixed to 0
 
     ! Return : 
     ! temperature : the temperature (in K) at the radius 'radius'
@@ -1074,7 +1079,7 @@ end subroutine initial_density_profile
       sigma_index = surface_density_index(closest_low_id) ! for the temperature index, no interpolation.
     else if (radius .lt. INNER_BOUNDARY_RADIUS) then
       sigma = surface_density_profile(1)
-      sigma_index = surface_density_index(1)
+      sigma_index = 0.
     else if (radius .ge. distance_sample(NB_SAMPLE_PROFILES-1)) then
       sigma = surface_density_profile(NB_SAMPLE_PROFILES)
       sigma_index = surface_density_index(NB_SAMPLE_PROFILES)
@@ -1479,7 +1484,7 @@ end subroutine initial_density_profile
               &; chi (thermal diffusivity) ;    tau (optical depth)'
 
   do j=1,NB_SAMPLE_PROFILES
-    write(10,*) distance_sample(j), temperature_profile(j), temp_profile_index(j), tau_profile(j), chi_profile(j)!, distance_sample(j), temperature_profile(j)
+    write(10,*) distance_sample(j), temperature_profile(j), temp_profile_index(j), chi_profile(j), tau_profile(j)!, distance_sample(j), temperature_profile(j)
   end do
   
   close(10)
@@ -1767,6 +1772,8 @@ subroutine get_temperature(radius, temperature, temperature_index, chi)
 ! the 'x' array must contains equally spaced 'r' values in linear basis (but not thei logarithm values of course). 
 ! BUT 'x' and 'y' MUST be respectively log(r) and log(T).
 ! 'x' and 'y' must have the same size !
+! When below the inner edge of the sample profile, the temperature will be equal to the temperature of the inner edge,
+! and the slope will be fixed to 0
 
 ! If the given radius is out of the radius boundaries of the temperature profile, 
 ! then the temperature of the closest bound of the temperature profile will be given.
@@ -1802,7 +1809,7 @@ if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. distance_sample(NB_SA
   chi = chi_profile(closest_low_id)
 else if (radius .lt. INNER_BOUNDARY_RADIUS) then
   temperature = temperature_profile(1)
-  temperature_index = temp_profile_index(1)
+  temperature_index = 0.
   chi = chi_profile(1)
 else if (radius .ge. distance_sample(NB_SAMPLE_PROFILES-1)) then
   temperature = temperature_profile(NB_SAMPLE_PROFILES)
