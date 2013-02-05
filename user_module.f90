@@ -209,9 +209,12 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
                  &Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
         end select
         
-
-        torque = torque_ref * (lindblad_torque + ecc_corot * corotation_torque)      
         
+        torque = torque_ref * (lindblad_torque + ecc_corot * corotation_torque)
+!~         ! use this line instead if you want to cutoff the corotation torque damping due to the eccentricity
+!~         torque = torque_ref * (lindblad_torque + corotation_torque)
+        
+
         time_mig = 0.5d0 * p_prop%angular_momentum / torque
         
         migration_acc_prefactor = 1.d0 / time_mig
@@ -219,6 +222,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         migration_acceleration(1) = migration_acc_prefactor * velocity(1,planet)
         migration_acceleration(2) = migration_acc_prefactor * velocity(2,planet)
         migration_acceleration(3) = migration_acc_prefactor * velocity(3,planet)
+
         
         !------------------------------------------------------------------------------
         ! Calculation of the acceleration due to eccentricity damping
@@ -266,10 +270,11 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         
         
 !~         if (p_prop%semi_major_axis.gt.4.) then
-!~ !          call print_planet_properties(p_prop)
+!~           call print_planet_properties(p_prop)
 !~           call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
 !~                        time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
 !~                        turbulence_acceleration)
+!~           write(*,*) 'torque=', torque
 !~ !          write (*,*) sqrt(sum(vect_product(position(1:3,planet), acceleration(1:3,planet))))
 !~ !          stop
 !~         end if
