@@ -117,7 +117,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision), save :: next_dissipation_step = -1.d0 ! next time at which we will compute the thermal properties of the disk?
   !------------------------------------------------------------------------------
   ! Setup
-  
+
   do planet=1,n_bodies
     acceleration(1,planet) = 0.d0
     acceleration(2,planet) = 0.d0
@@ -265,8 +265,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
                                  eccentricity_acceleration(2)
         acceleration(3,planet) = migration_acceleration(3) + turbulence_acceleration(3) + & 
                                  eccentricity_acceleration(3) + inclination_acceleration_z
-
-                                 
+        
+        
+        
 !~         if (p_prop%semi_major_axis.gt.4.) then
 !~ !          call print_planet_properties(p_prop)
 !~           call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &

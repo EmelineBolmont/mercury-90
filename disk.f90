@@ -1620,12 +1620,9 @@ subroutine get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotati
   !------------------------------------------------------------------------------
   
   x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
-  
+
   !------------------------------------------------------------------------------
-  if (p_prop%eccentricity.gt.0.6) then
-  call print_planet_properties(p_prop)
-  write(*,*) p_prop%eccentricity, x_s
-  end if
+
   ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
   
   corotation_torque = SATURATION_TORQUE * dtanh(INDEP_CZ - p_prop%radius)
