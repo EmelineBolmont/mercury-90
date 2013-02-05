@@ -290,8 +290,8 @@ subroutine read_disk_properties()
     
     ! problem if exponential decay timescale is set, but the dissipation_type is not exponentiel decay
     if ((TAU_DISSIPATION.gt.0.d0).and.(DISSIPATION_TYPE.ne.2)) then
-      write(*,*) 'Warning: Exponential decay of surface density must exist only if Dissipation method is "exponential decay"'
-      DISSIPATION_TYPE = 2
+      write(error_unit,*) 'Error: Exponential decay of surface density must exist only if Dissipation method is "exponential decay"'
+      call exit(7)
     end if
     
     ! problem is we want exponential decay of the surface density but we did not set the exponential decay timescale
@@ -471,6 +471,7 @@ subroutine write_disk_properties()
   write(10,'(a,f5.2,a)') 'The orbits will be resolved as low as ', distance_accuracy, ' AU'
   write(10,'(a,f6.1,a)') 'inner edge of the disk = ',INNER_BOUNDARY_RADIUS, ' (AU)'
   write(10,'(a,f6.1,a)') 'outer edge of the disk = ',OUTER_BOUNDARY_RADIUS, ' (AU)'
+  write(10,'(a,i4)') 'Nb points for profiles = ', NB_SAMPLE_PROFILES
   if (IS_MANUAL_SURFACE_DENSITY) then
     write(10,'(a)') 'initial surface density = manual (local "surface_density_profile.dat" file)'
   else
