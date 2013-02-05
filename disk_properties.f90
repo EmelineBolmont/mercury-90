@@ -118,6 +118,8 @@ module disk_properties
   end type PlanetProperties
   
   procedure(get_torques_interface), pointer :: get_torques
+  procedure(function_temperature_interface), pointer :: zero_finding_temperature
+  procedure(get_opacity_interface), pointer :: get_opacity
   
   abstract interface 
   subroutine get_torques_interface(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0, ecc_corot)
@@ -136,8 +138,6 @@ module disk_properties
     real(double_precision), intent(out) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
   end subroutine get_torques_interface
   end interface
-
-  procedure(function_temperature_interface), pointer :: zero_finding_temperature
   
   abstract interface 
   subroutine function_temperature_interface(temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
@@ -158,7 +158,23 @@ module disk_properties
   real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 32.d0)
   end subroutine function_temperature_interface
   end interface
-
+  
+  abstract interface 
+  function get_opacity_interface(temperature, num_bulk_density)
+  ! subroutine that return the opacity of the disk at the location of the planet given various parameters
+    import
+    
+    implicit none
+    
+    ! Inputs 
+    real(double_precision), intent(in) :: temperature & ! temperature of the disk [K]
+                                          , num_bulk_density ! bulk density of the gas disk [MSUN/AU^3] (in numerical units)
+  
+    ! Outputs
+    real(double_precision) :: get_opacity_interface
+  
+  end function get_opacity_interface
+  end interface
 contains
 
 subroutine print_planet_properties(p_prop, output)
