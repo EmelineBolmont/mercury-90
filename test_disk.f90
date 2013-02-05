@@ -49,41 +49,41 @@ program test_disk
     ! Note that the initial density profile and temperature profile are calculated inside the 'init_globals' routine.
 
     
-!~     ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
-!~     call study_torques(stellar_mass)
-!~     
-!~     ! we store in a .dat file the temperature profile
-!~     call store_temperature_profile(filename='temperature_profile.dat')
-!~     call store_density_profile(filename='density_profile.dat')
-!~     call store_scaleheight_profile()
-!~     
-!~     ! Unitary tests
-!~     call test_functions_FGK()
-!~     call test_function_zero_temperature(stellar_mass=stellar_mass)
-!~     call test_temperature_interpolation()
-!~     call test_manual_torque_interpolation()
-!~     call test_density_interpolation()
-!~     call test_retrieval_of_orbital_elements(stellar_mass=stellar_mass)
-!~ !     call test_turbulence_torque(stellar_mass=stellar_mass)
-!~     call test_turbulence_mode()
-!~ 
-!~     
-!~     ! Physical values and plots
-!~     call study_opacity_profile()
-!~     call study_torques_fixed_a(stellar_mass=stellar_mass)
-!~     call study_torques_fixed_m(stellar_mass=stellar_mass)
-!~     call study_ecc_corot(stellar_mass=stellar_mass)
-!~     call study_eccentricity_effect_on_corotation(stellar_mass=stellar_mass)
-!~     call study_temperature_profile()
-!~     call study_optical_depth_profile()
-!~     call study_thermal_diffusivity_profile()
-!~     call study_scaleheight_profile()
-!~     call study_dissipation_at_one_location()
+    ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
+    call study_torques(stellar_mass)
+    
+    ! we store in a .dat file the temperature profile
+    call store_temperature_profile(filename='temperature_profile.dat')
+    call store_density_profile(filename='density_profile.dat')
+    call store_scaleheight_profile()
+    
+    ! Unitary tests
+    call test_functions_FGK()
+    call test_function_zero_temperature(stellar_mass=stellar_mass)
+    call test_temperature_interpolation()
+    call test_manual_torque_interpolation()
+    call test_density_interpolation()
+    call test_retrieval_of_orbital_elements(stellar_mass=stellar_mass)
+!     call test_turbulence_torque(stellar_mass=stellar_mass)
+    call test_turbulence_mode()
+
+    
+    ! Physical values and plots
+    call study_opacity_profile()
+    call study_torques_fixed_a(stellar_mass=stellar_mass)
+    call study_torques_fixed_m(stellar_mass=stellar_mass)
+    call study_ecc_corot(stellar_mass=stellar_mass)
+    call study_eccentricity_effect_on_corotation(stellar_mass=stellar_mass)
+    call study_temperature_profile()
+    call study_optical_depth_profile()
+    call study_thermal_diffusivity_profile()
+    call study_scaleheight_profile()
+    call study_dissipation_at_one_location()
     
     ! Test dissipation
     ! EVERYTHING ABOVE MUST BE COMMENTED BEFORE DECOMMENTING 'ONE' AND ONE ALONE OF THESES ONES
-!~     call test_viscous_dissipation()
-!~     call test_disk_dissipation()
+!~     call test_viscous_dissipation(stellar_mass)
+!~     call test_disk_dissipation(stellar_mass)
     call study_influence_of_dissipation_on_torque(stellar_mass)
 
     
@@ -489,7 +489,7 @@ program test_disk
     
   end subroutine test_retrieval_of_orbital_elements
 
-  subroutine test_viscous_dissipation()
+  subroutine test_viscous_dissipation(stellar_mass)
   ! function to test the viscous dissipation with a dirac function. 
   
   ! Global parameters
@@ -509,6 +509,8 @@ program test_disk
   use bessel, only : bessik
   
   implicit none
+    
+    real(double_precision), intent(in) :: stellar_mass
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
@@ -549,7 +551,10 @@ program test_disk
     !------------------------------------------------------------------------------
     write(*,*) 'Test viscous dissipation of the disk'
     
-    write(*,*) '  /!\ No other test can be done before this one because initialisation must be perfect and not modified.'
+    write(*,*) '  Force Initialisation again'
+    FIRST_CALL = .true.
+    call init_globals(stellar_mass=stellar_mass, time=0.d0)
+    !------------------------------------------------------------------------------
     
     ! we force the dissipation type 
     DISSIPATION_TYPE = 1
@@ -718,7 +723,7 @@ program test_disk
   
   end subroutine test_viscous_dissipation
   
-  subroutine test_disk_dissipation()
+  subroutine test_disk_dissipation(stellar_mass)
   ! function to test the viscous dissipation with a dirac function. 
   
   ! Global parameters
@@ -738,6 +743,8 @@ program test_disk
   use bessel, only : bessik
   
   implicit none
+    
+    real(double_precision), intent(in) :: stellar_mass
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
@@ -765,7 +772,9 @@ program test_disk
     !------------------------------------------------------------------------------
     write(*,*) 'Test dissipation of the disk'
     
-    write(*,*) '  /!\ No other test can be done before this one because initialisation must be perfect and not modified.'
+    write(*,*) '  Force Initialisation again'
+    FIRST_CALL = .true.
+    call init_globals(stellar_mass=stellar_mass, time=0.d0)
     
     inquire(file='unitary_tests/dissipation', exist=isDefined)
     
@@ -2082,7 +2091,9 @@ program test_disk
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total torque during the dissipation of the disk'
     
-    write(*,*) '  /!\ No other test can be done before this one because initialisation must be perfect and not modified.'
+    write(*,*) '  Force Initialisation again'
+    FIRST_CALL = .true.
+    call init_globals(stellar_mass=stellar_mass, time=0.d0)
     
     inquire(file='dissipation', exist=isDefined)
     
@@ -2127,7 +2138,7 @@ program test_disk
     write(output_time, '(i0)') int(t_max)
     time_length = len(trim(output_time))
     write(time_format, *) '(i',time_length,'.',time_length,')'
-    write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years")'
+    write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years ; k = ",i5)'
     
     !------------------------------------------------------------------------------
     k = 1
@@ -2162,8 +2173,7 @@ program test_disk
         deallocate(time_temp, stat=error)
       end if
       
-      write(*,purcent_format) int(time(k)/365.25d0), int(t_max)
-      write(*,*) k, time(k)/365.25d0
+      write(*,purcent_format) int(time(k)/365.25d0), int(t_max), k
       
       if (.not.disk_effect) then
         next_dissipation_step = t_max * 365.d0

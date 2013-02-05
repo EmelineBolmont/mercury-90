@@ -776,8 +776,11 @@ subroutine init_globals(stellar_mass, time)
   
   if (FIRST_CALL) then
     FIRST_CALL = .False.
+    TAU_DISSIPATION = -1.d0
     
     call read_disk_properties()
+    
+    disk_effect = .true.
     
     select case(TORQUE_TYPE)
 			case('real') ! The normal torque profile, calculated form properties of the disk
@@ -801,24 +804,34 @@ subroutine init_globals(stellar_mass, time)
 						 &Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
     end select
     
-    allocate(distance_sample(NB_SAMPLE_PROFILES))
+    if (.not.allocated(distance_sample)) then
+			allocate(distance_sample(NB_SAMPLE_PROFILES))
+		end if
     distance_sample(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(x_sample(NB_SAMPLE_PROFILES))
+    if (.not.allocated(x_sample)) then
+      allocate(x_sample(NB_SAMPLE_PROFILES))
+    end if
     x_sample(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(surface_density_profile(NB_SAMPLE_PROFILES))
-    allocate(surface_density_index(NB_SAMPLE_PROFILES))
+    if (.not.allocated(surface_density_profile)) then
+      allocate(surface_density_profile(NB_SAMPLE_PROFILES))
+      allocate(surface_density_index(NB_SAMPLE_PROFILES))
+    end if
     surface_density_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     surface_density_index(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(temperature_profile(NB_SAMPLE_PROFILES))
-    allocate(temp_profile_index(NB_SAMPLE_PROFILES))
+    if (.not.allocated(temperature_profile)) then
+			allocate(temperature_profile(NB_SAMPLE_PROFILES))
+			allocate(temp_profile_index(NB_SAMPLE_PROFILES))
+    end if
     temperature_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     temp_profile_index(1:NB_SAMPLE_PROFILES) = 0.d0
     
-    allocate(chi_profile(NB_SAMPLE_PROFILES))
-    allocate(tau_profile(NB_SAMPLE_PROFILES))
+    if (.not.allocated(chi_profile)) then
+			allocate(chi_profile(NB_SAMPLE_PROFILES))
+			allocate(tau_profile(NB_SAMPLE_PROFILES))
+    end if
     chi_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     tau_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     
