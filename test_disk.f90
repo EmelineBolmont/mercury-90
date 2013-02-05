@@ -1630,11 +1630,11 @@ program test_disk
     
     real(double_precision), parameter :: mass = 1. * EARTH_MASS * K2
     real(double_precision), parameter :: a = 6. ! in AU
-    real(double_precision), parameter :: I = 0. ! in radians
+    real(double_precision) :: I = 0. ! in radians
     
     real(double_precision) :: total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
-    real(double_precision) :: e, q, gm, x_s, gamma_eff, Q_p
+    real(double_precision) :: e, q, gm, x_s, gamma_eff, Q_p, n
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     
@@ -1645,6 +1645,8 @@ program test_disk
     gm = stellar_mass + mass ! Masses are already in [msun * K2]
     position(1:3) = 0.d0
     velocity(1:3) = 0.d0
+    
+    n = 0.d0
     
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/ecc_corot.dat')
@@ -1657,7 +1659,7 @@ program test_disk
       q = a * (1 - e)
       
       ! We calculate position and velocities in function of orbital elements
-      call mco_el2x(gm,q,e,I,0.d0, 0.d0, 0.d0,& ! Inputs
+      call mco_el2x(gm,q,e,I,0.d0, n, 0.d0,& ! Inputs
                     position(1),position(2),position(3),velocity(1),velocity(2),velocity(3)) ! Outputs
       
       ! we store in global parameters various properties of the planet
