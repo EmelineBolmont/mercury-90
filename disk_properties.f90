@@ -129,6 +129,28 @@ module disk_properties
   end subroutine get_torques_interface
   end interface
 
+  procedure(function_temperature_interface), pointer :: zero_finding_temperature
+  
+  abstract interface 
+  subroutine function_temperature_interface(temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
+                                          prefactor, funcv, optical_depth)
+    import
+    
+  ! Output
+  real(double_precision), intent(out) :: funcv ! the value of the function
+  real(double_precision), intent(out) :: optical_depth ! the optical depth at a given position
+
+  ! Input
+  real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
+  real(double_precision), intent(in) :: sigma ! the surface density at a given position (in MS/AU**2)
+  real(double_precision), intent(in) :: distance_new ! current orbital distance [AU]
+  real(double_precision), intent(in) :: omega ! the angular velocity of the disk at a given position
+  real(double_precision), intent(in) :: scaleheight_old ! aspect ratio of the previous point
+  real(double_precision), intent(in) :: distance_old ! orbital distance of the previous point [AU]
+  real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 32.d0)
+  end subroutine function_temperature_interface
+  end interface
+
 contains
 
 subroutine print_planet_properties(p_prop, output)

@@ -175,10 +175,23 @@ program test_disk
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
+    real(double_precision) :: orbital_position, temperature_old, scaleheight_old, distance_old
 
   !------------------------------------------------------------------------------
-    position(:) = 0.d0
-    velocity(:) = 0.d0
+    orbital_position = 100.d0
+  
+  
+    position(1:3) = 0.d0
+    velocity(1:3) = 0.d0
+    
+    ! we define a fantom point
+    distance_old = orbital_position * 1.1
+    temperature_old = 10.d0 ! we force the temperature to be 10K for this fantom point
+    position(1) = distance_old
+    velocity(2) = sqrt((stellar_mass + mass) / position(1))
+    call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+     p_prop=p_prop) ! Output
+    scaleheight_old = get_scaleheight(temperature=temperature_old, angular_speed=p_prop%omega)
     
     write(*,*) 'Test of the zero function used to calculate the temperature at a given radius'
     
@@ -186,7 +199,7 @@ program test_disk
     open(10, file='unitary_tests/function_zero_temperature.dat')
     
     ! We generate cartesian coordinate for the given semi major axis
-    position(1) = 1.d0
+    position(1) = orbital_position
     
     ! We generate cartesian coordinate for the given mass and semi major axis
     velocity(2) = sqrt((stellar_mass + mass) / position(1))
@@ -196,7 +209,8 @@ program test_disk
      p_prop=p_prop) ! Output
     
     ! We calculate this value outside the function because we only have to do this once per step (per radial position)
-    prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 16.d0)
+    prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 32.d0)
+    
     
     write(10,*) '# properties of the disk at the location of the planet that influence the value of the temperature'
     write(10,*) '# radial position of the planet (in AU) :', p_prop%radius
@@ -209,7 +223,8 @@ program test_disk
 !~       temperature = T_min * T_step ** (i-1)
       temperature = (T_min + T_step * (i - 1.d0))
       
-      call zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor,& ! Input
+      call zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=prefactor,& ! Input
                               funcv=zero_function, optical_depth=tmp) ! Output
 !~       zero_function = zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, &
 !~                                                omega=p_prop%omega, prefactor=prefactor)
