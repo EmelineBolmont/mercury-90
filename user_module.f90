@@ -49,8 +49,8 @@ module user_module
   real(double_precision) :: INITIAL_SIGMA_0_NUM ! the surface density at (R=1AU) [Msun/AU^2]
   logical :: IS_DISSIPATION = .True. ! boolean to tell if there is dissipation of the disk or not.
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
-  character(len=80) :: INNER_BOUNDARY_CONDITION = 'open' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-  character(len=80) :: OUTER_BOUNDARY_CONDITION = 'open' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
+  character(len=80) :: INNER_BOUNDARY_CONDITION = 'closed'!open' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+  character(len=80) :: OUTER_BOUNDARY_CONDITION = 'closed'!open' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
   
   ! Here we define the constant value of the viscosity of the disk
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s]
@@ -173,7 +173,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision), dimension(3) :: migration_acceleration
   real(double_precision), dimension(3) :: eccentricity_acceleration
   real(double_precision) :: inclination_acceleration_z
-  real(double_precision), save :: next_step = -1.d0 ! next time at which we will compute the thermal properties of the disk?
+  real(double_precision), save :: next_dissipation_step = -1.d0 ! next time at which we will compute the thermal properties of the disk?
   
   !------------------------------------------------------------------------------
   ! Setup
@@ -188,12 +188,12 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     
   !------------------------------------------------------------------------------
   ! If it's time (depending on the timestep we want between each calculation of the disk properties)
-  ! The first 'next_step' is set to '-1' to force the calculation for the first timestep. In fact, the first timestep will be done fornothing, but we need this in order to have a clean code.
+  ! The first 'next_dissipation_step' is set to '-1' to force the calculation for the first timestep. In fact, the first timestep will be done fornothing, but we need this in order to have a clean code.
   if (IS_DISSIPATION) then
-    if (time.gt.next_step) then
+    if (time.gt.next_dissipation_step) then
       dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
       ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
-      next_step = time + dissipation_timestep
+      next_dissipation_step = time + dissipation_timestep
       
       ! we get the density profile.
       call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
@@ -301,13 +301,13 @@ subroutine get_parameter_value(line, isParameter, id, value)
   character(len=80), intent(out) :: id, value
   
   ! Local
-  character(len=1), parameter :: sep = '=' ! the separator of a parameter line
+  character(len=1), parameter :: SEP = '=' ! the separator of a parameter line
 
   integer :: sep_position ! an integer to get the position of the separator
 
   !------------------------------------------------------------------------------
 
-  sep_position = index(line, sep)
+  sep_position = index(line, SEP)
   
   if (sep_position.ne.0) then
     isParameter = .true.
@@ -678,9 +678,11 @@ subroutine initial_density_profile()
   implicit none
   
   integer :: i ! for loops
+  write(*,*) 'Warning: the initial profil is linear for tests of viscous dissipation!'
   
   do i=1,NB_SAMPLE_PROFILES
-    surface_density_profile(i) = log(INITIAL_SIGMA_0_NUM * exp(distance_log_sample(i))**(-INITIAL_SIGMA_INDEX))
+    surface_density_profile(i)=log(INITIAL_SIGMA_0_NUM*(1-exp(distance_log_sample(i))/exp(distance_log_sample(NB_SAMPLE_PROFILES))))
+!~     surface_density_profile(i) = log(INITIAL_SIGMA_0_NUM * exp(distance_log_sample(i))**(-INITIAL_SIGMA_INDEX))
     surface_density_index(i) = INITIAL_SIGMA_INDEX
   end do
 end subroutine initial_density_profile
@@ -1266,7 +1268,7 @@ if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
   write(*,*) 'root must be bracketed for zbrent'
   write(*,*) '  T_min =', x_min, 'f(T_min) =', fa
   write(*,*) '  T_max =', x_max, 'f(T_max) =', fb
-  write(*,*) 'properties of the disk at the location of the planet hat influence the value of the temperature'
+  write(*,*) 'properties of the disk at the location of the planet that influence the value of the temperature'
   write(*,*) '  radial position of the planet (in AU) :', p_prop%radius
   write(*,*) '  viscosity :', p_prop%nu
   write(*,*) '  surface density :', p_prop%sigma
@@ -1796,13 +1798,10 @@ end subroutine print_planet_properties
   ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
   ! surface_density_profile : values of the density in log() for each value of the 'a' sample
   
-    ! Return: (in the folder 'dissipation' of the current working directory where the tests are launched)
+    ! Return: (in the folder 'unitary_tests/dissipation' of the current working directory where the tests are launched)
   !  data files with the following paterns :
   !    surface_density*.dat : each file correspond to a data file of the surface density at one timestep (the number correspond to the index)
-  !    temperature*.dat : each file correspond to a data file of the temperature at one timestep (the number correspond to the index)
-  !    total_torque*.dat : each file correspond to a data file of the total torque exerted by the disk at one timestep (the number correspond to the index)
-  !    contour*.dat : each file correspond to the zero torque lines of the corresponding total_torque*.dat file.
-  ! IN ADDITION : There are 3 gnuplot scripts to generate the output files for the surface density, the temperature and the total torque. The last one need both total_torque and contour data files.
+  ! IN ADDITION : There are 1 gnuplot scripts to generate the output files for the surface density.
   
   use mercury_constant ! for 'HUGE' value
   
@@ -1816,7 +1815,7 @@ end subroutine print_planet_properties
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
-    real(double_precision), parameter :: t_max = 5.d4 ! time in years
+    real(double_precision), parameter :: t_max = 1.d6 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
     
@@ -1824,7 +1823,7 @@ end subroutine print_planet_properties
     type(PlanetProperties) :: p_prop
     
     real(double_precision) :: density_min, density_max
-    character(len=80) :: filename_density
+    character(len=80) :: filename_density, filename_density_ref
     character(len=80) :: output_density, output_time, time_format, purcent_format
     integer :: time_length ! the length of the displayed time, usefull for a nice display
     
@@ -1841,17 +1840,17 @@ end subroutine print_planet_properties
 
     ! Before dissipating the disk, we erase the 'normal' density profile with a dirac one. 
     surface_density_profile(1:NB_SAMPLE_PROFILES) = log(TINY)
-    surface_density_profile(NB_SAMPLE_PROFILES/2) = log(HUGE)
+    surface_density_profile(int(sqrt(NB_SAMPLE_PROFILES**2/2.))) = log(HUGE)
     
-    ! We open the file where we want to write the outputs
-    write(filename_density, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',0,'.dat'
-    call store_density_profile(filename=filename_density)
+    ! We store the initial profile of the surface density in a reference file.
+    write(filename_density_ref, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',0,'.dat'
+    call store_density_profile(filename=filename_density_ref)
     
     ! We want to know the max size of the time display in order to have a nice display, with filled spaces in the final plots
-    write(output_time, '(f0.0)') t_max
+    write(output_time, '(i0)') int(t_max)
     time_length = len(trim(output_time))
-    write(time_format, *) '(f',time_length,'.0)'
-    write(purcent_format, *) '(f',time_length,'.0,"/",f',time_length,'.0," years")'
+    write(time_format, *) '(i',time_length,'.',time_length,')'
+    write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years")'
     
     !------------------------------------------------------------------------------
     k = 1
@@ -1884,7 +1883,7 @@ end subroutine print_planet_properties
         deallocate(time_temp, stat=error)
       end if
       
-      write(*,purcent_format) time(k)/365.25d0, t_max ! We display on the screen how far we are from the end of the integration.
+      write(*,purcent_format) int(time(k)/365.25d0), int(t_max) ! We display on the screen how far we are from the end of the integration.
       
       
       time(k+1) = time(k) + dissipation_timestep * 365.25d0 ! days
@@ -1894,8 +1893,8 @@ end subroutine print_planet_properties
       
       if (k.eq.1) then
       ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
-        density_min = 0.
-        density_max = exp(surface_density_profile(1)) * MSUN / AU**2
+        density_min = exp(minval(surface_density_profile(1:NB_SAMPLE_PROFILES))) * MSUN / AU**2
+        density_max = exp(maxval(surface_density_profile(1:NB_SAMPLE_PROFILES))) * MSUN / AU**2
       end if
       
       k = k + 1 ! We increment the integer that point the time in the array (since it's a 'while' and not a 'do' loop)
@@ -1905,23 +1904,25 @@ end subroutine print_planet_properties
     
     !------------------------------------------------------------------------------
     ! Gnuplot script to output the frames of the density
+    write(filename_density_ref, '(a,i0.5,a)') 'surface_density',0,'.dat'
     open(13, file="unitary_tests/dissipation/density.gnuplot")
     write(13,*) "set terminal pngcairo enhanced size 800, 600"
     write(13,*) 'set xlabel "semi major axis (AU)"'
     write(13,*) 'set ylabel "Surface density (g/cm^2)"'
     write(13,*) 'set grid'
     write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'
-    write(13,*) 'set yrange [', TINY, ':', HUGE, ']'
-    write(13,*) 'set logscale y'
+    write(13,*) 'set yrange [', density_min, ':', density_max, ']'
+!~     write(13,*) 'set logscale y'
     
     do k=1, nb_time
       write(filename_density, '(a,i0.5,a)') 'surface_density',k,'.dat'
       write(output_density, '(a,i0.5,a)') 'surface_density',k,'.png'
-      write(output_time, time_format) time(k)/365.25
+      write(output_time, time_format) int(time(k)/365.25)
       
       write(13,*) "set output '",trim(output_density),"'"
       write(13,*) 'set title "T=', trim(output_time),' years"'
-      write(13,*) "plot '",trim(filename_density),"' using 1:2 with lines notitle"
+      write(13,*) "plot '",trim(filename_density_ref),"' using 1:2 with lines linetype 0 linewidth 3 notitle, \"
+      write(13,*) "     '",trim(filename_density),"' using 1:2 with lines linetype 1 notitle"
       write(13,*) ""
     end do
     close(13)
@@ -2649,7 +2650,7 @@ end subroutine print_planet_properties
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
-    real(double_precision), parameter :: t_max = 1.d5 ! time in years
+    real(double_precision), parameter :: t_max = 1.d6 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
     
@@ -2662,6 +2663,7 @@ end subroutine print_planet_properties
     
     real(double_precision) :: temp_min, temp_max, density_min, density_max, torque_min, torque_max
     character(len=80) :: filename_torque, filename_density, filename_temperature, filename_contour
+    character(len=80) :: filename_density_ref, filename_temperature_ref
     character(len=80) :: output_torque, output_density, output_temperature, output_time, time_format, purcent_format
     integer :: time_length ! the length of the displayed time, usefull for a nice display
     
@@ -2673,6 +2675,22 @@ end subroutine print_planet_properties
     
     position(:) = 0.d0
     velocity(:) = 0.d0
+    
+    write(filename_density_ref, '(a,i0.5,a)') 'dissipation/surface_density',0,'.dat'
+    write(filename_temperature_ref, '(a,i0.5,a)') 'dissipation/temperature',0,'.dat'
+    
+    ! we store in a .dat file the temperature profile
+    call store_temperature_profile(filename=filename_temperature_ref)
+    call store_density_profile(filename=filename_density_ref)
+    
+
+    temp_max = exp(temperature_profile(1))
+    temp_min = 0.
+    
+    ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
+    density_min = 0.
+    density_max = exp(maxval(surface_density_profile(1:NB_SAMPLE_PROFILES))) * MSUN / AU**2
+
     
 !~     call system("rm dissipation/*")
     
@@ -2686,10 +2704,10 @@ end subroutine print_planet_properties
     end do
     
     ! We want to know the max size of the time display in order to have a nice display, with filled spaces in the final plots
-    write(output_time, '(f0.0)') t_max
+    write(output_time, '(i0)') int(t_max)
     time_length = len(trim(output_time))
-    write(time_format, *) '(f',time_length,'.0)'
-    write(purcent_format, *) '(f',time_length,'.0,"/",f',time_length,'.0," years")'
+    write(time_format, *) '(i',time_length,'.',time_length,')'
+    write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years")'
     
     !------------------------------------------------------------------------------
     k = 1
@@ -2727,7 +2745,7 @@ end subroutine print_planet_properties
         deallocate(time_temp, stat=error)
       end if
       
-      write(*,purcent_format) time(k)/365.25d0, t_max
+      write(*,purcent_format) int(time(k)/365.25d0), int(t_max)
       
       
       time(k+1) = time(k) + dissipation_timestep * 365.25d0 ! days
@@ -2738,23 +2756,12 @@ end subroutine print_planet_properties
       call store_temperature_profile(filename=filename_temperature)
       call store_density_profile(filename=filename_density)
       
-      if (k.eq.1) then
-        temp_max = exp(temperature_profile(1))
-        temp_min = 0.
-        
-        ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
-        density_min = 0.
-        density_max = exp(maxval(surface_density_profile(1:NB_SAMPLE_PROFILES))) * MSUN / AU**2
-      end if
-      
       write(11,*) '# semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
       
       do i=1, nb_points ! loop on the position
         
         ! We generate cartesian coordinate for the given semi major axis
         position(1) = a(i)
-        
-
         
         do j=1,nb_mass
           mass(j) = (mass_min + mass_step * (j - 1.d0)) * K2
@@ -2813,7 +2820,7 @@ end subroutine print_planet_properties
       write(filename_torque, '(a,i0.5,a)') 'total_torque',k,'.dat'
       write(filename_contour, '(a,i0.5,a)') 'contour',k,'.dat'
       write(output_torque, '(a,i0.5,a)') 'total_torque',k,'.png'
-      write(output_time, time_format) time(k)/365.25
+      write(output_time, time_format) int(time(k)/365.25)
       
       write(11,*) "set output '",trim(output_torque),"'"
       write(11,*) 'set title "total torque {/Symbol G}_{tot}/{/Symbol G}_0 T=', trim(output_time),' years"'
@@ -2825,6 +2832,7 @@ end subroutine print_planet_properties
     
     !------------------------------------------------------------------------------
     ! Gnuplot script to output the frames of the temperature profile
+    write(filename_temperature_ref, '(a,i0.5,a)') 'temperature',0,'.dat'
     open(12, file="dissipation/temperature.gnuplot")
     write(12,*) "set terminal pngcairo enhanced size 1024, 768"
     write(12,*) 'set xlabel "semi major axis (AU)"'
@@ -2836,16 +2844,18 @@ end subroutine print_planet_properties
     do k=1, nb_time
       write(filename_temperature, '(a,i0.5,a)') 'temperature',k,'.dat'
       write(output_temperature, '(a,i0.5,a)') 'temperature',k,'.png'
-      write(output_time, time_format) time(k)/365.25
+      write(output_time, time_format) int(time(k)/365.25)
       
       write(12,*) "set output '",trim(output_temperature),"'"
       write(12,*) 'set title "T=', trim(output_time),' years"'
-      write(12,*) "plot '",trim(filename_temperature),"' using 1:2 with lines notitle"
+      write(12,*) "plot '",trim(filename_temperature_ref),"' using 1:2 with lines linetype 0 linewidth 3 notitle, \"
+      write(12,*) "     '",trim(filename_temperature),"' using 1:2 with lines  linetype 1 notitle"
       write(12,*) ""
     end do
     close(12)
     
     !------------------------------------------------------------------------------
+    write(filename_density_ref, '(a,i0.5,a)') 'surface_density',0,'.dat'
     ! Gnuplot script to output the frames of the density
     open(13, file="dissipation/density.gnuplot")
     write(13,*) "set terminal pngcairo enhanced size 1024, 768"
@@ -2858,11 +2868,12 @@ end subroutine print_planet_properties
     do k=1, nb_time
       write(filename_density, '(a,i0.5,a)') 'surface_density',k,'.dat'
       write(output_density, '(a,i0.5,a)') 'surface_density',k,'.png'
-      write(output_time, time_format) time(k)/365.25
+      write(output_time, time_format) int(time(k)/365.25)
       
       write(13,*) "set output '",trim(output_density),"'"
       write(13,*) 'set title "T=', trim(output_time),' years"'
-      write(13,*) "plot '",trim(filename_density),"' using 1:2 with lines notitle"
+      write(13,*) "plot '",trim(filename_density_ref),"' using 1:2 with lines linetype 0 linewidth 3 notitle, \"
+      write(13,*) "     '",trim(filename_density),"' using 1:2 with lines  linetype 1 notitle"
       write(13,*) ""
     end do
     close(13)
