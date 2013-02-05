@@ -36,7 +36,6 @@ module disk
   ! 2 planet radius in the apperture of this cutoff (a triangle with angle, orbital distance and 2 planet radius)
   real(double_precision), parameter :: INCLINATION_CUTOFF = 5.d-4 ! (in rad) the value below whom there will be no inclination damping anymore.
   real(double_precision), parameter :: ECCENTRICITY_CUTOFF = 1.d0 ! the eccentricity above what the torque of the disk is deactivated
-  real(double_precision) :: SMA_CUTOFF ! in AU, the distance below which the timestep do not allow us to compute the orbit correctly (for constant timestep)
   !------------------------------------------------------------------------------
   ! prefactors
   real(double_precision) :: X_S_PREFACTOR ! prefactor for the half width of the corotation region
@@ -196,6 +195,9 @@ subroutine read_disk_properties()
           read(value, *) TAU_DISSIPATION
           DISSIPATION_TYPE = 2
           
+        case('inner_smoothing_width')
+          read(value, *) INNER_SMOOTHING_WIDTH
+        
         case('inner_boundary_condition')
           read(value, *) INNER_BOUNDARY_CONDITION
         
@@ -347,8 +349,24 @@ subroutine write_disk_properties()
 
   implicit none
   
-  open(10, file='disk.out')
+  real(double_precision) :: timestep
+  real(double_precision) :: distance_accuracy
   
+  
+  
+	call read_paramin(timestep) 
+	! below this limit, with this timestep, an orbit will only contain 10 timestep or less, whiis not accurate.
+	distance_accuracy = (10. * timestep / 365.25)**TWOTHIRD 
+  
+  open(10, file='disk.out')
+  if (distance_accuracy.gt.INNER_BOUNDARY_RADIUS) then
+		write(10,'(a)') '------------------------------------'
+		write(10,'(a)') '|         /!\  WARNING /!\         |'
+		write(10,'(a)') '------------------------------------'
+		write(10,'(a,f3.1,a)') 'timestep = ',timestep, ' days'
+		write(10,'(a,f5.2,a)') '  with this timestep, the simulation will not be accurate below', distance_accuracy, ' AU'
+		write(10,'(a,f6.1,a)') '  which is greater than the inner edge of the gas disk : ', INNER_BOUNDARY_RADIUS, ' AU'
+  end if
   write(10,'(a)') '------------------------------------'
   write(10,'(a)') '|   Properties of the disk         |'
   write(10,'(a)') '------------------------------------'
@@ -356,6 +374,7 @@ subroutine write_disk_properties()
   write(10,'(a,f4.2)') 'adiabatic index = ', ADIABATIC_INDEX
   write(10,'(a,f4.2)') 'mean molecular weight = ', MEAN_MOLECULAR_WEIGHT
   write(10,'(a,es10.1e2,a)') 'viscosity = ', viscosity, ' (cm^2/s)'
+  write(10,*) ''
   write(10,'(a,l,a)') 'is turbulence = ', IS_TURBULENCE, ' (T:True;F:False)'
   if (IS_TURBULENCE) then
     write(10,'(a,es10.1e2,a)') '  turbulence_forcing = ', TURBULENT_FORCING, ' (adim)'
@@ -365,14 +384,15 @@ subroutine write_disk_properties()
   else
     write(10,'(a)') '  No turbulence'
   end if
+  write(10,*) ''
+  write(10,'(a,f6.1,a)') 'inner edge of the disk = ',INNER_BOUNDARY_RADIUS, ' (AU)'
+  write(10,'(a,f6.1,a)') 'outer edge of the disk = ',OUTER_BOUNDARY_RADIUS, ' (AU)'
   if (IS_MANUAL_SURFACE_DENSITY) then
     write(10,'(a)') 'initial surface density = manual (local "surface_density_profile.dat" file)'
   else
     write(10,'(a,f6.1,a,f4.2 ,a)') 'initial surface density = ',INITIAL_SIGMA_0, ' * R^(-',INITIAL_SIGMA_INDEX,') (g/cm^2)'
+    write(10,'(a,f6.4,a)') 'inner smoothing width = ',INNER_SMOOTHING_WIDTH * INNER_BOUNDARY_RADIUS, ' (AU)'
   end if
-  write(10,*) ''
-  write(10,'(a,f6.1,a)') 'inner edge of the disk = ',INNER_BOUNDARY_RADIUS, ' (AU)'
-  write(10,'(a,f6.1,a)') 'outer edge of the disk = ',OUTER_BOUNDARY_RADIUS, ' (AU)'
   write(10,*) ''
   write(10,'(a)') 'Possible values : &
   0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile'
@@ -404,7 +424,7 @@ subroutine write_disk_properties()
   write(10,'(a)') 'When the inclination damping stops'
   write(10,'(a,es10.1e2,a)') 'inclination cutoff = ',INCLINATION_CUTOFF, ' (rad)'
   write(10,'(a)') 'When the torque of the disk is deactivated'
-  write(10,'(a,f5.2,a)') 'cut off : semi major axis < ',SMA_CUTOFF, ' AU'
+  write(10,'(a,f5.2,a)') 'cut off : semi major axis < ',INNER_BOUNDARY_RADIUS, ' AU'
   write(10,'(a,f5.3)') 'cut off : eccentricity > ',ECCENTRICITY_CUTOFF
   write(10,*) ''
   write(10,'(a)') "Possible values : 'real', 'mass_independant', 'linear_indep', 'tanh_indep'"
@@ -664,7 +684,6 @@ subroutine init_globals(stellar_mass, time)
 ! temp_profile_index : values of the local negative slope of the temperature profile
 ! chi_profile : thermal diffusivity
 ! tau_profile : optical depth 
-! SMA_CUTOFF : in AU, the distance above which the timestep do not allow us to compute the orbit correctly (for constant timestep)
 !
 ! Parameters
 ! stellar_mass : the mass of the central object [Msun * K2]
@@ -678,7 +697,6 @@ subroutine init_globals(stellar_mass, time)
   ! Locals
   logical, save :: FirstCall = .True.
   integer :: i  
-  real(double_precision) :: timestep
   
   if (FirstCall) then
     FirstCall = .False.
@@ -755,9 +773,6 @@ subroutine init_globals(stellar_mass, time)
       call init_turbulence(time)
     end if
     
-    call read_paramin(timestep) 
-    SMA_CUTOFF = (10. * timestep / 365.25)**TWOTHIRD
-    
     ! we write all the values used by user_module, those given by the user, and the default ones, in 'disk.out' file
     call write_disk_properties() 
     
@@ -791,6 +806,7 @@ subroutine initial_density_profile()
   character(len=80) :: line
   character(len=80) :: filename
   character(len=1), parameter :: comment_character = '#'
+  real(double_precision) :: ground_surface_density = 0.1 ! g/cm^2, the minimum surface density
   
   real(double_precision), dimension(:), allocatable :: radius, manual_surface_profile
   
@@ -804,6 +820,10 @@ subroutine initial_density_profile()
 
   ! For loops
 	integer :: i
+	
+	! For the smoothing
+	real(double_precision) :: smoothing
+	integer :: i_smooth ! the maximum index where the smoothing is computed.
 	
   !------------------------------------------------------------------------------
   
@@ -884,6 +904,26 @@ subroutine initial_density_profile()
     do i=1,NB_SAMPLE_PROFILES
 			surface_density_profile(i) = INITIAL_SIGMA_0 * SIGMA_CGS2NUM * distance_sample(i)**(-INITIAL_SIGMA_INDEX)
 			surface_density_index(i) = INITIAL_SIGMA_INDEX
+		end do
+		
+		i = 0
+		smoothing = 0.5
+		! We do not allow to modify the last point of the profile (especially to avoid problems with the slope calculation of the profile.)
+		do while ((smoothing.lt.1.d0).and.(i.lt.NB_SAMPLE_PROFILES)) 
+			i = i + 1
+			smoothing = tanh((distance_sample(i) - INNER_BOUNDARY_RADIUS) / (INNER_SMOOTHING_WIDTH * INNER_BOUNDARY_RADIUS))
+			surface_density_profile(i) = smoothing * surface_density_profile(i)
+			
+			if (surface_density_profile(i).eq.0.d0) then
+				surface_density_profile(i) = ground_surface_density * SIGMA_CGS2NUM
+			end if
+		end do
+		i_smooth = i
+		
+		! For the smoothed values, we calculate again the surface density index
+		do i=1, i_smooth
+			surface_density_index(i) = - (log(surface_density_profile(i+1)) - log(surface_density_profile(i))) &
+				                           / (log(distance_sample(i+1)) - log(distance_sample(i)))
 		end do
   end if
   

@@ -72,6 +72,7 @@ module disk_properties
   ! Here we define properties common to the profiles
   real(double_precision) :: INNER_BOUNDARY_RADIUS = 1.d0
   real(double_precision) :: OUTER_BOUNDARY_RADIUS = 100.d0
+  real(double_precision) :: INNER_SMOOTHING_WIDTH = 0.05 ! the width (in unit of the inner boundary radius) of the inner region where the surface density is smoothed to 0
   integer :: NB_SAMPLE_PROFILES = 200 ! number of points for the sample of radius of the temperature profile
   
   ! We define a new type for the properties of the planet
