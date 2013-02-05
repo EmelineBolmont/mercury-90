@@ -32,7 +32,7 @@ program test_disk
     stellar_mass = 1.d0 * K2
     
     ! We force the value to be interesting for our tests
-    TORQUE_TYPE = 'manual' ! 'real', 'mass_independant', 'mass_dependant', 'manual'
+    TORQUE_TYPE = 'real' ! 'real', 'mass_independant', 'mass_dependant', 'manual'
     
     
     write(*,*) 'Initialisation'
@@ -1334,13 +1334,13 @@ program test_disk
     
     integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 20. * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     real(double_precision), dimension(nb_mass) :: mass
     
     integer, parameter :: nb_points = 100
     real(double_precision), parameter :: a_min = 0.01
-    real(double_precision), parameter :: a_max = 15.
+    real(double_precision), parameter :: a_max = 50.
     ! step for log sampling
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
     real(double_precision), dimension(nb_points) :: a
@@ -1352,11 +1352,19 @@ program test_disk
     type(PlanetProperties) :: p_prop
     
     integer :: i,j ! for loops
+    integer :: deltai, deltaj ! separation between to outputs for the vector part of the display (we do not want a lot of points)
+    real(double_precision) :: vector_limit ! The size limit of the vectors, to prevent chevauching.
     
     write(*,*) 'Evolution of the total, lindblad and corotation torques depending on the planet mass and distance'
     
     position(:) = 0.d0
     velocity(:) = 0.d0
+    
+    ! We want to have only 10 points both in x and y for vector outputs
+    deltai = nb_points / 20
+    deltaj = nb_mass / 20
+    
+    vector_limit = a_step * (deltai - 1)
     
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/test_corotation_torque.dat')
@@ -1364,13 +1372,14 @@ program test_disk
     open(12, file='unitary_tests/test_total_torque_units.dat')
     open(13, file='unitary_tests/test_lindblad_torque.dat')
     open(14, file='unitary_tests/test_ref_torque.dat')
-    
+    open(15, file='unitary_tests/test_vector_total_torque.dat')
     
     write(10,*) '# semi major axis (AU) ; mass in earth mass ; corotation torque (no dim)'
     write(11,*) '# semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
     write(12,*) '# semi major axis (AU) ; mass in earth mass ; total torque in M_s.AU^2.day^{-2}'
     write(13,*) '# semi major axis (AU) ; mass in earth mass ; lindblad torque (no dim)'
     write(14,*) '# semi major axis (AU) ; mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
+    write(15,*) '# semi major axis (AU) ; mass in earth mass ; Delta x ; Delta y'
     
     
     do i=1, nb_points ! loop on the position
@@ -1414,7 +1423,6 @@ program test_disk
             write(*,*) 'Warning: The torque rule cannot be found.'
             write(*,*) 'Given value :', TORQUE_TYPE
         end select
-!~         call get_corotation_torque(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref)
         
         total_torque(i,j) = lindblad_torque + corotation_torque
         total_torque_units(i,j) = torque_ref * total_torque(i,j)
@@ -1425,6 +1433,11 @@ program test_disk
         write(12,*) a(i), mass(j) / (EARTH_MASS*K2), total_torque_units(i,j)
         write(13,*) a(i), mass(j) / (EARTH_MASS*K2), lindblad_torque
         write(14,*) a(i), mass(j) / (EARTH_MASS*K2), torque_ref
+        
+        if ((modulo(i-int(deltai/2.),deltai).eq.0).and.(modulo(j,deltaj).eq.0)) then
+          write(15,*) a(i), mass(j) / (EARTH_MASS*K2), 0, &
+                      sign(min(sqrt(abs(total_torque(i,j))),vector_limit), total_torque(i,j)), 0, 0
+        end if
         
       end do
       
@@ -1437,6 +1450,7 @@ program test_disk
     close(12)
     close(13)
     close(14)
+    close(15)
     
     
     open(10, file="unitary_tests/corotation_torque.gnuplot")
@@ -1465,19 +1479,23 @@ program test_disk
       write(j,*) 'set pm3d map'
       write(j,*) 'set pm3d explicit'
       write(j,*) 'set palette rgbformulae 22,13,-31'
-      write(j,*) 'set mxtics 5'
-      write(j,*) 'set mytics 5'
-      write(j,*) 'set grid xtics ytics mxtics mytics linetype -1, linetype 0'
+      write(j,*) 'set grid xtics ytics linetype 0'
       write(j,*) 'set xrange [', a_min, ':', a_max, ']'
       write(j,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     end do
 
     write(10,*) "splot 'test_corotation_torque.dat' with pm3d notitle"
+    
     write(11,*) "splot 'test_total_torque.dat' with pm3d notitle, \"
-    write(11,*) "      'contour_total_torque.dat' with line linetype -1 title '{/Symbol G}=0'"
+    write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 title '{/Symbol G}=0', \"
+    write(11,*) "      'test_vector_total_torque.dat' with vector notitle head filled linestyle -1"
+    
     write(12,*) "splot 'test_total_torque_units.dat' with pm3d notitle, \"
-    write(12,*) "      'contour_total_torque.dat' with line linetype -1 title '{/Symbol G}=0'"
+    write(12,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 title '{/Symbol G}=0', \"
+    write(12,*) "      'test_vector_total_torque.dat' with vector notitle head filled linestyle -1"
+    
     write(13,*) "splot 'test_lindblad_torque.dat' with pm3d notitle"
+    
     write(14,*) "splot 'test_ref_torque.dat' with pm3d notitle"
 
     
@@ -1728,7 +1746,7 @@ program test_disk
       write(11,*) "set output '",trim(output_torque),"'"
       write(11,*) 'set title "total torque {/Symbol G}_{tot}/{/Symbol G}_0 T=', trim(output_time),' years"'
       write(11,*) "splot '",trim(filename_torque),"' with pm3d notitle, \"
-      write(11,*) "      '",trim(filename_contour),"' with line linetype -1 title '{/Symbol G}=0'"
+      write(11,*) "      '",trim(filename_contour),"' with line linetype -1 linewidth 2 title '{/Symbol G}=0'"
       write(11,*) ""
     end do
     close(11)
