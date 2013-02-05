@@ -161,7 +161,7 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   real(double_precision), dimension(3), intent(out) :: turbulence_acceleration ! The gravitational potential induced by the turbulence
   
   ! Locals
-  real(double_precision), parameter :: acc_prefactor = (64.d0 / (PI * PI)) ! the prefactor used to calculate the acceleration
+  real(double_precision), parameter :: acc_prefactor = (1.0d3 / (PI * PI)) ! the prefactor used to calculate the acceleration
   ! The surface density of the disk is given in MSUN, with no K2, so the solar mass is given in MSUN too, without K2
   real(double_precision) :: r, phi ! polar coordinates of the planet
   real(double_precision), dimension(3) :: shifted_position
