@@ -835,6 +835,9 @@ end subroutine initial_density_profile
   function get_viscosity(radius)
   ! function that return the viscosity of the disk in [AU^2.day^-1]
   
+  ! Parameters
+  ! radius : The orbital distance in AU
+  
   ! Global parameters
   ! viscosity : the viscosity of the disk in [cm^2/s]
   
@@ -1029,9 +1032,9 @@ end subroutine initial_density_profile
 !~       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
 !~         flux_ip12 = 0.d0
         ! If closed condition, the surface density at the boundary 'surface_density_profile(1)' doesn't change. So we do not compute anything.
-        tmp = (f_i + dissipation_timestep * flux_ip12 / X_SAMPLE_STEP) / (1.5d0 * x_sample(1))
+        tmp = (f_i + dissipation_timestep * flux_ip12 / X_SAMPLE_STEP) 
       
-        surface_density_profile(1) = tmp ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
+        surface_density_profile(1) = tmp / (1.5d0 * x_sample(1)) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
       case('open') 
       ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
       ! condition. Density is free to dissipate outside the grid.
@@ -1055,14 +1058,15 @@ end subroutine initial_density_profile
       flux_im12 = flux_ip12
       flux_ip12 = 3.d0 * get_viscosity(a_ip12) / a_ip12 * (f_ip1 - f_i) / X_SAMPLE_STEP
       
-      tmp = (f_i + dissipation_timestep * (flux_ip12 - flux_im12) / X_SAMPLE_STEP) / (1.5d0 * x_sample(i))
+      tmp = (f_i + dissipation_timestep * (flux_ip12 - flux_im12) / X_SAMPLE_STEP)
       
       if (tmp.lt.0.) then
-        write(*,*) 'ERROR: tmp is negative!!!!'
+        write(*,*) 'ERROR: tmp and thus the surface density is negative!!!!'
         write(*,*) a_ip12, f_i, f_ip1, flux_im12, flux_ip12
+        stop
       end if
       
-      surface_density_profile(i) = tmp ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
+      surface_density_profile(i) = tmp / (1.5d0 * x_sample(i)) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
       surface_density_index(i) = - (log(surface_density_profile(i)) - log(surface_density_profile(i-1))) &
                                     / (log(distance_sample(i)) - log(distance_sample(i-1)))
             
@@ -1087,9 +1091,9 @@ end subroutine initial_density_profile
 !~       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
 !~         flux_ip12 = 0.d0
         ! If closed condition, the surface density at the boundary 'surface_density_profile(1)' doesn't change. So we do not compute anything.
-        tmp = (f_i - dissipation_timestep * flux_im12 / X_SAMPLE_STEP) / (1.5d0 * x_sample(NB_SAMPLE_PROFILES))
+        tmp = (f_i - dissipation_timestep * flux_im12 / X_SAMPLE_STEP)
       
-        surface_density_profile(NB_SAMPLE_PROFILES) = tmp ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
+        surface_density_profile(NB_SAMPLE_PROFILES) = tmp / (1.5d0 * x_sample(NB_SAMPLE_PROFILES)) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
       case('open') 
       ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
       ! condition. Density is free to dissipate outside the grid.
@@ -1534,7 +1538,7 @@ end subroutine print_planet_properties
 !~     call test_function_zero_temperature(stellar_mass)
 !~     call test_temperature_interpolation()
 !~     call test_density_interpolation()
-    call test_dissipation(stellar_mass)
+    call test_dissipation()
 !~     
 !~     ! Physical values and plots
 !~     call study_opacity_profile()
@@ -1811,7 +1815,7 @@ end subroutine print_planet_properties
   
   end subroutine test_density_interpolation
   
-  subroutine test_dissipation(stellar_mass)
+  subroutine test_dissipation()
   ! function to test the viscous dissipation with a dirac function. 
   
   ! Global parameters
@@ -1831,23 +1835,16 @@ end subroutine print_planet_properties
   use bessel, only : bessik
   
   implicit none
-  
-  real(double_precision), intent(in) :: stellar_mass
-  
-    real(double_precision), parameter :: mass = 20 * EARTH_MASS 
-    
-    real(double_precision), parameter :: a = 1.
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
-    real(double_precision), parameter :: t_max = 1.d8 ! time in years
+    real(double_precision), parameter :: t_max = 1.d5 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer, parameter :: max_frames = 100 ! Parameter to have a control over the number of output frames. (I had near 80 000 once)
     integer :: nb_dissipation_per_step
     integer :: time_size ! the size of the array 'time'. 
     
-    real(double_precision) :: position(3), velocity(3)
-    type(PlanetProperties) :: p_prop
+    real(double_precision), parameter :: a = 1.
     
     real(double_precision) :: density_min, density_max
     character(len=80) :: filename_density, filename_density_ref
@@ -1859,7 +1856,7 @@ end subroutine print_planet_properties
     integer :: r_0i ! integer that correspond to the closest 'a' value from r_0
     real(double_precision), parameter :: t_0 = 0.016 ! the time at which the diffusion begin. Because we test a dirac function that 
                                                ! cannot be computed so we start after the beginning of the theoritical diffusion.
-    real(double_precision), parameter :: nu = 2.28e-6 ! the viscosity for the dissipation test with a dirac. (to compare with kley, 1999)
+    real(double_precision), parameter :: nu = 1.e-6 ! the viscosity for the dissipation test with a dirac in AU^2/day. (to compare with kley, 1999)
     real(double_precision) :: t_nu ! the viscous spreading time
     real(double_precision) :: sigma_prefactor ! the prefactor of the theoritical function for the spreading of the dirac function (taken from kley, 1999)
     real(double_precision) :: tau ! dimensionless time
@@ -1875,11 +1872,13 @@ end subroutine print_planet_properties
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total torque during the dissipation of the disk'
     
-    position(:) = 0.d0
-    velocity(:) = 0.d0
+    
+    ! First, we calculate the value of the viscosity in cm^2/s in order to modify the global variable 'viscosity'
+    viscosity = nu / DAY * AU**2 ! in cm^2/s
+    write(*,'(a,es10.2,a,es10.2,a)') 'with nu=', get_viscosity(a), 'AU^2/day (',viscosity,'cm^2/s)'
     
     call system("rm unitary_tests/dissipation/*")
-    t_nu = r_0**2 / (12.d0 * nu)
+    t_nu = r_0**2 / (12.d0 * get_viscosity(a))
     sigma_prefactor = 1 / (PI * r_0**2)
     
     ! We search for the closest radial value from the desired R_0 value
@@ -1888,9 +1887,11 @@ end subroutine print_planet_properties
         r_0i = i
       end if
     end do
+    
     if (.not.(((r_0i.gt.0).and.(r_0i.le.NB_SAMPLE_PROFILES)))) then
       write(*,*) 'Error: the r_0 value is not in the radial profile sample'
       write(*,*) r_0i
+      stop
     end if
     
     r_0 = distance_sample(r_0i)
@@ -1899,8 +1900,8 @@ end subroutine print_planet_properties
     write(filename_density_ref, '(a)') 'unitary_tests/dissipation/theoritical_dissipation.dat'
     open(10, file=filename_density_ref)
     write(10,*) '# radial length (no dim) ; profile for t=',ref_tau 
-    do i=1,100
-      x = 0.02 * i
+    do i=1,200
+      x = 0.01 * i
       
       do k=1,5
         tau = ref_tau(k)
@@ -1913,18 +1914,23 @@ end subroutine print_planet_properties
     close(10)
 
     ! Before dissipating the disk, we erase the 'normal' density profile with a dirac one. 
-!~     tau = t_0
-!~ 
-!~     do i=1, NB_SAMPLE_PROFILES
-!~       x = distance_sample(i)/r_0
-!~       call bessik(2*x/tau,0.25d0,Ix, Kx, Ixp, Kxp)
-!~       
-!~       tmp = sigma_prefactor / (tau * x**0.25d0) * exp(-(1.d0 + x**2) / tau) * Ix
-!~       surface_density_profile(i) = tmp
-!~     end do
-!~     
-    surface_density_profile(1:NB_SAMPLE_PROFILES) = 0.d0
-    surface_density_profile(r_0i) = 1/(2*PI*r_0)
+    tau = t_0
+
+    do i=1, NB_SAMPLE_PROFILES
+      x = distance_sample(i)/r_0
+      call bessik(2*x/tau,0.25d0,Ix, Kx, Ixp, Kxp)
+            
+      tmp = sigma_prefactor / (tau * x**0.25d0) * exp(-(1.d0 + x**2) / tau) * Ix
+      surface_density_profile(i) = tmp
+    end do
+    
+    ! In some cases, Ix return Infinity. Thus, the surface_density get NaN. To avoid this, we search for NaN and replace by a 0 surface density.
+    where(isnan(surface_density_profile))
+      surface_density_profile = 0.d0
+    end where
+    
+!~     surface_density_profile(1:NB_SAMPLE_PROFILES) = 0.d0
+!~     surface_density_profile(r_0i) = 1/(2*PI*r_0)
     
 !~     ! We store the initial profile of the surface density in a reference file.
 !~     write(filename_density_ref, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',0,'.dat'
@@ -1945,9 +1951,10 @@ end subroutine print_planet_properties
     time_size = 512 ! the size of the array. 
     allocate(time(time_size), stat=error)
     time(1) = t_min * 365.25d0 ! days
-    
-    dissipation_timestep = 0.9d0 * X_SAMPLE_STEP**2 / (4 * nu)
-    nb_dissipation_per_step = int((t_max - t_min) / (max_frames * dissipation_timestep))
+    write(*,*) X_SAMPLE_STEP, get_viscosity(a)
+    dissipation_timestep = 0.9d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(a)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
+    ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
+    nb_dissipation_per_step = int((t_max - t_min)* 365.25d0 / (max_frames * dissipation_timestep))
     
     ! if the effective number of timestep is less than the max allowed, then we force to have at least one dissipation timestep 
     ! at each value of 'k' 
@@ -1956,15 +1963,20 @@ end subroutine print_planet_properties
     end if
     
     do while (time(k).lt.(t_max*365.d0))
-    
-    
+      ! We open the file where we want to write the outputs
+      write(filename_density, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',k,'.dat'    
+      
+      ! we store in a .dat file the temperature profile
+      call store_density_profile(filename=filename_density)
+      
+      if (k.eq.1) then
+        ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
+        density_min = minval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
+        density_max = maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
+      end if
+      
       ! We calculate the temperature profile for the current time (because the surface density change in function of time)
       
-      ! We open the file where we want to write the outputs
-      write(filename_density, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',k,'.dat'
-      
-      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
-      ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
       
       ! we get the new dissipated surface density profile. For that goal, we dissipate as many times as needed to reach the required time for the next frame.
       do i=1,nb_dissipation_per_step
@@ -1987,16 +1999,8 @@ end subroutine print_planet_properties
       write(*,purcent_format) int(time(k)/365.25d0, kind=8), int(t_max, kind=8) ! We display on the screen how far we are from the end of the integration.
       
       
-      time(k+1) = time(k) + dfloat(nb_dissipation_per_step) * dissipation_timestep * 365.25d0 ! days
+      time(k+1) = time(k) + dfloat(nb_dissipation_per_step) * dissipation_timestep ! days
       
-      ! we store in a .dat file the temperature profile
-      call store_density_profile(filename=filename_density)
-      
-      if (k.eq.1) then
-        ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
-        density_min = minval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
-        density_max = maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
-      end if
       
       k = k + 1 ! We increment the integer that point the time in the array (since it's a 'while' and not a 'do' loop)
     end do
@@ -2011,7 +2015,7 @@ end subroutine print_planet_properties
     write(13,*) 'set xlabel "distance (adim)"'
     write(13,*) 'set ylabel "Surface density (g/cm^2)"'
     write(13,*) 'set grid'
-    write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS/r_0, ':', OUTER_BOUNDARY_RADIUS/r_0, ']'
+    write(13,*) 'set xrange [', 0, ':', 2, ']'
     write(13,*) 'set yrange [', density_min, ':', density_max, ']'
     
     do k=1, nb_time
