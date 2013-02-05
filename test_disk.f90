@@ -48,41 +48,40 @@ program test_disk
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
     ! Note that the initial density profile and temperature profile are calculated inside the 'init_globals' routine.
 
-!~     ! We force the value to be interesting for our tests
-!~     TORQUE_TYPE = 'tanh_indep' ! 'real', 'linear_indep', 'tanh_indep', 'mass_dependant', 'manual'
     
-    ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
-    call study_torques(stellar_mass)
-    
-    ! we store in a .dat file the temperature profile
-    call store_temperature_profile(filename='temperature_profile.dat')
-    call store_density_profile(filename='density_profile.dat')
-    call store_scaleheight_profile()
-    
-    ! Unitary tests
-    call test_functions_FGK()
-    call test_function_zero_temperature(stellar_mass=stellar_mass)
-    call test_temperature_interpolation()
-    call test_manual_torque_interpolation()
-    call test_density_interpolation()
-    call test_retrieval_of_orbital_elements(stellar_mass=stellar_mass)
-!~     call test_turbulence_torque(stellar_mass=stellar_mass)
-    call test_turbulence_mode()
-
-    
-    ! Physical values and plots
-    call study_opacity_profile()
-    call study_torques_fixed_a(stellar_mass=stellar_mass)
-    call study_torques_fixed_m(stellar_mass=stellar_mass)
-    call study_ecc_corot(stellar_mass=stellar_mass)
-    call study_eccentricity_effect_on_corotation(stellar_mass=stellar_mass)
-    call study_temperature_profile()
-    call study_optical_depth_profile()
-    call study_thermal_diffusivity_profile()
-    call study_scaleheight_profile()
-    call study_dissipation_at_one_location()
+!~     ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
+!~     call study_torques(stellar_mass)
+!~     
+!~     ! we store in a .dat file the temperature profile
+!~     call store_temperature_profile(filename='temperature_profile.dat')
+!~     call store_density_profile(filename='density_profile.dat')
+!~     call store_scaleheight_profile()
+!~     
+!~     ! Unitary tests
+!~     call test_functions_FGK()
+!~     call test_function_zero_temperature(stellar_mass=stellar_mass)
+!~     call test_temperature_interpolation()
+!~     call test_manual_torque_interpolation()
+!~     call test_density_interpolation()
+!~     call test_retrieval_of_orbital_elements(stellar_mass=stellar_mass)
+!~ !     call test_turbulence_torque(stellar_mass=stellar_mass)
+!~     call test_turbulence_mode()
+!~ 
+!~     
+!~     ! Physical values and plots
+!~     call study_opacity_profile()
+!~     call study_torques_fixed_a(stellar_mass=stellar_mass)
+!~     call study_torques_fixed_m(stellar_mass=stellar_mass)
+!~     call study_ecc_corot(stellar_mass=stellar_mass)
+!~     call study_eccentricity_effect_on_corotation(stellar_mass=stellar_mass)
+!~     call study_temperature_profile()
+!~     call study_optical_depth_profile()
+!~     call study_thermal_diffusivity_profile()
+!~     call study_scaleheight_profile()
+!~     call study_dissipation_at_one_location()
     
     ! Test dissipation
+    ! EVERYTHING ABOVE MUST BE COMMENTED BEFORE DECOMMENTING 'ONE' AND ONE ALONE OF THESES ONES
 !~     call test_viscous_dissipation()
 !~     call test_disk_dissipation()
     call study_influence_of_dissipation_on_torque(stellar_mass)
@@ -527,6 +526,7 @@ program test_disk
     character(len=80) :: filename_density, filename_density_ref
     character(len=80) :: output_density, output_time, time_format, purcent_format
     integer :: time_length ! the length of the displayed time, usefull for a nice display
+    real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
     
     ! For the definition of the diffusion function
     real(double_precision) :: r_0 = 50.d0 ! position of the dirac function (in AU)
@@ -548,6 +548,8 @@ program test_disk
     real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
     !------------------------------------------------------------------------------
     write(*,*) 'Test viscous dissipation of the disk'
+    
+    write(*,*) '  /!\ No other test can be done before this one because initialisation must be perfect and not modified.'
     
     ! we force the dissipation type 
     DISSIPATION_TYPE = 1
@@ -762,6 +764,8 @@ program test_disk
     logical :: isDefined
     !------------------------------------------------------------------------------
     write(*,*) 'Test dissipation of the disk'
+    
+    write(*,*) '  /!\ No other test can be done before this one because initialisation must be perfect and not modified.'
     
     inquire(file='unitary_tests/dissipation', exist=isDefined)
     
@@ -2078,12 +2082,16 @@ program test_disk
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total torque during the dissipation of the disk'
     
+    write(*,*) '  /!\ No other test can be done before this one because initialisation must be perfect and not modified.'
+    
     inquire(file='dissipation', exist=isDefined)
     
     ! We create the folder 'dissipation' if he doesn't exists.
     if (.not.isDefined) then
       call system("mkdir dissipation")
     end if
+    
+    call system("rm dissipation/*")
     
     position(:) = 0.d0
     velocity(:) = 0.d0
@@ -2101,7 +2109,7 @@ program test_disk
     
     ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
     density_min = 0.
-    density_max = maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
+    density_max = maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * SIGMA_NUM2CGS
 
     
 !~     call system("rm dissipation/*")
@@ -2155,9 +2163,13 @@ program test_disk
       end if
       
       write(*,purcent_format) int(time(k)/365.25d0), int(t_max)
+      write(*,*) k, time(k)/365.25d0
       
-      
-      time(k+1) = time(k) + dissipation_timestep * 365.25d0 ! days
+      if (.not.disk_effect) then
+        next_dissipation_step = t_max * 365.d0
+      end if
+
+      time(k+1) = next_dissipation_step ! days
       ! we get the temperature profile.
       call calculate_temperature_profile()
       
