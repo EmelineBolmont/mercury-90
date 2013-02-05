@@ -6,7 +6,8 @@ module user_module
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
-  
+  use types_numeriques
+
   private
   
   public :: mfo_user
@@ -36,7 +37,6 @@ subroutine mfo_user (time,jcen,nbod,nbig,m,x,v,a)
   !
   use physical_constant
   use mercury_constant  
-  use types_numeriques
 
   implicit none
 
