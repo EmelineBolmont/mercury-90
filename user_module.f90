@@ -24,9 +24,8 @@ module user_module
   real(double_precision), parameter :: sigma_index = 0.5! the negative slope of the surface density power law (alpha in the paper)
   real(double_precision), parameter :: sigma_0_num = sigma_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
   
-  ! Here we define the power law for viscosity viscosity(R) = viscosity_0 * R^(sigma_index-1/2)
-  real(double_precision), parameter :: viscosity_0 = 1.d15 ! the viscosity of the disk at (R=1AU) [cm^2.s^-1]
-  real(double_precision), parameter :: viscosity_0_num = viscosity_0 * DAY / AU**2 ! the viscosity of the disk at (R=1AU) [AU^2.day^-1]
+  ! Here we define the power law for viscosity viscosity(R) = alpha * c_s * H
+  real(double_precision), parameter :: alpha = 0.005 ! alpha parameter for an alpha prescription of the viscosity [No dim]
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
   real(double_precision), parameter :: temperature_0 = 150. ! the temperature at (R=1AU) [K]
@@ -185,10 +184,10 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
   ! We get semi_major_axis, radius_p and vel_squared
   call mco_x2a (gm,position(1), position(2), position(3), velocity(1),velocity(2), velocity(3),semi_major_axis,radius_p,vel_squared)
   
+  
   !------------------------------------------------------------------------------
   sigma_p = sigma_0_num / radius_p ** sigma_index ! [N.U.]
   temperature_p = temperature_0 / radius_p**temperature_index ! [K]
-  nu_p = viscosity_0_num * radius_p**(sigma_index - 0.5d0)
   
   velocity_p = sqrt(vel_squared)
   omega_p = sqrt(gm / (semi_major_axis * semi_major_axis * semi_major_axis)) ! [day-1]
@@ -197,7 +196,9 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
   ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
   scaleheight_p = scaleheight_prefactor * sqrt(temperature_p) / omega_p
   !------------------------------------------------------------------------------
+  nu_p = alpha * omega_p * scaleheight_p**2 ! [AU^2.day-1]
   aspect_ratio_p = scaleheight_p / radius_p
+    write(*,*) nu_p * AU**2 / DAY 
   !------------------------------------------------------------------------------
   bulk_density_p = 0.5d0 * sigma_p / scaleheight_p
   !------------------------------------------------------------------------------
