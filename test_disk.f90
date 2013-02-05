@@ -718,7 +718,7 @@ program test_disk
     ! Gnuplot script to output the frames of the density
     write(filename_density_ref, '(a)') 'theoritical_dissipation.dat'
     open(13, file="unitary_tests/dissipation/density.gnuplot")
-    write(13,*) "set terminal pngcairo enhanced size 800, 600"
+    write(13,*) "set terminal pngcairo enhanced size 800, 600 font ',20'"
     write(13,*) 'set xlabel "distance (adim)"'
     write(13,*) 'set ylabel "Surface density (g/cm^2)"'
     write(13,*) 'set grid'
@@ -871,7 +871,7 @@ program test_disk
     ! Gnuplot script to output the frames of the density
     write(filename_density_ref, '(a)') 'theoritical_dissipation.dat'
     open(13, file="unitary_tests/dissipation/density.gnuplot")
-    write(13,*) "set terminal pngcairo enhanced size 800, 600"
+    write(13,*) "set terminal pngcairo enhanced size 800, 600 font ',20'"
     write(13,*) 'set xlabel "distance (AU)"'
     write(13,*) 'set ylabel "Surface density (g/cm^2)"'
     write(13,*) 'set grid'
@@ -1872,7 +1872,7 @@ program test_disk
     open(14, file="unitary_tests/ref_torque.gnuplot")
 
     do j=10,14
-      write(j,*) "set terminal pngcairo crop enhanced size 1200, 1000"
+      write(j,*) "set terminal pngcairo crop enhanced size 1200, 1000 font ',20'"
     end do
     
     write(10,*) "set output 'corotation_torque.png'"
@@ -2261,7 +2261,7 @@ program test_disk
     !------------------------------------------------------------------------------
     ! Gnuplot script to output the frames of the total torque
     open(11, file="dissipation/total_torque.gnuplot")
-    write(11,*) "set terminal pngcairo enhanced size 1024, 768"
+    write(11,*) "set terminal pngcairo enhanced size 1024, 768 font ',20'"
     write(11,*) 'set xlabel "semi major axis (AU)"'
     write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
     write(11,*) 'set pm3d map'
@@ -2292,7 +2292,7 @@ program test_disk
     ! Gnuplot script to output the frames of the temperature profile
     write(filename_temperature_ref, '(a,i0.5,a)') 'temperature',0,'.dat'
     open(12, file="dissipation/temperature.gnuplot")
-    write(12,*) "set terminal pngcairo enhanced size 1024, 768"
+    write(12,*) "set terminal pngcairo enhanced size 1024, 768 font ',20'"
     write(12,*) 'set xlabel "semi major axis (AU)"'
     write(12,*) 'set ylabel "Temperature (K)"'
     write(12,*) 'set mxtics 10'
@@ -2320,7 +2320,7 @@ program test_disk
     write(filename_density_ref, '(a,i0.5,a)') 'surface_density',0,'.dat'
     ! Gnuplot script to output the frames of the density
     open(13, file="dissipation/density.gnuplot")
-    write(13,*) "set terminal pngcairo enhanced size 1024, 768"
+    write(13,*) "set terminal pngcairo enhanced size 1024, 768 font ',20'"
     write(13,*) 'set xlabel "semi major axis (AU)"'
     write(13,*) 'set ylabel "Surface density (g/cm^2)"'
     write(13,*) 'set grid'
