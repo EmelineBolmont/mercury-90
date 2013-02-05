@@ -57,9 +57,9 @@ module disk
   real(double_precision), dimension(:), allocatable :: tau_profile ! optical depth 
   
   real(double_precision), dimension(:), allocatable :: torque_profile ! The torque profile of the disk, if the option 'manual' is specified for the type of the torque
-	
-	logical :: disk_effect = .true. ! When false, we consider there is no disk anymore.
-	
+  
+  logical :: disk_effect = .true. ! When false, we consider there is no disk anymore.
+  
   contains
 
 subroutine get_parameter_value(line, isParameter, id, value)
@@ -102,7 +102,7 @@ subroutine get_parameter_value(line, isParameter, id, value)
     first_character = line(id_first_char:id_first_char)
     do while (first_character.eq.' ')
       id_first_char = id_first_char +1
-			first_character = line(id_first_char:id_first_char)
+      first_character = line(id_first_char:id_first_char)
     end do
     value = line(id_first_char:)
   else
@@ -180,19 +180,19 @@ subroutine read_disk_properties()
             IS_MANUAL_SURFACE_DENSITY = .true.
           case default
             IS_MANUAL_SURFACE_DENSITY = .false.
-						read(value, *) INITIAL_SIGMA_0, INITIAL_SIGMA_INDEX
-					end select
+            read(value, *) INITIAL_SIGMA_0, INITIAL_SIGMA_INDEX
+          end select
         
         case('is_irradiation')
           read(value, *) boolean
           if (boolean.eq.1) then
-						IS_IRRADIATION = .True.
+            IS_IRRADIATION = .True.
           else if (boolean.eq.0) then
-						IS_IRRADIATION = .False.
+            IS_IRRADIATION = .False.
           else
-						write(*,*) "Warning: An unknown value for identificator='", trim(identificator), " has been found'"
-						write(*,*) "         value(s)='", trim(value),"'"
-					end if
+            write(*,*) "Warning: An unknown value for identificator='", trim(identificator), " has been found'"
+            write(*,*) "         value(s)='", trim(value),"'"
+          end if
         
         case('opacity_type')
           read(value, *) OPACITY_TYPE
@@ -270,15 +270,15 @@ subroutine read_disk_properties()
         case('is_turbulence')
           read(value, *) boolean
           if (boolean.eq.1) then
-						IS_TURBULENCE = .True.
+            IS_TURBULENCE = .True.
           else if (boolean.eq.0) then
-						IS_TURBULENCE = .False.
+            IS_TURBULENCE = .False.
           else
-						write(*,*) "Warning: An unknown value for identificator='", trim(identificator), " has been found'"
-						write(*,*) "         value(s)='", trim(value),"'"
-					end if
-				case('turbulent_forcing')
-					read(value,*) TURBULENT_FORCING
+            write(*,*) "Warning: An unknown value for identificator='", trim(identificator), " has been found'"
+            write(*,*) "         value(s)='", trim(value),"'"
+          end if
+        case('turbulent_forcing')
+          read(value,*) TURBULENT_FORCING
 
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
@@ -301,26 +301,26 @@ subroutine read_disk_properties()
     end if
     
     if (DISSIPATION_TYPE.eq.3) then
-			! problem is we want the exponential decay for viscous dissipation to be set if dissipation_type equal to 3
-			if (TAU_VISCOUS.lt.0.d0) then
-				write(error_unit,*) 'Error: since dissipation_type=3, "r_viscous" is expected to be set.'
-				call exit(7)
-			end if
-			
-			! problem is we want the exponential decay for photoevaporation to be set if dissipation_type equal to 3
-			if (TAU_PHOTOEVAP.lt.0.d0) then
-				write(error_unit,*) 'Error: since dissipation_type=3, "r_photoevap" is expected to be set.'
-				call exit(7)
-			end if
-			
-			! problem is we want the exponential decay for photoevaporation to be set if dissipation_type equal to 3
-			if (DISSIPATION_TIME_SWITCH.lt.0.d0) then
-				write(error_unit,*) 'Error: since dissipation_type=3, "PHOTOEVAP_MASSLOSS" is expected to be set.'
-				call exit(7)
-			end if
-			
-			! We initialize TAU_DISSIPATION for the first phase of dissipation of this mixed dissipation
-			TAU_DISSIPATION = TAU_VISCOUS
+      ! problem is we want the exponential decay for viscous dissipation to be set if dissipation_type equal to 3
+      if (TAU_VISCOUS.lt.0.d0) then
+        write(error_unit,*) 'Error: since dissipation_type=3, "r_viscous" is expected to be set.'
+        call exit(7)
+      end if
+      
+      ! problem is we want the exponential decay for photoevaporation to be set if dissipation_type equal to 3
+      if (TAU_PHOTOEVAP.lt.0.d0) then
+        write(error_unit,*) 'Error: since dissipation_type=3, "r_photoevap" is expected to be set.'
+        call exit(7)
+      end if
+      
+      ! problem is we want the exponential decay for photoevaporation to be set if dissipation_type equal to 3
+      if (DISSIPATION_TIME_SWITCH.lt.0.d0) then
+        write(error_unit,*) 'Error: since dissipation_type=3, "PHOTOEVAP_MASSLOSS" is expected to be set.'
+        call exit(7)
+      end if
+      
+      ! We initialize TAU_DISSIPATION for the first phase of dissipation of this mixed dissipation
+      TAU_DISSIPATION = TAU_VISCOUS
     end if
     
   else
@@ -357,7 +357,7 @@ subroutine read_paramin(timestep)
   
   inquire(file='param.in', exist=isDefined)
   if (isDefined) then
-		j = 0
+    j = 0
     open(10, file='param.in', status='old')
     
     do
@@ -371,10 +371,10 @@ subroutine read_paramin(timestep)
       end if
       
       if (j.eq.5) then
-				call get_parameter_value(line, isParameter, identificator, value)
-				
-				read(value, *) timestep
-						
+        call get_parameter_value(line, isParameter, identificator, value)
+        
+        read(value, *) timestep
+            
 
       end if
     end do
@@ -406,7 +406,7 @@ subroutine write_disk_properties()
 ! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
 ! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
 
-	use git_infos
+  use git_infos
 
   implicit none
   
@@ -415,18 +415,18 @@ subroutine write_disk_properties()
   
   
   
-	call read_paramin(timestep) 
-	! below this limit, with this timestep, an orbit will only contain 10 timestep or less, whiis not accurate.
-	distance_accuracy = (10. * timestep / 365.25)**TWOTHIRD 
+  call read_paramin(timestep) 
+  ! below this limit, with this timestep, an orbit will only contain 10 timestep or less, whiis not accurate.
+  distance_accuracy = (10. * timestep / 365.25)**TWOTHIRD 
   
   open(10, file='disk.out')
   if (distance_accuracy.gt.INNER_BOUNDARY_RADIUS) then
-		write(10,'(a)') '------------------------------------'
-		write(10,'(a)') '|         /!\  WARNING /!\         |'
-		write(10,'(a)') '------------------------------------'
-		write(10,'(a,f3.1,a)') 'timestep = ',timestep, ' days'
-		write(10,'(a,f5.2,a)') '  with this timestep, the simulation will not be accurate below', distance_accuracy, ' AU'
-		write(10,'(a,f6.1,a)') '  which is greater than the inner edge of the gas disk : ', INNER_BOUNDARY_RADIUS, ' AU'
+    write(10,'(a)') '------------------------------------'
+    write(10,'(a)') '|         /!\  WARNING /!\         |'
+    write(10,'(a)') '------------------------------------'
+    write(10,'(a,f3.1,a)') 'timestep = ',timestep, ' days'
+    write(10,'(a,f5.2,a)') '  with this timestep, the simulation will not be accurate below', distance_accuracy, ' AU'
+    write(10,'(a,f6.1,a)') '  which is greater than the inner edge of the gas disk : ', INNER_BOUNDARY_RADIUS, ' AU'
   end if
   write(10,'(a)') '------------------------------------'
   write(10,'(a)') '|       Mercury Properties         |'
@@ -445,21 +445,21 @@ subroutine write_disk_properties()
   write(10,'(a,es10.1e2,a)') 'viscosity = ', viscosity, ' (cm^2/s)'
   write(10,'(a, a)', advance='no') 'opacity type = ', trim(OPACITY_TYPE)
   select case(OPACITY_TYPE)
-		case('bell')
-			write(10,'(a)') ' (Opacity table from (Bell & Lin, 1994))'
-		
-		! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-		case('zhu')
-			write(10,'(a)') ' (Opacity table from (Zhu & Hartmann, 2009))'
+    case('bell')
+      write(10,'(a)') ' (Opacity table from (Bell & Lin, 1994))'
+    
+    ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+    case('zhu')
+      write(10,'(a)') ' (Opacity table from (Zhu & Hartmann, 2009))'
     
     case('chambers') !
-			write(10,'(a)') ' (Opacity table from (Chambers, 2009))'
-		
-		case default
-			write(10,'(a)') '/!\ \nWarning: The opacity rule cannot be found.'
-			write(10,'(a,a)') '  Given value : ', trim(OPACITY_TYPE)
-			write(10,'(a)') '  Values possible : zhu ; bell ; chambers'
-	end select
+      write(10,'(a)') ' (Opacity table from (Chambers, 2009))'
+    
+    case default
+      write(10,'(a)') '/!\ \nWarning: The opacity rule cannot be found.'
+      write(10,'(a,a)') '  Given value : ', trim(OPACITY_TYPE)
+      write(10,'(a)') '  Values possible : zhu ; bell ; chambers'
+  end select
   write(10,*) ''
   write(10,'(a,l,a)') 'is turbulence = ', IS_TURBULENCE, ' (T:True;F:False)'
   if (IS_TURBULENCE) then
@@ -492,32 +492,32 @@ subroutine write_disk_properties()
   write(10,'(a)') 'Possible values : &
   0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile'
   write(10,'(a,i1)') 'dissipation of the disk = ',DISSIPATION_TYPE
-	select case(DISSIPATION_TYPE)
-		case(0) 
-			write(10,'(a)') '  0 : no dissipation of the density profile.'
-		
-		case(1) 
-			write(10,'(a)') '  1 : viscous dissipation of the surface density profile'
-			write(10,'(a)') "    Possible values : 'open', 'closed'"
-			write(10,'(a, a)') '    inner boundary condition = ', trim(INNER_BOUNDARY_CONDITION)
-			write(10,'(a, a)') '    outer boundary condition = ', trim(OUTER_BOUNDARY_CONDITION)
-		
-		case(2) 
-			write(10,'(a)') '  2 : Exponential decay of the surface density profile (no modification of the steepness though'
-			write(10,'(a,es10.1e2,a)') '    characteristic time for decay = ',TAU_DISSIPATION, 'years'
-		
-		case(3)
-			write(10,'(a)') '  3 : mixed dissipation, both viscously and with photoevaporation, with two timescales'
-			write(10,'(a,es8.1e2,a)') '    characteristic time for viscous decay = ',TAU_VISCOUS, ' years'
-			write(10,'(a,es8.1e2,a)') '    characteristic time for photoevaporation decay = ',TAU_PHOTOEVAP, ' years'
-			write(10,'(a,es8.1e2,a)') '    switch time from viscous to photoevap = ', &
-			                            DISSIPATION_TIME_SWITCH, ' years'
+  select case(DISSIPATION_TYPE)
+    case(0) 
+      write(10,'(a)') '  0 : no dissipation of the density profile.'
+    
+    case(1) 
+      write(10,'(a)') '  1 : viscous dissipation of the surface density profile'
+      write(10,'(a)') "    Possible values : 'open', 'closed'"
+      write(10,'(a, a)') '    inner boundary condition = ', trim(INNER_BOUNDARY_CONDITION)
+      write(10,'(a, a)') '    outer boundary condition = ', trim(OUTER_BOUNDARY_CONDITION)
+    
+    case(2) 
+      write(10,'(a)') '  2 : Exponential decay of the surface density profile (no modification of the steepness though'
+      write(10,'(a,es10.1e2,a)') '    characteristic time for decay = ',TAU_DISSIPATION, 'years'
+    
+    case(3)
+      write(10,'(a)') '  3 : mixed dissipation, both viscously and with photoevaporation, with two timescales'
+      write(10,'(a,es8.1e2,a)') '    characteristic time for viscous decay = ',TAU_VISCOUS, ' years'
+      write(10,'(a,es8.1e2,a)') '    characteristic time for photoevaporation decay = ',TAU_PHOTOEVAP, ' years'
+      write(10,'(a,es8.1e2,a)') '    switch time from viscous to photoevap = ', &
+                                  DISSIPATION_TIME_SWITCH, ' years'
 
-		case default
-			write(10,'(a)') 'Warning: The dissipation type cannot be found.'
-			write(10,'(a,a,a)') 'Given value : "', DISSIPATION_TYPE, '"'
-			write(10,'(a)') 'Values possible : 0 ; 1 ; 2 ; 3'
-	end select
+    case default
+      write(10,'(a)') 'Warning: The dissipation type cannot be found.'
+      write(10,'(a,a,a)') 'Given value : "', DISSIPATION_TYPE, '"'
+      write(10,'(a)') 'Values possible : 0 ; 1 ; 2 ; 3'
+  end select
   
   write(10,*) ''
   write(10,'(a)') '------------------------------------'
@@ -531,41 +531,41 @@ subroutine write_disk_properties()
   write(10,*) ''
   write(10,'(a)') "Possible values : 'real', 'mass_independant', 'linear_indep', 'tanh_indep'"
   write(10,'(a, a)') 'torque type = ', trim(TORQUE_TYPE)
-	select case(TORQUE_TYPE)
-		case('real') ! The normal torque profile, calculated form properties of the disk
-			write(10,'(a)') '  real : The torque profile is computed from the formulae of (Paardekooper, 2011)'
-		
-		! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-		case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
-			write(10,'(a)') '  linear_indep : manual torque profile with a mass independant convergence zone and a linear &
-			                &  decrease of the torque in function of the distance to the convergence zone'
-			write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
-			write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
-		
-		case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
-			write(10,'(a)') '  tanh_indep : Mass independant convergence zone with a torque profile that saturate far from the CZ'
-			write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
-			write(10,'(a,f6.1,a)') '    Saturation torque value = ', SATURATION_TORQUE, ' (Gamma_0)'
+  select case(TORQUE_TYPE)
+    case('real') ! The normal torque profile, calculated form properties of the disk
+      write(10,'(a)') '  real : The torque profile is computed from the formulae of (Paardekooper, 2011)'
+    
+    ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+    case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
+      write(10,'(a)') '  linear_indep : manual torque profile with a mass independant convergence zone and a linear &
+                      &  decrease of the torque in function of the distance to the convergence zone'
+      write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
+      write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
+    
+    case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
+      write(10,'(a)') '  tanh_indep : Mass independant convergence zone with a torque profile that saturate far from the CZ'
+      write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
+      write(10,'(a,f6.1,a)') '    Saturation torque value = ', SATURATION_TORQUE, ' (Gamma_0)'
 
-		
-		case('mass_dependant')
-			write(10,'(a)') '  mass_dependant : manual torque profile with a mass dependant convergence zone and a linear &
-			                &  decrease of the torque in function of the distance to the convergence zone'
-			write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
-			write(10,'(a,f6.1,a)') '    minimum mass = ', MASS_DEP_M_MIN, ' (earth mass)'
-			write(10,'(a,f6.1,a)') '    maximum mass = ', MASS_DEP_M_MAX, ' (earth mass)'
-			write(10,'(a,f6.1,a)') '    CZ for minimum mass = ', MASS_DEP_CZ_M_MIN, ' (AU)'
-			write(10,'(a,f6.1,a)') '    CZ for maximum mass = ', MASS_DEP_CZ_M_MAX, ' (AU)'
-		
-		case('manual')
-			write(10,'(a)') '  manual : The torque profile, mass_independant, is read from a torque profile file that contains&
-			                & distance and torque value (in Gamma_0) as two columns'
-			
-		case default
-			write(10,'(a)') 'Warning: The torque rule cannot be found.'
-			write(10,'(a,a)') '  Given value : ', trim(TORQUE_TYPE)
-			write(10,'(a)') '  Values possible : real ; linear_indep ; tanh_indep ; manual'
-	end select
+    
+    case('mass_dependant')
+      write(10,'(a)') '  mass_dependant : manual torque profile with a mass dependant convergence zone and a linear &
+                      &  decrease of the torque in function of the distance to the convergence zone'
+      write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
+      write(10,'(a,f6.1,a)') '    minimum mass = ', MASS_DEP_M_MIN, ' (earth mass)'
+      write(10,'(a,f6.1,a)') '    maximum mass = ', MASS_DEP_M_MAX, ' (earth mass)'
+      write(10,'(a,f6.1,a)') '    CZ for minimum mass = ', MASS_DEP_CZ_M_MIN, ' (AU)'
+      write(10,'(a,f6.1,a)') '    CZ for maximum mass = ', MASS_DEP_CZ_M_MAX, ' (AU)'
+    
+    case('manual')
+      write(10,'(a)') '  manual : The torque profile, mass_independant, is read from a torque profile file that contains&
+                      & distance and torque value (in Gamma_0) as two columns'
+      
+    case default
+      write(10,'(a)') 'Warning: The torque rule cannot be found.'
+      write(10,'(a,a)') '  Given value : ', trim(TORQUE_TYPE)
+      write(10,'(a)') '  Values possible : real ; linear_indep ; tanh_indep ; manual'
+  end select
 
 
   write(10,*) ''
@@ -639,11 +639,11 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
 
-!~ 	if (abs(p_prop%radius-p_prop%semi_major_axis)/p_prop%radius.gt.1e-2) then
-!~ 		write(*,'(a,es10.1e2,a,es10.1e2,a)') 'r = ', p_prop%radius, ' (AU) and a = ', p_prop%semi_major_axis, ' (AU)'
-!~ 		call print_planet_properties(p_prop) 
-!~ 		stop
-!~ 	end if
+!~   if (abs(p_prop%radius-p_prop%semi_major_axis)/p_prop%radius.gt.1e-2) then
+!~     write(*,'(a,es10.1e2,a,es10.1e2,a)') 'r = ', p_prop%radius, ' (AU) and a = ', p_prop%semi_major_axis, ' (AU)'
+!~     call print_planet_properties(p_prop) 
+!~     stop
+!~   end if
   !------------------------------------------------------------------------------
 !~   p_prop%chi = 1.d-5 * p_prop%radius**2 * p_prop%omega ! comment if you want to use the thermal diffusivity calculated from the temperature profile
   
@@ -662,17 +662,17 @@ get_scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(temperature) / angular_speed
 end function get_scaleheight
 
 function get_corotation_damping(e, x_s)
-	! Function that return the prefactor, between 0 and 1, to apply on the corotation torque due to the value of the eccentricity
+  ! Function that return the prefactor, between 0 and 1, to apply on the corotation torque due to the value of the eccentricity
 
-	implicit none
-	real(double_precision), intent(in) :: e
-	real(double_precision), intent(in) :: x_s
-	
-	real(double_precision) :: get_corotation_damping
-	
-	real(double_precision), parameter :: a = 0.45d0
-	real(double_precision), parameter :: b = 3.46d0
-	real(double_precision), parameter :: c = -2.34d0
+  implicit none
+  real(double_precision), intent(in) :: e
+  real(double_precision), intent(in) :: x_s
+  
+  real(double_precision) :: get_corotation_damping
+  
+  real(double_precision), parameter :: a = 0.45d0
+  real(double_precision), parameter :: b = 3.46d0
+  real(double_precision), parameter :: c = -2.34d0
   !------------------------------------------------------------------------------
   
 !~   get_corotation_damping = 1.d0 - dtanh(e / x_s)
@@ -848,26 +848,26 @@ subroutine init_globals(stellar_mass, time)
     disk_effect = .true.
     
     select case(TORQUE_TYPE)
-			case('real') ! The normal torque profile, calculated form properties of the disk
-				get_torques => get_corotation_torque
-			
-			! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-			case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
-				get_torques => get_corotation_torque_linear_indep
-			
-			case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
-				get_torques => get_corotation_torque_tanh_indep
-			
-			case('mass_dependant')
-				get_torques => get_corotation_torque_mass_dep_CZ
-				
-			case('manual')
-				get_torques => get_corotation_torque_manual
-				
-			case default
+      case('real') ! The normal torque profile, calculated form properties of the disk
+        get_torques => get_corotation_torque
+      
+      ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+      case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
+        get_torques => get_corotation_torque_linear_indep
+      
+      case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
+        get_torques => get_corotation_torque_tanh_indep
+      
+      case('mass_dependant')
+        get_torques => get_corotation_torque_mass_dep_CZ
+        
+      case('manual')
+        get_torques => get_corotation_torque_manual
+        
+      case default
         write (error_unit,*) 'The torque_type="', TORQUE_TYPE,'" cannot be found.'
-				write(error_unit,*) 'Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
-				write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
+        write(error_unit,*) 'Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
+        write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
         call exit(1)
     end select
     
@@ -878,27 +878,27 @@ subroutine init_globals(stellar_mass, time)
     end if
     
     select case(OPACITY_TYPE)
-			case('bell') ! The normal torque profile, calculated form properties of the disk
-				get_opacity => get_opacity_bell_lin_1994
-			
-			! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-			case('zhu') ! a defined torque profile to get a mass independant convergence zone
-				get_opacity => get_opacity_zhu_2009
-			
+      case('bell') ! The normal torque profile, calculated form properties of the disk
+        get_opacity => get_opacity_bell_lin_1994
+      
+      ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+      case('zhu') ! a defined torque profile to get a mass independant convergence zone
+        get_opacity => get_opacity_zhu_2009
+      
       case('chambers')
         get_opacity => get_opacity_chambers
-				
-			case default
+        
+      case default
         write (error_unit,*) 'The opacity type="', OPACITY_TYPE,'" cannot be found.'
-				write(error_unit,*) 'Values possible : zhu ; bell ; chambers'
-				write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
+        write(error_unit,*) 'Values possible : zhu ; bell ; chambers'
+        write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
         call exit(8)
     end select
     
     
     if (.not.allocated(distance_sample)) then
-			allocate(distance_sample(NB_SAMPLE_PROFILES))
-		end if
+      allocate(distance_sample(NB_SAMPLE_PROFILES))
+    end if
     distance_sample(1:NB_SAMPLE_PROFILES) = 0.d0
     
     if (.not.allocated(x_sample)) then
@@ -914,15 +914,15 @@ subroutine init_globals(stellar_mass, time)
     surface_density_index(1:NB_SAMPLE_PROFILES) = 0.d0
     
     if (.not.allocated(temperature_profile)) then
-			allocate(temperature_profile(NB_SAMPLE_PROFILES))
-			allocate(temp_profile_index(NB_SAMPLE_PROFILES))
+      allocate(temperature_profile(NB_SAMPLE_PROFILES))
+      allocate(temp_profile_index(NB_SAMPLE_PROFILES))
     end if
     temperature_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     temp_profile_index(1:NB_SAMPLE_PROFILES) = 0.d0
     
     if (.not.allocated(chi_profile)) then
-			allocate(chi_profile(NB_SAMPLE_PROFILES))
-			allocate(tau_profile(NB_SAMPLE_PROFILES))
+      allocate(chi_profile(NB_SAMPLE_PROFILES))
+      allocate(tau_profile(NB_SAMPLE_PROFILES))
     end if
     chi_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     tau_profile(1:NB_SAMPLE_PROFILES) = 0.d0
@@ -986,7 +986,7 @@ subroutine init_globals(stellar_mass, time)
     ! turbulence is not always declared, even if we test it.
     ! We only initialize the turbulence if there is no value (which would means that the value was defined in the parameter file 'disk.in'
     if (TURBULENT_FORCING.eq.0.d0) then
-			call init_turbulence_forcing() 
+      call init_turbulence_forcing() 
     end if
     
     if (IS_TURBULENCE) then
@@ -1011,8 +1011,8 @@ subroutine initial_density_profile()
   ! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
   ! INITIAL_SIGMA_INDEX : the negative slope of the surface density power law (alpha in the paper)
   ! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
-	! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
-	! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+  ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+  ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
   ! distance_sample : values of 'a' in AU
   ! surface_density_profile : values of the density in MSUN/AU^2 for each value of the 'a' sample
   ! surface_density_index : values of the local negative slope of the surface density profile
@@ -1038,20 +1038,20 @@ subroutine initial_density_profile()
   logical :: isDefined
 
   ! For loops
-	integer :: i
-	
-	! For the smoothing
-	real(double_precision) :: smoothing
-	integer :: i_smooth ! the maximum index where the smoothing is computed.
-	
+  integer :: i
+  
+  ! For the smoothing
+  real(double_precision) :: smoothing
+  integer :: i_smooth ! the maximum index where the smoothing is computed.
+  
   !------------------------------------------------------------------------------
   
   
   
   if (IS_MANUAL_SURFACE_DENSITY) then
-		filename = 'surface_density_profile.dat'
-		inquire(file=filename, exist=isDefined)
-		if (.not.isDefined) then
+    filename = 'surface_density_profile.dat'
+    inquire(file=filename, exist=isDefined)
+    if (.not.isDefined) then
       filename = 'density_profile.dat'
       inquire(file=filename, exist=isDefined)
       
@@ -1060,9 +1060,9 @@ subroutine initial_density_profile()
            &(and "density_profile.dat" neither).'
         call exit(2)
       end if
-		end if
-		
-		! We get the total lines of the file
+    end if
+    
+    ! We get the total lines of the file
     open(10, file=filename, status='old')
     i = 0
     do
@@ -1077,10 +1077,10 @@ subroutine initial_density_profile()
     
     ! We define the sizes of the arrays
     nb_values = i
-		if (allocated(radius)) then
-			deallocate(radius)
-			deallocate(manual_surface_profile)
-		end if
+    if (allocated(radius)) then
+      deallocate(radius)
+      deallocate(manual_surface_profile)
+    end if
     allocate(radius(nb_values))
     allocate(manual_surface_profile(nb_values))
     
@@ -1093,64 +1093,64 @@ subroutine initial_density_profile()
       
       if(line(1:1).ne.comment_character) then
         i = i + 1
-				read(line, *, iostat=error), radius(i), manual_surface_profile(i)
-			end if
-		end do
-		
-		! We now want to interpolate and have a torque profile that fit the array definitions of our simulation.
-		closest_low_id = 1
-		do i=1,NB_SAMPLE_PROFILES
-			
-			if ((distance_sample(i) .ge. radius(1)) .and. (distance_sample(i) .lt. radius(nb_values))) then
-				! we do not initialize closest_low_id at each step, because the sample is sorted, 
-				! so we know that the id will at least be the one of the previous timestep
-				do while (distance_sample(i).gt.radius(closest_low_id+1))
-					closest_low_id = closest_low_id + 1
-				end do
-				
-				x1 = radius(closest_low_id)
-				x2 = radius(closest_low_id + 1)
-				y1 = manual_surface_profile(closest_low_id)
-				y2 = manual_surface_profile(closest_low_id + 1)
+        read(line, *, iostat=error), radius(i), manual_surface_profile(i)
+      end if
+    end do
+    
+    ! We now want to interpolate and have a torque profile that fit the array definitions of our simulation.
+    closest_low_id = 1
+    do i=1,NB_SAMPLE_PROFILES
+      
+      if ((distance_sample(i) .ge. radius(1)) .and. (distance_sample(i) .lt. radius(nb_values))) then
+        ! we do not initialize closest_low_id at each step, because the sample is sorted, 
+        ! so we know that the id will at least be the one of the previous timestep
+        do while (distance_sample(i).gt.radius(closest_low_id+1))
+          closest_low_id = closest_low_id + 1
+        end do
+        
+        x1 = radius(closest_low_id)
+        x2 = radius(closest_low_id + 1)
+        y1 = manual_surface_profile(closest_low_id)
+        y2 = manual_surface_profile(closest_low_id + 1)
 
-				surface_density_profile(i) = SIGMA_CGS2NUM * (y2 + (y1 - y2) * (distance_sample(i) - x2) / (x1 - x2))
-				surface_density_index(i) = - (log(y2) - log(y1)) / (log(x2) - log(x1))
-			else if (distance_sample(i) .lt. radius(1)) then
-				surface_density_profile(i) = SIGMA_CGS2NUM * manual_surface_profile(1)
-				surface_density_index(i) = - (log(manual_surface_profile(2)) - log(manual_surface_profile(1))) &
+        surface_density_profile(i) = SIGMA_CGS2NUM * (y2 + (y1 - y2) * (distance_sample(i) - x2) / (x1 - x2))
+        surface_density_index(i) = - (log(y2) - log(y1)) / (log(x2) - log(x1))
+      else if (distance_sample(i) .lt. radius(1)) then
+        surface_density_profile(i) = SIGMA_CGS2NUM * manual_surface_profile(1)
+        surface_density_index(i) = - (log(manual_surface_profile(2)) - log(manual_surface_profile(1))) &
                                   / (log(radius(2)) - log(radius(1)))
-			else if (distance_sample(i) .ge. radius(nb_values)) then
-				surface_density_profile(i) = SIGMA_CGS2NUM * manual_surface_profile(nb_values)
-				surface_density_index(i) = - (log(manual_surface_profile(nb_values)) - log(manual_surface_profile(nb_values-1))) &
+      else if (distance_sample(i) .ge. radius(nb_values)) then
+        surface_density_profile(i) = SIGMA_CGS2NUM * manual_surface_profile(nb_values)
+        surface_density_index(i) = - (log(manual_surface_profile(nb_values)) - log(manual_surface_profile(nb_values-1))) &
                                   / (log(radius(nb_values)) - log(radius(nb_values-1)))
-			end if
-		end do
+      end if
+    end do
 
   else
     do i=1,NB_SAMPLE_PROFILES
-			surface_density_profile(i) = INITIAL_SIGMA_0 * SIGMA_CGS2NUM * distance_sample(i)**(-INITIAL_SIGMA_INDEX)
-			surface_density_index(i) = INITIAL_SIGMA_INDEX
-		end do
-		
-		i = 0
-		smoothing = 0.5
-		! We do not allow to modify the last point of the profile (especially to avoid problems with the slope calculation of the profile.)
-		do while ((smoothing.lt.1.d0).and.(i.lt.NB_SAMPLE_PROFILES)) 
-			i = i + 1
-			smoothing = tanh((distance_sample(i) - INNER_BOUNDARY_RADIUS) / (INNER_SMOOTHING_WIDTH * INNER_BOUNDARY_RADIUS))
+      surface_density_profile(i) = INITIAL_SIGMA_0 * SIGMA_CGS2NUM * distance_sample(i)**(-INITIAL_SIGMA_INDEX)
+      surface_density_index(i) = INITIAL_SIGMA_INDEX
+    end do
+    
+    i = 0
+    smoothing = 0.5
+    ! We do not allow to modify the last point of the profile (especially to avoid problems with the slope calculation of the profile.)
+    do while ((smoothing.lt.1.d0).and.(i.lt.NB_SAMPLE_PROFILES)) 
+      i = i + 1
+      smoothing = tanh((distance_sample(i) - INNER_BOUNDARY_RADIUS) / (INNER_SMOOTHING_WIDTH * INNER_BOUNDARY_RADIUS))
       
-			surface_density_profile(i) = smoothing * surface_density_profile(i)
-			if (surface_density_profile(i).eq.0.d0) then
-				surface_density_profile(i) = GROUND_SURFACE_DENSITY * SIGMA_CGS2NUM
-			end if
-		end do
-		i_smooth = i
-		
-		! For the smoothed values, we calculate again the surface density index
-		do i=1, i_smooth
-			surface_density_index(i) = - (log(surface_density_profile(i+1)) - log(surface_density_profile(i))) &
-				                           / (log(distance_sample(i+1)) - log(distance_sample(i)))
-		end do
+      surface_density_profile(i) = smoothing * surface_density_profile(i)
+      if (surface_density_profile(i).eq.0.d0) then
+        surface_density_profile(i) = GROUND_SURFACE_DENSITY * SIGMA_CGS2NUM
+      end if
+    end do
+    i_smooth = i
+    
+    ! For the smoothed values, we calculate again the surface density index
+    do i=1, i_smooth
+      surface_density_index(i) = - (log(surface_density_profile(i+1)) - log(surface_density_profile(i))) &
+                                   / (log(distance_sample(i+1)) - log(distance_sample(i)))
+    end do
   end if
   
 !~   write(*,*) 'Warning: the initial profil is linear for tests of viscous dissipation!'
@@ -1285,7 +1285,7 @@ end subroutine initial_density_profile
     real(double_precision) :: x1, x2, y1, y2
     real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
 
-		!------------------------------------------------------------------------------
+    !------------------------------------------------------------------------------
 
     if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. distance_sample(NB_SAMPLE_PROFILES-1))) then
       
@@ -1676,43 +1676,43 @@ end subroutine initial_density_profile
   !------------------------------------------------------------------------------
   
   select case(DISSIPATION_TYPE)
-		case(1) ! viscous dissipation
-			dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
-			! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
-			next_dissipation_step = time + dissipation_timestep
-			call viscously_dissipate_density_profile(dissipation_timestep)
-		
-		case(2) ! exponential decay
-			! we want 1% variation : timestep = - tau * ln(0.99)
-			dissipation_timestep = 0.01 * TAU_DISSIPATION * 365.25d0
-			next_dissipation_step = time + dissipation_timestep
-			
-			call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
-		
-		case(3) ! both (slow then fast decay)
-			if ((time/365.25).gt.DISSIPATION_TIME_SWITCH) then
-				TAU_DISSIPATION = TAU_PHOTOEVAP
-			end if
-			
-			! we want 1% variation : timestep = - tau * ln(99)
-			dissipation_timestep = 0.01 * TAU_DISSIPATION * 365.25d0
-			next_dissipation_step = time + dissipation_timestep
-			
-			call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
-		case default
+    case(1) ! viscous dissipation
+      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
+      ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
+      next_dissipation_step = time + dissipation_timestep
+      call viscously_dissipate_density_profile(dissipation_timestep)
+    
+    case(2) ! exponential decay
+      ! we want 1% variation : timestep = - tau * ln(0.99)
+      dissipation_timestep = 0.01 * TAU_DISSIPATION * 365.25d0
+      next_dissipation_step = time + dissipation_timestep
+      
+      call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
+    
+    case(3) ! both (slow then fast decay)
+      if ((time/365.25).gt.DISSIPATION_TIME_SWITCH) then
+        TAU_DISSIPATION = TAU_PHOTOEVAP
+      end if
+      
+      ! we want 1% variation : timestep = - tau * ln(99)
+      dissipation_timestep = 0.01 * TAU_DISSIPATION * 365.25d0
+      next_dissipation_step = time + dissipation_timestep
+      
+      call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
+    case default
         write (error_unit,*) 'The dissipation_type="', DISSIPATION_TYPE,'" cannot be found.'
         write (error_unit,*) 'Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay ; &
-						 &3 for mixed exponentiel decay'
-				write(error_unit,'(a)') 'Error in user_module, subroutine dissipate_disk'
+             &3 for mixed exponentiel decay'
+        write(error_unit,'(a)') 'Error in user_module, subroutine dissipate_disk'
         call exit(3)
-						 
+             
 
-	end select
-	
-	! When the surface density is to low, we suppress the dissipation of the disk.
-	if (maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)).lt.(GROUND_SURFACE_DENSITY*SIGMA_CGS2NUM)) then
-		disk_effect = .false.
-	end if
+  end select
+  
+  ! When the surface density is to low, we suppress the dissipation of the disk.
+  if (maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)).lt.(GROUND_SURFACE_DENSITY*SIGMA_CGS2NUM)) then
+    disk_effect = .false.
+  end if
   
   end subroutine dissipate_disk
   
@@ -2552,7 +2552,7 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   !------------------------------------------------------------------------------
   corotation_torque = TORQUE_PROFILE_STEEPNESS * 0.1d0 * ((a * planet_mass + b) - p_prop%radius)
   
-	corotation_torque = corotation_torque - lindblad_torque ! so that we can disable artificially the corotation part of the torque, even if the lindblad torque come from the paardekooper formulae
+  corotation_torque = corotation_torque - lindblad_torque ! so that we can disable artificially the corotation part of the torque, even if the lindblad torque come from the paardekooper formulae
 
 
   return
@@ -2584,11 +2584,11 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
   real(double_precision), intent(out) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
 
   ! Local
-	integer :: closest_low_id ! the index of the first closest lower value of radius regarding the radius value given in parameter of the subroutine. 
-	real(double_precision) :: x1, x2, y1, y2
-	real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
-	real(double_precision) :: Q_p, gamma_eff, lindblad_prefactor
-	
+  integer :: closest_low_id ! the index of the first closest lower value of radius regarding the radius value given in parameter of the subroutine. 
+  real(double_precision) :: x1, x2, y1, y2
+  real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
+  real(double_precision) :: Q_p, gamma_eff, lindblad_prefactor
+  
   ! Properties of the disk at the location of the planet
   real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
   
@@ -2618,29 +2618,29 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
   
   !------------------------------------------------------------------------------
 
-	if ((p_prop%radius .ge. INNER_BOUNDARY_RADIUS) .and. (p_prop%radius .lt. OUTER_BOUNDARY_RADIUS)) then
-		
-		x_radius = 2.d0 * sqrt(p_prop%radius)
-		! in the range
-		closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
-		
-		x1 = distance_sample(closest_low_id)
-		x2 = distance_sample(closest_low_id + 1)
-		y1 = torque_profile(closest_low_id)
-		y2 = torque_profile(closest_low_id + 1)
+  if ((p_prop%radius .ge. INNER_BOUNDARY_RADIUS) .and. (p_prop%radius .lt. OUTER_BOUNDARY_RADIUS)) then
+    
+    x_radius = 2.d0 * sqrt(p_prop%radius)
+    ! in the range
+    closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
+    
+    x1 = distance_sample(closest_low_id)
+    x2 = distance_sample(closest_low_id + 1)
+    y1 = torque_profile(closest_low_id)
+    y2 = torque_profile(closest_low_id + 1)
 
-		corotation_torque = y2 + (y1 - y2) * (p_prop%radius - x2) / (x1 - x2)
-	else if (p_prop%radius .lt. INNER_BOUNDARY_RADIUS) then
-		corotation_torque = torque_profile(1)
-	else if (p_prop%radius .gt. OUTER_BOUNDARY_RADIUS) then
-		corotation_torque = torque_profile(NB_SAMPLE_PROFILES)
-	end if
-	
-	if (corotation_torque.eq.0.d0) then
-	corotation_torque = - lindblad_torque
-	write(*,*) corotation_torque, lindblad_torque
-	else
-	corotation_torque = corotation_torque - lindblad_torque ! so that we can disable artificially the corotation part of the torque, even if the lindblad torque come from the paardekooper formulae
+    corotation_torque = y2 + (y1 - y2) * (p_prop%radius - x2) / (x1 - x2)
+  else if (p_prop%radius .lt. INNER_BOUNDARY_RADIUS) then
+    corotation_torque = torque_profile(1)
+  else if (p_prop%radius .gt. OUTER_BOUNDARY_RADIUS) then
+    corotation_torque = torque_profile(NB_SAMPLE_PROFILES)
+  end if
+  
+  if (corotation_torque.eq.0.d0) then
+  corotation_torque = - lindblad_torque
+  write(*,*) corotation_torque, lindblad_torque
+  else
+  corotation_torque = corotation_torque - lindblad_torque ! so that we can disable artificially the corotation part of the torque, even if the lindblad torque come from the paardekooper formulae
 endif 
 
   return
@@ -2672,20 +2672,20 @@ subroutine read_torque_profile()
   logical :: isDefined
 
   ! For loops
-	integer :: i
-	
+  integer :: i
+  
   !------------------------------------------------------------------------------
   ! We allocate the global variable
   if (.not.allocated(torque_profile)) then
-		allocate(torque_profile(NB_SAMPLE_PROFILES))
-		torque_profile(1:NB_SAMPLE_PROFILES) = 0.d0
-	end if
+    allocate(torque_profile(NB_SAMPLE_PROFILES))
+    torque_profile(1:NB_SAMPLE_PROFILES) = 0.d0
+  end if
   
   filename = 'torque_profile.dat'
   inquire(file=filename, exist=isDefined)
   if (isDefined) then
-		
-		! We get the total lines of the file
+    
+    ! We get the total lines of the file
     open(10, file=filename, status='old')
     i = 0
     do
@@ -2697,43 +2697,43 @@ subroutine read_torque_profile()
     
     ! We define the sizes of the arrays
     nb_values = i
-		if (allocated(radius)) then
-			deallocate(radius)
-			deallocate(torque)
-		end if
+    if (allocated(radius)) then
+      deallocate(radius)
+      deallocate(torque)
+    end if
     allocate(radius(nb_values))
     allocate(torque(nb_values))
     
     ! We get the values of the torque profile in the file
     open(10, file=filename, status='old')
     do i=1, nb_values
-			read(10, *, iostat=error), radius(i), torque(i)
-		end do
-		
-		! We now want to interpolate and have a torque profile that fit the array definitions of our simulation.
-		closest_low_id = 1
-		do i=1,NB_SAMPLE_PROFILES
-			
-			if ((distance_sample(i) .ge. radius(1)) .and. (distance_sample(i) .lt. radius(nb_values))) then
-				! we do not initialize closest_low_id at each step, because the sample is sorted, 
-				! so we know that the id will at least be the one of the previous timestep
-				do while (distance_sample(i).gt.radius(closest_low_id+1))
-					closest_low_id = closest_low_id + 1
-				end do
-				
-				x1 = radius(closest_low_id)
-				x2 = radius(closest_low_id + 1)
-				y1 = torque(closest_low_id)
-				y2 = torque(closest_low_id + 1)
+      read(10, *, iostat=error), radius(i), torque(i)
+    end do
+    
+    ! We now want to interpolate and have a torque profile that fit the array definitions of our simulation.
+    closest_low_id = 1
+    do i=1,NB_SAMPLE_PROFILES
+      
+      if ((distance_sample(i) .ge. radius(1)) .and. (distance_sample(i) .lt. radius(nb_values))) then
+        ! we do not initialize closest_low_id at each step, because the sample is sorted, 
+        ! so we know that the id will at least be the one of the previous timestep
+        do while (distance_sample(i).gt.radius(closest_low_id+1))
+          closest_low_id = closest_low_id + 1
+        end do
+        
+        x1 = radius(closest_low_id)
+        x2 = radius(closest_low_id + 1)
+        y1 = torque(closest_low_id)
+        y2 = torque(closest_low_id + 1)
 
-				torque_profile(i) = y2 + (y1 - y2) * (distance_sample(i) - x2) / (x1 - x2)
-			else if (distance_sample(i) .lt. radius(1)) then
-				torque_profile(i) = torque(1)
-			else if (distance_sample(i) .gt. radius(nb_values)) then
-				torque_profile(i) = torque(nb_values)
-			end if
-		end do
-		
+        torque_profile(i) = y2 + (y1 - y2) * (distance_sample(i) - x2) / (x1 - x2)
+      else if (distance_sample(i) .lt. radius(1)) then
+        torque_profile(i) = torque(1)
+      else if (distance_sample(i) .gt. radius(nb_values)) then
+        torque_profile(i) = torque(nb_values)
+      end if
+    end do
+    
   else
     write (*,*) 'Warning: The file "',filename,'" does not exist. Default values have been used'
   end if
