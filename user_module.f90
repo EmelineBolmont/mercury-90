@@ -139,9 +139,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision), dimension(3) :: eccentricity_acceleration
   real(double_precision) :: inclination_acceleration_z
   
-!~   ! parameters for the simplification. Must be deleted once the real calculation will be used.
-!~   real(double_precision), parameter :: z_c = 7.d0
-!~   real(double_precision), parameter :: torque_at_zero = 3.d0
+!~   integer, dimension(n_bodies) :: calculation_flag=0 ! The calculation will be done only if this flag is equal to 0. Else, nothing will be done.
+
 !~   
 !~   ! modif pour amortissement de e et I
 !~   real(double_precision) :: rad, ang, angold
@@ -159,8 +158,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     acceleration(2,planet) = 0.d0
     acceleration(3,planet) = 0.d0
   end do
-!~   acceleration(:,:) = 0.d0
-!~   eccentricity_acceleration(:) = 0.d0 8might activate this when I turn eccentricity damping off
   !------------------------------------------------------------------------------
   call init_globals(stellar_mass=mass(1))
   
@@ -198,12 +195,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       
       
       time_mig = 0.5d0 * p_prop%angular_momentum / torque
-      
-      ! We have problems if the time of migration is quicker than the time_wave value, used for eccentricity and inclination damping. 
-      ! 
-!~       if (time_mig .lt. (150.d0 * time_wave)) then
-!~         time_wave = 1.d0 / 150.d0 * abs(time_mig)
-!~       end if
       
       migration_acc_prefactor = 1.d0 / time_mig
       
@@ -274,8 +265,10 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   !~     acceleration(1,planet) = migration_acceleration(1) + eccentricity_acceleration(1)
   !~     acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
   !~     acceleration(3,planet) = migration_acceleration(3) + inclination_acceleration_z
-!~ 		write(*,*) p_prop%semi_major_axis, time_mig, time_ecc, time_inc
-      if (isnan(acceleration(1,planet))) then
+
+!~       if (counter.gt.807934) then
+      if ((counter.gt.78400).and.(counter.lt.78500)) then
+!~       if (isnan(acceleration(1,planet))) then
         open(15, file="leak.out", status="old", access="append")
         write(15,*) counter, time, planet, mass(planet)
         write(15,*) 'position:', position(1,planet), position(2,planet), position(3,planet)
@@ -290,30 +283,13 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         write(15,*) 'temperature:', p_prop%temperature, 'bulk_density:', p_prop%bulk_density, 'opacity:', p_prop%opacity
         close(15)
       end if
-
-!~       if (isnan(time_mig)) then
-!~         open(15, file="leak_after.out", status="old", access="append")
-!~         write(15,*) counter, time, planet, mass(planet), position(1,planet), position(2,planet), position(3,planet)
-!~         write(15,*) 'velocity:', velocity(1,planet), velocity(2,planet), velocity(3,planet)
-!~         write(15,*) 'acceleration:', acceleration(1,planet), acceleration(2,planet), acceleration(3,planet)
-!~         close(15)
-!~       end if
     end if
   end do
   
   
-  if (minval(mass(2:n_big_bodies)).lt.TINY) then
-    open(16, file="instant_output.out")
-    write(16,*) ''
-    do planet=2,n_big_bodies
-      write(16,*) time, planet, mass(planet), position(1,planet), position(2,planet), position(3,planet), &
-                  velocity(1,planet), velocity(2,planet), velocity(3,planet), &
-                  acceleration(1,planet), acceleration(2,planet), acceleration(3,planet)
-    end do
-    close(16)
-    stop
-  end if
-!~   stop
+!~   open(15, file="migration_time.out", status="old", access="append")
+!~   write(15,*) time, time_mig, time_ecc, time_inc
+!~   close(15)
   
   !------------------------------------------------------------------------------
   
@@ -479,7 +455,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   ! We calculate the angular momentum
   p_prop%angular_momentum = (mass / K2) * h_p  
   p_prop%velocity = sqrt(velocity2_p) ! [AU/day]
-  p_prop%omega = sqrt(gm / (p_prop%semi_major_axis * p_prop%semi_major_axis * p_prop%semi_major_axis)) ! [day-1]
+  p_prop%omega = sqrt(gm / (p_prop%radius**3)) ! [day-1]
   
   !------------------------------------------------------------------------------
   ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
@@ -604,6 +580,9 @@ subroutine init_globals(stellar_mass)
     open(15, file="leak.out", status="replace")
     write(15,*) "various data for debuguing that are output when the acceleration get NaN in mfo_user"
     close(15)
+!~     open(15, file="migration_time.out", status="replace")
+!~     write(15,*) "# The migration time in days, to be compared with real migration time mesured on the plot."
+!~     close(15)
     
     x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
 
@@ -619,6 +598,7 @@ subroutine init_globals(stellar_mass)
         
     torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
     torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
+    
     
   !~   write(*,*) 'Warning: il y a un offset au couple de corotation'
 !~     write(*,*) 'Warning: h est fixé à 0.05'
