@@ -44,6 +44,14 @@ program test_disk
       call system("mkdir unitary_tests")
     end if
     
+    inquire(file='disk.out', exist=isDefined)
+    
+    ! This file is used to say if we continue an integration or not. For test_disk, 
+    ! we DO NOT continue an integration, so to avoid it, we delete the file if it exist.
+    if (isDefined) then
+      call system("rm disk.out")
+    end if
+    
     write(*,*) 'Initialisation'
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
     ! Note that the initial density profile and temperature profile are calculated inside the 'init_globals' routine.
@@ -84,7 +92,7 @@ program test_disk
     ! EVERYTHING ABOVE MUST BE COMMENTED BEFORE DECOMMENTING 'ONE' AND ONE ALONE OF THESES ONES
 !~     call test_viscous_dissipation(stellar_mass)
 !~     call test_disk_dissipation(stellar_mass)
-    call study_influence_of_dissipation_on_torque(stellar_mass)
+!~     call study_influence_of_dissipation_on_torque(stellar_mass)
 
     
   end subroutine unitary_tests
