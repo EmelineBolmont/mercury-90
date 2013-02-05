@@ -52,7 +52,7 @@ module user_module
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
   character(len=80) :: INNER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
   character(len=80) :: OUTER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
-  
+  character(len=80) :: TORQUE_TYPE = 'real' ! values possible to change the properties of the torque. 'real', 'mass_independant', 'mass_dependant'
   ! Here we define the constant value of the viscosity of the disk
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s]
   
@@ -192,21 +192,24 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   ! The first 'next_dissipation_step' is set to '-1' to force the calculation for the first timestep. In fact, the first timestep will be done fornothing, but we need this in order to have a clean code.
   if (DISSIPATION_TYPE.ne.0) then
     if (time.gt.next_dissipation_step) then
-      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
-      ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
-      next_dissipation_step = time + dissipation_timestep
-      
       ! we get the density profile.
       select case(DISSIPATION_TYPE)
-        case(1)
+        case(1) ! viscous dissipation
+          dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
+          ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
+          next_dissipation_step = time + dissipation_timestep
           call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
         
-        case(2)
+        case(2) ! exponential decay
+          ! we want 1% variation : timestep = - tau * ln(1e-2)
+          dissipation_timestep = 4.6 * TAU_DISSIPATION
+          next_dissipation_step = time + dissipation_timestep
+          
           call exponential_decay_density_profile()
           
         case default
           write(*,*) 'Warning: The dissipation rule cannot be found.'
-          write(*,*) 'Given value :',DISSIPATION_TYPE
+          write(*,*) 'Given value :', DISSIPATION_TYPE
       end select
       
       ! we get the temperature profile.
@@ -240,8 +243,24 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to migration
-      call get_corotation_torque_mass_indep_CZ(mass(1), mass(planet), p_prop, & ! input
-      corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+      select case(TORQUE_TYPE)
+        case('real') ! The normal torque profile, calculated form properties of the disk
+          call get_corotation_torque(mass(1), mass(planet), p_prop, & ! input
+          corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+        
+        case('mass_independant') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_mass_indep_CZ(mass(1), mass(planet), p_prop, & ! input
+          corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+        
+        case('mass_dependant')
+          call get_corotation_torque_mass_dep_CZ(mass(1), mass(planet), p_prop, & ! input
+          corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+          
+        case default
+          write(*,*) 'Warning: The torque rule cannot be found.'
+          write(*,*) 'Given value :', TORQUE_TYPE
+      end select
+      
 
       torque = torque_ref * (lindblad_torque + corotation_torque)      
       
@@ -413,6 +432,9 @@ subroutine read_disk_properties()
         
         case('outer_boundary_condition')
           read(value, *) OUTER_BOUNDARY_CONDITION
+          
+        case('torque_type')
+          read(value, *) TORQUE_TYPE
           
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
@@ -803,7 +825,8 @@ end subroutine initial_density_profile
   end function get_K
   
   subroutine get_surface_density(radius, sigma, sigma_index)
-    ! function that interpolate the value of the surface density at the given radius
+    ! function that interpolate the value of the surface density at the given radius. 
+    ! A linear interpolation is used, in particuliar to avoid problems with log(sigma) when the surface density is 0.
     
     ! Global parameter
     ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
@@ -833,7 +856,7 @@ end subroutine initial_density_profile
 
     ! Local
     integer :: closest_low_id ! the index of the first closest lower value of radius regarding the radius value given in parameter of the subroutine. 
-    real(double_precision) :: ln_x1, ln_x2, ln_y1, ln_y2
+    real(double_precision) :: x1, x2, y1, y2
     real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
 
     if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. OUTER_BOUNDARY_RADIUS)) then
@@ -842,12 +865,12 @@ end subroutine initial_density_profile
       ! in the range
       closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
       
-      ln_x1 = log(distance_sample(closest_low_id))
-      ln_x2 = log(distance_sample(closest_low_id + 1))
-      ln_y1 = log(surface_density_profile(closest_low_id))
-      ln_y2 = log(surface_density_profile(closest_low_id + 1))
+      x1 = distance_sample(closest_low_id)
+      x2 = distance_sample(closest_low_id + 1)
+      y1 = surface_density_profile(closest_low_id)
+      y2 = surface_density_profile(closest_low_id + 1)
 
-      sigma = exp(ln_y2 + (ln_y1 - ln_y2) * (log(radius) - ln_x2) / (ln_x1 - ln_x2))
+      sigma = y2 + (y1 - y2) * (radius - x2) / (x1 - x2)
       sigma_index = surface_density_index(closest_low_id) ! for the temperature index, no interpolation.
     else if (radius .lt. INNER_BOUNDARY_RADIUS) then
       sigma = surface_density_profile(1)
@@ -1320,18 +1343,26 @@ real(double_precision) :: tau_a, tau_b
 
 if (isnan(p_prop%sigma)) then
   write(*,*) 'Error: the surface density is equal to NaN when we want to calculate the temperature profile'
+  call print_planet_properties(p_prop)
+  stop
 end if 
 
 if (isnan(p_prop%nu)) then
   write(*,*) 'Error: the viscosity is equal to NaN when we want to calculate the temperature profile'
+  call print_planet_properties(p_prop)
+  stop
 end if 
 
 if (isnan(p_prop%omega)) then
   write(*,*) 'Error: the angular velocity is equal to NaN when we want to calculate the temperature profile'
+  call print_planet_properties(p_prop)
+  stop
 end if 
 
 if (isnan(p_prop%radius)) then
   write(*,*) 'Error: the distance is equal to NaN when we want to calculate the temperature profile'
+  call print_planet_properties(p_prop)
+  stop
 end if
 
 !------------------------------------------------------------------------------
@@ -1582,6 +1613,9 @@ end subroutine print_planet_properties
 
     stellar_mass = 1.d0 * K2
     
+    ! We force the value to be interesting for our tests
+    TORQUE_TYPE = 'mass_dependant' ! 'real', 'mass_independant', 'mass_dependant'
+    
     write(*,*) 'Initialisation'
     call init_globals(stellar_mass)
     ! Note that the initial density profile and temperature profile are calculated inside the 'init_globals' routine.
@@ -1596,11 +1630,12 @@ end subroutine print_planet_properties
 !~     call test_function_zero_temperature(stellar_mass)
 !~     call test_temperature_interpolation()
 !~     call test_density_interpolation()
-    call test_dissipation()
+!~     call test_viscous_dissipation()
+!~     call test_exponential_dissipation()
 !~     
 !~     ! Physical values and plots
 !~     call study_opacity_profile()
-!~     call study_torques(stellar_mass)
+    call study_torques(stellar_mass)
 !~     call study_torques_fixed_a(stellar_mass)
 !~     call study_torques_fixed_m(stellar_mass)
 !~     call study_temperature_profile(stellar_mass)
@@ -1873,7 +1908,7 @@ end subroutine print_planet_properties
   
   end subroutine test_density_interpolation
   
-  subroutine test_dissipation()
+  subroutine test_viscous_dissipation()
   ! function to test the viscous dissipation with a dirac function. 
   
   ! Global parameters
@@ -1904,6 +1939,8 @@ end subroutine print_planet_properties
     
     real(double_precision), parameter :: a = 1.
     
+    
+    
     real(double_precision) :: density_min, density_max
     character(len=80) :: filename_density, filename_density_ref
     character(len=80) :: output_density, output_time, time_format, purcent_format
@@ -1930,6 +1967,8 @@ end subroutine print_planet_properties
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total torque during the dissipation of the disk'
     
+    ! we force the dissipation type 
+    DISSIPATION_TYPE = 1
     
     ! First, we calculate the value of the viscosity in cm^2/s in order to modify the global variable 'viscosity'
     viscosity = nu / DAY * AU**2 ! in cm^2/s
@@ -2093,7 +2132,146 @@ end subroutine print_planet_properties
     end do
     close(13)
   
-  end subroutine test_dissipation
+  end subroutine test_viscous_dissipation
+  
+  subroutine test_exponential_dissipation()
+  ! function to test the viscous dissipation with a dirac function. 
+  
+  ! Global parameters
+  ! dissipation_timestep : the timestep between two computation of the disk [in days]
+  ! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+  ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+  ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+  ! surface_density_profile : values of the density in MSUN/AU^2 for each value of the 'a' sample
+  ! distance_sample : values of 'a' in AU
+  ! viscosity : the viscosity of the disk in [cm^2/s] /!\ This parameter is modified here (which must not be done otherwise)
+  
+    ! Return: (in the folder 'unitary_tests/dissipation' of the current working directory where the tests are launched)
+  !  data files with the following paterns :
+  !    surface_density*.dat : each file correspond to a data file of the surface density at one timestep (the number correspond to the index)
+  ! IN ADDITION : There are 1 gnuplot scripts to generate the output files for the surface density.
+  
+  use bessel, only : bessik
+  
+  implicit none
+    
+    ! time sample
+    real(double_precision), parameter :: t_min = 0. ! time in years
+    real(double_precision), parameter :: t_max = 1.d7 ! time in years
+    real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
+    integer, parameter :: max_frames = 100 ! Parameter to have a control over the number of output frames. (I had near 80 000 once)
+    integer :: nb_dissipation_per_step
+    integer :: time_size ! the size of the array 'time'. 
+    
+    real(double_precision), parameter :: a = 1.
+    
+    
+    
+    real(double_precision) :: density_min, density_max
+    character(len=80) :: filename_density, filename_density_ref
+    character(len=80) :: output_density, output_time, time_format, purcent_format
+    integer :: time_length ! the length of the displayed time, usefull for a nice display
+    
+    integer :: i,k ! for loops
+    integer :: nb_time ! The total number of 't' values. 
+    integer :: error ! to retrieve error, especially during allocations
+    real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
+    !------------------------------------------------------------------------------
+    write(*,*) 'Evolution of the total torque during the dissipation of the disk'
+    
+    ! we force the dissipation type 
+    DISSIPATION_TYPE = 2
+    TAU_DISSIPATION = 1e6 ! in years
+    
+    call system("rm unitary_tests/dissipation/*")
+    
+    ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
+    density_min = minval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
+    density_max = maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
+    
+    ! We want to know the max size of the time display in order to have a nice display, with filled spaces in the final plots
+    write(output_time, '(i0)') int(t_max, kind=8)
+    time_length = len(trim(output_time))
+    write(time_format, *) '(f',time_length,'.0)'
+    write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years")'
+    
+    !------------------------------------------------------------------------------
+    k = 1
+    time_size = 512 ! the size of the array. 
+    allocate(time(time_size), stat=error)
+    time(1) = t_min * 365.25d0 ! days
+    
+    dissipation_timestep = (t_max - t_min) * 365.25d0 / dfloat(max_frames)
+    
+    
+    do while (time(k).lt.(t_max*365.d0))
+      ! We open the file where we want to write the outputs
+      write(filename_density, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',k,'.dat'    
+      
+      ! we store in a .dat file the temperature profile
+      call store_density_profile(filename=filename_density)
+      
+      if (k.eq.1) then
+        ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
+        density_min = minval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
+        density_max = maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
+      end if
+      
+      ! We calculate the temperature profile for the current time (because the surface density change in function of time)
+      
+      
+      ! we get the new dissipated surface density profile. For that goal, we dissipate as many times as needed to reach the required time for the next frame.
+      call exponential_decay_density_profile()
+      
+      
+      ! we expand the 'time' array if the limit is reached
+      if (k.eq.time_size) then
+        ! If the limit of the 'time' array is reach, we copy the values in a temporary array, allocate with a double size, et paste the 
+        ! old values in the new bigger array
+        allocate(time_temp(time_size), stat=error)
+        time_temp(1:time_size) = time(1:time_size)
+        deallocate(time, stat=error)
+        time_size = time_size * 2
+        allocate(time(time_size), stat=error)
+        time(1:time_size/2) = time_temp(1:time_size/2)
+        deallocate(time_temp, stat=error)
+      end if
+      
+      write(*,purcent_format) int(time(k)/365.25d0, kind=8), int(t_max, kind=8) ! We display on the screen how far we are from the end of the integration.
+      
+      
+      time(k+1) = time(k) + dissipation_timestep ! days
+      
+      
+      k = k + 1 ! We increment the integer that point the time in the array (since it's a 'while' and not a 'do' loop)
+    end do
+
+    nb_time = k - 1 ! since for the last step with incremented 'k' by one step that is beyond the limit.
+    
+    !------------------------------------------------------------------------------
+    ! Gnuplot script to output the frames of the density
+    write(filename_density_ref, '(a)') 'theoritical_dissipation.dat'
+    open(13, file="unitary_tests/dissipation/density.gnuplot")
+    write(13,*) "set terminal pngcairo enhanced size 800, 600"
+    write(13,*) 'set xlabel "distance (AU)"'
+    write(13,*) 'set ylabel "Surface density (g/cm^2)"'
+    write(13,*) 'set grid'
+    write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'
+    write(13,*) 'set yrange [', density_min, ':', density_max, ']'
+    
+    do k=1, nb_time
+      write(filename_density, '(a,i0.5,a)') 'surface_density',k,'.dat'
+      write(output_density, '(a,i0.5,a)') 'surface_density',k,'.png'
+      write(output_time, time_format) (time(k)/365.25d0)
+      
+      write(13,*) "set output '",trim(output_density),"'"
+      write(13,*) 'set title "T=', trim(output_time),' years"'
+      write(13,*) "plot '",trim(filename_density),"' using 1:2 with lines linetype 0 linewidth 4 notitle"
+      write(13,*) ""
+    end do
+    close(13)
+  
+  end subroutine test_exponential_dissipation
 
 ! %%% Physical behaviour %%%
   subroutine study_temperature_profile(stellar_mass)
@@ -2541,7 +2719,7 @@ end subroutine print_planet_properties
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
-      call get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+      call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
       
       total_torque = lindblad_torque + corotation_torque
       
@@ -2685,7 +2863,27 @@ end subroutine print_planet_properties
         call get_planet_properties(stellar_mass=stellar_mass, & ! Input
          mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! Input
          p_prop=p_prop) ! Output
-        call get_corotation_torque(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref)
+         
+        !------------------------------------------------------------------------------
+        ! Calculation of the acceleration due to migration
+        select case(TORQUE_TYPE)
+          case('real') ! The normal torque profile, calculated form properties of the disk
+            call get_corotation_torque(stellar_mass, mass(j), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+          
+          case('mass_independant') ! a defined torque profile to get a mass independant convergence zone
+            call get_corotation_torque_mass_indep_CZ(stellar_mass, mass(j), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+          
+          case('mass_dependant')
+            call get_corotation_torque_mass_dep_CZ(stellar_mass, mass(j), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
+            
+          case default
+            write(*,*) 'Warning: The torque rule cannot be found.'
+            write(*,*) 'Given value :', TORQUE_TYPE
+        end select
+!~         call get_corotation_torque(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref)
         
         total_torque(i,j) = lindblad_torque + corotation_torque
         total_torque_units(i,j) = torque_ref * total_torque(i,j)
@@ -2955,8 +3153,6 @@ end subroutine print_planet_properties
           
           write(11,*) a(i), mass_earth(j), total_torque(i,j)
           
-          
-          
         end do
 
         write(11,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
@@ -3093,6 +3289,66 @@ subroutine get_corotation_torque_mass_indep_CZ(stellar_mass, mass, p_prop, corot
 
   return
 end subroutine get_corotation_torque_mass_indep_CZ
+
+subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0)
+! function that return the total torque exerted by the disk on the planet 
+!
+! Global parameters
+! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
+! X_S_PREFACTOR : prefactor for the half width of the corotation region
+
+  implicit none
+  real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
+  ! Properties of the planet
+  real(double_precision), intent(in) :: mass ! the mass of the planet [Msun * K2]
+  type(PlanetProperties), intent(in) :: p_prop ! various properties of the planet
+  
+  
+  real(double_precision), intent(out) :: corotation_torque
+  real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
+  real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
+  
+  ! parameters
+  real(double_precision), parameter :: a_steepness = 1. !increase, in units of Gamma_0 of the torque per 10AU
+  
+  ! boundary mass values that have a zero torque zone
+  real(double_precision), parameter :: m_min = 1.  ! mass in earth mass
+  real(double_precision), parameter :: m_max = 60. ! mass in earth mass
+  
+  ! position of the zero torque zone for the minimum and maximum mass
+  real(double_precision), parameter :: CZ_m_min = 2.  ! in AU
+  real(double_precision), parameter :: CZ_m_max = 30. ! in AU
+  
+  ! coeff for the function that give the position of the convergence zone in function of mass
+  real(double_precision), parameter :: a = (CZ_m_max - CZ_m_min) / ((m_max - m_min)) ! The mass will be given in solar mass. So we add a corrective factor to get planet mass in earth mass
+  real(double_precision), parameter :: b = CZ_m_min - m_min * a
+  
+  ! Local 
+  real(double_precision) :: planet_mass ! the mass of the current planet in earth mass
+  !------------------------------------------------------------------------------
+  ! position of zero torque zone in function of the mass : 
+  ! r(m_min) = a_min
+  ! r(m_max) = a_max
+  !
+  ! r(m) = a * m + b
+  ! a = (a_max - a_min) / (m_max - m_min)
+  ! b = a_min - m_min * a
+  
+  planet_mass = mass / (3.00374072d-6 * K2)
+  
+  ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
+  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
+  
+  lindblad_torque = 0.
+  
+  !------------------------------------------------------------------------------
+  corotation_torque = 0. ! if not in mass boundaries, the torque is 0
+  if ((planet_mass.gt.m_min).and.(planet_mass.lt.m_max)) then
+    corotation_torque = a_steepness * 0.1d0 * ((a * planet_mass + b) - p_prop%radius)
+  end if
+
+  return
+end subroutine get_corotation_torque_mass_dep_CZ
 
 end module user_module
   
