@@ -29,7 +29,7 @@ module user_module
   real(double_precision) :: mean_molecular_weight = 2.35 ! the mean molecular weight in mass of a proton
   
   ! Here we define the power law for surface density sigma(R) = sigma_0 * R^(-sigma_index)
-  real(double_precision) :: sigma_0 = 1700 ! the surface density at (R=1AU) [g/cm^2]
+  real(double_precision) :: sigma_0 = 450 ! the surface density at (R=1AU) [g/cm^2]
   real(double_precision) :: sigma_index = 0.5! the negative slope of the surface density power law (alpha in the paper)
   real(double_precision) :: sigma_0_num ! the surface density at (R=1AU) [Msun/AU^2]
   
@@ -78,7 +78,6 @@ module user_module
     real(double_precision) :: nu ! the viscosity of the disk at the location of the planet [AU^2.day^-1]
     real(double_precision) :: temperature ! the temperature of the disk at the location of the planet [K] 
     real(double_precision) :: temperature_index ! the negative temperature index of the disk at the location of the planet [no dim] 
-    real(double_precision) :: opacity ! the opacity of the disk at the location of the planet [?]  
   end type PlanetProperties
 
   
@@ -163,6 +162,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   !------------------------------------------------------------------------------
   call init_globals(stellar_mass=mass(1))
   
+!~   write(*,*) '-------------------------------'
+!~   write(*,*) time, 'n_big_bodies=',n_big_bodies
   
   do planet=2,n_big_bodies
     ! because ongoing deletion of planets put their mass to 0 for a few steps, we must check. Else, we will have an error "NaN".
@@ -173,7 +174,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       call get_planet_properties(stellar_mass=mass(1), mass=mass(planet), & ! input
       position=position(1:3, planet), velocity=velocity(1:3,planet),& ! input
       p_prop=p_prop) ! Output
-      
       
       !------------------------------------------------------------------------------
       ! prefactor calculation for eccentricity and inclination damping
@@ -218,6 +218,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         
         inclination_acceleration_z = - velocity(3,planet) / time_inc
       else
+        time_inc = 0.d0
         inclination_acceleration_z = 0.d0
       end if
       
@@ -227,14 +228,12 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       acceleration(1,planet) = migration_acceleration(1) + eccentricity_acceleration(1)
       acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
       acceleration(3,planet) = migration_acceleration(3) + eccentricity_acceleration(3) + inclination_acceleration_z
-
-      if (time.gt.313506725) then
-        open(10, file='leak.out', status="old", access="append")
-        write(10,*) time, planet, p_prop%eccentricity, p_prop%inclination
-        close(10)
-!~         write(*,*)
-!~         call print_planet_properties(p_prop)
-      end if
+      
+!~       write(*,*) '###########################' 
+!~       write(*,*) 'planet ', planet
+!~       write(*,*) time_mig, time_ecc, time_inc, torque
+!~       write(*,*) migration_acc_prefactor, eccentricity_acc_prefactor
+!~       call print_planet_properties(p_prop)
     end if
   end do
   
@@ -508,8 +507,8 @@ subroutine init_globals(stellar_mass)
     
     call read_disk_properties()
 
-    open(10, file='leak.out', status='replace')
-    close(10)
+!~     open(10, file='leak.out', status='replace')
+!~     close(10)
 
     allocate(temp_profile_y(nb_a_sample))
     allocate(temp_profile_x(nb_a_sample))
@@ -913,20 +912,27 @@ end subroutine init_globals
   ! Return:
   !  a data file 'test_total_torque.dat' 
   ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  
+    use contour
+    
     implicit none
     
-    integer, parameter :: nb_mass = 100
+    integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 20. * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
+    real(double_precision), dimension(nb_mass) :: mass
     
     integer, parameter :: nb_points = 200
     real(double_precision), parameter :: a_min = 0.01
-    real(double_precision), parameter :: a_max = 100.
+    real(double_precision), parameter :: a_max = 50.
     ! step for log sampling
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
+    real(double_precision), dimension(nb_points) :: a
     
-    real(double_precision) :: a, mass, total_torque, total_torque_units, corotation_torque, lindblad_torque, torque_ref
+    real(double_precision), dimension(nb_points, nb_mass) :: total_torque, total_torque_units
+    
+    real(double_precision) :: corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: stellar_mass, position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     
@@ -956,32 +962,32 @@ end subroutine init_globals
     
     
     do i=1, nb_points ! loop on the position
-      a = a_min + a_step * (i-1)
+      a(i) = a_min + a_step * (i-1)
       
       ! We generate cartesian coordinate for the given semi major axis
-      position(1) = a
+      position(1) = a(i)
       
       
       do j=1,nb_mass
-        mass = (mass_min + mass_step * (j - 1.d0)) * K2
+        mass(j) = (mass_min + mass_step * (j - 1.d0)) * K2
         
         ! We generate cartesian coordinate for the given mass and semi major axis
-        velocity(2) = sqrt((stellar_mass + mass) / position(1))
+        velocity(2) = sqrt((stellar_mass + mass(j)) / position(1))
         
         ! we store in global parameters various properties of the planet
-        call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! input
+        call get_planet_properties(stellar_mass=stellar_mass, mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! input
          p_prop=p_prop) ! Output
-        call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
+        call get_corotation_torque(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref)
         
-        total_torque = lindblad_torque + corotation_torque
+        total_torque(i,j) = lindblad_torque + corotation_torque
         total_torque_units = torque_ref * total_torque
         
                 
-        write(10,*) a, mass / (EARTH_MASS*K2), corotation_torque
-        write(11,*) a, mass / (EARTH_MASS*K2), total_torque
-        write(12,*) a, mass / (EARTH_MASS*K2), total_torque_units
-        write(13,*) a, mass / (EARTH_MASS*K2), lindblad_torque
-        write(14,*) a, mass / (EARTH_MASS*K2), torque_ref
+        write(10,*) a(i), mass(j) / (EARTH_MASS*K2), corotation_torque
+        write(11,*) a(i), mass(j) / (EARTH_MASS*K2), total_torque(i,j)
+        write(12,*) a(i), mass(j) / (EARTH_MASS*K2), total_torque_units(i,j)
+        write(13,*) a(i), mass(j) / (EARTH_MASS*K2), lindblad_torque
+        write(14,*) a(i), mass(j) / (EARTH_MASS*K2), torque_ref
         
       end do
       
@@ -1002,26 +1008,10 @@ end subroutine init_globals
     open(13, file="unitary_tests/lindblad_torque.gnuplot")
     open(14, file="unitary_tests/ref_torque.gnuplot")
     
-    
-    ! --------------------------------------------
-    ! Part for contour for only a part of the plots. We want an isoline for zero torque
-    do j=11,12
-      write(j,*) 'set contour base; set cntrparam levels discret 0.'
-      write(j,*) 'unset surface'
-      write(j,*) 'set table "contour.dat"'
-      write(j,*) 'set dgrid3d 30,30,20'
-    end do
-    
-    write(11,*) "splot 'test_total_torque.dat'"
-    write(12,*) "splot 'test_total_torque_units.dat'"
-    
-    do j=11,12
-      write(j,*) 'unset table'
-
-      write(j,*) '# Draw the plot'
-      write(j,*) 'reset'
-    end do
-    ! --------------------------------------------
+    ! We want to get the contour for the torque equal to 0 for total torque both in physical dimension of units of gamma_0
+    mass(1:nb_mass) = mass(1:nb_mass) / (EARTH_MASS*K2)
+    call get_contour(total_torque, a, mass,'unitary_tests/contour_total_torque.dat', 0.d0)
+    call get_contour(total_torque_units, a, mass,'unitary_tests/contour_total_torque_units.dat', 0.d0)
     
     do j=10,14
       write(j,*) 'set terminal wxt enhanced'
@@ -1047,8 +1037,10 @@ end subroutine init_globals
     end do
 
     write(10,*) "splot 'test_corotation_torque.dat' with pm3d notitle"
-    write(11,*) "splot 'test_total_torque.dat' with pm3d notitle, 'contour.dat' with line linetype -1 title '{/Symbol G}=0'"
-    write(12,*) "splot 'test_total_torque_units.dat' with pm3d notitle, 'contour.dat' with line linetype -1 title '{/Symbol G}=0'"
+    write(11,*) "splot 'test_total_torque.dat' with pm3d notitle, \"
+    write(11,*) "      'contour_total_torque.dat' with line linetype -1 title '{/Symbol G}=0'"
+    write(12,*) "splot 'test_total_torque_units.dat' with pm3d notitle, \"
+    write(12,*) "      'contour_total_torque_units.dat' with line linetype -1 title '{/Symbol G}=0'"
     write(13,*) "splot 'test_lindblad_torque.dat' with pm3d notitle"
     write(14,*) "splot 'test_ref_torque.dat' with pm3d notitle"
 
@@ -1066,10 +1058,6 @@ end subroutine init_globals
         
     do j=10,14
       write(j,*) "replot # pour générer le fichier d'output"
-    end do
-    
-    do j=11,12
-      write(j,*) '!rm contour.dat' ! to delete the temporary file
     end do
     
     close(10)
@@ -1231,7 +1219,7 @@ end subroutine init_globals
     real(double_precision), parameter :: a_max = 60. ! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
+    real(double_precision), parameter :: mass = 5. * EARTH_MASS * K2
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: lindblad_torque_units, corotation_torque_units, total_torque_units
@@ -1945,8 +1933,7 @@ subroutine print_planet_properties(p_prop)
   write (*,*) 'scaleheight :', p_prop%scaleheight 
   write (*,*) 'aspect_ratio :', p_prop%aspect_ratio 
   write (*,*) 'chi :', p_prop%chi 
-  write (*,*) 'nu :', p_prop%nu 
-  write (*,*) 'opacity :', p_prop%opacity 
+  write (*,*) 'nu :', p_prop%nu
   write (*,*) 'temperature :', p_prop%temperature 
   write (*,*) 'temperature_index:', p_prop%temperature_index
 end subroutine print_planet_properties
