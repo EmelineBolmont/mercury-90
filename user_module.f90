@@ -162,8 +162,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   !------------------------------------------------------------------------------
   call init_globals(stellar_mass=mass(1))
   
-!~   write(*,*) '-------------------------------'
-!~   write(*,*) time, 'n_big_bodies=',n_big_bodies
+  write(*,*) '-------------------------------'
+  write(*,*) time, 'n_big_bodies=',n_big_bodies
   
   do planet=2,n_big_bodies
     ! because ongoing deletion of planets put their mass to 0 for a few steps, we must check. Else, we will have an error "NaN".
@@ -229,11 +229,11 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
       acceleration(3,planet) = migration_acceleration(3) + eccentricity_acceleration(3) + inclination_acceleration_z
       
-!~       write(*,*) '###########################' 
-!~       write(*,*) 'planet ', planet
-!~       write(*,*) time_mig, time_ecc, time_inc, torque
-!~       write(*,*) migration_acc_prefactor, eccentricity_acc_prefactor
-!~       call print_planet_properties(p_prop)
+      write(*,*) '###########################' 
+      write(*,*) 'planet ', planet
+      write(*,*) time_mig, time_ecc, time_inc, torque
+      write(*,*) migration_acc_prefactor, eccentricity_acc_prefactor
+      call print_planet_properties(p_prop)
     end if
   end do
   
@@ -540,6 +540,7 @@ subroutine init_globals(stellar_mass)
     
     ! we store in a .dat file the temperature profile
     call store_temperature_profile()
+    call store_scaleheight_profile()
     
     ! Here we display various warning for specific modification of the code that must be kept in mind (because this is not the normal behaviour of the code)
 !~     write(*,*) 'Warning: le couple de corotation a été désactivé'
@@ -711,6 +712,7 @@ end subroutine init_globals
     call test_temperature_interpolation()
     call test_optical_depth_profile()
     call test_thermal_diffusivity_profile()
+    call test_scaleheight_profile()
     
   end subroutine unitary_tests
   
@@ -1434,6 +1436,45 @@ end subroutine init_globals
   
   end subroutine store_temperature_profile
   
+  subroutine store_scaleheight_profile()
+  ! subroutine that store in a '.dat' file the scaleheight profile
+  
+  implicit none
+  
+  integer :: j ! for loops
+  real(double_precision) :: a, scaleheight
+  real(double_precision) :: position(3), velocity(3), stellar_mass, mass
+  type(PlanetProperties) :: p_prop
+  
+  position(1:3) = 0.d0
+  velocity(1:3) = 0.d0
+
+  ! stellar mass
+  stellar_mass = 1.d0 * K2
+  ! planet mass
+  mass = 20. * EARTH_MASS * K2
+  
+  ! We open the file where we want to write the outputs
+  open(10, file='scaleheight_profile.dat', status='replace')
+  write(10,*) '# a in AU ; scaleheight (AU) ; aspect ratio'
+  do j=1,nb_a_sample
+    a = exp(temp_profile_x(j))
+    ! We generate cartesian coordinate for the given semi major axis
+    position(1) = a
+    
+    ! We generate cartesian coordinate for the given mass and semi major axis
+    velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+    
+    ! we store in global parameters various properties of the planet
+    call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+     p_prop=p_prop) ! Output
+    write(10,*) a, p_prop%scaleheight, p_prop%scaleheight/a
+  end do
+  
+  close(10)
+
+  
+  end subroutine store_scaleheight_profile
   
   subroutine test_temperature_profile()
 ! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
@@ -1494,6 +1535,58 @@ end subroutine init_globals
     close(11)
   
   end subroutine test_temperature_profile
+  
+  subroutine test_scaleheight_profile
+    implicit none
+    
+    integer :: j
+    
+  open(10, file="unitary_tests/scaleheight_profile.gnuplot")
+  open(11, file="unitary_tests/aspect_ratio.gnuplot")
+  
+  do j=10,11
+    write(j,*) 'set terminal wxt enhanced'
+    write(j,*) 'set xlabel "semi major axis a (in AU)"'
+    write(j,*) 'set nokey'
+  end do
+  
+  write(10,*) 'set ylabel "Scaleheight H [AU]"'
+  
+  write(11,*) 'set ylabel "Aspect ratio h=H/R"'
+  
+  do j=10,11
+    write(j,*) 'set grid'
+    write(j,*) 'cd ".."'
+  end do
+
+  write(10,*) "plot 'scaleheight_profile.dat' using 1:2 with line linetype -1 notitle, \"
+  write(10,*) "     '' using 1:(-$2) with line linetype -1 notitle"
+  
+  write(11,*) "plot 'scaleheight_profile.dat' using 1:3 with line linetype -1 notitle, \"
+  write(11,*) "     '' using 1:(-$3) with line linetype -1 notitle"
+  
+
+  
+  do j=10,11
+    write(j,*) "#pause -1 # wait until a carriage return is hit"
+    write(j,*) "set terminal pdfcairo enhanced"
+  end do
+  
+  write(10,*) '!rm "unitary_tests/scaleheight_profile.pdf"'
+  write(10,*) "set output 'unitary_tests/scaleheight_profile.pdf'"
+  write(11,*) '!rm "unitary_tests/aspect_ratio_profile.pdf"'
+  write(11,*) "set output 'unitary_tests/aspect_ratio_profile.pdf'"
+  
+  
+  do j=10,11
+    write(j,*) "replot # to generate the output file"
+  end do
+  
+  close(10)
+  close(11)
+  
+  
+  end subroutine test_scaleheight_profile
   
   subroutine test_optical_depth_profile()
 ! Subroutine that test the finding of the optical depth profile and store a plot of the temperature profile of the disk
