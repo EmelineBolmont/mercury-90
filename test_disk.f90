@@ -1199,7 +1199,7 @@ program test_disk
     implicit none
     
     real(double_precision), dimension(5) :: bulk_density = (/ 1.d-5, 1.d-6, 1.d-7, 1.d-8, 1.d-9/)
-    real(double_precision), dimension(5) :: opacity
+    real(double_precision), dimension(5) :: opacity, opacity_zhu, opacity_bell
     real(double_precision) :: temperature
     
     real(double_precision), parameter :: T_min = 80.
@@ -1213,19 +1213,27 @@ program test_disk
     
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/opacity.dat')
-    write(10,*) "Correspond to the figure 9a of Bell & Lin 1994"
+    open(11, file='unitary_tests/opacity_comparison.dat')
+    write(10,*) "# Correspond to the opacity type :", OPACITY_TYPE
     write(10,*) '# Temperature (K) ; Opacity for bulk density from 1e-5 to 1e-9 by power of ten'
+    write(11,*) '# Temperature (K) ; Opacity bell ; zhu, bell; zhu'
     
     do i=1, nb_points
       temperature = T_min * T_step ** (i-1)
       
       do j=1,5
         opacity(j) = get_opacity(temperature, bulk_density(j)) * MSUN / AU**3
+        opacity_bell(j) = get_opacity_bell_lin_1994(temperature, bulk_density(j)) * MSUN / AU**3
+        opacity_zhu(j) = get_opacity_zhu_2009(temperature, bulk_density(j)) * MSUN / AU**3
       end do
       
       write(10,*) temperature, opacity(1), opacity(2), opacity(3), opacity(4), opacity(5)
+      write(11,*) temperature, opacity_bell(1), opacity_bell(2), opacity_bell(3), &
+      opacity_bell(4), opacity_bell(5), opacity_zhu(1), opacity_zhu(2), opacity_zhu(3), opacity_zhu(4), opacity_zhu(5)
+
     end do
     close(10)
+    close(11)
     
     open(10, file="unitary_tests/opacity.gnuplot")
     write(10,*) "set terminal pdfcairo enhanced"
@@ -1243,6 +1251,30 @@ program test_disk
     write(10,*) "     '' using 1:6 with lines title '{/Symbol r}=10^{-9}'"
     
     close(10)
+    
+    open(11, file="unitary_tests/opacity_comparison.gnuplot")
+    write(11,*) "set terminal pdfcairo enhanced"
+    write(11,*) "set output 'opacity_comparison.pdf'"
+    write(11,*) 'set xlabel "Temperature T"'
+    write(11,*) 'set ylabel "Opacity {/Symbol k}"'
+    write(11,*) 'set logscale x'
+    write(11,*) 'set logscale y'
+    write(11,*) 'set grid'
+    write(11,*) 'set termoption dashed'
+    write(11,*) 'set title "Dotted line : Bell \& Lin (1994) ; Solid line : Zhu \& Hartmann (2009)"'
+    write(11,*) 'set xrange [', T_min, ':', T_max, ']'
+    write(11,*) "plot 'opacity_comparison.dat' using 1:2  with lines linetype 3 linecolor 1 notitle,\"
+    write(11,*) "'' using 1:3  with lines linetype 3 linecolor 2 notitle,\"
+    write(11,*) "'' using 1:4  with lines linetype 3 linecolor 3 notitle,\"
+    write(11,*) "'' using 1:5  with lines linetype 3 linecolor 4 notitle,\"
+    write(11,*) "'' using 1:6  with lines linetype 3 linecolor 5 notitle,\"
+    write(11,*) "'' using 1:7  with lines linetype 1 linecolor 1 title '{/Symbol r}=10^{-5}',\"
+    write(11,*) "'' using 1:8  with lines linetype 1 linecolor 2 title '{/Symbol r}=10^{-6}',\"
+    write(11,*) "'' using 1:9  with lines linetype 1 linecolor 3 title '{/Symbol r}=10^{-7}',\"
+    write(11,*) "'' using 1:10 with lines linetype 1 linecolor 4 title '{/Symbol r}=10^{-8}',\"
+    write(11,*) "'' using 1:11 with lines linetype 1 linecolor 5 title '{/Symbol r}=10^{-9}'"
+    
+    close(11)
     
   end subroutine study_opacity_profile
 
