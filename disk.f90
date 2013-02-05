@@ -194,6 +194,17 @@ subroutine read_disk_properties()
         case('disk_exponential_decay')
           read(value, *) TAU_DISSIPATION
           DISSIPATION_TYPE = 2
+        
+        case('r_viscous')
+          read(value, *) R_VISCOUS
+          DISSIPATION_TYPE = 3
+          
+        case('r_photoevap')
+          read(value, *) R_PHOTOEVAP
+          DISSIPATION_TYPE = 3
+          
+        case('photoevap_massloss')
+          read(value, *) PHOTOEVAP_MASSLOSS
           
         case('inner_smoothing_width')
           read(value, *) INNER_SMOOTHING_WIDTH
@@ -261,6 +272,27 @@ subroutine read_disk_properties()
       write(*,*) 'Error: since dissipation_type=2, "disk_exponential_decay" is expected to be set.'
       stop
     end if
+    
+    if (DISSIPATION_TYPE.eq.3) then
+			! problem is we want the exponential decay for viscous dissipation to be set if dissipation_type equal to 3
+			if (R_VISCOUS.lt.0.d0) then
+				write(*,*) 'Error: since dissipation_type=3, "r_viscous" is expected to be set.'
+				stop
+			end if
+			
+			! problem is we want the exponential decay for photoevaporation to be set if dissipation_type equal to 3
+			if (R_PHOTOEVAP.lt.0.d0) then
+				write(*,*) 'Error: since dissipation_type=3, "r_photoevap" is expected to be set.'
+				stop
+			end if
+			
+			! problem is we want the exponential decay for photoevaporation to be set if dissipation_type equal to 3
+			if (PHOTOEVAP_MASSLOSS.lt.0.d0) then
+				write(*,*) 'Error: since dissipation_type=3, "PHOTOEVAP_MASSLOSS" is expected to be set.'
+				stop
+			end if
+    end if
+    
   else
     write (*,*) 'Warning: The file "disk.in" does not exist. Default values have been used'
   end if
@@ -290,11 +322,12 @@ subroutine read_paramin(timestep)
   
   logical :: isParameter, isDefined
   character(len=80) :: identificator, value
+  integer :: j
   !------------------------------------------------------------------------------
   
   inquire(file='param.in', exist=isDefined)
   if (isDefined) then
-  
+		j = 0
     open(10, file='param.in', status='old')
     
     do
@@ -304,19 +337,15 @@ subroutine read_paramin(timestep)
       ! in param.in, comment must start from the first character, there is no comments starting from a random point of the line. 
       ! Indeed ')' can be used elsewhere, inside the key, without meaning any comment after this.
       if (line(1:1).ne.comment_character) then
+        j = j + 1
+      end if
       
+      if (j.eq.5) then
 				call get_parameter_value(line, isParameter, identificator, value)
 				
-				if (isParameter) then
-					select case(identificator)
-					case(' timestep (days)')
-						read(value, *) timestep
+				read(value, *) timestep
+						
 
-					case default
-!~ 						write(*,*) 'Warning: An unknown parameter has been found'
-!~ 						write(*,*) "identificator='", trim(identificator), "' ; value(s)='", value,"'"
-					end select
-				end if
       end if
     end do
     close(10)
@@ -410,12 +439,21 @@ subroutine write_disk_properties()
 		
 		case(2) 
 			write(10,'(a)') '  2 : Exponential decay of the surface density profile (no modification of the steepness though'
-			write(10,'(a,es10.1e2)') '    characteristic time for decay = ',TAU_DISSIPATION
+			write(10,'(a,es10.1e2,a)') '    characteristic time for decay = ',TAU_DISSIPATION, 'years'
+		
+		case(3)
+			write(10,'(a)') '  3 : mixed dissipation, both viscously and with photoevaporation, with two timescales'
+			write(10,'(a,f6.1,a)') '    radius at which the viscous decay is calculated = ',R_VISCOUS, ' AU'
+			write(10,'(a,es10.1e2,a)') '    characteristic time for viscous decay = ',TAU_VISCOUS, ' years'
+			write(10,'(a,f6.1,a)') '    radius at which the photoevaporation decay is calculated = ',R_PHOTOEVAP, ' AU'
+			write(10,'(a,es10.1e2,a)') '    characteristic time for photoevaporation decay = ',TAU_PHOTOEVAP, ' years'
+			write(10,'(a,es10.1e2,a)') '    photoevaporation mass loss (when viscous loss is inferior, the photoevaporation start) = ',&
+			                           PHOTOEVAP_MASSLOSS, ' Msun/yr'
 
 		case default
 			write(10,'(a)') 'Warning: The dissipation type cannot be found.'
-			write(10,'(a,a)') 'Given value : ', DISSIPATION_TYPE
-			write(10,'(a)') 'Values possible : 0 ; 1 ; 2'
+			write(10,'(a,a,a)') 'Given value : "', DISSIPATION_TYPE, '"'
+			write(10,'(a)') 'Values possible : 0 ; 1 ; 2 ; 3'
 	end select
   
   write(10,*) ''
@@ -726,6 +764,14 @@ subroutine init_globals(stellar_mass, time)
     FirstCall = .False.
     
     call read_disk_properties()
+    
+    ! Valid only for mixed exponantial decay for the disk surface density
+    if (DISSIPATION_TYPE.eq.3) then
+      TAU_VISCOUS = (R_VISCOUS**2) / (get_viscosity(R_VISCOUS) * 365.25d0) ! in years
+      TAU_PHOTOEVAP = (R_PHOTOEVAP**2) / (get_viscosity(R_PHOTOEVAP) * 365.25d0) ! in years
+    
+      TAU_DISSIPATION = TAU_VISCOUS
+    end if
     
     select case(TORQUE_TYPE)
 			case('real') ! The normal torque profile, calculated form properties of the disk
@@ -1360,7 +1406,55 @@ end subroutine initial_density_profile
   
   end subroutine exponential_decay_density_profile
   
-  subroutine dissipate_density_profile()
+  subroutine dissipate_disk(time, next_dissipation_step)
+  
+  implicit none
+  
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(out) :: next_dissipation_step
+  
+  ! Locals
+  real(double_precision) :: sigma, sigma_index
+  real(double_precision) :: viscous_accretion
+  !------------------------------------------------------------------------------
+  
+  select case(DISSIPATION_TYPE)
+		case(1) ! viscous dissipation
+			dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
+			! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
+			next_dissipation_step = time + dissipation_timestep
+			call viscously_dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
+		
+		case(2) ! exponential decay
+			! we want 1% variation : timestep = - tau * ln(1e-2)
+			dissipation_timestep = 4.6 * TAU_DISSIPATION
+			next_dissipation_step = time + dissipation_timestep
+			
+			call exponential_decay_density_profile()
+		
+		case(3) ! both (slow then fast decay)
+			! we want 1% variation : timestep = - tau * ln(1e-2)
+			dissipation_timestep = 4.6 * TAU_DISSIPATION
+			next_dissipation_step = time + dissipation_timestep
+
+			call get_surface_density(radius=R_PHOTOEVAP, sigma=sigma, sigma_index=sigma_index)
+			
+			viscous_accretion = (3 * PI * 365.25d0) * get_viscosity(R_PHOTOEVAP) * sigma
+			
+			if (viscous_accretion.lt.PHOTOEVAP_MASSLOSS) then
+				TAU_DISSIPATION = TAU_PHOTOEVAP
+			end if
+			
+			call exponential_decay_density_profile()
+		case default
+				stop 'Error in user_module : The "dissipation_type" cannot be found. &
+						 &Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay'
+
+	end select
+  
+  end subroutine dissipate_disk
+  
+  subroutine viscously_dissipate_density_profile()
 ! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
 ! 
 ! Global Parameters 
@@ -1503,7 +1597,7 @@ end subroutine initial_density_profile
     surface_density_index(2) = surface_density_index(3) ! We do this because the first two values are polluted by boundary conditions
     surface_density_index(1) = surface_density_index(2)
   
-  end subroutine dissipate_density_profile
+  end subroutine viscously_dissipate_density_profile
 
   subroutine store_temperature_profile(filename)
   ! subroutine that store in a '.dat' file the temperature profile and negative index of the local power law
