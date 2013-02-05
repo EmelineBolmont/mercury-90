@@ -1772,14 +1772,14 @@ call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%om
 !~ fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
 
 if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
-  write(*,*) 'root must be bracketed for zbrent'
+  write(*,*) 'subroutine zbrent: root must be bracketed.'
   write(*,*) '  T_min =', x_min, 'f(T_min) =', fa
   write(*,*) '  T_max =', x_max, 'f(T_max) =', fb
   write(*,*) 'properties of the disk at the location of the planet that influence the value of the temperature'
-  write(*,*) '  radial position of the planet (in AU) :', p_prop%radius
-  write(*,*) '  viscosity :', p_prop%nu
-  write(*,*) '  surface density :', p_prop%sigma
-  write(*,*) '  angular velocity :', P_prop%omega
+  write(*,'(a,f5.1,a)')     '   Radial position of the planet : ', p_prop%radius, ' [AU]'
+  write(*,'(a,es10.2e2,a)') '   Viscosity : ', p_prop%nu, ' [AU^2.day^-1]'
+  write(*,'(a,es10.2e2,a)') '   Surface density : ', p_prop%sigma , ' [Msun.AU^-2]'
+  write(*,'(a,es10.2e2,a)') '   Angular Velocity : ', p_prop%omega , ' [day-1]'
   stop
 endif
 
