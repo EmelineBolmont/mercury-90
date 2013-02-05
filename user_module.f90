@@ -29,7 +29,7 @@ module user_module
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
   real(double_precision), parameter :: temperature_0 = 510. ! the temperature at (R=1AU) [K]
-  real(double_precision), parameter :: temperature_index = 1.! the negativeslope of the temperature power law (beta in the paper)
+  real(double_precision), parameter :: temperature_index = 1.0! the negativeslope of the temperature power law (beta in the paper)
   
   !prefactors
   real(double_precision) :: x_s_prefactor
@@ -262,26 +262,30 @@ subroutine init_globals(stellar_mass)
   
   implicit none
   real(double_precision), intent(in) :: stellar_mass
+  logical, save :: FirstCall = .True.
   
-  x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
+  if (FirstCall) then
+    FirstCall = .False.
+    x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
 
-  chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
-  
-  ! AU is in cm, so we must turn into meter before doing the conversion
-  ! division of k_B by m_H is done separately for exponant and value to have more precision
-  ! sqrt(k_B/m_H) in numerical units, knowing that [k_B]=[m^2.kg.s^-2K^-1] and [m_H]=[kg]. 
-  scaleheight_prefactor = sqrt(1.3806503d0/(1.67262158d0 * mean_molecular_weight) * 1.d4) * DAY / (AU * 1.d-2) 
-  
-!~   lindblad_prefactor = -(2.3d0 + 0.4d0 * temperature_index - 0.1d0 * sigma_index) ! masset & casoli 2010
-  lindblad_prefactor = -(2.5d0 + 1.7d0 * temperature_index - 0.1d0 * sigma_index) ! paardekooper, baruteau & kley 2010
-  
-  torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
-  torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
-  
-!~   write(*,*) 'Warning: il y a un offset au couple de corotation'
-  write(*,*) 'Warning: h est fixé à 0.05'
-  write(*,*) 'Warning: nu est fixé à la main à 10^15'
-  write(*,*) 'Warning: chi est fixé à la main à 10^-6'
+    chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
+    
+    ! AU is in cm, so we must turn into meter before doing the conversion
+    ! division of k_B by m_H is done separately for exponant and value to have more precision
+    ! sqrt(k_B/m_H) in numerical units, knowing that [k_B]=[m^2.kg.s^-2K^-1] and [m_H]=[kg]. 
+    scaleheight_prefactor = sqrt(1.3806503d0/(1.67262158d0 * mean_molecular_weight) * 1.d4) * DAY / (AU * 1.d-2) 
+    
+  !~   lindblad_prefactor = -(2.3d0 + 0.4d0 * temperature_index - 0.1d0 * sigma_index) ! masset & casoli 2010
+    lindblad_prefactor = -(2.5d0 + 1.7d0 * temperature_index - 0.1d0 * sigma_index) ! paardekooper, baruteau & kley 2010
+    
+    torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
+    torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
+    
+  !~   write(*,*) 'Warning: il y a un offset au couple de corotation'
+    write(*,*) 'Warning: h est fixé à 0.05'
+    write(*,*) 'Warning: nu est fixé à la main à 10^15'
+    write(*,*) 'Warning: chi est fixé à la main à 10^-6'
+  endif
   
 end subroutine init_globals
 
