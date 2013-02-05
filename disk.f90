@@ -2024,7 +2024,7 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
     
   !------------------------------------------------------------------------------
   
-    x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
+  x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
   
   !------------------------------------------------------------------------------
   
@@ -2053,7 +2053,12 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
 		corotation_torque = torque_profile(NB_SAMPLE_PROFILES)
 	end if
 	
+	if (corotation_torque.eq.0.d0) then
+	corotation_torque = - lindblad_torque
+	write(*,*) corotation_torque, lindblad_torque
+	else
 	corotation_torque = corotation_torque - lindblad_torque ! so that we can disable artificially the corotation part of the torque, even if the lindblad torque come from the paardekooper formulae
+endif 
 
   return
 end subroutine get_corotation_torque_manual
@@ -2145,7 +2150,7 @@ subroutine read_torque_profile()
 				torque_profile(i) = torque(nb_values)
 			end if
 		end do
-
+		
   else
     write (*,*) 'Warning: The file "',filename,'" does not exist. Default values have been used'
   end if
