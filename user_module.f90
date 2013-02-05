@@ -25,12 +25,12 @@ module user_module
   real(double_precision), parameter :: sigma_0_num = sigma_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
   
   ! Here we define the power law for viscosity viscosity(R) = viscosity_0 * R^(sigma_index-1/2)
-  real(double_precision), parameter :: viscosity_0 = 1.6d12 ! the viscosity of the disk at (R=1AU) [cm^2.s^-1]
+  real(double_precision), parameter :: viscosity_0 = 1.d15 ! the viscosity of the disk at (R=1AU) [cm^2.s^-1]
   real(double_precision), parameter :: viscosity_0_num = viscosity_0 * DAY / AU**2 ! the viscosity of the disk at (R=1AU) [AU^2.day^-1]
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
   real(double_precision), parameter :: temperature_0 = 150. ! the temperature at (R=1AU) [K]
-  real(double_precision), parameter :: temperature_index = 1.! the negativeslope of the temperature power law (beta in the paper)
+  real(double_precision), parameter :: temperature_index = 1.6! the negativeslope of the temperature power law (beta in the paper)
   
   !prefactors
   real(double_precision) :: x_s_prefactor
@@ -112,19 +112,19 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     
     torque = (torque_ref / gamma_eff) * (torque_lindblad + corotation_torque)
       ! We calculate the angular momentum, that is, the z-composant. We assume that the x and y composant are negligible (to be tested)
-  angular_momentum = mass(planet) * (position(1,planet) * velocity(2,planet) - position(2,planet) * velocity(1,planet))
-!~   angular_momentum_x = mass(planet) * (position(2,planet) * velocity(3,planet) - position(3,planet) * velocity(2,planet))
-!~   angular_momentum_y = mass(planet) * (position(3,planet) * velocity(1,planet) - position(1,planet) * velocity(3,planet))
-  
-  time_mig = 0.5d0 * angular_momentum / torque
-  
-  acceleration(1,planet) = - velocity(1,planet) / time_mig
-  acceleration(2,planet) = - velocity(2,planet) / time_mig
-  acceleration(3,planet) = - velocity(3,planet) / time_mig
+    angular_momentum = mass(planet) * (position(1,planet) * velocity(2,planet) - position(2,planet) * velocity(1,planet))
+  !~   angular_momentum_x = mass(planet) * (position(2,planet) * velocity(3,planet) - position(3,planet) * velocity(2,planet))
+  !~   angular_momentum_y = mass(planet) * (position(3,planet) * velocity(1,planet) - position(1,planet) * velocity(3,planet))
+    
+    time_mig = 0.5d0 * angular_momentum / torque
+    
+    acceleration(1,planet) = - velocity(1,planet) / time_mig
+    acceleration(2,planet) = - velocity(2,planet) / time_mig
+    acceleration(3,planet) = - velocity(3,planet) / time_mig
     
   end do
   
-
+  
   !------------------------------------------------------------------------------
   
 
@@ -269,7 +269,7 @@ subroutine init_globals(stellar_mass)
   torque_lindblad = -2.5d0 - 1.7d0 * temperature_index + 0.1d0 * sigma_index
   torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
   torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
-
+  
 end subroutine init_globals
 
   function get_F(p)
@@ -409,23 +409,21 @@ end subroutine init_globals
     
     implicit none
     
-    call test_get_F()
-    call test_get_G()
-    call test_get_K()
+    call test_functions_FGK()
     call test_get_opacity()
     call test_torques()
     
   end subroutine unitary_tests
 
-  subroutine test_get_F
-  ! subroutine that test the function 'get_F' and 
+  subroutine test_functions_FGK
+  ! subroutine that test the functions 'get_F', 'get_G' and 'get_K' and 
   
   ! Return:
-  !  a data file 'test_F(p).dat' 
-  ! and an associated gnuplot file 'fp.gnuplot' that display values for get_F for a range of p values.
+  !  a data file 'test_functions_FGK.dat' 
+  ! and an associated gnuplot file 'functions_FGK.gnuplot' that display values for get_F, get_G and get_K for a range of p values.
     implicit none
     
-    real(double_precision) :: p, f_p
+    real(double_precision) :: p, f_p, g_p, k_p
     
     real(double_precision), parameter :: p_min = 0.1
     real(double_precision), parameter :: p_max = 100.
@@ -436,137 +434,41 @@ end subroutine init_globals
     
     
     ! We open the file where we want to write the outputs
-    open(10, file='test_F(p).dat')
+    open(10, file='test_functions_FGK.dat')
     write(10,*) "Correspond to the figure 2 of II. Effects of diffusion"
-    write(10,*) 'p ; F(p)'
+    write(10,*) 'p ; F(p) ; G(p) ; K(p)'
     
     
     do i=1,nb_points
       p = p_min * p_step ** (i-1)
       f_p = get_F(p)
-      
-      write(10,*) p, f_p
-    end do
-    
-    close(10)
-    
-    open(10, file="fp.gnuplot")
-
-    write(10,*) 'set xlabel "p"'
-    write(10,*) 'set ylabel "F(p)"'
-    write(10,*) 'set logscale x'
-    write(10,*) 'set nokey' ! Les 'keys' sont les indications permettant de savoir quelle courbe est tracÃÂ©e. (la lÃÂ©gende quoi)
-    write(10,*) 'set grid'
-    write(10,*) 'set xrange [', p_min, ':', p_max, ']'
-    write(10,*) 'plot "test_F(p).dat" using 1:2 with lines'  
-    write(10,*) '#pause -1 # wait until a carriage return is hit'
-    write(10,*) 'set terminal pdfcairo enhanced'
-    write(10,*) 'set output "fp.pdf"'
-    write(10,*) 'replot' 
-    
-    close(10)
-      
-  end subroutine test_get_F
-  
-  subroutine test_get_G
-  ! subroutine that test the function 'get_G' and 
-  
-  ! Return:
-  !  a data file 'test_G(p).dat' 
-  ! and an associated gnuplot file 'gp.gnuplot' that display values for get_G for a range of p values.
-    implicit none
-    
-    real(double_precision) :: p, g_p
-    
-    real(double_precision), parameter :: p_min = 0.1
-    real(double_precision), parameter :: p_max = 100.
-    integer, parameter :: nb_points = 100
-    real(double_precision), parameter :: p_step = (p_max/p_min) ** (1/(nb_points-1.d0))
-    
-    integer :: i ! for loops
-    
-    
-    ! We open the file where we want to write the outputs
-    open(10, file='test_G(p).dat')
-    write(10,*) 'p ; G(p)'
-    
-    
-    do i=1,nb_points
-      p = p_min * p_step ** (i-1)
       g_p = get_G(p)
-      
-      write(10,*) p, g_p
-    end do
-    
-    close(10)
-    
-    open(10, file="gp.gnuplot")
-
-    write(10,*) 'set xlabel "p"'
-    write(10,*) 'set ylabel "G(p)"'
-    write(10,*) 'set logscale x'
-    write(10,*) 'set nokey' ! Les 'keys' sont les indications permettant de savoir quelle courbe est tracée (la légende quoi)
-    write(10,*) 'set grid'
-    write(10,*) 'set xrange [', p_min, ':', p_max, ']'
-    write(10,*) 'plot "test_G(p).dat" using 1:2 with lines'  
-    write(10,*) '#pause -1 # wait until a carriage return is hit'
-    write(10,*) 'set terminal pdfcairo enhanced'
-    write(10,*) 'set output "gp.pdf"'
-    write(10,*) 'replot' 
-    
-    close(10)
-      
-  end subroutine test_get_G
-  
-  subroutine test_get_K
-  ! subroutine that test the function 'get_K' and 
-  
-  ! Return:
-  !  a data file 'test_K(p).dat' 
-  ! and an associated gnuplot file 'kp.gnuplot' that display values for get_K for a range of p values.
-    implicit none
-    
-    real(double_precision) :: p, k_p
-    
-    real(double_precision), parameter :: p_min = 0.1
-    real(double_precision), parameter :: p_max = 100.
-    integer, parameter :: nb_points = 100
-    real(double_precision), parameter :: p_step = (p_max/p_min) ** (1/(nb_points-1.d0))
-    
-    integer :: i ! for loops
-    
-    
-    ! We open the file where we want to write the outputs
-    open(10, file='test_K(p).dat')
-    write(10,*) 'p ; K(p)'
-    
-    
-    do i=1,nb_points
-      p = p_min * p_step ** (i-1)
       k_p = get_K(p)
       
-      write(10,*) p, k_p
+      write(10,*) p, f_p, g_p, k_p
     end do
     
     close(10)
     
-    open(10, file="kp.gnuplot")
+    open(10, file="functions_FGK.gnuplot")
 
     write(10,*) 'set xlabel "p"'
-    write(10,*) 'set ylabel "K(p)"'
+    write(10,*) 'set ylabel "function"'
     write(10,*) 'set logscale x'
-    write(10,*) 'set nokey' ! Les 'keys' sont les indications permettant de savoir quelle courbe est tracée (la légende quoi)
-    write(10,*) 'set grid'
+    write(10,*) 'set mxtics 10'
+    write(10,*) 'set grid xtics ytics mxtics'
     write(10,*) 'set xrange [', p_min, ':', p_max, ']'
-    write(10,*) 'plot "test_K(p).dat" using 1:2 with lines'  
+    write(10,*) 'plot "test_functions_FGK.dat" using 1:2 with lines title "F(p)",\'
+    write(10,*) "     '' using 1:3 with lines title 'G(p)',\"
+    write(10,*) "     '' using 1:4 with lines title 'K(p)'"
     write(10,*) '#pause -1 # wait until a carriage return is hit'
     write(10,*) 'set terminal pdfcairo enhanced'
-    write(10,*) 'set output "kp.pdf"'
-    write(10,*) 'replot'  
+    write(10,*) 'set output "functions_FGK.pdf"'
+    write(10,*) 'replot' 
     
     close(10)
       
-  end subroutine test_get_K
+  end subroutine test_functions_FGK
 
   subroutine test_get_opacity
   ! subroutine that test the function 'get_opacity'
@@ -635,16 +537,16 @@ end subroutine init_globals
     
     integer, parameter :: nb_mass = 100
     real(double_precision), parameter :: mass_min = 1. * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 10. * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     
-    integer, parameter :: nb_points = 100
+    integer, parameter :: nb_points = 200
     real(double_precision), parameter :: a_min = 0.1
-    real(double_precision), parameter :: a_max = 50.
+    real(double_precision), parameter :: a_max = 30.
     ! step for log sampling
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
     
-    real(double_precision) :: a, mass, torque, corotation_torque, gamma_eff, torque_ref
+    real(double_precision) :: a, mass, total_torque, total_torque_units, corotation_torque, gamma_eff, torque_ref
     real(double_precision) :: stellar_mass, position(3), velocity(3)
     
     integer :: i,j ! for loops
@@ -663,12 +565,14 @@ end subroutine init_globals
     open(12, file='test_lindblad_torque.dat')
     open(13, file='test_ref_torque.dat')
     open(14, file='test_gamma_eff.dat')
+    open(15, file='test_total_torque_units.dat')
     
-    write(10,*) 'semi major axis (AU) ; mass in earth mass ; corotation torque'
-    write(11,*) 'semi major axis (AU) ; mass in earth mass ; total torque'
-    write(12,*) 'semi major axis (AU) ; mass in earth mass ; lindblad torque'
-    write(13,*) 'semi major axis (AU) ; mass in earth mass ; reference torque'
+    write(10,*) 'semi major axis (AU) ; mass in earth mass ; corotation torque (no dim)'
+    write(11,*) 'semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
+    write(12,*) 'semi major axis (AU) ; mass in earth mass ; lindblad torque (no dim)'
+    write(13,*) 'semi major axis (AU) ; mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
     write(14,*) 'semi major axis (AU) ; mass in earth mass ; gamma effective'
+    write(15,*) 'semi major axis (AU) ; mass in earth mass ; total torque in M_s.AU^2.day^{-2}'
     
     do i=1, nb_points ! loop on the position
       a = a_min + a_step * (i-1)
@@ -684,21 +588,23 @@ end subroutine init_globals
         velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
         
         call get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, torque_ref, gamma_eff)
-    
-        torque = torque_lindblad + corotation_torque
+        
+        total_torque = torque_lindblad + corotation_torque
+        total_torque_units = (torque_ref / gamma_eff) * total_torque
         
 !~         corotation_torque = torque_ref / gamma_eff * corotation_torque
 !~         torque_lindblad = torque_ref / gamma_eff * torque_lindblad
-        torque = torque_ref / gamma_eff * torque
+!~         torque = torque_ref / gamma_eff * torque
                 
         write(10,*) a, mass / EARTH_MASS, corotation_torque
-        write(11,*) a, mass / EARTH_MASS, torque
+        write(11,*) a, mass / EARTH_MASS, total_torque
         write(12,*) a, mass / EARTH_MASS, torque_lindblad
         write(13,*) a, mass / EARTH_MASS, torque_ref
         write(14,*) a, mass / EARTH_MASS, gamma_eff
+        write(15,*) a, mass / EARTH_MASS, total_torque_units
       end do
       
-      do j=10,14
+      do j=10,15
         write(j,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
       end do
     end do
@@ -707,6 +613,7 @@ end subroutine init_globals
     close(12)
     close(13)
     close(14)
+    close(15)
     
     
     open(10, file="corotation_torque.gnuplot")
@@ -714,8 +621,9 @@ end subroutine init_globals
     open(12, file="lindblad_torque.gnuplot")
     open(13, file="ref_torque.gnuplot")
     open(14, file="gamma_eff.gnuplot")
+    open(15, file="total_torque_units.gnuplot")
     
-    do j=10,14
+    do j=10,15
       write(j,*) 'set terminal x11 enhanced'
       write(j,*) 'set xlabel "semi major axis (AU)"'
       write(j,*) 'set ylabel "Planet mass (m_{earth})" center'
@@ -726,8 +634,9 @@ end subroutine init_globals
     write(12,*) 'set title "Evolution of the lindblad torque {/Symbol g}_{eff}{/Symbol G}_L/{/Symbol G}_0 "'
     write(13,*) 'set title "Evolution of the reference torque {/Symbol G}_0 [M_s.AU^2.day^{-2}]"'
     write(14,*) 'set title "Evolution of {/Symbol g}_{eff}"'
+    write(15,*) 'set title "Evolution of the total torque {/Symbol G}_{tot} [M_s.AU^2.day^{-2}]"'
     
-    do j=10,14
+    do j=10,15
       write(j,*) 'set pm3d map'
 !~     write(j,*) 'set xrange [', a_min, ':', a_max, '] noreverse'
 !~     write(j,*) 'set yrange [', mass_min, ':', mass_max, '] noreverse'
@@ -738,8 +647,9 @@ end subroutine init_globals
     write(12,*) "splot 'test_lindblad_torque.dat' title ''"
     write(13,*) "splot 'test_ref_torque.dat' title ''"
     write(14,*) "splot 'test_gamma_eff.dat' title ''"
+    write(15,*) "splot 'test_total_torque_units.dat' title ''"
     
-    do j=10,14
+    do j=10,15
       write(j,*) "#pause -1 # wait until a carriage return is hit"
       write(j,*) "set terminal pngcairo enhanced"
     end do
@@ -749,8 +659,9 @@ end subroutine init_globals
     write(12,*) "set output 'lindblad_torque.png'"
     write(13,*) "set output 'ref_torque.png'"
     write(14,*) "set output 'gamma_eff.png'"
+    write(15,*) "set output 'total_torque_units.png'"
     
-    do j=10,14
+    do j=10,15
       write(j,*) "replot # pour générer le fichier d'output"
     end do
     
@@ -759,6 +670,7 @@ end subroutine init_globals
     close(12)
     close(13)
     close(14)
+    close(15)
     
   end subroutine test_torques
 
