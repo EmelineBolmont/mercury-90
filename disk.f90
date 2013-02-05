@@ -416,7 +416,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 !~   p_prop%nu = alpha * p_prop%omega * p_prop%scaleheight**2 ! [AU^2.day-1]
   p_prop%nu = get_viscosity(p_prop%semi_major_axis)
 
-  p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
+  p_prop%aspect_ratio = p_prop%scaleheight / p_prop%radius
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
   
   !------------------------------------------------------------------------------
