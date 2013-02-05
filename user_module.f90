@@ -6,6 +6,21 @@ module user_module
 !**
 !** Version 1.0 - june 2011
 !*************************************************************
+
+! The user_module is divided in several parts. First of all, some parameters are calculated at the beginning of the run, in 
+! init_globals. This subroutine must be executed before the rest. Since mfo_user is used by mercury, we can't execute init_globals 
+! only once, we must include an 'if' test that  run init_globals only if it's the first time we pass in the routine. Another thing 
+! to keep in mind is that the temperature profile of the disk is calculated manually. Since the density profile evolve in time, You
+! must re-calculate the temperature profile each time you need it. A mistake can be made because the surface density will evolve 
+! in time automatically. BUT, the temperature profile will not correspond to it. Another set of routine are prefixed with 'test_', 
+! they are all coded to test something, either a routine or a physical value (and plot it). Each plot consist in a data file (*
+! .dat) and a gnuplot file (*.gnuplot). You only have to run the gnuplot file with gnuplot with a command "gnuplot file.gnuplot". 
+
+! Most of the plot are stored in a subdirectory "unitary_tests" of the current directory Theses tests are used ONLY in the 
+! subroutine "unitary_tests" that can be used outside the module. For instance, I made a fortran source code that use this module 
+! and call the routine 'unitary_tests'. That's how I test my module before running it in mercury. The problem is to prepare 
+! variable in the same way, both in mfo_user and my tests. That's why init_globals exists, thus I can run it in my tests also.
+
   use types_numeriques
   use physical_constant
 
@@ -32,6 +47,8 @@ module user_module
   real(double_precision) :: sigma_0 = 450 ! the surface density at (R=1AU) [g/cm^2]
   real(double_precision) :: sigma_index = 0.5! the negative slope of the surface density power law (alpha in the paper)
   real(double_precision) :: sigma_0_num ! the surface density at (R=1AU) [Msun/AU^2]
+  real(double_precision) :: dissipation_timescale = 1.d6 ! the dissipation timescale of the disk (following an exponential law) [year]
+  real(double_precision) :: dissipation_timestep = 1.d3 ! the timestep between two computation of the disk [in years]
   
   ! Here we define the constant value of the viscosity of the disk
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s]
@@ -149,21 +166,36 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision), dimension(3) :: migration_acceleration
   real(double_precision), dimension(3) :: eccentricity_acceleration
   real(double_precision) :: inclination_acceleration_z
+  real(double_precision), save :: next_step = -1.d0 ! next time at which we will compute the thermal properties of the disk?
   
   !------------------------------------------------------------------------------
   ! Setup
-  
   
   do planet=1,n_bodies
     acceleration(1,planet) = 0.d0
     acceleration(2,planet) = 0.d0
     acceleration(3,planet) = 0.d0
   end do
-  !------------------------------------------------------------------------------
+  
   call init_globals(stellar_mass=mass(1))
   
-  write(*,*) '-------------------------------'
-  write(*,*) time, 'n_big_bodies=',n_big_bodies
+  !------------------------------------------------------------------------------
+  ! If it's time (depending on the timestep we want between each calculation of the disk properties)
+  ! The first 'next_step' is set to '-1' to force the calculation for the first timestep
+  if (time.gt.next_step) then
+    next_step = time + dissipation_timestep * 365.25d0
+    
+    ! we get the temperature profile.
+    call calculate_temperature_profile(a_min=radius_min, a_max=radius_max, nb_a=nb_a_sample, time=time, & ! Input
+                                       ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, & ! Output
+                                       tau=tau_profile, chi=chi_profile) ! Output
+    
+    ! we store in a .dat file the temperature profile
+    call store_temperature_profile(filename='temperature_profile.dat')
+    call store_scaleheight_profile()
+  end if
+  !------------------------------------------------------------------------------
+
   
   do planet=2,n_big_bodies
     ! because ongoing deletion of planets put their mass to 0 for a few steps, we must check. Else, we will have an error "NaN".
@@ -171,7 +203,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       !------------------------------------------------------------------------------
       ! we store in a structure, various properties of the planet usefull in all the 
       ! subroutine to avoid multiple calculation of the same parameters
-      call get_planet_properties(stellar_mass=mass(1), mass=mass(planet), & ! input
+      call get_planet_properties(time=time, stellar_mass=mass(1), mass=mass(planet), & ! input
       position=position(1:3, planet), velocity=velocity(1:3,planet),& ! input
       p_prop=p_prop) ! Output
       
@@ -229,11 +261,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
       acceleration(3,planet) = migration_acceleration(3) + eccentricity_acceleration(3) + inclination_acceleration_z
       
-      write(*,*) '###########################' 
-      write(*,*) 'planet ', planet
-      write(*,*) time_mig, time_ecc, time_inc, torque
-      write(*,*) migration_acc_prefactor, eccentricity_acc_prefactor
-      call print_planet_properties(p_prop)
     end if
   end do
   
@@ -335,6 +362,9 @@ subroutine read_disk_properties()
         case('viscosity')
           read(value, *) viscosity
           
+        case('dissipation_timescale')
+          read(value, *) dissipation_timescale
+          
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
           write(*,*) "identificator='", trim(identificator), "' ; value(s)='", trim(value),"'"
@@ -351,7 +381,7 @@ subroutine read_disk_properties()
   
 end subroutine read_disk_properties
 
-subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
+subroutine get_planet_properties(time, stellar_mass, mass, position, velocity, p_prop)
 
 ! subroutine that return numerous properties of the planet and its environment given its mass, position and velocity
 ! Note that some parameters are global and accessed directly by the subroutine
@@ -371,6 +401,8 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   use orbital_elements, only : mco_x2ae
   
   implicit none
+  
+  real(double_precision), intent(in) :: time ! in days from the beginning of the integration
   real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
   real(double_precision), intent(in) :: mass ! the mass of the planet [Msun * K2]
   real(double_precision), dimension(3), intent(in) :: position ! Cartesian position of the planet [AU]
@@ -387,7 +419,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
                 p_prop%semi_major_axis,p_prop%eccentricity,p_prop%inclination,p_prop%radius,velocity2_p,h_p)
   
   !------------------------------------------------------------------------------
-  p_prop%sigma = sigma_0_num / p_prop%radius ** sigma_index ! [Msun/AU^3]
+  p_prop%sigma = get_surface_density(time=time, radius=p_prop%radius) ! [Msun/AU^3]
 !~   call print_planet_properties(p_prop)
   call get_temperature(ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, chi_prof=chi_profile, & ! Input
                        radius=p_prop%radius, & ! Input
@@ -502,13 +534,11 @@ subroutine init_globals(stellar_mass)
   real(double_precision), intent(in) :: stellar_mass
   logical, save :: FirstCall = .True.
   
+  
   if (FirstCall) then
     FirstCall = .False.
     
     call read_disk_properties()
-
-!~     open(10, file='leak.out', status='replace')
-!~     close(10)
 
     allocate(temp_profile_y(nb_a_sample))
     allocate(temp_profile_x(nb_a_sample))
@@ -521,9 +551,8 @@ subroutine init_globals(stellar_mass)
     chi_profile(1:nb_a_sample) = 0.d0
     tau_profile(1:nb_a_sample) = 0.d0
     
-    x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
-
-!~     chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
+    ! The x_s value is corrected from (paardekooper, 2010). The expression used is the one from (paardekooper, 2009a)
+    x_s_prefactor = 1.1d0 * (0.4d0 / b_over_h)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
     
     ! AU is in cm, so we must turn into meter before doing the conversion
     ! division of k_B by m_H is done separately for exponant and value to have more precision
@@ -533,22 +562,11 @@ subroutine init_globals(stellar_mass)
     torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
     torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
     
-    ! we get the temperature profile.
-    call calculate_temperature_profile(a_min=radius_min, a_max=radius_max, nb_a=nb_a_sample, & ! Input
-                                       ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, & ! Output
-                                       tau=tau_profile, chi=chi_profile) ! Output
-    
-    ! we store in a .dat file the temperature profile
-    call store_temperature_profile()
-    call store_scaleheight_profile()
     
     ! Here we display various warning for specific modification of the code that must be kept in mind (because this is not the normal behaviour of the code)
 !~     write(*,*) 'Warning: le couple de corotation a été désactivé'
-!~     write(*,*) 'Warning: h est fixé à 0.05'
     write(*,*) 'Warning: nu est fixé à la main à 10^15'
-!~     write(*,*) 'Warning: chi est fixé à la main à 10^-5'
   endif
-  
 end subroutine init_globals
 
   function get_F(p)
@@ -637,6 +655,25 @@ end subroutine init_globals
     return
   end function get_K
   
+  function get_surface_density(time, radius)
+    ! function that return the surface density at a given radius
+    
+    ! Parameters : 
+    ! radius : the orbital distance [in AU]
+    ! time : the current time [in days]
+    
+    implicit none
+    
+    real(double_precision) :: get_surface_density
+    
+    real(double_precision), intent(in) :: time ! in days from the beginning of the integration
+    real(double_precision), intent(in) :: radius ! in AU, the distance from the central object
+    
+    get_surface_density = sigma_0_num * exp(-time / (365.25 * dissipation_timescale)) / radius ** sigma_index
+  
+    return
+  end function get_surface_density
+  
   function get_opacity(temperature, num_bulk_density)
   ! subroutine that return the opacity of the disk at the location of the planet given various parameters
     implicit none
@@ -701,46 +738,287 @@ end subroutine init_globals
     
     implicit none
     
+    real(double_precision) :: stellar_mass
+    real(double_precision) :: time
+    
+    time = 0.d0
+    stellar_mass = 1.d0 * K2
+    
+    write(*,*) 'Initialisation'
+    call init_globals(stellar_mass)
+    
+    ! we get the temperature profile.
+    call calculate_temperature_profile(a_min=radius_min, a_max=radius_max, nb_a=nb_a_sample, time=time, & ! Input
+                                       ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, & ! Output
+                                       tau=tau_profile, chi=chi_profile) ! Output
+    
+    ! we store in a .dat file the temperature profile
+    call store_temperature_profile(filename='temperature_profile.dat')
+    call store_scaleheight_profile()
     
     call test_functions_FGK()
     call test_get_opacity()
-    call test_torques()
-    call test_torques_fixed_a()
-    call test_torques_fixed_m()
-    call test_function_zero_temperature()
-    call test_temperature_profile()
-    call test_temperature_interpolation()
-    call test_optical_depth_profile()
-    call test_thermal_diffusivity_profile()
+    call test_torques(stellar_mass)
+    call test_torques_fixed_a(stellar_mass)
+    call test_torques_fixed_m(stellar_mass)
+    call test_function_zero_temperature(stellar_mass)
+    call test_temperature_profile(stellar_mass)
+    call test_temperature_interpolation(stellar_mass)
+    call test_optical_depth_profile(stellar_mass)
+    call test_thermal_diffusivity_profile(stellar_mass)
     call test_scaleheight_profile()
+    
+    call test_dissipation_of_the_disk(stellar_mass)
     
   end subroutine unitary_tests
   
-  subroutine test_temperature_interpolation()
+  subroutine test_dissipation_of_the_disk(stellar_mass)
+  ! subroutine that plot several values depending on the properties of the disk during its dissipation
+  
+  ! Return:
+  !  a data file 'test_total_torque.dat' 
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  
+    use contour
+    
+    implicit none
+    
+    real(double_precision), intent(in) :: stellar_mass
+    
+    ! mass sample
+    integer, parameter :: nb_mass = 150
+    real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
+    real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
+    real(double_precision), dimension(nb_mass) :: mass, mass_earth
+    
+    ! orbital distance sample
+    integer, parameter :: nb_points = 100
+    real(double_precision), parameter :: a_min = 0.01
+    real(double_precision), parameter :: a_max = 50.
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points - 1.d0)
+    real(double_precision), dimension(nb_points) :: a
+    
+    ! time sample
+    integer, parameter :: nb_time = 200
+    real(double_precision), parameter :: t_min = 0. ! time in years
+    real(double_precision), parameter :: t_max = 1.d7 ! time in years
+    real(double_precision), parameter :: t_step = (t_max - t_min) / (nb_time - 1.d0)
+    real(double_precision), dimension(nb_time) :: time
+    
+    ! Array to store values of the torque. Used to find the zero torque line
+    real(double_precision), dimension(nb_points, nb_mass) :: total_torque
+    
+    real(double_precision) :: corotation_torque, lindblad_torque, torque_ref
+    real(double_precision) :: position(3), velocity(3)
+    type(PlanetProperties) :: p_prop
+    
+    real(double_precision) :: temp_min, temp_max, density_min, density_max, torque_min, torque_max
+    character(len=80) :: filename_torque, filename_density, filename_temperature, filename_contour
+    character(len=80) :: output_torque, output_density, output_temperature, output_time, time_format
+    integer :: time_length
+    
+    integer :: i,j,k ! for loops
+    !------------------------------------------------------------------------------
+    write(*,*) 'Evolution of the total torque during the dissipation of the disk'
+    
+    time = 0.d0
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+!~     call system("rm dissipation/*")
+      
+    do i=1, nb_points ! loop on the position
+      a(i) = a_min + a_step * (i-1)
+    end do
+    
+    do j=1,nb_mass
+      mass(j) = (mass_min + mass_step * (j - 1.d0)) * K2
+      mass_earth(j) = (mass_min + mass_step * (j - 1.d0)) / EARTH_MASS
+    end do
+    
+    do k=1,nb_time
+      time(k) = (t_min + t_step * (k-1)) * 365.25d0
+    end do
+    write(output_time, '(f0.0)') time(nb_time)/365.25
+    time_length = len(trim(output_time))
+    write(time_format, *) '(f',time_length,'.0)'
+    
+    density_min = 0.
+    density_max = get_surface_density(radius=a(1), time=time(1)) * MSUN / AU**2
+    
+    !------------------------------------------------------------------------------
+    do k=1, nb_time
+      ! We calculate the temperature profile for the current time (because the surface density change in function of time)
+      
+      ! We open the file where we want to write the outputs
+      write(filename_torque, '(a,i0.5,a)') 'dissipation/total_torque',k,'.dat'
+      write(filename_density, '(a,i0.5,a)') 'dissipation/surface_density',k,'.dat'
+      write(filename_temperature, '(a,i0.5,a)') 'dissipation/temperature',k,'.dat'
+      write(filename_contour, '(a,i0.5,a)') 'dissipation/contour',k,'.dat'
+      
+      open(11, file=filename_torque)
+      open(12, file=filename_density)
+      
+      ! we get the temperature profile.
+      call calculate_temperature_profile(a_min=radius_min, a_max=radius_max, nb_a=nb_a_sample, time=time(k), & ! Input
+                                         ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, & ! Output
+                                         tau=tau_profile, chi=chi_profile) ! Output
+      
+      ! we store in a .dat file the temperature profile
+      call store_temperature_profile(filename=filename_temperature)
+      
+      if (k.eq.1) then
+        temp_max = exp(temp_profile_y(1))
+        temp_min = 0.
+      end if
+      
+      write(11,*) '# semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
+      write(12,*) '# semi major axis (AU) ; surface density'
+      
+      do i=1, nb_points ! loop on the position
+        
+        ! We generate cartesian coordinate for the given semi major axis
+        position(1) = a(i)
+        
+
+        
+        do j=1,nb_mass
+          mass(j) = (mass_min + mass_step * (j - 1.d0)) * K2
+          
+          ! We generate cartesian coordinate for the given mass and semi major axis
+          velocity(2) = sqrt((stellar_mass + mass(j)) / position(1))
+          
+          ! we store in global parameters various properties of the planet
+          call get_planet_properties(time=time(k), stellar_mass=stellar_mass, & ! Input
+           mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! Input
+           p_prop=p_prop) ! Output
+          call get_corotation_torque(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref)
+          
+          total_torque(i,j) = lindblad_torque + corotation_torque        
+          
+          write(11,*) a(i), mass_earth(j), total_torque(i,j)
+          
+          
+          
+        end do
+        ! We store the density profile (we only do this for the last mass element, because we wantonly one point for each 'a' value
+          write(12,*) a(i), p_prop%sigma * MSUN / AU**2
+
+        write(11,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
+
+      end do
+
+      close(11)
+      close(12)
+      ! We want to get the contour for the torque equal to 0 for total torque both in physical dimension of units of gamma_0
+      call get_contour(total_torque, a, mass_earth,filename_contour, 0.d0)
+      
+      if (k.eq.1) then
+        torque_min = minval(total_torque)
+        torque_max = maxval(total_torque)
+      end if
+    end do
+    
+    
+    !------------------------------------------------------------------------------
+    ! Gnuplot script to output the frames of the total torque
+    open(11, file="dissipation/total_torque.gnuplot")
+    write(11,*) "set terminal pngcairo enhanced size 1024, 768"
+    write(11,*) 'set xlabel "semi major axis (AU)"'
+    write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
+    write(11,*) 'set pm3d map'
+    write(11,*) 'set pm3d explicit'
+    write(11,*) 'set palette rgbformulae 22,13,-31'
+    write(11,*) 'set mxtics 5'
+    write(11,*) 'set mytics 5'
+    write(11,*) 'set grid xtics ytics mxtics mytics linetype -1, linetype 0'
+    write(11,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+    write(11,*) 'set cbrange [', torque_min, ':', torque_max, ']'
+    
+    do k=1, nb_time
+      write(filename_torque, '(a,i0.5,a)') 'total_torque',k,'.dat'
+      write(filename_contour, '(a,i0.5,a)') 'contour',k,'.dat'
+      write(output_torque, '(a,i0.5,a)') 'total_torque',k,'.png'
+      write(output_time, time_format) time(k)/365.25
+      
+      write(11,*) "set output '",trim(output_torque),"'"
+      write(11,*) 'set title "total torque {/Symbol G}_{tot}/{/Symbol G}_0 T=', trim(output_time),' years"'
+      write(11,*) "splot '",trim(filename_torque),"' with pm3d notitle, \"
+      write(11,*) "      '",trim(filename_contour),"' with line linetype -1 title '{/Symbol G}=0'"
+      write(11,*) ""
+    end do
+    close(11)
+    
+    !------------------------------------------------------------------------------
+    ! Gnuplot script to output the frames of the temperature profile
+    open(12, file="dissipation/temperature.gnuplot")
+    write(12,*) "set terminal pngcairo enhanced size 1024, 768"
+    write(12,*) 'set xlabel "semi major axis (AU)"'
+    write(12,*) 'set ylabel "Temperature (K)"'
+    write(12,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(12,*) 'set yrange [', temp_min, ':', temp_max, ']'
+    
+    do k=1, nb_time
+      write(filename_temperature, '(a,i0.5,a)') 'temperature',k,'.dat'
+      write(output_temperature, '(a,i0.5,a)') 'temperature',k,'.png'
+      write(output_time, time_format) time(k)/365.25
+      
+      write(12,*) "set output '",trim(output_temperature),"'"
+      write(12,*) 'set title "T=', trim(output_time),' years"'
+      write(12,*) "plot '",trim(filename_temperature),"' using 1:2 with lines notitle"
+      write(12,*) ""
+    end do
+    close(12)
+    
+    !------------------------------------------------------------------------------
+    ! Gnuplot script to output the frames of the density
+    open(13, file="dissipation/density.gnuplot")
+    write(13,*) "set terminal pngcairo enhanced size 1024, 768"
+    write(13,*) 'set xlabel "semi major axis (AU)"'
+    write(13,*) 'set ylabel "Surface density (g/cm^2)"'
+    write(13,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(13,*) 'set yrange [', density_min, ':', density_max, ']'
+    
+    do k=1, nb_time
+      write(filename_density, '(a,i0.5,a)') 'surface_density',k,'.dat'
+      write(output_density, '(a,i0.5,a)') 'surface_density',k,'.png'
+      write(output_time, time_format) time(k)/365.25
+      
+      write(13,*) "set output '",trim(output_density),"'"
+      write(13,*) 'set title "T=', trim(output_time),' years"'
+      write(13,*) "plot '",trim(filename_density),"' using 1:2 with lines notitle"
+      write(13,*) ""
+    end do
+    close(13)
+  
+  end subroutine test_dissipation_of_the_disk
+  
+  subroutine test_temperature_interpolation(stellar_mass)
   
     implicit none
     
     ! Input
+    real(double_precision), intent(in) :: stellar_mass
+    
     integer, parameter :: nb_a = 1000
     real(double_precision), parameter :: a_min = 0.d0 ! in AU
     real(double_precision), parameter :: a_max = 100.d0! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
-    
-    real(double_precision) :: stellar_mass
     
     real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
     
     real(double_precision) :: a
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
+    real(double_precision) :: time
     
     integer :: j ! for loops
     
-    ! stellar mass
-    stellar_mass = 1.d0 * K2
+    write(*,*) 'Test of the temperature interpolation'
     
-    call init_globals(stellar_mass)
-    
+    time = 0.d0
     position(:) = 0.d0
     velocity(:) = 0.d0
     
@@ -754,7 +1032,7 @@ end subroutine init_globals
       velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
-      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+      call get_planet_properties(time=time, stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
       
@@ -812,6 +1090,7 @@ end subroutine init_globals
     
     integer :: i ! for loops
     
+    write(*,*) 'test of functions F, G, K from (paardekooper, 2010)'
     
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/test_functions_FGK.dat')
@@ -869,6 +1148,8 @@ end subroutine init_globals
     
     integer :: i,j ! for loops
     
+    write(*,*) 'Test of the opacity'
+    
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/test_opacity.dat')
     write(10,*) "Correspond to the figure 9a of Bell & Lin 1994"
@@ -908,7 +1189,7 @@ end subroutine init_globals
   end subroutine test_get_opacity
   
   
-  subroutine test_torques
+  subroutine test_torques(stellar_mass)
   ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
@@ -919,13 +1200,15 @@ end subroutine init_globals
     
     implicit none
     
+    real(double_precision), intent(in) :: stellar_mass
+    
     integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
     real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     real(double_precision), dimension(nb_mass) :: mass
     
-    integer, parameter :: nb_points = 200
+    integer, parameter :: nb_points = 100
     real(double_precision), parameter :: a_min = 0.01
     real(double_precision), parameter :: a_max = 50.
     ! step for log sampling
@@ -935,18 +1218,17 @@ end subroutine init_globals
     real(double_precision), dimension(nb_points, nb_mass) :: total_torque, total_torque_units
     
     real(double_precision) :: corotation_torque, lindblad_torque, torque_ref
-    real(double_precision) :: stellar_mass, position(3), velocity(3)
+    real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
+    real(double_precision) :: time
     
     integer :: i,j ! for loops
     
+    write(*,*) 'Evolution of the total, lindblad and corotation torques depending on the planet mass and distance'
+    
+    time = 0.d0
     position(:) = 0.d0
     velocity(:) = 0.d0
-    
-    ! stellar mass
-    stellar_mass = 1.d0 * K2
-    
-    call init_globals(stellar_mass)
     
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/test_corotation_torque.dat')
@@ -977,7 +1259,8 @@ end subroutine init_globals
         velocity(2) = sqrt((stellar_mass + mass(j)) / position(1))
         
         ! we store in global parameters various properties of the planet
-        call get_planet_properties(stellar_mass=stellar_mass, mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! input
+        call get_planet_properties(time=time, stellar_mass=stellar_mass, & ! Input
+         mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! Input
          p_prop=p_prop) ! Output
         call get_corotation_torque(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref)
         
@@ -1014,10 +1297,10 @@ end subroutine init_globals
     mass(1:nb_mass) = mass(1:nb_mass) / (EARTH_MASS*K2)
     call get_contour(total_torque, a, mass,'unitary_tests/contour_total_torque.dat', 0.d0)
     call get_contour(total_torque_units, a, mass,'unitary_tests/contour_total_torque_units.dat', 0.d0)
-    
     do j=10,14
       write(j,*) 'set terminal wxt enhanced'
       write(j,*) 'set xlabel "semi major axis (AU)"'
+      write(j,*) 'set ylabel "Planet mass (m_{earth})" center'
       write(j,*) 'set ylabel "Planet mass (m_{earth})" center'
     end do
     
@@ -1070,13 +1353,15 @@ end subroutine init_globals
     
   end subroutine test_torques
 
-  subroutine test_torques_fixed_a
+  subroutine test_torques_fixed_a(stellar_mass)
   ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
   !  a data file 'test_total_torque.dat' 
   ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
     implicit none
+    
+    real(double_precision), intent(in) :: stellar_mass
     
     integer, parameter :: nb_mass = 100
     real(double_precision), parameter :: mass_min = 1. ! in earth mass
@@ -1087,18 +1372,17 @@ end subroutine init_globals
     
     real(double_precision) :: mass, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: lindblad_torque_units, corotation_torque_units, total_torque_units
-    real(double_precision) :: stellar_mass, position(3), velocity(3)
+    real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
+    real(double_precision) :: time
     
     integer :: i,j ! for loops
     
+    write(*,*) 'Evolution of the torque for a fixed distance "a"'
+    
+    time = 0.d0
     position(:) = 0.d0
     velocity(:) = 0.d0
-    
-    ! stellar mass
-    stellar_mass = 1.d0 * K2
-    
-    call init_globals(stellar_mass)
     
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/test_torques_fixed_a.dat')
@@ -1123,7 +1407,7 @@ end subroutine init_globals
       velocity(2) = sqrt((stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
-      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! input
+      call get_planet_properties(time=time, stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! input
        p_prop=p_prop) ! Output
        
       call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
@@ -1208,13 +1492,15 @@ end subroutine init_globals
     
   end subroutine test_torques_fixed_a
 
-  subroutine test_torques_fixed_m
+  subroutine test_torques_fixed_m(stellar_mass)
   ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
   !  a data file 'test_total_torque.dat' 
   ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
     implicit none
+    
+    real(double_precision), intent(in) :: stellar_mass
     
     integer, parameter :: nb_a = 400
     real(double_precision), parameter :: a_min = 0.1 ! in AU
@@ -1225,18 +1511,17 @@ end subroutine init_globals
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: lindblad_torque_units, corotation_torque_units, total_torque_units
-    real(double_precision) :: stellar_mass, position(3), velocity(3)
+    real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
+    real(double_precision) :: time
     
     integer :: i,j ! for loops
     
+    write(*,*) 'Evolution of the torque for a fixed planet mass "m"'
+
+    time = 0.d0
     position(:) = 0.d0
     velocity(:) = 0.d0
-    
-    ! stellar mass
-    stellar_mass = 1.d0 * K2
-    
-    call init_globals(stellar_mass)
     
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/test_torques_fixed_m.dat')
@@ -1261,7 +1546,7 @@ end subroutine init_globals
       velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
-      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+      call get_planet_properties(time=time, stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
       call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, torque_ref)
@@ -1336,7 +1621,7 @@ end subroutine init_globals
     
   end subroutine test_torques_fixed_m
   
-  subroutine calculate_temperature_profile(a_min, a_max, nb_a, ln_x, ln_y, idx, tau, chi)
+  subroutine calculate_temperature_profile(a_min, a_max, nb_a, time, ln_x, ln_y, idx, tau, chi)
 ! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
 ! 
 ! Parameters 
@@ -1350,6 +1635,7 @@ end subroutine init_globals
     integer, intent(in) :: nb_a
     real(double_precision), intent(in) :: a_min! in AU
     real(double_precision), intent(in) :: a_max! in AU
+    real(double_precision), intent(in) :: time ! current time [in days]
     
     real(double_precision), intent(out), dimension(nb_a) :: ln_x, ln_y, idx, tau, chi
     
@@ -1360,9 +1646,9 @@ end subroutine init_globals
     real(double_precision) :: a
     real(double_precision) :: stellar_mass, position(3), velocity(3), temperature, exponant
     type(PlanetProperties) :: p_prop
+
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
     real(double_precision) :: a_old, temperature_old, tmp
-    integer :: nb_smoothing ! number of neighboor value needed around a point to calculate the smoothed value
     
     integer :: i,j ! for loops
         
@@ -1383,7 +1669,7 @@ end subroutine init_globals
     velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
     
     ! we store in global parameters various properties of the planet
-    call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+    call get_planet_properties(time=time, stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
      
     call zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop, & ! Input
@@ -1402,7 +1688,7 @@ end subroutine init_globals
       ! We generate cartesian coordinate for the given mass and semi major axis
       velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
       
-      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+      call get_planet_properties(time=time, stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
       call zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop, & ! Input
@@ -1418,15 +1704,17 @@ end subroutine init_globals
     
   end subroutine calculate_temperature_profile
   
-  subroutine store_temperature_profile()
+  subroutine store_temperature_profile(filename)
   ! subroutine that store in a '.dat' file the temperature profile and negative index of the local power law
   
   implicit none
   
+  character(len=*), intent(in) :: filename
+  
   integer :: j ! for loops
   
   ! We open the file where we want to write the outputs
-  open(10, file='temperature_profile.dat', status='replace')
+  open(10, file=filename, status='replace')
   write(10,*) '# a in AU ; temperature (in K) ; exponant ; chi (thermal diffusivity) ; tau (optical depth)'
   do j=1,nb_a_sample
     write(10,*) exp(temp_profile_x(j)), exp(temp_profile_y(j)), temp_profile_index(j), tau_profile(j), chi_profile(j)!, temp_profile_x(j), temp_profile_y(j)
@@ -1445,7 +1733,9 @@ end subroutine init_globals
   real(double_precision) :: a, scaleheight
   real(double_precision) :: position(3), velocity(3), stellar_mass, mass
   type(PlanetProperties) :: p_prop
+  real(double_precision) :: time
   
+  time = 0.d0
   position(1:3) = 0.d0
   velocity(1:3) = 0.d0
 
@@ -1466,7 +1756,7 @@ end subroutine init_globals
     velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
     
     ! we store in global parameters various properties of the planet
-    call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+    call get_planet_properties(time=time, stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
     write(10,*) a, p_prop%scaleheight, p_prop%scaleheight/a
   end do
@@ -1476,21 +1766,18 @@ end subroutine init_globals
   
   end subroutine store_scaleheight_profile
   
-  subroutine test_temperature_profile()
+  subroutine test_temperature_profile(stellar_mass)
 ! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 ! TODO calculer aussi l'exposant local du profil de température
 
     implicit none
     
-    real(double_precision) :: stellar_mass
+    real(double_precision), intent(in) :: stellar_mass
     
     integer :: j ! for loops
     
-    ! stellar mass
-    stellar_mass = 1.d0 * K2
-    
-    call init_globals(stellar_mass)
+    write(*,*) 'Test of the temperature profile'
     
     open(10, file="unitary_tests/temperature_profile.gnuplot")
     open(11, file="unitary_tests/temperature_index.gnuplot")
@@ -1541,6 +1828,8 @@ end subroutine init_globals
     
     integer :: j
     
+    write(*,*) 'Test of the scaleheight'
+    
   open(10, file="unitary_tests/scaleheight_profile.gnuplot")
   open(11, file="unitary_tests/aspect_ratio.gnuplot")
   
@@ -1588,23 +1877,20 @@ end subroutine init_globals
   
   end subroutine test_scaleheight_profile
   
-  subroutine test_optical_depth_profile()
+  subroutine test_optical_depth_profile(stellar_mass)
 ! Subroutine that test the finding of the optical depth profile and store a plot of the temperature profile of the disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 
     implicit none
     
-    real(double_precision) :: stellar_mass
+    real(double_precision), intent(in) :: stellar_mass
     
     integer :: j ! for loops
     
-    ! stellar mass
-    stellar_mass = 1.d0 * K2
-    
-    call init_globals(stellar_mass)
     
     open(10, file="unitary_tests/optical_depth_profile.gnuplot")
     
+    write(*,*) 'Test of the optical depth'
 
     write(10,*) 'set terminal wxt enhanced'
     write(10,*) 'set xlabel "semi major axis a (in AU)"'
@@ -1633,20 +1919,17 @@ end subroutine init_globals
   
   end subroutine test_optical_depth_profile
   
-  subroutine test_thermal_diffusivity_profile()
+  subroutine test_thermal_diffusivity_profile(stellar_mass)
 ! Subroutine that test the finding of the optical depth profile and store a plot of the temperature profile of the disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 
     implicit none
     
-    real(double_precision) :: stellar_mass
+    real(double_precision), intent(in) :: stellar_mass
     
     integer :: j ! for loops
     
-    ! stellar mass
-    stellar_mass = 1.d0 * K2
-    
-    call init_globals(stellar_mass)
+    write(*,*) 'Test of the thermal diffusivity'
     
     open(10, file="unitary_tests/thermal_diffusivity_profile.gnuplot")
     
@@ -1678,12 +1961,13 @@ end subroutine init_globals
   
   end subroutine test_thermal_diffusivity_profile
 
-  subroutine test_function_zero_temperature
+  subroutine test_function_zero_temperature(stellar_mass)
   ! subroutine that test the function 'zero_finding_temperature'
   
   ! Return:
   !  a data file and an associated gnuplot file.
     implicit none
+    real(double_precision), intent(in) :: stellar_mass
     
     real(double_precision) :: temperature
     
@@ -1698,20 +1982,17 @@ end subroutine init_globals
     real(double_precision) :: zero_function, tmp ! value that we want to output and a dummy argument 'tmp'
     
     integer :: i,j ! for loops
-    real(double_precision) :: stellar_mass, position(3), velocity(3)
+    real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
+    real(double_precision) :: time
 
   !------------------------------------------------------------------------------
-
-
+    time = 0.d0
     position(:) = 0.d0
     velocity(:) = 0.d0
     
-    ! stellar mass
-    stellar_mass = 1.d0 * K2
-    
-    call init_globals(stellar_mass)
+    write(*,*) 'Test of the zero function used to calculate the temperature at a given radius'
     
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/test_function_zero_temperature.dat')
@@ -1723,7 +2004,7 @@ end subroutine init_globals
     velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
     
     ! we store in global parameters various properties of the planet
-    call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+    call get_planet_properties(time=time, stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
     
     ! We calculate this value outside the function because we only have to do this once per step (per radial position)
