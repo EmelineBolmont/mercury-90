@@ -2051,20 +2051,20 @@ program test_disk
     ! mass sample
     integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 20. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     real(double_precision), dimension(nb_mass) :: mass, mass_earth
     
     ! orbital distance sample
     integer, parameter :: nb_points = 100
     real(double_precision), parameter :: a_min = 0.01
-    real(double_precision), parameter :: a_max = 50.
+    real(double_precision), parameter :: a_max = 5.
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points - 1.d0)
     real(double_precision), dimension(nb_points) :: a
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
-    real(double_precision), parameter :: t_max = 2.5d6 ! time in years
+    real(double_precision), parameter :: t_max = 2.7d6 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
     
@@ -2115,8 +2115,8 @@ program test_disk
     call store_density_profile(filename=filename_density_ref)
     
 
-    temp_max = temperature_profile(1)
-    temp_min = 0.
+    temp_max = 1e4
+    temp_min = 1.
     
     ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
     density_min = 0.
@@ -2222,7 +2222,7 @@ program test_disk
       
       if (k.eq.1) then
         torque_min = minval(total_torque)
-        torque_max = maxval(total_torque)
+        torque_max = 7.5 ! maxval(total_torque)
       end if
       
       k = k + 1 ! We increment the integer that point the time in the array (since it's a 'while' and not a 'do' loop)
@@ -2266,8 +2266,12 @@ program test_disk
     write(12,*) "set terminal pngcairo enhanced size 1024, 768"
     write(12,*) 'set xlabel "semi major axis (AU)"'
     write(12,*) 'set ylabel "Temperature (K)"'
-    write(12,*) 'set grid'
-    write(12,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(12,*) 'set mxtics 10'
+    write(12,*) 'set mytics 10'
+    write(12,*) 'set grid xtics ytics mxtics mytics linetype -1, 0'
+    write(12,*) 'set logscale x'
+    write(12,*) 'set logscale y'
+    write(12,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'
     write(12,*) 'set yrange [', temp_min, ':', temp_max, ']'
     
     do k=1, nb_time
