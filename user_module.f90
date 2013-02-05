@@ -15,6 +15,8 @@ module user_module
   
   public :: mfo_user, unitary_tests ! unitary_tests must be used only to test function, you should not use it out of the debug phase
   
+  integer, parameter :: nb_a_sample = 400 ! number of points for the sample of radius of the temperature profile
+  
   !------------------------------------------------------------------------------
   ! Default values for parameters that are to be read in the parameter file 'disk.in'
   real(double_precision) :: b_over_h = 0.4 ! the smoothing length for the planet's potential
@@ -30,8 +32,10 @@ module user_module
   real(double_precision) :: alpha = 0.005 ! alpha parameter for an alpha prescription of the viscosity [No dim]
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
-  real(double_precision) :: temperature_0 = 400. ! the temperature at (R=1AU) [K]
-  real(double_precision) :: temperature_index = 1.6! the negativeslope of the temperature power law (beta in the paper)
+!~   real(double_precision) :: temperature_0 = 400. ! the temperature at (R=1AU) [K]
+!~   real(double_precision) :: temperature_index = 1.6! the negativeslope of the temperature power law (beta in the paper)
+  real(double_precision) :: radius_min = 1.d0
+  real(double_precision) :: radius_max = 60.d0
   
   !------------------------------------------------------------------------------
   ! prefactors
@@ -46,6 +50,10 @@ module user_module
   real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
   
   !------------------------------------------------------------------------------
+  real(double_precision), dimension(nb_a_sample), save :: temp_profile_y ! values of the temperature in log() for each value of the 'a' sample
+  real(double_precision), dimension(nb_a_sample), save :: temp_profile_x ! values of 'a' in log()
+  real(double_precision), dimension(nb_a_sample), save :: temp_profile_index ! values of the local negative slope of the temperature profile
+  
   ! We define a new type for the properties of the planet
   type PlanetProperties
     ! Properties of the planet
@@ -64,6 +72,7 @@ module user_module
     real(double_precision) :: chi ! the thermal diffusion coefficient at the location of the planet [AU^2.day^-1]
     real(double_precision) :: nu ! the viscosity of the disk at the location of the planet [AU^2.day^-1]
     real(double_precision) :: temperature ! the temperature of the disk at the location of the planet [K] 
+    real(double_precision) :: temperature_index ! the negative temperature index of the disk at the location of the planet [no dim]
     real(double_precision) :: bulk_density ! the bulk_density of the disk at the location of the planet [MSUN.AU^-3]
     real(double_precision) :: opacity ! the opacity of the disk at the location of the planet [?]   
   end type PlanetProperties
@@ -396,7 +405,7 @@ subroutine read_disk_properties()
           read(value, *) sigma_0, sigma_index
 
         case('temperature')
-          read(value, *) temperature_0, temperature_index
+          read(value, *) radius_min, radius_max
           
         case('alpha')
           read(value, *) alpha
@@ -455,8 +464,10 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   
   !------------------------------------------------------------------------------
   p_prop%sigma = sigma_0_num / p_prop%radius ** sigma_index ! [Msun/AU^3]
-  p_prop%temperature = temperature_0 / p_prop%radius**temperature_index ! [K]
-  
+  call get_temperature(ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, radius=p_prop%radius, & ! Input
+                       temperature=p_prop%temperature, temperature_index=p_prop%temperature_index) ! Output
+!~   p_prop%temperature = temperature_0 / p_prop%radius**temperature_index ! [K]
+
   ! We calculate the angular momentum
   p_prop%angular_momentum = (mass / K2) * h_p  
   p_prop%velocity = sqrt(velocity2_p) ! [AU/day]
@@ -471,15 +482,9 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   p_prop%nu = 1.d15 * DAY / AU**2
   p_prop%aspect_ratio = p_prop%scaleheight / p_prop%radius
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
-  !------------------------------------------------------------------------------
-  p_prop%bulk_density = 0.5d0 * p_prop%sigma / p_prop%scaleheight
-  !------------------------------------------------------------------------------
-  p_prop%opacity = get_opacity(p_prop%temperature, p_prop%bulk_density)
   
   p_prop%chi = 1.d-5 * p_prop%radius**2 * p_prop%omega 
 !~   p_prop%chi = chi_p_prefactor * p_prop%temperature**4 / (p_prop%opacity * p_prop%sigma**2 * p_prop%omega**2)
-
-
   
 end subroutine get_planet_properties
 
@@ -533,7 +538,7 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   + 2.d0 * adiabatic_index * adiabatic_index * Q_p * Q_p - 2.d0))
   
   !------------------------------------------------------------------------------
-  zeta_eff = temperature_index - (gamma_eff - 1.d0) * sigma_index
+  zeta_eff = p_prop%temperature_index - (gamma_eff - 1.d0) * sigma_index
   
   x_s = x_s_prefactor / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
   
@@ -547,6 +552,8 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   p_chi = sqrt(k_p / p_prop%chi)
 
   lindblad_parameter = sqrt(p_prop%chi / ( 2.d0 * p_prop%omega * p_prop%scaleheight**2))
+  
+  LINDBLAD_PREFACTOR = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * sigma_index) ! paardekooper, baruteau & kley 2010
 !~   lindblad_torque = lindblad_prefactor * (lindblad_parameter + 1.d0 / gamma_eff) / (lindblad_parameter + 1.d0) ! lindblad torque from masset & casoli 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010
   torque_hs_ent = 7.9d0 * zeta_eff / gamma_eff
@@ -598,15 +605,13 @@ subroutine init_globals(stellar_mass)
     ! sqrt(k_B/m_H) in numerical units, knowing that [k_B]=[m^2.kg.s^-2K^-1] and [m_H]=[kg]. 
     scaleheight_prefactor = sqrt(1.3806503d0/(1.67262158d0 * mean_molecular_weight) * 1.d4) * DAY / (AU * 1.d-2) 
     
-  !~   lindblad_prefactor = -(2.3d0 + 0.4d0 * temperature_index - 0.1d0 * sigma_index) ! masset & casoli 2010
-    lindblad_prefactor = -(2.5d0 + 1.7d0 * temperature_index - 0.1d0 * sigma_index) ! paardekooper, baruteau & kley 2010
     
     write(*,*) 'Warning: lindblad torque prefactor need to be calculated at each step if the temperature index change'
     
     torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
     torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
     
-    call calculate_temperature_profile(a_min=1.d0, a_max=60.d0, nb_a=400)
+    call calculate_temperature_profile(a_min=radius_min, a_max=radius_max, nb_a=nb_a_sample)!, ln_a, ln_T, temperature_index)
     
   !~   write(*,*) 'Warning: il y a un offset au couple de corotation'
 !~     write(*,*) 'Warning: h est fixé à 0.05'
@@ -1391,6 +1396,7 @@ end subroutine init_globals
     ! we store in global parameters various properties of the planet
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
+     
     
     temperature = zero_finding_zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop)
 
@@ -1536,7 +1542,6 @@ end subroutine init_globals
     write(10,*) '# radial position of the planet (in AU) :', p_prop%radius
     write(10,*) '# viscosity :', p_prop%nu
     write(10,*) '# surface density :', p_prop%sigma
-    write(10,*) '# bulk density :', p_prop%bulk_density
     write(10,*) '# angular velocity :', P_prop%omega
     write(10,*) '# Temperature (K) ; value of the function. The right temperature is when the function is 0'
     
@@ -1544,7 +1549,7 @@ end subroutine init_globals
 !~       temperature = T_min * T_step ** (i-1)
       temperature = (T_min + T_step * (i - 1.d0))
       
-      zero_function = zero_finding_temperature(temperature=temperature, rho=p_prop%bulk_density, &
+      zero_function = zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, &
                                                omega=p_prop%omega, prefactor=prefactor)
       
       write(10,*) temperature, zero_function
@@ -1566,156 +1571,6 @@ end subroutine init_globals
     close(10)
     
   end subroutine test_function_zero_temperature
-  
-subroutine paardekooper_corotation(stellar_mass, mass, position, velocity)
-! function that return the total torque exerted by the disk on the planet 
-!
-! Parameter:
-! mass : an array will all the masses (including the central one as the first element [solar mass]
-! p_prop%radius : the distance between the central body and each planet
-  use orbital_elements, only : mco_x2a
-  implicit none
-  real(double_precision), intent(in) :: stellar_mass, mass, position(3), velocity(3)
-
-  !Local
-  
-  ! Meaningless parameters (intermediate constant and so on that doesn't mean anything physically)
-  real(double_precision) :: Q_p ! parameter for gamma_eff (equation (45) of Paardekooper, Baruteau, 2010 II. Effects of diffusion)
-  real(double_precision) :: k_p ! parameter for p_nu and p_chi for example  !!! This is not 'k' from equation (15)!
-  
-  !Properties of the disk at the location of the planet
-  type(PlanetProperties) :: p_prop
-
-  real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
-  real(double_precision) :: zeta_eff ! effective entropy index depending on gamma_eff [no dim]
-  real(double_precision) :: p_nu ! parameter for saturation due to viscosity at the location of the planet [no dim]
-  real(double_precision) :: p_chi ! parameter for saturation due to thermal diffusion at the location of the planet [no dim]
-  
-  !Torques (some depends of the planet)
-  real(double_precision) :: torque_hs_ent ! entropy related part of the horseshoe drag
-  real(double_precision) :: torque_c_lin_ent ! entropy related part of the linear corotation torque
-
-  real(double_precision), parameter :: p_nu_min = 0.1d0
-  real(double_precision), parameter :: p_nu_max = 20.d0
-  integer, parameter :: nb_points = 400
-  real(double_precision), parameter :: p_nu_step = (p_nu_max/p_nu_min) ** (1/(nb_points-1.d0))
-  
-  real(double_precision), parameter, dimension(4) :: list_chi = (/1.d-5, 2.d-6, 1.d-6, 1.d-7/)
-  real(double_precision) :: corotation_torque(4)
-  real(double_precision) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
-  real(double_precision) :: gamma_eff ! effective adiabatic index depending on several parameters [no dim]
-  
-  integer :: i,j ! for loops
-  
-  
-  ! we store in global parameters various properties of the planet
-  call get_planet_properties(stellar_mass=stellar_mass, mass=mass, & ! input
-  position=position(1:3), velocity=velocity(1:3),& ! input
-  p_prop=p_prop) ! Output
-  
-  !------------------------------------------------------------------------------
-  ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
-  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
-  
-  open(10, file='unitary_tests/test_paardekooper_figure6.dat')
-  write(10,*) "Correspond to the figure 6 of Paardekooper 2010"
-  write(10,*) '# p_nu ; corotation torque for chi=(1e-5, 2e-6, 1e-6, 1e-7)'
-  
-  do i=1,nb_points
-    do j=1,4 ! loop on chi
-      p_prop%chi = list_chi(j) * p_prop%radius**2 * p_prop%omega
-      
-      !------------------------------------------------------------------------------
-      ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
-      Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
-      !------------------------------------------------------------------------------
-      
-      gamma_eff = 2.d0 * Q_p * adiabatic_index / (adiabatic_index * Q_p + 0.5d0 * &
-      sqrt(2.d0 * sqrt((adiabatic_index * adiabatic_index * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (adiabatic_index - 1.d0)) &
-      + 2.d0 * adiabatic_index * adiabatic_index * Q_p * Q_p - 2.d0))
-      
-      !------------------------------------------------------------------------------
-      zeta_eff = temperature_index - (gamma_eff - 1.d0) * sigma_index
-      
-      x_s = x_s_prefactor / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
-      
-      !------------------------------------------------------------------------------
-      ! k_p is defined to limit the number of operation and to have a value independant from chi_p or nu_p
-      k_p = p_prop%radius * p_prop%radius * p_prop%omega * x_s * x_s * x_s / (2.d0 * PI)
-      
-      !------------------------------------------------------------------------------
-    !~   p_nu = TWOTHIRD * sqrt(k_p / p_prop%nu)
-      p_nu = p_nu_min * p_nu_step ** (i-1)
-      
-      p_chi = sqrt(k_p / p_prop%chi)
-      
-      torque_hs_ent = 7.9d0 * zeta_eff / gamma_eff
-      torque_c_lin_ent = (2.2d0 - 1.4d0 / gamma_eff) * zeta_eff
-      
-      !------------------------------------------------------------------------------
-
-      corotation_torque(j) = (1.d0 / gamma_eff) * &
-        (torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
-        + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
-        + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi))))
-    end do
-    write (10,*) p_nu, corotation_torque
-  end do
-  close(10)
-  
-  open(10, file="unitary_tests/paardekooper_figure6.gnuplot")
-  write(10,*) 'set terminal wxt enhanced'
-  write(10,*) 'set xlabel "p_{/Symbol n}"'
-  write(10,*) 'set ylabel "{/Symbol G}_c/{/Symbol G}_0"'
-  write(10,*) 'set logscale x'
-  write(10,*) 'set mxtics 10'
-  write(10,*) 'set grid xtics ytics mxtics'
-  write(10,*) 'set xrange [', p_nu_min, ':', p_nu_max, ']'
-  write(10,*) "plot 'test_paardekooper_figure6.dat' using 1:2 with lines title '{/Symbol c}_p=10^{-5}',\"
-  write(10,*) "     '' using 1:3 with lines title '{/Symbol c}_p=2*10^{-6}',\"
-  write(10,*) "     '' using 1:4 with lines title '{/Symbol c}_p=10^{-6}',\"
-  write(10,*) "     '' using 1:5 with lines title '{/Symbol c}_p=10^{-7}'"
-  write(10,*) "#pause -1 # wait until a carriage return is hit"
-  write(10,*) "set terminal pdfcairo enhanced"
-  write(10,*) "set output 'paardekooper_figure6.pdf'"
-  write(10,*) "replot # pour générer le fichier d'output"  
-
-  close(10)
-  
-  return
-end subroutine paardekooper_corotation
-
-  subroutine test_paardekooper_corotation
-  ! subroutine that try to reproduce the figure 6 of paardekooper, 2010
-  
-  ! Return:
-  !  a data file 'test_total_torque.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
-    implicit none
-    
-    
-    real(double_precision) :: a, mass
-    real(double_precision) :: stellar_mass, position(3), velocity(3)
-    
-    position(:) = 0.d0
-    velocity(:) = 0.d0
-    
-    ! stellar mass
-    stellar_mass = 1.d0 * K2
-    
-    mass = 1.26d-5  * K2
-    
-    call init_globals(stellar_mass)
-    
-    a = 5.d0
-    position(1) = a
-    
-    velocity(2) = sqrt((stellar_mass + mass) / position(1))
-    
-    
-    call paardekooper_corotation(stellar_mass, mass, position, velocity)
-    
-  end subroutine test_paardekooper_corotation
 
 function zero_finding_zbrent(x_min, x_max, tolerance, p_prop)
 ! Using Brent's method, find the root of a function 'func' known to lie between 'x_min' and 'x_max'. 
@@ -1746,6 +1601,22 @@ integer :: iter
 real(double_precision) :: a, b, c, d, e, fa, fb, fc, p, q, r, s, tol1, xm
 real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
 
+if (isnan(p_prop%sigma)) then
+  write(*,*) 'Error: the surface density is equal to NaN when we want to calculate the temperature profile'
+end if 
+
+if (isnan(p_prop%nu)) then
+  write(*,*) 'Error: the viscosity is equal to NaN when we want to calculate the temperature profile'
+end if 
+
+if (isnan(p_prop%omega)) then
+  write(*,*) 'Error: the angular velocity is equal to NaN when we want to calculate the temperature profile'
+end if 
+
+if (isnan(p_prop%radius)) then
+  write(*,*) 'Error: the distance is equal to NaN when we want to calculate the temperature profile'
+end if
+
 !------------------------------------------------------------------------------
 
 ! We calculate this value outside the function because we only have to do this once per step (per radial position)
@@ -1753,8 +1624,8 @@ prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 16.d0)
 
 a = x_min
 b = x_max
-fa = zero_finding_temperature(temperature=a, rho=p_prop%bulk_density, omega=p_prop%omega, prefactor=prefactor)
-fb = zero_finding_temperature(temperature=b, rho=p_prop%bulk_density, omega=p_prop%omega, prefactor=prefactor)
+fa = zero_finding_temperature(temperature=a, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
+fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
 
 if (((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))) then
   write(*,*) 'root must be bracketed for zbrent'
@@ -1835,14 +1706,14 @@ do iter=1,ITMAX
   ! evaluate new trial root
   b = b + merge(d, sign(tol1,xm), abs(d) .gt. tol1)
   
-  fb = zero_finding_temperature(temperature=b, rho=p_prop%bulk_density, omega=p_prop%omega, prefactor=prefactor)
+  fb = zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, prefactor=prefactor)
 end do
 write(*,*) 'Warning: zbrent exceeding maximum iterations'
 zero_finding_zbrent=b
 return
 end function zero_finding_zbrent
 
-function zero_finding_temperature(temperature, rho, omega, prefactor)
+function zero_finding_temperature(temperature, sigma, omega, prefactor)
 ! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
 ! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
 ! We also use the opacity given in Bell & lin 1994. 
@@ -1855,16 +1726,18 @@ real(double_precision) :: zero_finding_temperature ! the value of the function
 
 ! Input
 real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
-real(double_precision), intent(in) :: rho ! the bulk density at a given position (in MS/AU**3)
+real(double_precision), intent(in) :: sigma ! the surface density at a given position (in MS/AU**2)
 real(double_precision), intent(in) :: omega ! the angular velocity of the disk at a given position
 real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 16.d0)
 
 ! Local
 real(double_precision) :: optical_depth ! the optical depth at a given position
-
+real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
+real(double_precision) :: rho ! the bulk density of the disk at a given position
 !------------------------------------------------------------------------------
-
-optical_depth = get_opacity(temperature, rho) * rho * scaleheight_prefactor * sqrt(temperature) / omega
+scaleheight = scaleheight_prefactor * sqrt(temperature) / omega
+rho = 0.5d0 * sigma / scaleheight
+optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
 
 ! 1.7320508075688772d0 = sqrt(3)
 zero_finding_temperature = SIGMA_STEFAN * temperature**4 + prefactor * &
@@ -1872,7 +1745,7 @@ zero_finding_temperature = SIGMA_STEFAN * temperature**4 + prefactor * &
 return
 end function zero_finding_temperature
 
-subroutine get_temperature(ln_x, ln_y, radius, temperature)
+subroutine get_temperature(ln_x, ln_y, idx, radius, temperature, temperature_index)
 ! subroutine that interpolate a value of the temperature at a given radius with input arrays of radius (x) and temperature (y)
 
 ! Warning : 
@@ -1886,10 +1759,11 @@ subroutine get_temperature(ln_x, ln_y, radius, temperature)
 ! Return : 
 ! temperature : the temperature (in K) at the radius 'radius'
 
-real(double_precision), dimension(:), intent(in) :: ln_x, ln_y
+real(double_precision), dimension(:), intent(in) :: ln_x, ln_y, idx
 real(double_precision), intent(in) :: radius
 
 real(double_precision), intent(out) :: temperature
+real(double_precision), intent(out) :: temperature_index
 
 ! Local
 real(double_precision) :: radius_step ! the step between each radial values in the 'x' array
@@ -1914,10 +1788,13 @@ if ((radius .gt. x_min) .and. (radius .gt. x_max)) then
   ln_y2 = ln_y(closest_low_id + 1)
   
   temperature = exp(ln_y2 + (ln_y1 - ln_y2) * (log(radius) - ln_x2) / (ln_x1 - ln_x2))
+  temperature_index = idx(closest_low_id) ! for the temperature index, no interpolation.
 else if (radius .lt. x_min) then
   temperature = exp(ln_y(1))
+  temperature_index = idx(1)
 else if (radius .gt. x_max) then
   temperature = exp(ln_y(id_max))
+  temperature_index = idx(id_max)
 end if
 
 end subroutine get_temperature
