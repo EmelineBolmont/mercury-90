@@ -2168,19 +2168,19 @@ optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if ther
 funcv = SIGMA_STEFAN * temperature**4 + prefactor * &
                            (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
 
-!if (distance_new.lt.0.4) then
-!  write(*,'(a)')            '------------------------------------------------'
-!  write(*,'(a,es10.3e2)')   '|Temperature = ', temperature
-!  write(*,'(a,es10.3e2)')   '|f(T) = ', funcv
-!  write(*,'(a,es10.3e2,a)') '|Scaleheight = ',scaleheight, ' AU'
-!  write(*,'(a,es10.3e2)')   '|optical depth = ', optical_depth
-!  write(*,'(a,es10.3e2,a)') '|bulk density = ',rho, ' MSUN/AU**3'
-!  write(*,'(a)')            '------------------------------------------------'
-!  write(*,'(a,es10.3e2)')   '|-9*nu*sigma*omega**2/32 = ',prefactor 
-!  write(*,'(a,es10.3e2)')   '|viscous heating = ', prefactor * &
-!                             (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
-!  write(*,'(a)')            '------------------------------------------------'
-!end if
+!~ if (distance_new.lt.0.4) then
+!~   write(*,'(a)')            '------------------------------------------------'
+!~   write(*,'(a,es10.3e2)')   '|Temperature = ', temperature
+!~   write(*,'(a,es10.3e2)')   '|f(T) = ', funcv
+!~   write(*,'(a,es10.3e2,a)') '|Scaleheight = ',scaleheight, ' AU'
+!~   write(*,'(a,es10.3e2)')   '|optical depth = ', optical_depth
+!~   write(*,'(a,es10.3e2,a)') '|bulk density = ',rho, ' MSUN/AU**3'
+!~   write(*,'(a)')            '------------------------------------------------'
+!~   write(*,'(a,es10.3e2)')   '|-9*nu*sigma*omega**2/32 = ',prefactor 
+!~   write(*,'(a,es10.3e2)')   '|viscous heating = ', prefactor * &
+!~                              (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
+!~   write(*,'(a)')            '------------------------------------------------'
+!~ end if
 
 return
 end subroutine temperature_pure_viscous
