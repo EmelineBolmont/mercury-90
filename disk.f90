@@ -344,9 +344,10 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   real(double_precision) :: velocity2_p ! the norm of the velocity squared [AU^2 day^-2]
 
   gm = stellar_mass + mass
+  
   call mco_x2ae(gm,position(1),position(2),position(3),velocity(1),velocity(2),velocity(3),&
                 p_prop%semi_major_axis,p_prop%eccentricity,p_prop%inclination,p_prop%radius,velocity2_p,h_p)
-  
+
   !------------------------------------------------------------------------------
 !~   p_prop%sigma = get_surface_density(radius=p_prop%radius) ! [Msun/AU^3]
   call get_surface_density(radius=p_prop%semi_major_axis, sigma=p_prop%sigma, sigma_index=p_prop%sigma_index)
@@ -368,9 +369,13 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 !~   p_prop%nu = alpha * p_prop%omega * p_prop%scaleheight**2 ! [AU^2.day-1]
   p_prop%nu = get_viscosity(p_prop%semi_major_axis)
 
-  p_prop%aspect_ratio = p_prop%scaleheight / p_prop%radius
+  p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
-  
+	if (abs(p_prop%radius-p_prop%semi_major_axis)/p_prop%radius.gt.1e-2) then
+		write(*,'(a,es10.1e2,a,es10.1e2,a)') 'r = ', p_prop%radius, ' (AU) and a = ', p_prop%semi_major_axis, ' (AU)'
+		call print_planet_properties(p_prop) 
+		stop
+	end if
   !------------------------------------------------------------------------------
 !~   p_prop%chi = 1.d-5 * p_prop%radius**2 * p_prop%omega ! comment if you want to use the thermal diffusivity calculated from the temperature profile
   
@@ -483,7 +488,7 @@ subroutine init_globals(stellar_mass, time)
 ! tau_profile : optical depth 
 !
 ! Parameters
-! stellar_mass : the mass of the central object in solar mass (times K2)
+! stellar_mass : the mass of the central object [Msun * K2]
 
 
   
@@ -848,13 +853,14 @@ end subroutine initial_density_profile
     position(1) = a
     
     ! We generate cartesian coordinate for the given mass and semi major axis
-    velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+    velocity(2) = sqrt((stellar_mass + mass) / position(1))
+    
     
     ! we store in global parameters various properties of the planet
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
-     
-    call zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop, & ! Input
+    
+    call zbrent(x_min=1.d-5, x_max=1.d5, tolerance=1d-4, p_prop=p_prop, & ! Input
                             temperature=temperature, optical_depth=tau_profile(1)) ! Output    
 
     temperature_profile(1) = temperature
@@ -869,12 +875,12 @@ end subroutine initial_density_profile
       position(1) = a
       
       ! We generate cartesian coordinate for the given mass and semi major axis
-      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      velocity(2) = sqrt((stellar_mass + mass) / position(1))
       
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
-      call zbrent(x_min=1.d-5, x_max=1.d4, tolerance=1d-4, p_prop=p_prop, & ! Input
+      call zbrent(x_min=1.d-5, x_max=1.d5, tolerance=1d-4, p_prop=p_prop, & ! Input
                               temperature=temperature, optical_depth=tau_profile(j)) ! Output
       
       temperature_profile(j) = temperature
@@ -1151,7 +1157,7 @@ end subroutine initial_density_profile
     position(1) = a
     
     ! We generate cartesian coordinate for the given mass and semi major axis
-    velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+    velocity(2) = sqrt((stellar_mass + mass) / position(1))
     
     ! we store in global parameters various properties of the planet
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
