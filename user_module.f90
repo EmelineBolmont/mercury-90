@@ -177,7 +177,7 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   call mco_x2a (gm,position(1), position(2), position(3), velocity(1),velocity(2), velocity(3),semi_major_axis,radius_p,vel_squared)
   velocity_p = sqrt(vel_squared)
   
-  omega_p = velocity_p / radius_p ! TODO UNITS!!!!!!!!!
+  omega_p = sqrt(gm / (semi_major_axis * semi_major_axis * semi_major_axis)) ! [day-1]
   write(*,*) "Warning: Units for omega_p are currently not verified"
   
   sigma_p = sigma_0_num * radius_p ** sigma_index ! [N.U.]
