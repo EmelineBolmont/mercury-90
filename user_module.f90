@@ -1858,7 +1858,6 @@ end subroutine print_planet_properties
     allocate(time(time_size), stat=error)
     time(1) = t_min * 365.25d0 ! days
     
-!~     write(*,*) time(k), t_max*365.25d0
     do while (time(k).lt.(t_max*365.d0))
       ! We calculate the temperature profile for the current time (because the surface density change in function of time)
       
@@ -1912,7 +1911,6 @@ end subroutine print_planet_properties
     write(13,*) 'set grid'
     write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'
     write(13,*) 'set yrange [', density_min, ':', density_max, ']'
-!~     write(13,*) 'set logscale y'
     
     do k=1, nb_time
       write(filename_density, '(a,i0.5,a)') 'surface_density',k,'.dat'
