@@ -37,7 +37,7 @@ module disk_properties
   real(double_precision) :: INITIAL_SIGMA_INDEX = 0.5! the negative slope of the surface density power law (alpha in the paper)
   real(double_precision), parameter :: SIGMA_CGS2NUM = AU**2 / MSUN ! The factor to convert surface density from g/cm^2 to MSUN/AU^2 (the numerical units)
   real(double_precision), parameter :: SIGMA_NUM2CGS = MSUN / AU**2 ! The factor to convert surface density from MSUN/AU^2 (numerical units) to g/cm^2 (CGS)
-  integer :: DISSIPATION_TYPE = 1 ! integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
+  integer :: DISSIPATION_TYPE = 0 ! integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
   real(double_precision) :: TAU_DISSIPATION = -1.d0 ! the characteristic time for the exponential decay of the surface density (in years)
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
   character(len=80) :: INNER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
@@ -70,7 +70,7 @@ module disk_properties
   
   !------------------------------------------------------------------------------
   ! Here we define properties common to the profiles
-  real(double_precision) :: INNER_BOUNDARY_RADIUS = 1.d0
+  real(double_precision) :: INNER_BOUNDARY_RADIUS = 0.2d0
   real(double_precision) :: OUTER_BOUNDARY_RADIUS = 100.d0
   real(double_precision) :: INNER_SMOOTHING_WIDTH = 0.05 ! the width (in unit of the inner boundary radius) of the inner region where the surface density is smoothed to 0
   integer :: NB_SAMPLE_PROFILES = 200 ! number of points for the sample of radius of the temperature profile
@@ -127,7 +127,7 @@ integer :: unit
   write(unit,'(a)')            '|####################################'
   write(unit,'(a)')            '|#     Properties of the planet     #'
   write(unit,'(a)')            '|####################################'
-  write(unit,'(a,es10.2e2,a)') '| Mass : ', p_prop%mass, ' [Msun * K2]' 
+  write(unit,'(a,2(es10.2e2,a))') '| Mass : ', p_prop%mass, ' [Msun * K2] (', p_prop%mass/K2 / EARTH_MASS, ' earth mass)'
   write(unit,'(a,f5.1,a)')     '| Semi-major axis : ', p_prop%semi_major_axis, ' [AU]'
   write(unit,'(a,f9.7)')       '| Eccentricity : ', p_prop%eccentricity 
   write(unit,'(a,f5.1,a)')     '| Inclination : ', p_prop%inclination*180./PI, ' [degrees]'

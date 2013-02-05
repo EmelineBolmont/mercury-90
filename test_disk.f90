@@ -2,6 +2,7 @@
 program test_disk
   use types_numeriques
   use disk
+  use disk_properties
     
   implicit none
   
@@ -54,7 +55,7 @@ program test_disk
     call test_manual_torque_interpolation()
     call test_density_interpolation()
     call test_retrieval_of_orbital_elements(stellar_mass=stellar_mass)
-    call test_turbulence_torque(stellar_mass=stellar_mass)
+!~     call test_turbulence_torque(stellar_mass=stellar_mass)
     call test_turbulence_mode()
 
     
@@ -113,7 +114,8 @@ program test_disk
     close(10)
     
     open(10, file="unitary_tests/functions_FGK.gnuplot")
-
+    write(10,*) 'set terminal pdfcairo enhanced'
+    write(10,*) 'set output "functions_FGK.pdf"'
     write(10,*) 'set xlabel "p"'
     write(10,*) 'set ylabel "function"'
     write(10,*) 'set logscale x'
@@ -123,10 +125,6 @@ program test_disk
     write(10,*) 'plot "functions_FGK.dat" using 1:2 with lines title "F(p)",\'
     write(10,*) "     '' using 1:3 with lines title 'G(p)',\"
     write(10,*) "     '' using 1:4 with lines title 'K(p)'"
-    write(10,*) '#pause -1 # wait until a carriage return is hit'
-    write(10,*) 'set terminal pdfcairo enhanced'
-    write(10,*) 'set output "functions_FGK.pdf"'
-    write(10,*) 'replot' 
     
     close(10)
       
@@ -200,16 +198,13 @@ program test_disk
     close(10)
     
     open(10, file="unitary_tests/function_zero_temperature.gnuplot")
-    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) "set output 'function_zero_temperature.pdf'"
     write(10,*) 'set xlabel "Temperature T"'
     write(10,*) 'set ylabel "zero function"'
     write(10,*) 'set grid'
     write(10,*) 'set xrange [', T_min, ':', T_max, ']'
     write(10,*) "plot 'function_zero_temperature.dat' using 1:2 with lines notitle"
-    write(10,*) "#pause -1 # wait until a carriage return is hit"
-    write(10,*) "set terminal pdfcairo enhanced"
-    write(10,*) "set output 'function_zero_temperature.pdf'"
-    write(10,*) "replot # to generate the output file"  
     
     close(10)
     
@@ -247,10 +242,11 @@ program test_disk
     open(10, file="unitary_tests/temperature_interpolation.gnuplot")
     
 
-    write(10,*) 'set terminal wxt enhanced'
-    write(10,*) 'set xlabel "semi major axis a (in AU)"'
-
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) '!rm "temperature_interpolation.pdf"'
+    write(10,*) "set output 'temperature_interpolation.pdf'"
     
+    write(10,*) 'set xlabel "semi major axis a (in AU)"'
     write(10,*) 'set ylabel "temperature [K]"'
       
     write(10,*) 'set grid'
@@ -258,19 +254,6 @@ program test_disk
 
     write(10,*) 'plot "temperature_interpolation.dat" using 1:2 with lines title "Interpolation",\'
     write(10,*) '     "../temperature_profile.dat" using 1:2 with lines title "Profile"'
-        
-
-    
-    write(10,*) "#pause -1 # wait until a carriage return is hit"
-    write(10,*) "set terminal pdfcairo enhanced"
-
-    
-    write(10,*) '!rm "temperature_interpolation.pdf"'
-    write(10,*) "set output 'temperature_interpolation.pdf'"
-
-    
-    
-    write(10,*) "replot # to generate the output file"
     
     close(10)
   
@@ -307,7 +290,10 @@ program test_disk
     open(10, file="unitary_tests/density_interpolation.gnuplot")
     
 
-    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) '!rm "density_interpolation.pdf"'
+    write(10,*) "set output 'density_interpolation.pdf'"
+    
     write(10,*) 'set xlabel "semi major axis a (in AU)"'
 
     
@@ -318,19 +304,7 @@ program test_disk
 
     write(10,*) 'plot "density_interpolation.dat" using 1:2 with lines title "Interpolation",\'
     write(10,*) '     "../density_profile.dat" using 1:2 with lines title "Profile"'
-        
-
     
-    write(10,*) "#pause -1 # wait until a carriage return is hit"
-    write(10,*) "set terminal pdfcairo enhanced"
-
-    
-    write(10,*) '!rm "density_interpolation.pdf"'
-    write(10,*) "set output 'density_interpolation.pdf'"
-
-    
-    
-    write(10,*) "replot # to generate the output file"
     
     close(10)
   
@@ -383,7 +357,10 @@ program test_disk
     open(10, file="unitary_tests/torque_interpolation.gnuplot")
     
 
-    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) '!rm "torque_interpolation.pdf"'
+    write(10,*) "set output 'torque_interpolation.pdf'"
+    
     write(10,*) 'set xlabel "semi major axis a (in AU)"'
 
     
@@ -394,19 +371,7 @@ program test_disk
 
     write(10,*) 'plot "torque_interpolation.dat" using 1:2 with lines linetype -1 title "Interpolated profile",\'
     write(10,*) '     "../torque_profile.dat" using 1:2 with points linetype 1 pointtype 2 linewidth 3 title "Read Profile"'
-        
-
     
-    write(10,*) "#pause -1 # wait until a carriage return is hit"
-    write(10,*) "set terminal pdfcairo enhanced"
-
-    
-    write(10,*) '!rm "torque_interpolation.pdf"'
-    write(10,*) "set output 'torque_interpolation.pdf'"
-
-    
-    
-    write(10,*) "replot # to generate the output file"
     
     close(10)
   
@@ -480,39 +445,32 @@ program test_disk
     open(11, file="unitary_tests/retrieval_e.gnuplot")
     open(12, file="unitary_tests/retrieval_I.gnuplot")
     
-    write(10,*) 'set xlabel "Initial a"'
-    write(11,*) 'set xlabel "Initial e"'
-    write(12,*) 'set xlabel "Initial I"'
-    
-    write(10,*) 'set ylabel "Final a"'
-    write(11,*) 'set ylabel "Final e"'
-    write(12,*) 'set ylabel "Final I"'
-    
     do j=10,12
-      write(j,*) 'set mxtics 10'
-      write(j,*) 'set grid xtics ytics mxtics'
-    end do
-    
-    write(10,*) 'plot "retrieval_a.dat" using 1:2 with lines title "a",\'
-    write(10,*) '                        " " using 1:3 with lines title "r",\'
-    write(10,*) '                        " " using 1:4 with lines title "a2",\'
-    write(10,*) '                        " " using 1:5 with lines title "r2"'
-    write(11,*) 'plot "retrieval_e.dat" using 1:2 with lines title "e",\'
-    write(11,*) '"" using 1:3 with lines title "e2"'
-    write(12,*) 'plot "retrieval_I.dat" using 1:2 with lines title "I",\'
-    write(12,*) '"" using 1:3 with lines title "I2"'
-    
-    do j=10,12
-      write(10,*) '#pause -1 # wait until a carriage return is hit'
-      write(10,*) 'set terminal pdfcairo enhanced'
+      write(j,*) 'set terminal pdfcairo enhanced'
     end do
     
     write(10,*) 'set output "retrieval_a.pdf"'
     write(11,*) 'set output "retrieval_e.pdf"'
     write(12,*) 'set output "retrieval_I.pdf"'
     
+    write(10,*) 'set xlabel "Initial a"'
+    write(11,*) 'set xlabel "Initial a (e=0)"'
+    write(12,*) 'set xlabel "Initial a (I=0)"'
+    
+    write(10,*) 'set ylabel "Retrieved a"'
+    write(11,*) 'set ylabel "Retrieved e"'
+    write(12,*) 'set ylabel "Retrieved I"'
+    
+    do j=10,12
+      write(j,*) 'set mxtics 10'
+      write(j,*) 'set grid xtics ytics mxtics'
+    end do
+    
+    write(10,*) 'plot "retrieval_aeI.dat" using 1:2 with lines notitle'
+    write(11,*) 'plot "retrieval_aeI.dat" using 1:3 with lines notitle'
+    write(12,*) 'plot "retrieval_aeI.dat" using 1:5 with lines notitle'
+    
     do j=10, 12
-      write(j,*) 'replot'
       close(j)
     end do
     
@@ -919,9 +877,11 @@ program test_disk
 
   integer :: i ! For loops
   
+  !------------------------------------------------------------------------------
+  write(*,*) 'Test of turbulence Torque'
+  
   call init_turbulence(initial_time)
   
-  !------------------------------------------------------------------------------
   position(1:3) = 0.d0
   velocity(1:3) = 0.d0
   
@@ -944,7 +904,11 @@ program test_disk
     
     call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
     turbulence_torque(i) = (-sin(theta_planet) * turbulence_acceleration(1) + cos(theta_planet) * turbulence_acceleration(2)) * a 
-
+    
+    write(*,*) turbulence_acceleration(1:3)
+    write(*,*) theta_planet, radius_planet, position(1:3), velocity(1:3)
+    call print_planet_properties(p_prop)
+    
     write(10,*) time, turbulence_torque(i)
   end do
   close(10)
@@ -994,6 +958,7 @@ program test_disk
   type(TurbulenceMode) :: turb_mode ! a turbulence mode
   integer :: i ! For loops
   !------------------------------------------------------------------------------
+  write(*,*) 'Test of turbulence modes'
   
   call init_turbulence(initial_time)
   
@@ -1032,9 +997,17 @@ program test_disk
     
     open(10, file="unitary_tests/temperature_profile.gnuplot")
     open(11, file="unitary_tests/temperature_index.gnuplot")
-    
+
     do j=10,11
-      write(j,*) 'set terminal wxt enhanced'
+      write(j,*) "set terminal pdfcairo enhanced"
+    end do
+    
+    write(10,*) '!rm "temperature_profile.pdf"'
+    write(10,*) "set output 'temperature_profile.pdf'"
+    write(11,*) '!rm "temperature_index.pdf"'
+    write(11,*) "set output 'temperature_index.pdf'"
+
+    do j=10,11
       write(j,*) 'set xlabel "semi major axis a (in AU)"'
       write(j,*) 'set nokey'
     end do
@@ -1045,29 +1018,11 @@ program test_disk
     
     do j=10,11
       write(j,*) 'set grid'
-      write(j,*) 'cd ".."'
     end do
 
-    write(10,*) "plot 'temperature_profile.dat' using 1:2 with lines notitle"
+    write(10,*) 'plot "../temperature_profile.dat" using 1:2 with lines notitle'
     
-    write(11,*) "plot 'temperature_profile.dat' using 1:3 with lines notitle"
-    
-
-    
-    do j=10,11
-      write(j,*) "#pause -1 # wait until a carriage return is hit"
-      write(j,*) "set terminal pdfcairo enhanced"
-    end do
-    
-    write(10,*) '!rm "unitary_tests/temperature_profile.pdf"'
-    write(10,*) "set output 'unitary_tests/temperature_profile.pdf'"
-    write(11,*) '!rm "unitary_tests/temperature_index.pdf"'
-    write(11,*) "set output 'unitary_tests/temperature_index.pdf'"
-    
-    
-    do j=10,11
-      write(j,*) "replot # to generate the output file"
-    end do
+    write(11,*) 'plot "../temperature_profile.dat" using 1:3 with lines notitle'
     
     close(10)
     close(11)
@@ -1085,7 +1040,15 @@ program test_disk
   open(11, file="unitary_tests/aspect_ratio.gnuplot")
   
   do j=10,11
-    write(j,*) 'set terminal wxt enhanced'
+    write(j,*) "set terminal pdfcairo enhanced"
+  end do
+  
+  write(10,*) '!rm "scaleheight_profile.pdf"'
+  write(10,*) "set output 'scaleheight_profile.pdf'"
+  write(11,*) '!rm "aspect_ratio_profile.pdf"'
+  write(11,*) "set output 'aspect_ratio_profile.pdf'"
+  
+  do j=10,11
     write(j,*) 'set xlabel "semi major axis a (in AU)"'
     write(j,*) 'set nokey'
   end do
@@ -1096,31 +1059,13 @@ program test_disk
   
   do j=10,11
     write(j,*) 'set grid'
-    write(j,*) 'cd ".."'
   end do
 
-  write(10,*) "plot 'scaleheight_profile.dat' using 1:2 with line linetype -1 notitle, \"
+  write(10,*) "plot '../scaleheight_profile.dat' using 1:2 with line linetype -1 notitle, \"
   write(10,*) "     '' using 1:(-$2) with line linetype -1 notitle"
   
-  write(11,*) "plot 'scaleheight_profile.dat' using 1:3 with line linetype -1 notitle, \"
+  write(11,*) "plot '../scaleheight_profile.dat' using 1:3 with line linetype -1 notitle, \"
   write(11,*) "     '' using 1:(-$3) with line linetype -1 notitle"
-  
-
-  
-  do j=10,11
-    write(j,*) "#pause -1 # wait until a carriage return is hit"
-    write(j,*) "set terminal pdfcairo enhanced"
-  end do
-  
-  write(10,*) '!rm "unitary_tests/scaleheight_profile.pdf"'
-  write(10,*) "set output 'unitary_tests/scaleheight_profile.pdf'"
-  write(11,*) '!rm "unitary_tests/aspect_ratio_profile.pdf"'
-  write(11,*) "set output 'unitary_tests/aspect_ratio_profile.pdf'"
-  
-  
-  do j=10,11
-    write(j,*) "replot # to generate the output file"
-  end do
   
   close(10)
   close(11)
@@ -1141,7 +1086,10 @@ program test_disk
     
     write(*,*) 'Test of the optical depth'
 
-    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) '!rm "optical_depth_profile.pdf"'
+    write(10,*) "set output 'optical_depth_profile.pdf'"
+    
     write(10,*) 'set xlabel "semi major axis a (in AU)"'
     write(10,*) 'set nokey'
 
@@ -1149,20 +1097,10 @@ program test_disk
     write(10,*) 'set ylabel "Optical depth {/Symbol t}"'
         
     write(10,*) 'set grid'
-    write(10,*) 'cd ".."'
 
 
-    write(10,*) "plot 'temperature_profile.dat' using 1:4 with lines notitle"
-
+    write(10,*) 'plot "../temperature_profile.dat" using 1:5 with lines notitle'
     
-    write(10,*) "#pause -1 # wait until a carriage return is hit"
-    write(10,*) "set terminal pdfcairo enhanced"
-    
-    write(10,*) '!rm "unitary_tests/optical_depth_profile.pdf"'
-    write(10,*) "set output 'unitary_tests/optical_depth_profile.pdf'"
-    
-    
-    write(10,*) "replot # to generate the output file"
     
     close(10)
   
@@ -1181,28 +1119,17 @@ program test_disk
     open(10, file="unitary_tests/thermal_diffusivity_profile.gnuplot")
     
 
-    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) "set terminal pdfcairo enhanced"
+    
+    write(10,*) '!rm "thermal_diffusivity_profile.pdf"'
+    write(10,*) "set output 'thermal_diffusivity_profile.pdf'"
     write(10,*) 'set xlabel "semi major axis a (in AU)"'
     write(10,*) 'set nokey'
-
-    
     write(10,*) 'set ylabel "Thermal diffusivity {/Symbol c} [AU^2/day]"'
         
     write(10,*) 'set grid'
-    write(10,*) 'cd ".."'
 
-
-    write(10,*) "plot 'temperature_profile.dat' using 1:5 with lines notitle"
-
-    
-    write(10,*) "#pause -1 # wait until a carriage return is hit"
-    write(10,*) "set terminal pdfcairo enhanced"
-    
-    write(10,*) '!rm "unitary_tests/thermal_diffusivity_profile.pdf"'
-    write(10,*) "set output 'unitary_tests/thermal_diffusivity_profile.pdf'"
-    
-    
-    write(10,*) "replot # to generate the output file"
+    write(10,*) 'plot "../temperature_profile.dat" using 1:4 with lines notitle'
     
     close(10)
   
@@ -1246,7 +1173,8 @@ program test_disk
     close(10)
     
     open(10, file="unitary_tests/opacity.gnuplot")
-    write(10,*) 'set terminal wxt enhanced'
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) "set output 'opacity.pdf'"
     write(10,*) 'set xlabel "Temperature T"'
     write(10,*) 'set ylabel "Opacity {/Symbol k}"'
     write(10,*) 'set logscale x'
@@ -1258,10 +1186,6 @@ program test_disk
     write(10,*) "     '' using 1:4 with lines title '{/Symbol r}=10^{-7}',\"
     write(10,*) "     '' using 1:5 with lines title '{/Symbol r}=10^{-8}',\"
     write(10,*) "     '' using 1:6 with lines title '{/Symbol r}=10^{-9}'"
-    write(10,*) "#pause -1 # wait until a carriage return is hit"
-    write(10,*) "set terminal pdfcairo enhanced"
-    write(10,*) "set output 'opacity.pdf'"
-    write(10,*) "replot # to generate the output file"  
     
     close(10)
     
@@ -1377,9 +1301,16 @@ program test_disk
     open(12, file="unitary_tests/torques_fixed_a_units.gnuplot")
     open(13, file="unitary_tests/specific_torque_fixed_a.gnuplot")
 
+    do j=10,13
+      write(j,*) "set terminal pdfcairo enhanced"
+    end do
+    
+    write(10,*) "set output 'torques_fixed_a.pdf'"
+    write(11,*) "set output 'ref_torque_fixed_a.pdf'"
+    write(12,*) "set output 'torques_fixed_a_units.pdf'"
+    write(13,*) "set output 'specific_torque_fixed_a.pdf'"
     
     do j=10,13
-      write(j,*) 'set terminal wxt enhanced'
       write(j,*) 'set xlabel "Planet mass (m_{earth})"'
       write(j,'(a,f5.1,a)') 'set title "for a semi major axis a= ',a,' AU"'
     end do
@@ -1411,20 +1342,6 @@ program test_disk
     write(12,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
     
     write(13,*) "plot 'specific_torque_fixed_a.dat' using 1:2 with lines"
-    
-    do j=10,13
-      write(j,*) "#pause -1 # wait until a carriage return is hit"
-      write(j,*) "set terminal pdfcairo enhanced"
-    end do
-    
-    write(10,*) "set output 'torques_fixed_a.pdf'"
-    write(11,*) "set output 'ref_torque_fixed_a.pdf'"
-    write(12,*) "set output 'torques_fixed_a_units.pdf'"
-    write(13,*) "set output 'specific_torque_fixed_a.pdf'"
-    
-    do j=10,13
-      write(j,*) "replot # to generate the output file"
-    end do
     
     close(10)
     close(11)
@@ -1543,7 +1460,14 @@ program test_disk
     open(12, file="unitary_tests/torques_fixed_m_units.gnuplot")
     
     do j=10,12
-      write(j,*) 'set terminal wxt enhanced'
+      write(j,*) "set terminal pdfcairo enhanced"
+    end do
+    
+    write(10,*) "set output 'torques_fixed_m.pdf'"
+    write(11,*) "set output 'ref_torque_fixed_m.pdf'"
+    write(12,*) "set output 'torques_fixed_m_units.pdf'"
+    
+    do j=10,12
       write(j,*) 'set xlabel "semi major axis a (in AU)"'
       write(j,'(a,f4.1,a)') 'set title "for planet mass = ',mass / (EARTH_MASS * K2),' m_{earth}"'
     end do
@@ -1569,20 +1493,6 @@ program test_disk
     write(12,*) "plot 'torques_fixed_m_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
     write(12,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
     write(12,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
-
-    
-    do j=10,12
-      write(j,*) "#pause -1 # wait until a carriage return is hit"
-      write(j,*) "set terminal pdfcairo enhanced"
-    end do
-    
-    write(10,*) "set output 'torques_fixed_m.pdf'"
-    write(11,*) "set output 'ref_torque_fixed_m.pdf'"
-    write(12,*) "set output 'torques_fixed_m_units.pdf'"
-    
-    do j=10,12
-      write(j,*) "replot # to generate the output file"
-    end do
     
     close(10)
     close(11)
@@ -1691,7 +1601,7 @@ program test_disk
       
       
               
-      write(10,*) e, ecc_corot, x_s
+      write(10,*) e / x_s, ecc_corot
     end do
     
     close(10)
@@ -1702,17 +1612,13 @@ program test_disk
 
     write(10,*) "set terminal pdfcairo enhanced"
     write(10,*) "set output 'ecc_corot.pdf'"
-    write(10,'(2(a,f4.1),2a)') 'set title "mass = ',mass / (EARTH_MASS * K2),' m_{earth} ; a = ',a ,'AU"'
+!~     write(10,'(2(a,f4.1),2a)') 'set title "mass = ',mass / (EARTH_MASS * K2),' m_{earth} ; a = ',a ,'AU"'
 
-    write(10,*) 'set xlabel "eccentricity"'
-    write(10,*) 'set logscale x'
-    write(10,*) 'set mxtics 10'
-    write(10,*) 'set grid xtics ytics mxtics'
-    write(10,*) 'set xrange [',e_min ,':1]'
+    write(10,*) 'set xlabel "e/x_s"'
+    write(10,*) 'set grid'
+    write(10,*) 'set xrange [0:2]'
 
-    write(10,*) "plot 'ecc_corot.dat' using 1:2 with lines title 'eccentricity correction', \"
-    write(10,*) "     '' using 3:2 with lines title 'x_s semi width of horseshoe region'"
-    
+    write(10,*) "plot 'ecc_corot.dat' using 1:2 with lines title 'eccentricity correction'"    
     close(10)
 
     
@@ -1728,21 +1634,22 @@ program test_disk
   
     use contour
     
+    
     implicit none
     
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 20. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     real(double_precision), dimension(nb_mass) :: mass
     
     integer, parameter :: nb_points = 100
-    real(double_precision), parameter :: a_min = 0.01
-    real(double_precision), parameter :: a_max = 50.
+    real(double_precision) :: a_min
+    real(double_precision) :: a_max
     ! step for log sampling
-    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
+    real(double_precision) :: a_step
     real(double_precision), dimension(nb_points) :: a
     
     real(double_precision), dimension(nb_points, nb_mass) :: total_torque, total_torque_units
@@ -1756,6 +1663,12 @@ program test_disk
     integer :: deltai, deltaj ! separation between to outputs for the vector part of the display (we do not want a lot of points)
     real(double_precision) :: vector_limit ! The size limit of the vectors, to prevent chevauching.
     
+    !------------------------------------------------------------------------------
+    a_min = INNER_BOUNDARY_RADIUS + INNER_SMOOTHING_WIDTH
+    a_max = 20.
+    a_step = (a_max - a_min) / (nb_points-1.d0)
+    
+    !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total, lindblad and corotation torques depending on the planet mass and distance'
     
     position(:) = 0.d0
@@ -1881,7 +1794,16 @@ program test_disk
     open(14, file="unitary_tests/ref_torque.gnuplot")
 
     do j=10,14
-      write(j,*) 'set terminal wxt enhanced'
+      write(j,*) "set terminal pngcairo crop enhanced size 1200, 1000"
+    end do
+    
+    write(10,*) "set output 'corotation_torque.png'"
+    write(11,*) "set output 'total_torque.png'"
+    write(12,*) "set output 'total_torque_units.png'"
+    write(13,*) "set output 'lindblad_torque.png'"
+    write(14,*) "set output 'ref_torque.png'"
+
+    do j=10,14
       write(j,*) 'set xlabel "semi major axis (AU)"'
       write(j,*) 'set ylabel "Planet mass (m_{earth})" center'
     end do
@@ -1914,22 +1836,7 @@ program test_disk
     write(13,*) "splot 'lindblad_torque.dat' with pm3d notitle"
     
     write(14,*) "splot 'ref_torque.dat' with pm3d notitle"
-
-    
-    do j=10,14
-      write(j,*) "#pause -1 # wait until a carriage return is hit"
-      write(j,*) "set terminal pngcairo crop enhanced size 1200, 1000"
-    end do
-    
-    write(10,*) "set output 'corotation_torque.png'"
-    write(11,*) "set output 'total_torque.png'"
-    write(12,*) "set output 'total_torque_units.png'"
-    write(13,*) "set output 'lindblad_torque.png'"
-    write(14,*) "set output 'ref_torque.png'"
         
-    do j=10,14
-      write(j,*) "replot # to generate the output file"
-    end do
     
     close(10)
     close(11)
