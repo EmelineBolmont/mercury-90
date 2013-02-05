@@ -209,7 +209,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             write(*,*) 'Warning: The torque rule cannot be found.'
             write(*,*) 'Given value :', TORQUE_TYPE
             write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
-            return 1
+            stop ! 1
         end select
         
 
