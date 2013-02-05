@@ -6,14 +6,19 @@ module turbulence
 !** Version 1.0 - mai 2012
 !*************************************************************
 
+! WARNING : You must call once the subroutine "init_turbulence", in the global code or whatever
+
   use types_numeriques
   use physical_constant
+  use disk_properties
 
   implicit none
-  
+    
+  integer, parameter :: nb_modes = 50 ! The total number of mode existing at the same time and that represent the turbulence in the disk at any time.
   integer :: wavenumber_min = 1
   integer :: wavenumber_max = 96
-  real(double_precision) :: lifetime_prefactor = 0.1
+  integer :: wavenumber_cutoff = 6 ! If the wavenumber if greater than this number, then we set the gravitational potential of this mode to 0, to gain computational time.
+  real(double_precision) :: lifetime_prefactor = 0.1 ! a security factor to limit the lifetime of a mode and fit more accurately to hydro simulations
   
   ! We define a new type for the properties of the planet
   type TurbulenceMode
@@ -27,200 +32,278 @@ module turbulence
     real(double_precision) :: radial_extent ! The radial extent of the mode [AU]
 
   end type TurbulenceMode
+  
+  type(TurbulenceMode), dimension(:), allocatable :: turbulence_mode ! an array containing the values for the 50 modes of turbulence
 
   contains
 
+subroutine print_turbulencemode_properties(mode)
+! subroutine that display in the terminal all the values 
+! contained in the instance of turbulenceMode given in parameters
+!
+! Parameters
+! mode : an object of type 'TurbulenceMode'
+  implicit none
+  type(TurbulenceMode), intent(in) :: mode
+  
+  write (*,*) 'radius position of the mode :', mode%r 
+  write (*,*) 'angular position of the mode :', mode%phi 
+  write (*,*) 'wavenumber :', mode%wavenumber
+  write (*,*) 'time of creation of the mode :', mode%t_init
+  write (*,*) 'lifetime of the mode :', mode%lifetime
+  write (*,*) 'chi :', mode%chi 
+  write (*,*) 'radial extent :', mode%radial_extent 
+
+end subroutine print_turbulencemode_properties
 
 subroutine init_mode(time, mode)
-	implicit none
-	real(double_precision), intent(in) :: time
-	type(TurbulenceMode), intent(out) :: mode
-	
-	! locals
-	real(double_precision) :: random_number_01, random_number_02, random_number_03, random_number_normal
-	
-	!------------------------------------------------------------------------------
-	call random_number(random_number_01)! par defaut, c'est entre 0 et 1
-	call random_number(random_number_02)
-	call random_number(random_number_03)
-	
-	random_number_normal = dble(wavenumber_min) * exp(log(dble(wavenumber_max) / dble(wavenumber_min)) * random_number_01) ! pour le mode m, on passe d'une distrib uniforme a une  distrib normale, modemax vaut 96 et modemin vaut 1
-	mode%wavenumber = dble(int(random_number_normal))! on force le fait qeu ce soit un entier
+  ! Routine that create a mode for turbulence, and return an object of type "TurbulenceMode"
+  
+  ! In this routine, the aspect ratio is supposed to be 0.05, and is not related to the 'real' aspect ratio of the disk. 
+  ! This is only used for the lifetime of a mode.
+  
+  ! Parameter
+  ! time : the time of creation of the mode
+  !
+  ! Return : mode
+  
+  implicit none
+  ! Input
+  real(double_precision), intent(in) :: time
+  
+  ! Outputs
+  type(TurbulenceMode), intent(out) :: mode
+  
+  ! Locals
+  real(double_precision) :: random_number_01, random_number_02, random_number_03, random_number_normal
+  type(PlanetProperties) :: d_prop ! to get some properties of the disk at a given location.calculate
+  real(double_precision) :: aspect_ratio = 0.05d0 ! the aspect ratio of the disk. This has nothing to do with the value computed elsewhere. 
+  
+  !------------------------------------------------------------------------------
+  call random_number(random_number_01) ! By default between 0 and 1
+  call random_number(random_number_02)
+  call random_number(random_number_03)
+  
+  random_number_normal = dble(wavenumber_min) * exp(log(dble(wavenumber_max) / dble(wavenumber_min)) * random_number_01) ! pour le mode m, on passe d'une distrib uniforme a une  distrib normale, modemax vaut 96 et modemin vaut 1
+  mode%wavenumber = dble(int(random_number_normal))! on force le fait qeu ce soit un entier
 
-	mode%r = rmax + (rmax - rmin) * random_number_02 ! c'est le rk du papier, c'est la position radiale de l'origine de la turbulence
+  mode%r = INNER_BOUNDARY_RADIUS + (OUTER_BOUNDARY_RADIUS - INNER_BOUNDARY_RADIUS) * random_number_02 ! c'est le rk du papier, c'est la position radiale de l'origine de la turbulence
 
-	mode%phi = 2.d0 * pi * random_number_03 ! pareil pour phik
-	call normal(mode%chi) ! ca genere xi_k, distribution normale de moyenne nulle et d'ecart type 1
-	
-	mode%radial_extent = pi * mode%r / (4.0d0 * mode%wavenumber) ! c'est l'etendu du mode de la turbulence
-	
-	mode%t_init = time ! origine de la generation du mode 
-	! The factor lifetime_prefactor is here to have a better agreement with mhd simulations. lifemode value has 0.1
-	mode%lifetime = lifetime_prefactor * 2.d0 * pi * mode%r**(1.5d0) / (mode%wavenumber * hsr)!c'est le temps de vie du mode
-	
+  mode%phi = TWOPI * random_number_03 ! pareil pour phik
+  call normal(mode%chi) ! ca genere xi_k, distribution normale de moyenne nulle et d'ecart type 1
+  
+  mode%radial_extent = 0.25d0 * PI * mode%r / mode%wavenumber ! c'est l'etendu du mode de la turbulence
+  
+  mode%t_init = time ! origine de la generation du mode 
+  ! The factor lifetime_prefactor is here to have a better agreement with mhd simulations. lifemode value has 0.1
+  mode%lifetime = lifetime_prefactor * TWOPI * mode%r**(1.5d0) / (mode%wavenumber * 0.05) ! lifetime of the mode
+  
 end subroutine init_mode
 
-subroutine potentielturb
+subroutine init_turbulence(time)
+! routine that initialize all the parameters of the turbulence
   implicit none
-  integer i,j,k,m
-  double precision rand,randl,rand2,rand3
-  double precision tp,lturb
-  double precision mode_center_r(k),chi(k),devturb(k),deltat(k),mode_init_time(k),mturb(k),mode_center_phi(k)
-  double precision phim,phip
-  character*2 lab
+  
+  ! Inputs
+  real(double_precision), intent(in) :: time
+  
+  ! Locals
+  integer :: i
+  
+  !------------------------------------------------------------------------------
+  
+  allocate(turbulence_mode(nb_modes))
+  
+  ! We initialize the random seed
+  call init_random_seed()
+  
+  do i=1, nb_modes
+	call init_mode(time, turbulence_mode(i))
+!~ 	call print_turbulencemode_properties(turbulence_mode(i))
+  end do
+end subroutine init_turbulence
 
+subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
+  use utilities, only : get_polar_coordinates
 
+  implicit none
+  
+  ! Inputs
+  real(double_precision), intent(in) :: time ! The current time [days]
+  real(double_precision), dimension(3), intent(in) :: position ! the cartesian position [AU]
+  type(PlanetProperties) :: p_prop ! An object to store various properties of a planet
+  
+  ! Outputs
+  real(double_precision), dimension(3), intent(out) :: turbulence_acceleration ! The gravitational potential induced by the turbulence
+  
+  ! Locals
+  real(double_precision) :: delta_distance = 0.01 ! The infinitesimal distance used to compute the numerical derivation [AU]
+  real(double_precision) :: r_xp1, r_xm1, r_yp1, r_ym1
+  real(double_precision) :: phi_xp1, phi_xm1, phi_yp1, phi_ym1
+  real(double_precision), dimension(3) :: shifted_position
+  integer :: k ! for loops
+  real(double_precision) :: single_prefactor ! common prefactor for a given mode, for each position
+  real(double_precision) :: acc_prefactor ! the prefactor used to calculate the acceleration
+  real(double_precision) :: tmp
+  real(double_precision) :: potential_xp1, potential_xm1, potential_yp1, potential_ym1
+  real(double_precision) :: relative_time ! the current time, with respect to the creation time of a given mode
+  !------------------------------------------------------------------------------  
+  
   ! initialisation
-  if ((time.eq.0.0d0).AND.(initdisk.eq.0)) then
-     do k=1,nb_modes
-        mode_init_time(k)=0.0d0
-        deltat(k)=0.0d0
-     enddo
-  endif
+  ! You must call once the subroutine "init_turbulence", in the global code or whatever
 
-  ! le nombre de mode nmod=50
-  do k=1,nb_modes
-    if (abs(time-mode_init_time(k)).ge.deltat(k)) then!si le mode doit être détruit, on en créé un autre pour remplacer
-			call random_number(rand)! par defaut, c'est entre 0 et 1
-			call random_number(rand2)
-			call random_number(rand3)
-			randl=dble(modemin)*exp(log(dble(modemax)/dble(modemin))*rand) ! pour le mode m, on passe d'une distrib uniforme a une  distrib normale, modemax vaut 96 et modemin vaut 1
-			mturb(k)=dble(int(randl))! on force le fait qeu ce soit un entier
+	potential_xp1 = 0.d0
+	potential_xm1 = 0.d0
+	potential_yp1 = 0.d0
+	potential_ym1 = 0.d0
+	
+	call get_polar_coordinates(position(1) + delta_distance, position(2), position(3), r_xp1, phi_xp1)
+	call get_polar_coordinates(position(1) - delta_distance, position(2), position(3), r_xm1, phi_xm1)
+	call get_polar_coordinates(position(1), position(2) + delta_distance, position(3), r_yp1, phi_yp1)
+	call get_polar_coordinates(position(1), position(2) - delta_distance, position(3), r_ym1, phi_ym1)
+! This radius must be used instead of p_prop%radius because p_prop is the same during the calculation of the derivative
 
-			mode_center_r(k) = rmax + (rmax - rmin) * rand2 ! c'est le rk du papier, c'est la position radiale de l'origine de la turbulence
+	! la on calcule le potentiel turbulent, on fait la smme de tous les
+	! modes en tenant compte de leur evolution teporemlle
+	do k=1,nb_modes
+		relative_time = time - turbulence_mode(k)%t_init ! c'est le temps relatif au temps d 'origine du mode
+		
+		! If needed, we replace an old mode by a new one
+		if (relative_time.ge.turbulence_mode(k)%lifetime) then
+			call init_mode(time, turbulence_mode(k))
+			relative_time = 0.d0
+		end if
 
-			mode_center_phi(k) = 2.d0 * pi * rand3 ! pareil pour phik
-			call normal(chi(k)) ! ca genere xi_k, distribution normale de moyenne nulle et d'ecart type 1
-			devturb(k)=pi*mode_center_r(k)/(4.0d0*mturb(k)) ! c'est l'etendu du mode de la turbulence
-			mode_init_time(k)=time!origine de la generation du mode 
-			! The factor lifemode is here to have a better agreement with mhd simulations. lifemode value has 0.1
-			deltat(k)=lifemode * 2.d0 * pi * mode_center_r(k)**(1.5d0) / (mturb(k) * hsr)!c'est le temps de vie du mode
+		if (turbulence_mode(k)%wavenumber.le.wavenumber_cutoff) then
+			single_prefactor = turbulence_mode(k)%chi * sin(PI * relative_time / turbulence_mode(k)%lifetime)
+			tmp = turbulence_mode(k)%phi - p_prop%omega * relative_time
+
+potential_xp1 = potential_xp1 + single_prefactor * &
+				 exp(-(r_xp1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
+				 cos(turbulence_mode(k)%wavenumber * phi_xp1 - tmp)
+potential_xm1 = potential_xm1 + single_prefactor * &
+				 exp(-(r_xm1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
+				 cos(turbulence_mode(k)%wavenumber * phi_xm1 - tmp)
+potential_yp1 = potential_yp1 + single_prefactor * &
+				 exp(-(r_yp1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
+				 cos(turbulence_mode(k)%wavenumber * phi_yp1 - tmp)
+potential_ym1 = potential_ym1 + single_prefactor * &
+				 exp(-(r_ym1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
+				 cos(turbulence_mode(k)%wavenumber * phi_ym1 - tmp)
 		endif
 	enddo
 
+	! We apply at the end the prefactor of the gravitational potential
+	acc_prefactor = - 0.5d0 / delta_distance * turbulent_forcing * p_prop%radius**2 * p_prop%omega**2
+	
+	turbulence_acceleration(1) = acc_prefactor * (potential_xp1 - potential_xm1) ! The acceleration in one direction equal minus the gradient of the potential
+  turbulence_acceleration(2) = acc_prefactor * (potential_yp1 - potential_ym1) 
+  turbulence_acceleration(3) = 0.d0
 
+end subroutine get_turbulence_acceleration
 
+subroutine get_turbulence_potential(time, p_prop, position, full_gravitational_potential)
+  use utilities, only : get_polar_coordinates
 
-potturb=0.0d0
+  implicit none
+  
+  ! Inputs
+  real(double_precision), intent(in) :: time ! The current time [days]
+  real(double_precision), dimension(3), intent(in) :: position ! the cartesian position [AU]
+  type(PlanetProperties) :: p_prop ! An object to store various properties of a planet
+  
+  ! Outputs
+  real(double_precision), intent(out) :: full_gravitational_potential ! The gravitational potential induced by the turbulence
+  
+  ! Locals
+  integer k
+  real(double_precision) :: single_potential ! the gravitational potential of a single turbulence mode
+  real(double_precision) :: relative_time ! the current time, with respect to the creation time of a given mode
+  real(double_precision) :: theta_planet ! the angle of the planet in polar coordinates
+  real(double_precision) :: radius_planet ! the radius of the planet [AU] (currently not needed here since we have the value in the p_prop object)
 
+  !------------------------------------------------------------------------------
+  
+  call get_polar_coordinates(position(1), position(2), position(3), radius_planet, theta_planet) 
+  ! This radius must be used instead of p_prop%radius because p_prop is the same during the calculation of the derivative
+  
+  ! initialisation
+  ! You must call once the subroutine "init_turbulence", in the global code or whatever
+
+full_gravitational_potential = 0.0d0
 
 ! la on calcule le potentiel turbulent, on fait la smme de tous les
 ! modes en tenant compte de leur evolution teporemlle
 do k=1,nb_modes
-	if (mturb(k).gt.modecut) then
-		 lturb=0.0d0
-	else
-		 tp = time - mode_init_time(k)!c'est le temps relatif au tempsd 'origine du mode
-		 lturb = forc * chi(k) / rc(i)*!mettre r2omega^2 ici, vu que je l'ai
-		 TODO
-		 !forc, c'est le terme gamma, prefacte'ur commun a tous les modes
-		 &    exp(-(rc(i)-mode_center_r(k))**2/devturb(k)**2)
-		 &   *cos(mturb(k)*tc(j)-mode_center_phi(k)-mode_center_r(k)**(-1.5d0)*tp
-		 &    +omega*tp )
-		 &   *sin(pi*tp/deltat(k))!expression 14 
-		 potturb = potturb + lturb
-		 !         write(11,*) mode_init_time(k),mode_center_r(k),mode_center_phi(k),chi(k),
-		 !     &   devturb(k),mturb(k),deltat(k),modemin,modemax,lifemode
-		 !         call flush(11)
-	endif
+  relative_time = time - turbulence_mode(k)%t_init ! c'est le temps relatif au temps d 'origine du mode
+  
+  ! If needed, we replace an old mode by a new one
+  if (relative_time.ge.turbulence_mode(k)%lifetime) then
+	call init_mode(time, turbulence_mode(k))
+	relative_time = 0.d0
+  end if
+
+  if (turbulence_mode(k)%wavenumber.gt.wavenumber_cutoff) then
+	single_potential = 0.0d0
+  else
+
+	single_potential =  turbulence_mode(k)%chi * & 
+					   exp(-(radius_planet - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
+					   cos(turbulence_mode(k)%wavenumber * theta_planet - &
+					   turbulence_mode(k)%phi - p_prop%omega * relative_time) * &
+					   sin(pi * relative_time / turbulence_mode(k)%lifetime) ! expression 14 of pierens et al.
+
+	full_gravitational_potential = full_gravitational_potential + single_potential
+  endif
 enddo
-!         stop
+
+! We apply at the end the prefactor of the gravitational potential
+full_gravitational_potential = turbulent_forcing * p_prop%radius**2 * p_prop%omega**2 * full_gravitational_potential
+
 ! TODO il faut que je mette ls expressions pour l'acceleration
 ! turbulente, aec deux termes, en cosinus et sinus. Parc que je derive
 ! directement dans le code pour avoir l'acceleration qui derive du
 ! potentiel turbulence. Til faut que je fasse aussi la conversion de
 ! cylindrique a cartesien, j'ai le formules sur le bloc.
 
-end subroutine potentielturb
+end subroutine get_turbulence_potential
 
+SUBROUTINE init_random_seed()
+  INTEGER :: i, n, clock
+  INTEGER, DIMENSION(:), ALLOCATABLE :: seed
 
+  CALL RANDOM_SEED(size = n)
+  ALLOCATE(seed(n))
 
-FUNCTION logdis(idum)
-INTEGER idum
-REAL logdis
-REAL ran2,v1
+  CALL SYSTEM_CLOCK(COUNT=clock)
 
-v1=1.0+ran2(idum)
-logdis=(v1*log(v1)-v1+1.0)/(2.0*log(2.0)-1.0)
-return
-END FUNCTION logdis
+  seed = clock + 37 * (/ (i - 1, i = 1, n) /)
+  CALL RANDOM_SEED(PUT = seed)
 
-
+  DEALLOCATE(seed)
+END SUBROUTINE
 
 SUBROUTINE normal(x)
-IMPLICIT NONE
-double precision v1,v2,v11,v22
-double precision r,x
+  ! generate a random number through a gaussian distribution of mean=0 and standard deviation of 1
+  implicit none
+  
+  ! Output
+  real(double_precision), intent(out) :: x
+  
+  ! Locals
+  real(double_precision) :: v1,v2,v11,v22
+  real(double_precision) :: r
 
-r=1.5d0
-do while ((r.gt.1.d0).OR.(r.eq.0.d0))
-  call random_number(v1)
-  call random_number(v2)
-  v11 = 2.d0 * v1 - 1.d0
-  v22 = 2.d0 * v2 - 1.d0
-  r=v11**2 + v22**2
-enddo
-x=v11*dsqrt(-2.d0*dlog(r)/r)
+  r = 1.5d0
+  do while ((r.gt.1.d0).OR.(r.eq.0.d0))
+	call random_number(v1)
+	call random_number(v2)
+	v11 = 2.d0 * v1 - 1.d0
+	v22 = 2.d0 * v2 - 1.d0
+	r = v11**2 + v22**2
+  enddo
+  
+  x = v11 * dsqrt(-2.d0 * dlog(r) / r)
 END SUBROUTINE normal
-
-FUNCTION gasdev(idum,mu)
-INTEGER idum
-REAL gasdev,mu
-INTEGER iset
-REAL fac,gset,rsq,v1,v2,ran2
-SAVE iset,gset
-DATA iset/0/
-if (idum.lt.0) iset=0
-if (iset.eq.0) then
-1 v1=2.*ran2(idum)-1.
-  v2=2.*ran2(idum)-1.
-  rsq=v1**2+v2**2
-  if (rsq.ge.1..or.rsq.eq.0.)goto 1
-  fac=sqrt(-2.*log(rsq)/rsq)
-  gset=v1*fac
-  gasdev=v2*fac
-  iset=1
-else
-  gasdev=gset
-  iset=0
-endif
-gasdev=mu+gasdev
-return
-end FUNCTION gasdev
-
-
-FUNCTION ran2(idum)
-INTEGER idum,IM1,IM2,IMM1,IA1,IA2,IQ1,IQ2,IR1,IR2,NTAB,NDIV
-REAL ran2,AM,eps,RNMX
-PARAMETER (IM1=2147483563,IM2=2147483399,AM=1./IM1,IMM1=IM1-1,
-*IA1=40014,IA2=40692,IQ1=53668,IQ2=52774,IR1=12211,
-*IR2=3791,NTAB=32,NDIV=1+IMM1/NTAB,EPS=1.2e-7,RNMX=1.-EPS)
-INTEGER idum2,j,k,iv(NTAB),iy
-SAVE iv,iy,idum2
-DATA idum2/123456789/, iv/NTAB*0/, iy/0/
-if (idum.le.0) then
-  idum=max(-idum,1)
-  idum2=idum
-  do 11 j=NTAB+8,1,-1
-     k=idum/IQ1
-     idum=IA1*(idum-k*IQ1)-k*IR1
-     if (idum.lt.0) idum=idum+IM1
-     if (j.le.NTAB) iv(j)=idum
-11   continue
-     iy=iv(1)
-  endif
-  k=idum/IQ1
-  idum=IA1*(idum-k*IQ1)-k*IR1
-  if (idum.lt.0) idum=idum+IM1
-  k=idum2/IQ2
-  idum2=IA2*(idum2-k*IQ2)-k*IR2
-  if (idum2.lt.0) idum2=idum2+IM2
-  j=1+iy/NDIV
-  iy=iv(j)-idum2
-  iv(j)=idum
-  if (iy.lt.1) iy=iy+IMM1
-  ran2=min(AM*iy,RNMX)
-  return
-END function ran2
 
 end module turbulence
