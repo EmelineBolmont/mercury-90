@@ -15,7 +15,7 @@ module turbulence
   implicit none
     
   integer, parameter :: nb_modes = 50 ! The total number of mode existing at the same time and that represent the turbulence in the disk at any time.
-  integer :: wavenumber_min = 2
+  integer :: wavenumber_min = 1
   integer :: wavenumber_max = 96
   integer :: wavenumber_cutoff = 6 ! If the wavenumber if greater than this number, then we set the gravitational potential of this mode to 0, to gain computational time.
   real(double_precision) :: lifetime_prefactor = 1.0 ! a security factor to limit the lifetime of a mode and fit more accurately to hydro simulations
@@ -105,7 +105,7 @@ subroutine init_mode(time, mode)
   
   mode%t_init = time ! origine de la generation du mode 
   ! The factor lifetime_prefactor is here to have a better agreement with mhd simulations. lifemode value has 0.1
-  mode%lifetime = lifetime_prefactor * TWOPI * mode%r**(1.5d0) / (mode%wavenumber * 0.05) ! lifetime of the mode
+  mode%lifetime = lifetime_prefactor * TWOPI * mode%r**(1.5d0) / (mode%wavenumber * aspect_ratio) ! lifetime of the mode
   
 !~   call print_turbulencemode_properties(mode)
   
@@ -143,8 +143,6 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
 ! TURBULENT_FORCING : the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
 !                     the value of the turbulent forcing gamma is related to the alpha parameter of 
 !                     the viscosity prescription by : alpha = 120 (gamma / h)^2 where h is the aspect ratio
-
-
 
   use utilities, only : get_polar_coordinates
 
@@ -199,6 +197,7 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
 !~ 	  close(10)
 	end if
 
+	! if the mode is too faint, we neglect it, instead of calculating a very small number
 	if (turbulence_mode(k)%wavenumber.le.wavenumber_cutoff) then
 	  single_prefactor = turbulence_mode(k)%chi * sin(PI * relative_time / turbulence_mode(k)%lifetime) * &
 						 exp(-((r - turbulence_mode(k)%r) / turbulence_mode(k)%radial_extent)**2)
@@ -210,7 +209,6 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
 	  sum_element_r = sum_element_r + (1.d0 + 2.d0 * r * (r - turbulence_mode(k)%r) / turbulence_mode(k)%radial_extent**2) * &
 	                  lambda_cm
 	  sum_element_theta = sum_element_theta + turbulence_mode(k)%wavenumber * lambda_sm
-	  
 
 	endif
   enddo
@@ -223,7 +221,7 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   
   ! To get the turbulence acceleration, we use (28), (29) and (30) of (ogihara, 2007). Some constant calculation is putted in a 
   ! prefactor, some other calculation that depend upon the planet are calculed in another prefactor
-  
+
   turbulence_acceleration(1) = cos(phi) * force_radius - sin(phi) * force_theta
   turbulence_acceleration(2) = sin(phi) * force_radius + cos(phi) * force_theta
   turbulence_acceleration(3) = 0.d0
