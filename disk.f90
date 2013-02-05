@@ -548,6 +548,21 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   
 end subroutine get_planet_properties
 
+function get_corotation_damping(e, x_s)
+	! Function that return the prefactor, between 0 and 1, to apply on the corotation torque due to the value of the eccentricity
+
+	implicit none
+	real(double_precision), intent(in) :: e
+	real(double_precision), intent(in) :: x_s
+	
+	real(double_precision) :: get_corotation_damping
+  !------------------------------------------------------------------------------
+  
+!~   get_corotation_damping = 1.d0 - dtanh(e / x_s)
+  get_corotation_damping = 0.5d0 * (dtanh(2.d0) - dtanh((2.5d0 * e) / x_s - 2.d0))
+
+end function get_corotation_damping
+
 subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0, ecc_corot)
 ! function that return the total torque exerted by the disk on the planet 
 !
@@ -612,7 +627,8 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   ! k_p is defined to limit the number of operation and to have a value independant from chi_p or nu_p
   k_p = p_prop%radius * p_prop%radius * p_prop%omega * x_s * x_s * x_s / (2.d0 * PI)
   
-  ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
+!~   ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
+  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
   
   !------------------------------------------------------------------------------
   p_nu = TWOTHIRD * sqrt(k_p / p_prop%nu)
@@ -1871,7 +1887,7 @@ subroutine get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotati
 
   !------------------------------------------------------------------------------
 
-  ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
+  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
   
   corotation_torque = SATURATION_TORQUE * dtanh(INDEP_CZ - p_prop%radius)
   
@@ -1927,7 +1943,7 @@ subroutine get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corota
   
   !------------------------------------------------------------------------------
   
-  ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
+  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
   
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
@@ -2005,11 +2021,11 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
     
   !------------------------------------------------------------------------------
   
-    x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
+  x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
   
   !------------------------------------------------------------------------------
   
-  ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
+  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
   
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
@@ -2076,7 +2092,7 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
   
   !------------------------------------------------------------------------------
   
-  ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
+  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
   
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
