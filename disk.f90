@@ -270,6 +270,7 @@ subroutine write_disk_properties()
   write(10,'(a,f4.2)') 'mean molecular weight = ', MEAN_MOLECULAR_WEIGHT
   write(10,'(a,es10.1e2,a)') 'viscosity = ', viscosity, ' (cm^2/s)'
   if (isTurbulence) then
+    write(10,'(a,l)') 'is turbulence = ', isTurbulence
     write(10,'(a,es10.1e2,a)') 'turbulence_forcing = ', TURBULENT_FORCING, ' (adim)'
   else
     write(10,'(a)') 'No turbulence'
@@ -282,12 +283,26 @@ subroutine write_disk_properties()
   write(10,'(a)') 'Possible values : &
   0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile'
   write(10,'(a,i1)') 'dissipation of the disk = ',DISSIPATION_TYPE
-  write(10,'(a)') '  Case(1) : viscous dissipation'
-  write(10,'(a)') "    Possible values : 'open', 'closed'"
-  write(10,'(a, a)') '    inner boundary condition = ', trim(INNER_BOUNDARY_CONDITION)
-  write(10,'(a, a)') '    outer boundary condition = ', trim(OUTER_BOUNDARY_CONDITION)
-  write(10,'(a)') '  Case(2) : exponential decay'
-  write(10,'(a,es10.1e2)') '    characteristic time for decay = ',TAU_DISSIPATION
+select case(DISSIPATION_TYPE)
+		case(0) 
+			write(10,'(a)') '  0 : no dissipation of the density profile.'
+		
+		case(1) 
+			write(10,'(a)') '  1 : viscous dissipation of the surface density profile'
+			write(10,'(a)') "    Possible values : 'open', 'closed'"
+			write(10,'(a, a)') '    inner boundary condition = ', trim(INNER_BOUNDARY_CONDITION)
+			write(10,'(a, a)') '    outer boundary condition = ', trim(OUTER_BOUNDARY_CONDITION)
+		
+		case(2) 
+			write(10,'(a)') '  2 : Exponential decay of the surface density profile (no modification of the steepness though'
+			write(10,'(a,es10.1e2)') '    characteristic time for decay = ',TAU_DISSIPATION
+
+		case default
+			write(10,'(a)') 'Warning: The dissipation type cannot be found.'
+			write(10,'(a,a)') 'Given value : ', DISSIPATION_TYPE
+			write(10,'(a)') 'Values possible : 0 ; 1 ; 2'
+	end select
+  
   write(10,*) ''
   write(10,'(a)') '------------------------------------'
   write(10,'(a)') '|     Interactions disk/planets     |'
