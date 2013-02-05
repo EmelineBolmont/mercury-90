@@ -4,6 +4,8 @@
 
 from make import *
 
+import git_infos
+
 # Parameters
 debug = False
 gdb = False
@@ -45,6 +47,10 @@ if isProblem:
   print(problem_message)
   exit()
 
+git_infos.write_infos_in_f90_file()
+
+isModifs = git_infos.is_non_committed_modifs()
+
 # We clean undesirable files. Indeed, we will compile everything everytime.
 if force:
   clean(["o", "mod"])
@@ -63,3 +69,6 @@ sources_filename = lister("*.f90")
 # We create the binaries
 make_binaries(sources_filename, ["mercury.f90", "element.f90", "close.f90"], debug=debug, gdb=gdb, profiling=profiling)
 #~ make_binaries(sources_filename, {"mercury.f90":"mercury2", "element.f90":"element2", "close.f90":"close2"}, debug=False, gdb=False, profiling=False)
+
+if (isModifs):
+	print("Warning: There is non committed modifs!")
