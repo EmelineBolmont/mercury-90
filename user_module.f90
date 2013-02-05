@@ -69,7 +69,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   use physical_constant
   use mercury_constant
   use turbulence
-
+  use utilities, only : vect_product
+  
   implicit none
 
   
@@ -120,7 +121,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   end do
   
   call init_globals(stellar_mass=mass(1), time=time)
-    
+  
   !------------------------------------------------------------------------------
   ! If it's time (depending on the timestep we want between each calculation of the disk properties)
   ! The first 'next_dissipation_step' is set to '-1' to force the calculation for the first timestep. In fact, the first timestep will be done fornothing, but we need this in order to have a clean code.
@@ -244,11 +245,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         
         !------------------------------------------------------------------------------
         ! Calculation of the acceleration due to turbulence, if needed
-        turbulence_acceleration(1) = 0.d0
-        turbulence_acceleration(2) = 0.d0
-        turbulence_acceleration(3) = 0.d0
+        turbulence_acceleration(1:3) = 0.d0
         
-        if (isTurbulence) then
+        if (IS_TURBULENCE) then
           call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
         end if
         
@@ -263,12 +262,15 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
                                  eccentricity_acceleration(3) + inclination_acceleration_z
         
         
-!~         if (time.gt.8.948e5) then
+!~         if (p_prop%semi_major_axis.gt.4.) then
 !~ !          call print_planet_properties(p_prop)
 !~           call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
-!~                        time_mig, migration_acceleration, time_ecc, eccentricity_acceleration)
+!~                        time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
+!~                        turbulence_acceleration)
+!~ !          write (*,*) sqrt(sum(vect_product(position(1:3,planet), acceleration(1:3,planet))))
+!~ !          stop
 !~         end if
-!~         if (time.gt.1e6) then
+!~         if (time.gt.1.2e3) then
 !~           stop
 !~         end if
       end if
@@ -280,7 +282,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 end subroutine mfo_user
 
 subroutine debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
-                       time_mig, migration_acceleration, time_ecc, eccentricity_acceleration)
+                       time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
+                       turbulence_acceleration)
 ! subroutine that print informations helpfull to debug, such as migration timescales, accelerations and so on
 
 implicit none
@@ -295,6 +298,7 @@ implicit none
   
   real(double_precision), dimension(3), intent(in) :: migration_acceleration
   real(double_precision), dimension(3), intent(in) :: eccentricity_acceleration
+  real(double_precision), dimension(3), intent(in) :: turbulence_acceleration
 
 ! Local
 character(len=80) :: output_format
@@ -323,6 +327,12 @@ write(*,'(a,es10.3e2,a)') 'Eccentricity timescale = ', time_ecc, ' days'
 write(*,output_format) 'aex = ', eccentricity_acceleration(1), &
                        'aey = ', eccentricity_acceleration(2), &
                        'aez = ', eccentricity_acceleration(3)
+write(*,'(a)') '------------------------------------'
+write(*,'(a)') '|           Turbulence             |'
+write(*,'(a)') '------------------------------------'
+write(*,output_format) 'atx = ', turbulence_acceleration(1), &
+                       'aty = ', turbulence_acceleration(2), &
+                       'atz = ', turbulence_acceleration(3)
 write(*,'(a)') '____________________________________'
 
 
