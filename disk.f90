@@ -430,7 +430,7 @@ subroutine write_disk_properties()
     write(10,'(a)') '  No turbulence'
   end if
   write(10,*) ''
-  write(10,'(a,f5.2,a)') 'The orbits will be resolved up to ', distance_accuracy, ' AU'
+  write(10,'(a,f5.2,a)') 'The orbits will be resolved as low as ', distance_accuracy, ' AU'
   write(10,'(a,f6.1,a)') 'inner edge of the disk = ',INNER_BOUNDARY_RADIUS, ' (AU)'
   write(10,'(a,f6.1,a)') 'outer edge of the disk = ',OUTER_BOUNDARY_RADIUS, ' (AU)'
   if (IS_MANUAL_SURFACE_DENSITY) then
