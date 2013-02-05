@@ -48,7 +48,7 @@ module disk_properties
   ! Here we define the constant value of the viscosity of the disk
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s] (must not be used directly into the code, use get_viscosity(radius) instead)
   logical :: IS_TURBULENCE = .False. ! if there is turbulence or not inside the disk
-  real(double_precision) :: TURBULENT_FORCING ! the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
+  real(double_precision) :: TURBULENT_FORCING = 0.d0 ! the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
   ! the value of the turbulent forcing gamma is related to the alpha parameter of the viscosity prescription by : alpha = 120 (gamma / h)^2 where h is the aspect ratio
   
   !------------------------------------------------------------------------------
