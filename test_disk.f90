@@ -1375,8 +1375,8 @@ program test_disk
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     integer, parameter :: nb_a = 400
-    real(double_precision), parameter :: a_min = 0.1 ! in AU
-    real(double_precision), parameter :: a_max = 15 ! in AU
+    real(double_precision), parameter :: a_min = 1 ! in AU
+    real(double_precision), parameter :: a_max = 9 ! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
     real(double_precision), parameter :: mass = 10. * EARTH_MASS * K2
@@ -1391,8 +1391,8 @@ program test_disk
     
     write(*,*) 'Evolution of the torque for a fixed planet mass "m"'
 
-    position(:) = 0.d0
-    velocity(:) = 0.d0
+    position(1:3) = 0.d0
+    velocity(1:3) = 0.d0
     
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/torques_fixed_m.dat')
@@ -1414,7 +1414,7 @@ program test_disk
       position(1) = a
       
       ! We generate cartesian coordinate for the given mass and semi major axis
-      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      velocity(2) = sqrt((stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
@@ -1757,8 +1757,8 @@ program test_disk
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total, lindblad and corotation torques depending on the planet mass and distance'
     
-    position(:) = 0.d0
-    velocity(:) = 0.d0
+    position(1:3) = 0.d0
+    velocity(1:3) = 0.d0
     
     ! We want to have only 10 points both in x and y for vector outputs
     deltai = nb_points / 20
