@@ -9,6 +9,7 @@ module contour
 !** where 'z' is a matrix with first dimension the same length of the 'x' array and the second dimension of 'z' is the same dimension than 'y'
 !** i.e z(1:10,1:5), x(1:10), y(1:5) will work
 !**
+!**
 !** Version 1.0 - sept 2011
 !*************************************************************
   use types_numeriques
@@ -30,12 +31,15 @@ real(double_precision), dimension(:), intent(in) :: x, y
 real(double_precision), intent(in) :: lvl
 logical, dimension(:,:), allocatable :: not_tested ! in order to count only once each point
 character(len=*), intent(in) :: filename
+integer,save :: nb_times = 0
 
 ! Local
 integer :: nb_x, nb_y
 integer :: i,j
 logical :: change_sign_L0, change_sign_L1
 !-----
+
+nb_times = nb_times + 1
 
 nb_x = size(x)
 nb_y = size(y)
@@ -46,6 +50,12 @@ end if
 
 if (size(matrix,2).ne.nb_y) then
   stop 'Error: The second dimension of "matrix" must be the same size than the "y" array'
+end if
+
+if (allocated(not_tested)) then
+  write(*,*) size(not_tested)
+  write(*,*) nb_x, nb_y
+  write(*,*) filename
 end if
 
 allocate(not_tested(nb_x, nb_y))
@@ -101,7 +111,10 @@ do j=1,nb_y-1
     end if
   end do
 end do
-!-----
+
+deallocate(not_tested) ! I had problems of "already allocated" which I don't understand, but this seems to solve the problem.
+!** | At line 56 of file contour.f90
+!** | Fortran runtime error: Attempting to allocate already allocated array 'not_tested'
 end subroutine get_contour
 
 subroutine get_contour_line(i_max, j_max, i1_start,j1_start,i2_start,j2_start, matrix, x, y, not_tested, lvl, filename)
