@@ -65,9 +65,10 @@ subroutine get_parameter_value(line, isParameter, id, value)
 !
 ! Return
 ! isParameter : is a boolean to say whether or not there is a parameter on this line. 
-!  i.e if there is an occurence of the separator in the input line
+!               i.e if there is an occurence of the separator in the input line
 ! id : a string that contain the name of the parameter
-! value : a string that contains the value(s) associated with the parameter name
+! value : a string that contains the value(s) associated with the parameter name. 
+!         Note that a special attention is given to the fact that the first character of 'value' must NOT be a 'space'
 
   implicit none
   
@@ -80,6 +81,9 @@ subroutine get_parameter_value(line, isParameter, id, value)
   
   ! Local
   character(len=1), parameter :: SEP = '=' ! the separator of a parameter line
+  
+  character(len=1) :: first_character
+  integer :: id_first_char
 
   integer :: sep_position ! an integer to get the position of the separator
 
@@ -90,7 +94,14 @@ subroutine get_parameter_value(line, isParameter, id, value)
   if (sep_position.ne.0) then
     isParameter = .true.
     id = line(1:sep_position-1)
-    value = line(sep_position+1:)
+    
+    id_first_char = sep_position +1
+    first_character = line(id_first_char:id_first_char)
+    do while (first_character.eq.' ')
+      id_first_char = id_first_char +1
+			first_character = line(id_first_char:id_first_char)
+    end do
+    value = line(id_first_char:)
   else
     isParameter = .false.
   end if
@@ -161,7 +172,13 @@ subroutine read_disk_properties()
           read(value, *) MEAN_MOLECULAR_WEIGHT
           
         case('surface_density')
-          read(value, *) INITIAL_SIGMA_0, INITIAL_SIGMA_INDEX
+          select case(value)
+          case('manual')
+            IS_MANUAL_SURFACE_DENSITY = .true.
+          case default
+            IS_MANUAL_SURFACE_DENSITY = .false.
+						read(value, *) INITIAL_SIGMA_0, INITIAL_SIGMA_INDEX
+					end select
 
         case('disk_edges')
           read(value, *) INNER_BOUNDARY_RADIUS, OUTER_BOUNDARY_RADIUS
@@ -246,8 +263,7 @@ subroutine read_disk_properties()
     write (*,*) 'Warning: The file "disk.in" does not exist. Default values have been used'
   end if
   
-  ! Whether we modified or not 'INITIAL_SIGMA_0' we calculate the value in numerical units of the initial sigma_0 value.
-  INITIAL_SIGMA_0_NUM = INITIAL_SIGMA_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
+
   
 end subroutine read_disk_properties
 
@@ -305,7 +321,7 @@ subroutine read_paramin(timestep)
   end if
   
   if (isnan(timestep)) then
-    write(*,*) 'Error: There was problem while reading the timestep in "param.in"'
+    write(*,*) 'Error in "read_paramin": There was problem while reading the timestep in "param.in"'
     stop
   end if
   
@@ -349,7 +365,11 @@ subroutine write_disk_properties()
   else
     write(10,'(a)') '  No turbulence'
   end if
-  write(10,'(a,f6.1,a,f4.2 ,a)') 'initial surface density = ',INITIAL_SIGMA_0, ' * R^(-',INITIAL_SIGMA_INDEX,') (g/cm^2)'
+  if (IS_MANUAL_SURFACE_DENSITY) then
+    write(10,'(a)') 'initial surface density = manual (local "surface_density_profile.dat" file)'
+  else
+    write(10,'(a,f6.1,a,f4.2 ,a)') 'initial surface density = ',INITIAL_SIGMA_0, ' * R^(-',INITIAL_SIGMA_INDEX,') (g/cm^2)'
+  end if
   write(10,*) ''
   write(10,'(a,f6.1,a)') 'inner edge of the disk = ',INNER_BOUNDARY_RADIUS, ' (AU)'
   write(10,'(a,f6.1,a)') 'outer edge of the disk = ',OUTER_BOUNDARY_RADIUS, ' (AU)'
@@ -748,26 +768,132 @@ end subroutine init_globals
 
 subroutine initial_density_profile()
   ! subroutine that store in the global parameters the value of the initial surface density profile. 
+  ! If the option 'manual' is given for the surface density profile, then the profile is read from "surface_density_profile.dat'. 
+  ! in this file, the first column must be the position in AU, and the second column the surface density in g/cm^2
+  ! Else, the profile will be a power law following the steepness and the surface density at 1 AU given in the global parameters of the disk.
   !
-  ! Global parameters
+  ! Global Parameters
   ! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
   ! INITIAL_SIGMA_INDEX : the negative slope of the surface density power law (alpha in the paper)
+  ! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+	! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+	! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
   ! distance_sample : values of 'a' in AU
   ! surface_density_profile : values of the density in MSUN/AU^2 for each value of the 'a' sample
   ! surface_density_index : values of the local negative slope of the surface density profile
+  !
+  ! /!\ If you want to add comments, the FIRST character of the line must be '#'. 
+  !     Be carefull, because this will not works if there is spaces between the beginning of the line and the comment character.
   
+
   implicit none
   
-  integer :: i ! for loops
+  character(len=80) :: line
+  character(len=80) :: filename
+  character(len=1), parameter :: comment_character = '#'
+  
+  real(double_precision), dimension(:), allocatable :: radius, manual_surface_profile
+  
+  ! For interpolation
+  real(double_precision) :: x1, x2, y1, y2
+  integer :: nb_values, closest_low_id
+  
+  ! For the file reading
+  integer :: error ! to store the state of a read instruction
+  logical :: isDefined
+
+  ! For loops
+	integer :: i
+	
+  !------------------------------------------------------------------------------
+  
+  
+  
+  if (IS_MANUAL_SURFACE_DENSITY) then
+		filename = 'surface_density_profile.dat'
+		inquire(file=filename, exist=isDefined)
+		if (.not.isDefined) then
+			stop 'Error in "initial_density_profile" : the file "surface_density_profile.dat" does not exist.'
+		end if
+		
+		! We get the total lines of the file
+    open(10, file=filename, status='old')
+    i = 0
+    do
+      read(10, '(a80)', iostat=error), line
+      if (error /= 0) exit
+      
+      if (line(1:1).ne.comment_character) then
+        i = i + 1
+      end if
+    end do
+    close(10)
+    
+    ! We define the sizes of the arrays
+    nb_values = i
+		if (allocated(radius)) then
+			deallocate(radius)
+			deallocate(manual_surface_profile)
+		end if
+    allocate(radius(nb_values))
+    allocate(manual_surface_profile(nb_values))
+    
+    ! We get the values of the torque profile in the file
+    open(10, file=filename, status='old')
+    i = 0
+    do
+      read(10, '(a80)', iostat=error), line
+      if (error /= 0) exit
+      
+      if(line(1:1).ne.comment_character) then
+        i = i + 1
+				read(line, *, iostat=error), radius(i), manual_surface_profile(i)
+			end if
+		end do
+		
+		! We now want to interpolate and have a torque profile that fit the array definitions of our simulation.
+		closest_low_id = 1
+		do i=1,NB_SAMPLE_PROFILES
+			
+			if ((distance_sample(i) .ge. radius(1)) .and. (distance_sample(i) .lt. radius(nb_values))) then
+				! we do not initialize closest_low_id at each step, because the sample is sorted, 
+				! so we know that the id will at least be the one of the previous timestep
+				do while (distance_sample(i).gt.radius(closest_low_id+1))
+					closest_low_id = closest_low_id + 1
+				end do
+				
+				x1 = radius(closest_low_id)
+				x2 = radius(closest_low_id + 1)
+				y1 = manual_surface_profile(closest_low_id)
+				y2 = manual_surface_profile(closest_low_id + 1)
+
+				surface_density_profile(i) = SIGMA_CGS2NUM * (y2 + (y1 - y2) * (distance_sample(i) - x2) / (x1 - x2))
+				surface_density_index(i) = - (log(y2) - log(y1)) / (log(x2) - log(x1))
+			else if (distance_sample(i) .lt. radius(1)) then
+				surface_density_profile(i) = SIGMA_CGS2NUM * manual_surface_profile(1)
+				surface_density_index(i) = - (log(manual_surface_profile(2)) - log(manual_surface_profile(1))) &
+                                  / (log(radius(2)) - log(radius(1)))
+			else if (distance_sample(i) .ge. radius(nb_values)) then
+				surface_density_profile(i) = SIGMA_CGS2NUM * manual_surface_profile(nb_values)
+				surface_density_index(i) = - (log(manual_surface_profile(nb_values)) - log(manual_surface_profile(nb_values-1))) &
+                                  / (log(radius(nb_values)) - log(radius(nb_values-1)))
+			end if
+		end do
+
+  else
+    do i=1,NB_SAMPLE_PROFILES
+			surface_density_profile(i) = INITIAL_SIGMA_0 * SIGMA_CGS2NUM * distance_sample(i)**(-INITIAL_SIGMA_INDEX)
+			surface_density_index(i) = INITIAL_SIGMA_INDEX
+		end do
+  end if
+  
 !~   write(*,*) 'Warning: the initial profil is linear for tests of viscous dissipation!'
 !~   do i=1,NB_SAMPLE_PROFILES
 !~     surface_density_profile(i)=INITIAL_SIGMA_0_NUM*(1-distance_sample(i)/distance_sample(NB_SAMPLE_PROFILES)) ! linear decay of the surface density, for tests
 !~   end do
   
-  do i=1,NB_SAMPLE_PROFILES
-    surface_density_profile(i) = INITIAL_SIGMA_0_NUM * distance_sample(i)**(-INITIAL_SIGMA_INDEX)
-    surface_density_index(i) = INITIAL_SIGMA_INDEX
-  end do
+
+  
 end subroutine initial_density_profile
 
   function get_F(p)
@@ -1309,7 +1435,7 @@ end subroutine initial_density_profile
   
   ! We open the file where we want to write the outputs
   open(10, file=filename, status='replace')
-  write(10,*) '# a in AU            ;    temperature (in K)    ;       exponant   &
+  write(10,'(a)') '# a in AU            ;    temperature (in K)    ;       exponant   &
               &; chi (thermal diffusivity) ;    tau (optical depth)'
 
   do j=1,NB_SAMPLE_PROFILES
@@ -1331,17 +1457,15 @@ end subroutine initial_density_profile
   implicit none
   
   character(len=*), intent(in) :: filename
-  
-  real(double_precision), parameter :: NUM2PHYS = MSUN / AU**2
-  
+    
   integer :: j ! for loops
   
   ! We open the file where we want to write the outputs
   open(10, file=filename, status='replace')
-  write(10,*) '#       a in AU       ; surface density (in g/cm^2) ;    exponant'
+  write(10,'(a)') '#       a in AU       ; surface density (in g/cm^2) ;    exponant'
 
   do j=1,NB_SAMPLE_PROFILES
-    write(10,*) distance_sample(j), surface_density_profile(j) * NUM2PHYS, surface_density_index(j)
+    write(10,*) distance_sample(j), surface_density_profile(j) * SIGMA_NUM2CGS, surface_density_index(j)
   end do
   
   close(10)
@@ -1371,7 +1495,7 @@ end subroutine initial_density_profile
   
   ! We open the file where we want to write the outputs
   open(10, file='scaleheight_profile.dat', status='replace')
-  write(10,*) '# a in AU ; scaleheight (AU) ; aspect ratio'
+  write(10,'(a)') '# a in AU ; scaleheight (AU) ; aspect ratio'
   do j=1,NB_SAMPLE_PROFILES
     a = distance_sample(j)
     ! We generate cartesian coordinate for the given semi major axis
@@ -2025,9 +2149,6 @@ subroutine read_torque_profile()
   else
     write (*,*) 'Warning: The file "',filename,'" does not exist. Default values have been used'
   end if
-  
-  ! Whether we modified or not 'INITIAL_SIGMA_0' we calculate the value in numerical units of the initial sigma_0 value.
-  INITIAL_SIGMA_0_NUM = INITIAL_SIGMA_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
   
 end subroutine read_torque_profile
 
