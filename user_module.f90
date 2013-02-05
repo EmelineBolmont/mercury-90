@@ -62,9 +62,9 @@ module user_module
   
   !------------------------------------------------------------------------------
   ! Here we define properties common to the profiles
-  real(double_precision) :: INNER_BOUNDARY_RADIUS = 1d0
-  real(double_precision) :: OUTER_BOUNDARY_RADIUS = 100.d0
-  integer :: NB_SAMPLE_PROFILES = 200 ! number of points for the sample of radius of the temperature profile
+  real(double_precision) :: INNER_BOUNDARY_RADIUS = 30d0
+  real(double_precision) :: OUTER_BOUNDARY_RADIUS = 60.d0
+  integer :: NB_SAMPLE_PROFILES = 50 ! number of points for the sample of radius of the temperature profile
   real(double_precision) :: X_SAMPLE_STEP ! the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
 
   real(double_precision), dimension(:), allocatable :: distance_log_sample ! values of 'a' in log()
@@ -998,10 +998,11 @@ end subroutine initial_density_profile
     implicit none
 
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
-    real(double_precision) :: a_i
-    real(double_precision) :: f_im1, f_i, f_ip1 ! ip1 == (i+1) ; im1 == (i-1)
+    real(double_precision) :: a_im12, a_ip12 ! ip12 == (i+1/2) ; im12 == (i-1/2)
+    real(double_precision) :: f_i, f_ip1 ! ip1 == (i+1) ; im1 == (i-1)
+    real(double_precision) :: flux_im12, flux_ip12 ! ip12 == (i+1/2) ; im12 == (i-1/2)
     integer :: i ! for loops
-    real(double_precision) :: tmp
+    real(double_precision) :: tmp ! for temporary values
     
     ! The dissipation_timestep is a global variable that is the timestep between two calculation of the surface density profile 
     ! This value is calculated in mfo_user, in the 'if' loop where the re-calculation is done. This value is needed here in the 
@@ -1012,15 +1013,20 @@ end subroutine initial_density_profile
     
     ! We prepare values for the first step of the loop 
     ! (i.e i=1 because we simulate the ghost step of the loop to be able to shift the temp values)
+    a_ip12 = 0.125d0 * (x_sample(1) * x_sample(1) + x_sample(2) * x_sample(2))
     
     f_i   = 1.5d0 * x_sample(1) * exp(surface_density_profile(1)) 
-    f_ip1 = 1.5d0 * x_sample(2) * exp(surface_density_profile(2))    
+    f_ip1 = 1.5d0 * x_sample(2) * exp(surface_density_profile(2))
+    
+    flux_ip12 = 3.d0 * get_viscosity(a_ip12) / a_ip12 * (f_ip1 - f_i) / X_SAMPLE_STEP
     
     ! CONDITION AT THE INNER EDGE
     select case(INNER_BOUNDARY_CONDITION)
       case('closed') 
       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
-      ! if we use a closed condition, we doesn't change the density value on the edge. Else nothing can get out.
+        flux_ip12 = 0.d0
+        ! If closed condition, the surface density at the boundary 'surface_density_profile(1)' doesn't change. So we do not compute anything.
+        
       case('open') 
       ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
       ! condition. Density is free to dissipate outside the grid.
@@ -1036,57 +1042,65 @@ end subroutine initial_density_profile
     do i=2,NB_SAMPLE_PROFILES-2
       
       ! We shift the indexes by 1
-      a_i = 0.25d0 * x_sample(i) * x_sample(i)
+      a_ip12 = 0.125d0 * (x_sample(i) * x_sample(i) + x_sample(i+1) * x_sample(i+1))
       
-      f_im1 = f_i
       f_i = f_ip1
       f_ip1 = 1.5d0 * x_sample(i+1) * exp(surface_density_profile(i+1))
       
-      tmp = (f_i + dissipation_timestep * (3.d0 * get_viscosity(a_i) / a_i) * (f_ip1 - 2 * f_i + f_im1) &
-                                            / (X_SAMPLE_STEP * X_SAMPLE_STEP)) / (1.5d0 * x_sample(i))
+      flux_im12 = flux_ip12
+      flux_ip12 = 3.d0 * get_viscosity(a_ip12) / a_ip12 * (f_ip1 - f_i) / X_SAMPLE_STEP
+      
+      tmp = (f_i + dissipation_timestep * (flux_ip12 - flux_im12) / X_SAMPLE_STEP) / (1.5d0 * x_sample(i))
+      
       if (tmp.lt.0.) then
         write(*,*) 'ERROR: tmp is negative!!!!'
-        write(*,*) a_i, f_im1, f_i, f_ip1
+        write(*,*) a_ip12, f_i, f_ip1, flux_im12, flux_ip12
       end if
+      
       surface_density_profile(i) = log(tmp) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
       surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
                                     / (distance_log_sample(i) - distance_log_sample(i-1))
             
     end do
     !------------------------------------------------------------------------------
+    i=NB_SAMPLE_PROFILES-1
+    ! We shift the indexes by 1
+    f_i = f_ip1
     
+    flux_im12 = flux_ip12
+        
     ! The boundary condition is computed here because some values are needed by "i=NB_SAMPLE_PROFILES-1 surface density value".
     select case(OUTER_BOUNDARY_CONDITION)
       case('closed') 
       ! here i=NB_SAMPLE_PROFILES-2
       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
-      ! if we use a closed condition, we doesn't change the density value on the edge. Else nothing can get out.
+        flux_ip12 = 0.d0
+        ! If closed condition, the surface density at the boundary 'surface_density_profile(1)' doesn't change. So we do not compute anything.
       case('open') 
       ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
       ! condition. Density is free to dissipate outside the grid.
         surface_density_profile(NB_SAMPLE_PROFILES) = log(TINY) ! in log, '0' is not defined, so we put a huge negative value to get close to 0
         
+        a_ip12 = 0.125d0 * (x_sample(i) * x_sample(i) + x_sample(i+1) * x_sample(i+1))
         
+        f_ip1 = 1.5d0 * x_sample(i+1) * exp(surface_density_profile(i+1))
+        
+        flux_ip12 = 3.d0 * get_viscosity(a_ip12) / a_ip12 * (f_ip1 - f_i) / X_SAMPLE_STEP
       case default
         write(*,*) 'Warning: An unknown outer boundary condition has been found'
         write(*,*) "outer_boundary_condition=", trim(OUTER_BOUNDARY_CONDITION)
     end select    
     
-    !------------------------------------------------------------------------------
-    i=NB_SAMPLE_PROFILES-1
-    ! We shift the indexes by 1
-    a_i = 0.25d0 * x_sample(i) * x_sample(i)
+    tmp = (f_i + dissipation_timestep * (flux_ip12 - flux_im12) / X_SAMPLE_STEP) / (1.5d0 * x_sample(i))
+      
+    if (tmp.lt.0.) then
+      write(*,*) 'ERROR: tmp is negative!!!!'
+      write(*,*) a_ip12, f_i, f_ip1, flux_im12, flux_ip12
+    end if
     
-    f_im1 = f_i
-    f_i = f_ip1
-    f_ip1 = 1.5d0 * x_sample(i+1) * exp(surface_density_profile(i+1))
-    
-    tmp = (f_i + dissipation_timestep * (3.d0 * get_viscosity(a_i) / a_i) * (f_ip1 - 2 * f_i + f_im1) &
-                                            / (X_SAMPLE_STEP * X_SAMPLE_STEP)) / (1.5d0 * x_sample(i))
-    
-    surface_density_profile(i) = log(tmp)
+    surface_density_profile(i) = log(tmp) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
     surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
-                                      / (distance_log_sample(i) - distance_log_sample(i-1))
+                                  / (distance_log_sample(i) - distance_log_sample(i-1))
     
     !------------------------------------------------------------------------------
     ! And the last index NB_SAMPLE_PROFILES 
@@ -1101,7 +1115,7 @@ end subroutine initial_density_profile
     surface_density_index(1) = surface_density_index(2)
   
   end subroutine dissipate_density_profile
-  
+
   subroutine store_temperature_profile(filename)
   ! subroutine that store in a '.dat' file the temperature profile and negative index of the local power law
   
@@ -1815,8 +1829,10 @@ end subroutine print_planet_properties
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
-    real(double_precision), parameter :: t_max = 1.d6 ! time in years
+    real(double_precision), parameter :: t_max = 1.d8 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
+    integer, parameter :: max_frames = 100 ! Parameter to have a control over the number of output frames. (I had near 80 000 once)
+    integer :: nb_dissipation_per_step
     integer :: time_size ! the size of the array 'time'. 
     
     real(double_precision) :: position(3), velocity(3)
@@ -1827,7 +1843,7 @@ end subroutine print_planet_properties
     character(len=80) :: output_density, output_time, time_format, purcent_format
     integer :: time_length ! the length of the displayed time, usefull for a nice display
     
-    integer :: k ! for loops
+    integer :: i,k ! for loops
     integer :: nb_time ! The total number of 't' values. 
     integer :: error ! to retrieve error, especially during allocations
     !------------------------------------------------------------------------------
@@ -1858,7 +1874,18 @@ end subroutine print_planet_properties
     allocate(time(time_size), stat=error)
     time(1) = t_min * 365.25d0 ! days
     
+    dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0))
+    nb_dissipation_per_step = int((t_max - t_min) / (max_frames * dissipation_timestep))
+    
+    ! if the effective number of timestep is less than the max allowed, then we force to have at least one dissipation timestep 
+    ! at each value of 'k' 
+    if (nb_dissipation_per_step.eq.0) then
+      nb_dissipation_per_step = 1
+    end if
+    
     do while (time(k).lt.(t_max*365.d0))
+    
+    
       ! We calculate the temperature profile for the current time (because the surface density change in function of time)
       
       ! We open the file where we want to write the outputs
@@ -1867,11 +1894,14 @@ end subroutine print_planet_properties
       dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
       ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
       
-      ! we get the density profile.
-      call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
+      ! we get the new dissipated surface density profile. For that goal, we dissipate as many times as needed to reach the required time for the next frame.
+      do i=1,nb_dissipation_per_step
+        call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
+      end do
       
+      ! we expand the 'time' array if the limit is reached
       if (k.eq.time_size) then
-        ! If the limit of the array is reach, we copy the values in a temporary array, allocate with a double size, et paste the 
+        ! If the limit of the 'time' array is reach, we copy the values in a temporary array, allocate with a double size, et paste the 
         ! old values in the new bigger array
         allocate(time_temp(time_size), stat=error)
         time_temp(1:time_size) = time(1:time_size)
@@ -1885,7 +1915,7 @@ end subroutine print_planet_properties
       write(*,purcent_format) int(time(k)/365.25d0), int(t_max) ! We display on the screen how far we are from the end of the integration.
       
       
-      time(k+1) = time(k) + dissipation_timestep * 365.25d0 ! days
+      time(k+1) = time(k) + dfloat(nb_dissipation_per_step) * dissipation_timestep * 365.25d0 ! days
       
       ! we store in a .dat file the temperature profile
       call store_density_profile(filename=filename_density)
