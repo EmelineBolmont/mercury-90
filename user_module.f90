@@ -15,7 +15,12 @@ module user_module
   
   public :: mfo_user, unitary_tests ! unitary_tests must be used only to test function, you should not use it out of the debug phase
   
-
+  ! If we don't put a cutoff, then the simulation will crash if the inclination become exactly equal to zero, 
+  ! which in addition is not really physically possible.
+  ! The other idea behind this cutoff is to allow planets to come close, and pass one in front of the other without collision. 
+  ! Hence, the idea is to have a cutoff sufficiently high to allow, at a given position, 
+  ! 2 planet radius in the apperture of this cutoff (a triangle with angle, orbital distance and 2 planet radius)
+  real(double_precision), parameter :: inclination_cutoff = 5.d-4 ! (in rad) the value below whom there will be no inclination damping anymore.
   
   !------------------------------------------------------------------------------
   ! Default values for parameters that are to be read in the parameter file 'disk.in'
@@ -32,8 +37,6 @@ module user_module
   real(double_precision) :: alpha = 0.005 ! alpha parameter for an alpha prescription of the viscosity [No dim]
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
-!~   real(double_precision) :: temperature_0 = 400. ! the temperature at (R=1AU) [K]
-!~   real(double_precision) :: temperature_index = 1.6! the negativeslope of the temperature power law (beta in the paper)
   real(double_precision) :: radius_min = 1.d0
   real(double_precision) :: radius_max = 60.d0
   integer :: nb_a_sample = 400 ! number of points for the sample of radius of the temperature profile
@@ -73,6 +76,7 @@ module user_module
     real(double_precision) :: nu ! the viscosity of the disk at the location of the planet [AU^2.day^-1]
     real(double_precision) :: temperature ! the temperature of the disk at the location of the planet [K] 
     real(double_precision) :: temperature_index ! the negative temperature index of the disk at the location of the planet [no dim] 
+    real(double_precision) :: opacity ! the opacity of the disk at the location of the planet [?]  
   end type PlanetProperties
 
   
@@ -137,7 +141,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision) :: time_inc ! The inclination damping timescale for the planet [day]
   
   !local temporary parameters
-  logical, save :: FirstCall = .True.
   type(PlanetProperties) :: p_prop ! various properties of a planet
   real(double_precision) :: e_h ! the ratio between the eccentricity and the aspect ratio for a given planet [no dim]
   real(double_precision) :: i_h ! the ratio between the inclination and the aspect ratio for a given planet [no dim]
@@ -146,19 +149,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision), dimension(3) :: eccentricity_acceleration
   real(double_precision) :: inclination_acceleration_z
   
-!~   integer, dimension(n_bodies) :: calculation_flag=0 ! The calculation will be done only if this flag is equal to 0. Else, nothing will be done.
-
-!~   
-!~   ! modif pour amortissement de e et I
-!~   real(double_precision) :: rad, ang, angold
-  
-  ! counter to check how many time the routine have been called
-  integer :: counter = 0
-  
   !------------------------------------------------------------------------------
   ! Setup
   
-  counter = counter + 1
   
   do planet=1,n_bodies
     acceleration(1,planet) = 0.d0
@@ -167,11 +160,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   end do
   !------------------------------------------------------------------------------
   call init_globals(stellar_mass=mass(1))
-  
-!~   if (FirstCall) then
-!~     FirstCall = .False.
-!~     write(*,*) 'Warning: the torque is specified manually'
-!~   end if
   
   
   do planet=2,n_big_bodies
@@ -184,10 +172,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       position=position(1:3, planet), velocity=velocity(1:3,planet),& ! input
       p_prop=p_prop) ! Output
       
-      if (FirstCall) then
-        FirstCall = .False.
-        call print_planet_properties(p_prop)
-      end if
       
       !------------------------------------------------------------------------------
       ! prefactor calculation for eccentricity and inclination damping
@@ -195,16 +179,13 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       i_h = p_prop%inclination / p_prop%aspect_ratio
       time_wave = mass(1)**2 * p_prop%aspect_ratio**4 / (mass(planet) * K2 * p_prop%sigma * &
                   p_prop%semi_major_axis**2 * p_prop%omega)
-!~       time_wave = abs(time_mig) * p_prop%aspect_ratio**2
 
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to migration
       call get_corotation_torque(mass(1), mass(planet), p_prop, & ! input
       corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref) ! Output
 
-      torque = torque_ref * (lindblad_torque + corotation_torque)
-!~       torque = torque_ref * (torque_at_zero / z_c * (p_prop%semi_major_axis - z_c))
-      
+      torque = torque_ref * (lindblad_torque + corotation_torque)      
       
       time_mig = 0.5d0 * p_prop%angular_momentum / torque
       
@@ -214,7 +195,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       migration_acceleration(2) = migration_acc_prefactor * velocity(2,planet)
       migration_acceleration(3) = migration_acc_prefactor * velocity(3,planet)
       
-
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to eccentricity damping
       
@@ -231,9 +211,13 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       
       ! Calculation of the acceleration due to the inclination damping
       
-      time_inc = time_wave / 0.544d0 * (1.d0 - 0.30d0 * i_h**2 + 0.24 * i_h**3 + 0.14 * e_h**2 * i_h)
-      
-      inclination_acceleration_z = - velocity(3,planet) / time_inc
+      if (p_prop%inclination.gt.inclination_cutoff) then
+        time_inc = time_wave / 0.544d0 * (1.d0 - 0.30d0 * i_h**2 + 0.24 * i_h**3 + 0.14 * e_h**2 * i_h)
+        
+        inclination_acceleration_z = - velocity(3,planet) / time_inc
+      else
+        inclination_acceleration_z = 0.d0
+      end if
       
       !------------------------------------------------------------------------------
       ! Calculation of the total acceleration on the planet
@@ -241,83 +225,21 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       acceleration(1,planet) = migration_acceleration(1) + eccentricity_acceleration(1)
       acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
       acceleration(3,planet) = migration_acceleration(3) + eccentricity_acceleration(3) + inclination_acceleration_z
-  !~ 
-  !~     ! Les commandes en dessous sont la deuxième façon de décrire l'amortissement de e et I (pour limiter les effets sur a)
-  !~     !------------------------------------------------------------------------------
-  !~     ! prefactor calculation for eccentricity and inclination damping
-  !~     e_h = p_prop%eccentricity / p_prop%aspect_ratio
-  !~     i_h = p_prop%inclination / p_prop%aspect_ratio
-  !~     time_wave = mass(1)**2 * p_prop%aspect_ratio**4 / (mass(planet) * K2 * p_prop%sigma * p_prop%semi_major_axis**2 * p_prop%omega)
-  !~     
-  !~     !------------------------------------------------------------------------------
-  !~     ! Calculation of the acceleration due to eccentricity damping
-  !~     
-  !~     time_ecc = time_wave / 0.780d0 * (1.d0 - 0.14d0 * e_h**2 + 0.06 * e_h**3 + 0.18 * e_h * i_h**2)
-  !~     
-  !~     rad = (position(1,planet) * velocity(1,planet) + position(2,planet) * velocity(2,planet)) / p_prop%radius**2
-  !~     
-  !~     ang = (position(1,planet) * velocity(2,planet) - position(2,planet) * velocity(1,planet)) / p_prop%radius**2
-  !~     
-  !~     angold = ang - sqrt((mass(1) + mass(planet)) * p_prop%radius) / p_prop%radius**2
-  !~     
-  !~     eccentricity_acceleration(1) = - (rad * position(1,planet) - angold * position(2,planet)) / time_ecc
-  !~     eccentricity_acceleration(2) = - (rad * position(2,planet) + angold * position(1,planet)) / time_ecc
-  !~     
-  !~     !------------------------------------------------------------------------------
-  !~     
-  !~     ! Calculation of the acceleration due to the inclination damping
-  !~     
-  !~     time_inc = time_wave / 0.544d0 * (1.d0 - 0.30d0 * i_h**2 + 0.24 * i_h**3 + 0.14 * e_h**2 * i_h)
-  !~     
-  !~     inclination_acceleration_z = - velocity(3,planet) / time_inc
-  !~     
-  !~     !------------------------------------------------------------------------------
-  !~     ! Calculation of the total acceleration on the planet
-  !~     
-  !~     acceleration(1,planet) = migration_acceleration(1) + eccentricity_acceleration(1)
-  !~     acceleration(2,planet) = migration_acceleration(2) + eccentricity_acceleration(2)
-  !~     acceleration(3,planet) = migration_acceleration(3) + inclination_acceleration_z
 
-!~ !      if (counter.gt.807934) then
-!~      if ((counter.gt.78400).and.(counter.lt.78500)) then
-!~ !       if (isnan(acceleration(1,planet))) then
-!~         open(15, file="leak.out", status="old", access="append")
-!~         write(15,*) counter, time, planet, mass(planet)
-!~         write(15,*) 'position:', position(1,planet), position(2,planet), position(3,planet)
-!~         write(15,*) 'velocity:', velocity(1,planet), velocity(2,planet), velocity(3,planet)
-!~         write(15,*) 'acceleration:', acceleration(1,planet), acceleration(2,planet), acceleration(3,planet)
-!~         write(15,*) 'times:', time_mig, time_ecc, time_inc
-!~         write(15,*) 'torques:', torque, lindblad_torque, corotation_torque
-!~         write(15,*) 'angular momentum:', p_prop%angular_momentum, 'radius:', p_prop%radius, 'velocity:', p_prop%velocity
-!~         write(15,*) 'omega:', p_prop%omega, 'semi_major_axis:', p_prop%semi_major_axis, 'eccentricity:', p_prop%eccentricity
-!~         write(15,*) 'inclination:', p_prop%inclination, 'sigma:', p_prop%sigma, 'scaleheight:', p_prop%scaleheight
-!~         write(15,*) 'aspect_ratio:', p_prop%aspect_ratio, 'chi:', p_prop%chi, 'nu:', p_prop%nu
-!~         write(15,*) 'temperature:', p_prop%temperature, 'bulk_density:', p_prop%bulk_density, 'opacity:', p_prop%opacity
-!~         close(15)
+!~       if (time.gt.30429600) then
+!~         open(10, file='leak.out', status="old", access="append")
+!~         write(10,*) time, planet, time_mig, time_ecc, time_inc
+!~         close(10)
+!~         write(*,*)
+!~         call print_planet_properties(p_prop)
 !~       end if
     end if
   end do
-  
   
 !~   open(15, file="migration_time.out", status="old", access="append")
 !~   write(15,*) time, time_mig, time_ecc, time_inc
 !~   close(15)
   
-  !------------------------------------------------------------------------------
-  
-!~   if (FirstCall) then
-!~     FirstCall = .False.
-!~     write (*,*) 'time=', time
-!~     write (*,*) 'jcen=', jcen
-!~     write (*,*) 'mass=', mass
-!~     write (*,*) 'position=', position
-!~     write (*,*) 'velocity=', velocity
-!~     write (*,*) '--------------------'
-!~     write (*,*) 'time_mig=', time_mig
-!~     write (*,*) 'angular_momentum=', angular_momentum
-!~     write (*,*) 'torque=', torque
-!~     write (*,*) 'acceleration=', acceleration
-!~   end if
   !------------------------------------------------------------------------------
   return
 end subroutine mfo_user
@@ -473,8 +395,6 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   call get_temperature(ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index, radius=p_prop%radius, & ! Input
                        temperature=p_prop%temperature, temperature_index=p_prop%temperature_index) ! Output
   
-!~   p_prop%temperature = temperature_0 / p_prop%radius**temperature_index ! [K]
-
   ! We calculate the angular momentum
   p_prop%angular_momentum = (mass / K2) * h_p  
   p_prop%velocity = sqrt(velocity2_p) ! [AU/day]
@@ -484,13 +404,17 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
   p_prop%scaleheight = scaleheight_prefactor * sqrt(p_prop%temperature) / p_prop%omega
 !~   p_prop%scaleheight = 0.05 * p_prop%radius
+
   !------------------------------------------------------------------------------
 !~   p_prop%nu = alpha * p_prop%omega * p_prop%scaleheight**2 ! [AU^2.day-1]
   p_prop%nu = 1.d15 * DAY / AU**2
+
   p_prop%aspect_ratio = p_prop%scaleheight / p_prop%radius
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
   
+  !------------------------------------------------------------------------------
   p_prop%chi = 1.d-5 * p_prop%radius**2 * p_prop%omega 
+!~   p_prop%opacity = get_opacity(p_prop%temperature, 0.5d0 * p_prop%sigma / p_prop%scaleheight)
 !~   p_prop%chi = chi_p_prefactor * p_prop%temperature**4 / (p_prop%opacity * p_prop%sigma**2 * p_prop%omega**2)
   
 end subroutine get_planet_properties
@@ -517,8 +441,6 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   real(double_precision) :: Q_p ! parameter for gamma_eff (equation (45) of Paardekooper, Baruteau, 2010 II. Effects of diffusion)
   real(double_precision) :: k_p ! parameter for p_nu and p_chi for example  !!! This is not 'k' from equation (15)!
   real(double_precision) :: lindblad_parameter ! intermediate of calculation for the lindblad torque. 
-  
-
   
   !Properties of the disk at the location of the planet
   real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
@@ -557,12 +479,10 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   p_nu = TWOTHIRD * sqrt(k_p / p_prop%nu)
   
   p_chi = sqrt(k_p / p_prop%chi)
-
-  lindblad_parameter = sqrt(p_prop%chi / ( 2.d0 * p_prop%omega * p_prop%scaleheight**2))
   
-  LINDBLAD_PREFACTOR = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * sigma_index) ! paardekooper, baruteau & kley 2010
-!~   lindblad_torque = lindblad_prefactor * (lindblad_parameter + 1.d0 / gamma_eff) / (lindblad_parameter + 1.d0) ! lindblad torque from masset & casoli 2010
+  lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010
+  
   torque_hs_ent = 7.9d0 * zeta_eff / gamma_eff
   torque_c_lin_ent = (2.2d0 - 1.4d0 / gamma_eff) * zeta_eff
 
@@ -573,11 +493,6 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
     + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
     + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi)))
   
-!~   write (*,*) lindblad_torque, corotation_torque, Gamma_0
-!~   write (*,*) 'stellar_mass=',stellar_mass
-!~   write (*,*) 'mass=',mass
-!~   write (*,*) 'position=',position
-!~   write (*,*) 'velocity=',velocity
 
   return
 end subroutine get_corotation_torque
@@ -585,7 +500,7 @@ end subroutine get_corotation_torque
 subroutine init_globals(stellar_mass)
 ! subroutine that initialize global values that define prefactors or values for torque that does not depend on the planet properties
 ! Parameters
-! stellar_mass : the mass of the central object in solar mass
+! stellar_mass : the mass of the central object in solar mass (times K2)
   
   implicit none
   real(double_precision), intent(in) :: stellar_mass
@@ -596,6 +511,13 @@ subroutine init_globals(stellar_mass)
     
     call read_disk_properties()
     
+!~     open(10, file='migration_time.out', status='replace')
+!~     write(10,*) 'time, time_mig, time_ecc, time_inc'
+!~     close(10)
+
+!~     open(10, file='leak.out', status='replace')
+!~     close(10)
+
     allocate(temp_profile_y(nb_a_sample))
     allocate(temp_profile_x(nb_a_sample))
     allocate(temp_profile_index(nb_a_sample))
@@ -615,10 +537,15 @@ subroutine init_globals(stellar_mass)
     torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
     torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
     
+    ! we get the temperature profile.
     call calculate_temperature_profile(a_min=radius_min, a_max=radius_max, nb_a=nb_a_sample, & ! Input
-                                       ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index)
-
-  !~   write(*,*) 'Warning: il y a un offset au couple de corotation'
+                                       ln_x=temp_profile_x, ln_y=temp_profile_y, idx=temp_profile_index) ! Output
+    
+    ! we store in a .dat file the temperature profile
+    call store_temperature_profile()
+    
+    ! Here we display various warning for specific modification of the code that must be kept in mind (because this is not the normal behaviour of the code)
+!~     write(*,*) 'Warning: le couple de corotation a été désactivé'
 !~     write(*,*) 'Warning: h est fixé à 0.05'
     write(*,*) 'Warning: nu est fixé à la main à 10^15'
     write(*,*) 'Warning: chi est fixé à la main à 10^-6'
@@ -643,7 +570,6 @@ end subroutine init_globals
     !------------------------------------------------------------------------------
 
     
-!~     get_F = 1.d0 / (1.d0 + (p / 1.3d0) * (p / 1.3d0))
     get_F = 1.d0 / (1.d0 + p * p * tmp)
     
     return
@@ -720,6 +646,7 @@ end subroutine init_globals
   ! array : the array to smooth. Will also be the output array
   ! nb_smoothing : the number of points for smoothing (in practice, this number will be the first odd number greater or equal than nb_smoothing)
   implicit none
+  
   ! Input/Output
   real(double_precision), dimension(:), intent(in) :: array
   integer, intent(in) :: nb_smoothing
@@ -979,7 +906,7 @@ end subroutine init_globals
   ! subroutine that test the function 'get_opacity'
   
   ! Return:
-  !  a data file 'test_opacity.dat' 
+  ! a data file 'test_opacity.dat' 
   ! and an associated gnuplot file 'opacity.gnuplot' that display values for get_opacity for a range of p values.
     implicit none
     
@@ -1437,7 +1364,6 @@ end subroutine init_globals
     write(12,*) 'set ylabel "torque [M_s.AU^2.day^{-2}]"'
     
     do j=10,12
-!~     write(j,*) 'set xrange [', a_min, ':', a_max, '] noreverse'
       write(j,*) 'set grid'
       write(j,*) 'set xrange [', a_min, ':', a_max, ']'
     end do
@@ -1499,6 +1425,7 @@ end subroutine init_globals
     type(PlanetProperties) :: p_prop
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
     real(double_precision) :: a_old, temperature_old 
+    integer :: nb_smoothing ! number of neighboor value needed around a point to calculate the smoothed value
     
     integer :: i,j ! for loops
         
@@ -1518,7 +1445,6 @@ end subroutine init_globals
     ! We generate cartesian coordinate for the given mass and semi major axis
     velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
     
-!~     call print_planet_properties(p_prop)
     ! we store in global parameters various properties of the planet
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
@@ -1538,9 +1464,6 @@ end subroutine init_globals
       ! We generate cartesian coordinate for the given mass and semi major axis
       velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
       
-      ! we store in global parameters various properties of the planet
-
-!~       call print_planet_properties(p_prop)
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
       
@@ -1553,9 +1476,30 @@ end subroutine init_globals
       
     end do
     
-    call smoothing(idx,int(1./a_step), idx)
+    ! We want to smooth on a length, and here we calculate the number of points we need for the smoothing to be in that length
+    nb_smoothing = int(0.5 / a_step) 
+    call smoothing(idx, nb_smoothing, idx)
     
   end subroutine calculate_temperature_profile
+  
+  subroutine store_temperature_profile()
+  ! subroutine that store in a '.dat' file the temperature profile and negative index of the local power law
+  
+  implicit none
+  
+  integer :: j ! for loops
+  
+  ! We open the file where we want to write the outputs
+  open(10, file='temperature_profile.dat', status='replace')
+  write(10,*) '# a in AU ; temperature (in K) ; exponant ; log(a) ; log(T)'
+  do j=1,nb_a_sample
+    write(10,*) exp(temp_profile_x(j)), exp(temp_profile_y(j)), temp_profile_index(j), temp_profile_x(j), temp_profile_y(j)
+  end do
+  
+  close(10)
+  
+  end subroutine store_temperature_profile
+  
   
   subroutine test_temperature_profile()
 ! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
@@ -1573,17 +1517,6 @@ end subroutine init_globals
     
     call init_globals(stellar_mass)
     
-
-    ! We open the file where we want to write the outputs
-    open(10, file='temperature_profile.dat', status='replace')
-    write(10,*) '# a in AU ; temperature (in K) ; exponant ; log(a) ; log(T)'
-    do j=1,nb_a_sample
-      write(10,*) exp(temp_profile_x(j)), exp(temp_profile_y(j)), temp_profile_index(j), temp_profile_x(j), temp_profile_y(j)
-    end do
-    
-    close(10)
-    
-    
     open(10, file="unitary_tests/temperature_profile.gnuplot")
     open(11, file="unitary_tests/temperature_index.gnuplot")
     
@@ -1600,7 +1533,6 @@ end subroutine init_globals
     do j=10,11
       write(j,*) 'set grid'
       write(j,*) 'cd ".."'
-!~       write(j,*) 'set xrange [', a_min, ':', a_max, ']'
     end do
 
     write(10,*) "plot 'temperature_profile.dat' using (exp($4)):(exp($5)) with lines notitle"
@@ -1963,6 +1895,7 @@ subroutine print_planet_properties(p_prop)
   write (*,*) 'aspect_ratio :', p_prop%aspect_ratio 
   write (*,*) 'chi :', p_prop%chi 
   write (*,*) 'nu :', p_prop%nu 
+  write (*,*) 'opacity :', p_prop%opacity 
   write (*,*) 'temperature :', p_prop%temperature 
   write (*,*) 'temperature_index:', p_prop%temperature_index
 end subroutine print_planet_properties
@@ -1973,6 +1906,4 @@ end module user_module
 ! TODO routine générale de conversion des couples en accélération afin de pouvoir réutiliser ailleurs
 
 !TODO : 
-!_ amortissement de l'eccentricité
-!_ amortissement de l'inclinaison
 !_rajouter le spin comme variable d'entrée de la routine mfo_user
