@@ -407,6 +407,7 @@ end subroutine init_globals
   ! p : parameter
     implicit none
     real(double_precision), intent(in) :: p
+    real(double_precision), parameter :: tmp = 1.d0 / (1.3d0**2)
     
     real(double_precision) :: get_F
 
@@ -414,7 +415,8 @@ end subroutine init_globals
     !------------------------------------------------------------------------------
 
     
-    get_F = 1.d0 / (1.d0 + (p / 1.3d0) * (p / 1.3d0))
+!~     get_F = 1.d0 / (1.d0 + (p / 1.3d0) * (p / 1.3d0))
+    get_F = 1.d0 / (1.d0 + p * p * tmp)
     
     return
   end function get_F
