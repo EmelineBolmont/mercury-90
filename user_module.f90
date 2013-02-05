@@ -220,6 +220,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       eccentricity_acceleration(2) = eccentricity_acc_prefactor * position(2,planet)
       eccentricity_acceleration(3) = eccentricity_acc_prefactor * position(3,planet)
       
+      
       !------------------------------------------------------------------------------
       
       ! Calculation of the acceleration due to the inclination damping
