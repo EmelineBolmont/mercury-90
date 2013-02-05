@@ -10,7 +10,7 @@ module contour
 !** i.e z(1:10,1:5), x(1:10), y(1:5) will work
 !**
 !**
-!** Version 1.0 - sept 2011
+!** Version 1.1 - fevr 2012
 !*************************************************************
   use types_numeriques
 
@@ -118,7 +118,24 @@ deallocate(not_tested) ! I had problems of "already allocated" which I don't und
 end subroutine get_contour
 
 subroutine get_contour_line(i_max, j_max, i1_start,j1_start,i2_start,j2_start, matrix, x, y, not_tested, lvl, filename)
-
+! given two points where a change in sign is known, we want to retrieve the line or contour by following this change of sign.
+! In input, we want the coordinates (i1, j1) and (i2, j2) of the two points, that define a line that will be the starting point of our search by following the scheme : 
+!                  3/ else : this line
+!                     hereafter :
+!                     LINE 3
+!        (i3,j3) +-------------------+ (i4,j4)
+!                |                   |
+!                |                   |
+!                |                   |
+! 1/ first line  |    Direction of   | 2/ second line
+!    to check    |      research     |    to check
+!    hereafter : |         .         |    hereafter :
+!     LINE 1     |        / \        |    LINE 2
+!                |         |         |
+!                |         |         |
+!        (i1,j1) +-------------------+ (i2,j2)
+!                 Reference LINE 0 we
+!                 know has a change in sign
 implicit none
 integer :: i_max, j_max
 real(double_precision), dimension(i_max,j_max), intent(in) :: matrix
@@ -139,7 +156,7 @@ integer :: i_temp, j_temp ! temporary variables to exchange two positions
 integer, dimension(2) :: direction, tmp_dir 
 logical :: end_of_line ! set to True if we must end the seek of the line because we have reached the end
 real(double_precision) :: x_cont, y_cont ! the current (x,y) coordinates of the last contour point found
-logical :: change_sign_L1, change_sign_L2 ! (boolean to tell if values of edges have differents signs around the lvl value)
+logical :: change_sign_L1, change_sign_L2, change_sign_L3 ! (boolean to tell if values of edges have differents signs around the lvl value)
 
 ! we store initial position
 i1 = i1_start
@@ -247,6 +264,7 @@ do while (.not.end_of_line)
 
   change_sign_L1 = ((matrix(i1,j1) - lvl) * (matrix(i3,j3) - lvl)).lt.0.
   change_sign_L2 = ((matrix(i2,j2) - lvl) * (matrix(i4,j4) - lvl)).lt.0.
+  change_sign_L3 = ((matrix(i3,j3) - lvl) * (matrix(i4,j4) - lvl)).lt.0.
   
   ! We check first if the change in sign is on the LINE1
   if (change_sign_L1) then
@@ -286,8 +304,8 @@ do while (.not.end_of_line)
     tmp_dir(1:2) = direction(1:2)
     direction(1) =  tmp_dir(2)
     direction(2) = -tmp_dir(1)
-  ! So the change must be in the LINE 3
-  else
+  ! We then check if the change in sign is on the LINE 3
+  else if (change_sign_L3) then
     if (direction(1).eq.0) then
       x_cont = x(i4) + (x(i3) - x(i4)) / (matrix(i3,j3) - matrix(i4,j4)) * (lvl - matrix(i4,j4))
       y_cont = y(j3)
@@ -301,9 +319,15 @@ do while (.not.end_of_line)
     j1 = j3
     i2 = i4
     j2 = j4
+  ! There is no change of sign. We must end the line
+  else
+    end_of_line = .True.
   end if
-  ! We output in the file the current point of the contour
-  write(10,*) x_cont, y_cont, lvl
+  
+  if (.not.end_of_line) then
+    ! We output in the file the current point of the contour
+    write(10,*) x_cont, y_cont, lvl
+  end if
   
   ! We test if we are at the end of the contour, i.e we are at the starting point again, or at an edge of the matrix.
   if ((i1.eq.i1_start).and.(i2.eq.i2_start).and.(j1.eq.j1_start).and.(j2.eq.j2_start)) then
@@ -331,6 +355,9 @@ close(10)
 end subroutine get_contour_line
 
 subroutine test_get_contour()
+! subroutine to test the get_contour() subroutine on a particuliar matrix and see if the contour is retrieved correctly. 
+! To see the result, launch :
+! $ gnuplot test_contour.gnuplot
   implicit none
   integer, parameter :: dimx = 10
   integer, parameter :: dimy = 10
@@ -380,3 +407,7 @@ subroutine test_get_contour()
 end subroutine test_get_contour
 
 end module contour
+
+! changelog :
+! v1.1 : the contour function will now stop if the countour is a line in the middle of the matrix that stop abruptely. 
+!        There was a bug wehere the values where NaN if the end of a line was not at an edge of the matrix.
