@@ -49,7 +49,9 @@ module disk
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
   character(len=80) :: INNER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
   character(len=80) :: OUTER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
-  character(len=80) :: TORQUE_TYPE = 'real' ! values possible to change the properties of the torque. 'real', 'mass_independant', 'mass_dependant'
+  ! values possible to change the properties of the torque. 'real', 'mass_independant', 'mass_dependant', 'manual'. 
+  ! If 'manual' is chosen, the code will read the file 'torque_profile.dat' that must exist and the first column must be semi major axis in AU, and the second one is the torque (in units of \Gamma_0 for the moment)
+  character(len=80) :: TORQUE_TYPE = 'real' 
   ! Here we define the constant value of the viscosity of the disk
   real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s]
   
@@ -89,6 +91,8 @@ module disk
   real(double_precision), dimension(:), allocatable :: temp_profile_index ! values of the local negative slope of the temperature profile
   real(double_precision), dimension(:), allocatable :: chi_profile ! thermal diffusivity
   real(double_precision), dimension(:), allocatable :: tau_profile ! optical depth 
+  
+  real(double_precision), dimension(:), allocatable :: torque_profile ! The torque profile of the disk, if the option 'manual' is specified for the type of the torque
   
   ! We define a new type for the properties of the planet
   type PlanetProperties
@@ -597,6 +601,10 @@ subroutine init_globals(stellar_mass)
     call store_temperature_profile(filename='temperature_profile.dat')
     call store_density_profile(filename='density_profile.dat')
     call store_scaleheight_profile()
+    
+    if (TORQUE_TYPE.eq.'manual') then
+      call read_torque_profile()
+    end if
     
     ! Here we display various warning for specific modification of the code that must be kept in mind (because this is not the normal behaviour of the code)
 
@@ -1573,5 +1581,162 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
 
   return
 end subroutine get_corotation_torque_mass_dep_CZ
+
+subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0)
+! function that return the total torque exerted by the disk on the planet. It uses the torque profile read by the program at the beginning. 
+!
+! Global parameters
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
+! INNER_BOUNDARY_RADIUS : the inner edge of the different profiles
+! OUTER_BOUNDARY_RADIUS : the outer edge of the different profiles
+! distance_sample : values of 'a' in AU
+! x_sample : values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
+! torque_profile : The torque profile of the disk, if the option 'manual' is specified for the type of the torque
+
+    
+  implicit none
+  real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
+  ! Properties of the planet
+  real(double_precision), intent(in) :: mass ! the mass of the planet [Msun * K2]
+  type(PlanetProperties), intent(in) :: p_prop ! various properties of the planet
+  
+  
+  real(double_precision), intent(out) :: corotation_torque
+  real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
+  real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
+
+  !Local
+	integer :: closest_low_id ! the index of the first closest lower value of radius regarding the radius value given in parameter of the subroutine. 
+	real(double_precision) :: x1, x2, y1, y2
+	real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
+
+  
+  !------------------------------------------------------------------------------
+  ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
+  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
+  
+  lindblad_torque = 0.d0
+  
+  
+  !------------------------------------------------------------------------------
+
+	if ((p_prop%radius .ge. INNER_BOUNDARY_RADIUS) .and. (p_prop%radius .lt. OUTER_BOUNDARY_RADIUS)) then
+		
+		x_radius = 2.d0 * sqrt(p_prop%radius)
+		! in the range
+		closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
+		
+		x1 = distance_sample(closest_low_id)
+		x2 = distance_sample(closest_low_id + 1)
+		y1 = torque_profile(closest_low_id)
+		y2 = torque_profile(closest_low_id + 1)
+
+		corotation_torque = y2 + (y1 - y2) * (p_prop%radius - x2) / (x1 - x2)
+	else if (p_prop%radius .lt. INNER_BOUNDARY_RADIUS) then
+		corotation_torque = torque_profile(1)
+	else if (p_prop%radius .gt. OUTER_BOUNDARY_RADIUS) then
+		corotation_torque = torque_profile(NB_SAMPLE_PROFILES)
+	end if
+
+  return
+end subroutine get_corotation_torque_manual
+
+subroutine read_torque_profile()
+! subroutine that read the 'disk.in' file to retrieve disk properties. Default value exist, if a parameter is not defined
+
+! Global Parameters
+! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! torque_profile : The torque profile of the disk, if the option 'manual' is specified for the type of the torque
+! distance_sample : values of 'a' in AU
+
+  implicit none
+  
+  character(len=80) :: line
+  character(len=80) :: filename
+  
+  real(double_precision), dimension(:), allocatable :: radius, torque
+  
+  ! For interpolation
+  real(double_precision) :: x1, x2, y1, y2
+  integer :: nb_values, closest_low_id
+  
+  ! For the file reading
+  integer :: error ! to store the state of a read instruction
+  logical :: isDefined
+
+  ! For loops
+	integer :: i
+	
+  !------------------------------------------------------------------------------
+  ! We allocate the global variable
+  if (.not.allocated(torque_profile)) then
+		allocate(torque_profile(NB_SAMPLE_PROFILES))
+		torque_profile(1:NB_SAMPLE_PROFILES) = 0.d0
+	end if
+  
+  filename = 'torque_profile.dat'
+  inquire(file=filename, exist=isDefined)
+  if (isDefined) then
+		
+		! We get the total lines of the file
+    open(10, file=filename, status='old')
+    i = 0
+    do
+      read(10, '(a80)', iostat=error), line
+      if (error /= 0) exit
+      i = i + 1
+    end do
+    close(10)
+    
+    ! We define the sizes of the arrays
+    nb_values = i
+		if (allocated(radius)) then
+			deallocate(radius)
+			deallocate(torque)
+		end if
+    allocate(radius(nb_values))
+    allocate(torque(nb_values))
+    
+    ! We get the values of the torque profile in the file
+    open(10, file=filename, status='old')
+    do i=1, nb_values
+			read(10, *, iostat=error), radius(i), torque(i)
+		end do
+		
+		! We now want to interpolate and have a torque profile that fit the array definitions of our simulation.
+		closest_low_id = 1
+		do i=1,NB_SAMPLE_PROFILES
+			
+			if ((distance_sample(i) .ge. radius(1)) .and. (distance_sample(i) .lt. radius(nb_values))) then
+				! we do not initialize closest_low_id at each step, because the sample is sorted, 
+				! so we know that the id will at least be the one of the previous timestep
+				do while (distance_sample(i).gt.radius(closest_low_id+1))
+					closest_low_id = closest_low_id + 1
+				end do
+				
+				x1 = radius(closest_low_id)
+				x2 = radius(closest_low_id + 1)
+				y1 = torque(closest_low_id)
+				y2 = torque(closest_low_id + 1)
+
+				torque_profile(i) = y2 + (y1 - y2) * (distance_sample(i) - x2) / (x1 - x2)
+			else if (distance_sample(i) .lt. radius(1)) then
+				torque_profile(i) = torque(1)
+			else if (distance_sample(i) .gt. radius(nb_values)) then
+				torque_profile(i) = torque(nb_values)
+			end if
+		end do
+
+  else
+    write (*,*) 'Warning: The file "',filename,'" does not exist. Default values have been used'
+  end if
+  
+  ! Whether we modified or not 'INITIAL_SIGMA_0' we calculate the value in numerical units of the initial sigma_0 value.
+  INITIAL_SIGMA_0_NUM = INITIAL_SIGMA_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
+  
+end subroutine read_torque_profile
 
 end module disk
