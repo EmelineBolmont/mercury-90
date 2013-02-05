@@ -2054,10 +2054,12 @@ aspect_ratio_old = scaleheight_old / distance_old
 rho = 0.5d0 * sigma / scaleheight
 !------------------------------------------------------------------------------
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
+
+flaring_angle = distance_new * ((aspect_ratio_old - aspect_ratio_new) / (distance_old - distance_new)) + &
+                0.4d0 * R_STAR / distance_new
 !------------------------------------------------------------------------------
 envelope_heating = -SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
-irradiation = prefactor_irradiation * ((aspect_ratio_old - aspect_ratio_new) / (distance_old - distance_new) + &
-              0.4d0 * R_STAR / distance_new) / distance_new
+irradiation = prefactor_irradiation * flaring_angle / distance_new**2
 ! 1.7320508075688772d0 = sqrt(3)
 viscous_heating = prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
 !------------------------------------------------------------------------------
