@@ -11,9 +11,9 @@ module user_module
 
   implicit none
   
-  private
-  
-  public :: mfo_user
+!~   private
+!~   
+!~   public :: mfo_user
   
   real(double_precision), parameter :: b_over_h = 0.4 ! the smoothing length for the planet's potential
   real(double_precision), parameter :: adiabatic_index = 1.4 ! the adiabatic index for the gas equation of state
@@ -26,7 +26,7 @@ module user_module
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^temperature_index
   real(double_precision), parameter :: temperature_0 = 150 ! the temperature at (R=1AU) [K]
-  real(double_precision), parameter :: temperature_index = 0.5! the slope of the temperature power law (beta in the paper)
+  real(double_precision), parameter :: temperature_index = 1.! the slope of the temperature power law (beta in the paper)
   
   !prefactors
   real(double_precision) :: x_s_prefactor
@@ -144,7 +144,7 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   
   ! Meaningless parameters (intermediate constant and so on that doesn't mean anything physically)
   real(double_precision) :: Q_p ! parameter for gamma_eff (equation (45) of Paardekooper, Baruteau, 2010 II. Effects of diffusion)
-  real(double_precision) :: k_p ! parameter for p_nu and p_chi for example  (equation (15) of Paardekooper, Baruteau, 2010 II. Effects of diffusion)
+  real(double_precision) :: k_p ! parameter for p_nu and p_chi for example  !!! This is not 'k' from equation (15)!
   real(double_precision) :: gm ! parameter to calculate the semi major axis. passed to mco_x2a
   
   ! Properties of the planet
@@ -177,6 +177,7 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   call mco_x2a (gm,position(1), position(2), position(3), velocity(1),velocity(2), velocity(3),semi_major_axis,radius_p,vel_squared)
   velocity_p = sqrt(vel_squared)
   
+  !------------------------------------------------------------------------------
   omega_p = sqrt(gm / (semi_major_axis * semi_major_axis * semi_major_axis)) ! [day-1]
   write(*,*) "Warning: Units for omega_p are currently not verified"
   
@@ -184,6 +185,7 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   temperature_p = temperature_0 * radius_p**temperature_index ! [K]
   aspect_ratio_p = aspect_ratio
   
+  !------------------------------------------------------------------------------
   opacity_p = get_opacity(temperature_p, sigma_p)
   write(*,*) "Warning: opacity currently not set, just put to 1 to avoid compilation errors"
   
@@ -195,21 +197,30 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   
   ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h : 
   Q_p = 2 * chi_p / (3 * aspect_ratio_p**3 * radius_p**2 * omega_p)
+  !------------------------------------------------------------------------------
   
   gamma_eff = 2 * Q_p * adiabatic_index / (adiabatic_index * Q_p + 0.5d0 * &
   sqrt(2.d0 * sqrt((adiabatic_index * adiabatic_index * Q_p * Q_p + 1)**2 + 16.d0 * Q_p * Q_p * (adiabatic_index - 1)) &
   + 2.d0 * adiabatic_index * adiabatic_index * Q_p * Q_p -2))
   
+  !------------------------------------------------------------------------------
   zeta_eff = temperature_index - (gamma_eff - 1) * sigma_index
   
   x_s = x_s_prefactor / gamma_eff**0.25 * sqrt(mass / aspect_ratio_p)
   
-  k_p = radius_p * radius_p * omega_p / (2 * PI * nu_p)
+  ! k_p is defined to limit the number of operation and to have a value independant from chi_p or nu_p
+  k_p = radius_p * radius_p * omega_p * x_s * x_s * x_s / (2 * PI)
   
+  !------------------------------------------------------------------------------
   
-
+  p_nu = (2/3.d0) * sqrt(k_p / nu_p)
+  
+  p_chi = sqrt(k_p / chi_p)
+  
   torque_hs_ent = 7.9 * zeta_eff / gamma_eff
   torque_c_lin_ent = (2.2 - 1.4 / gamma_eff) * zeta_eff
+  
+  !------------------------------------------------------------------------------
 
   get_total_torque = (Gamma_0 / gamma_eff) * (prefactor_lindblad &
     + torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
