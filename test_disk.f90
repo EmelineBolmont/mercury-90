@@ -27,9 +27,9 @@ program test_disk
     
     implicit none
     
-    real(double_precision) :: stellar_mass
+    real(double_precision) :: stellar_mass ! [Msun * K2]
 
-    stellar_mass = 1.d0 * K2
+    stellar_mass = 1.d0 * K2 ! [Msun * K2]
     
 !~     ! We force the value to be interesting for our tests
 !~     TORQUE_TYPE = 'real' ! 'real', 'mass_independant', 'mass_dependant', 'manual'
@@ -53,16 +53,17 @@ program test_disk
     call test_temperature_interpolation()
     call test_manual_torque_interpolation()
     call test_density_interpolation()
+    call test_retrieval_of_orbital_elements(stellar_mass)
 
     
     ! Physical values and plots
-    call study_opacity_profile()
-    call study_torques_fixed_a(stellar_mass)
-    call study_torques_fixed_m(stellar_mass)
-    call study_temperature_profile(stellar_mass)
-    call study_optical_depth_profile(stellar_mass)
-    call study_thermal_diffusivity_profile(stellar_mass)
-    call study_scaleheight_profile()
+!~     call study_opacity_profile()
+!~     call study_torques_fixed_a(stellar_mass)
+!~     call study_torques_fixed_m(stellar_mass)
+!~     call study_temperature_profile(stellar_mass)
+!~     call study_optical_depth_profile(stellar_mass)
+!~     call study_thermal_diffusivity_profile(stellar_mass)
+!~     call study_scaleheight_profile()
     
     ! Test dissipation
 !~     call test_viscous_dissipation()
@@ -166,7 +167,7 @@ program test_disk
     position(1) = 1.d0
     
     ! We generate cartesian coordinate for the given mass and semi major axis
-    velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+    velocity(2) = sqrt((stellar_mass + mass) / position(1))
     
     ! we store in global parameters various properties of the planet
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
@@ -407,6 +408,112 @@ program test_disk
     close(10)
   
   end subroutine test_manual_torque_interpolation
+
+  subroutine test_retrieval_of_orbital_elements(stellar_mass)
+  ! subroutine that test the function 'get_corotation_torque'
+  
+  ! Return:
+  !  a data file 'test_total_torque.dat' 
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  
+    use contour
+    
+    implicit none
+    
+    real(double_precision), intent(in) :: stellar_mass
+    
+    integer, parameter :: nb_mass = 150
+    real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2
+    
+    integer, parameter :: nb_points = 100
+    real(double_precision), parameter :: a_min = 0.01
+    real(double_precision), parameter :: a_max = 50.
+    
+    ! step for log sampling
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
+    real(double_precision), dimension(nb_points) :: a
+    
+    real(double_precision) :: position(3), velocity(3)
+    type(PlanetProperties) :: p_prop
+    
+    integer :: i,j ! for loops
+    
+    write(*,*) 'Test of the orbital retrieval'
+    
+    position(1:3) = 0.d0
+    velocity(1:3) = 0.d0
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='unitary_tests/test_retrieval_aeI.dat')
+    
+    write(10,*) '# initial a (AU) ; final a (AU) ; initial e ; final e ; initial I (degrees) ; final I (degrees)'
+    
+    
+    do i=1, nb_points ! loop on the position
+      a(i) = a_min + a_step * (i-1)
+      
+      ! We generate cartesian coordinate for the given semi major axis
+      position(1) = a(i)
+      
+      ! We generate cartesian coordinate for the given mass and semi major axis
+      velocity(2) = sqrt((stellar_mass + mass) / position(1))
+      
+      ! we store in global parameters various properties of the planet
+      call get_planet_properties(stellar_mass=stellar_mass, & ! Input
+       mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+       p_prop=p_prop) ! Output
+       
+      
+              
+      write(10,*) a(i), p_prop%semi_major_axis, 0.0, p_prop%eccentricity, 0.0, p_prop%inclination
+      
+    end do
+    close(10)
+    close(11)
+    close(12)
+    
+    
+    open(10, file="unitary_tests/retrieval_a.gnuplot")
+    open(11, file="unitary_tests/retrieval_e.gnuplot")
+    open(12, file="unitary_tests/retrieval_I.gnuplot")
+    
+    write(10,*) 'set xlabel "Initial a"'
+    write(11,*) 'set xlabel "Initial e"'
+    write(12,*) 'set xlabel "Initial I"'
+    
+    write(10,*) 'set ylabel "Final a"'
+    write(11,*) 'set ylabel "Final e"'
+    write(12,*) 'set ylabel "Final I"'
+    
+    do j=10,12
+      write(j,*) 'set mxtics 10'
+      write(j,*) 'set grid xtics ytics mxtics'
+    end do
+    
+    write(10,*) 'plot "test_retrieval_a.dat" using 1:2 with lines title "a",\'
+    write(10,*) '                        " " using 1:3 with lines title "r",\'
+    write(10,*) '                        " " using 1:4 with lines title "a2",\'
+    write(10,*) '                        " " using 1:5 with lines title "r2"'
+    write(11,*) 'plot "test_retrieval_e.dat" using 1:2 with lines title "e",\'
+    write(11,*) '"" using 1:3 with lines title "e2"'
+    write(12,*) 'plot "test_retrieval_I.dat" using 1:2 with lines title "I",\'
+    write(12,*) '"" using 1:3 with lines title "I2"'
+    
+    do j=10,12
+      write(10,*) '#pause -1 # wait until a carriage return is hit'
+      write(10,*) 'set terminal pdfcairo enhanced'
+    end do
+    
+    write(10,*) 'set output "retrieval_a.pdf"'
+    write(11,*) 'set output "retrieval_e.pdf"'
+    write(12,*) 'set output "retrieval_I.pdf"'
+    
+    do j=10, 12
+      write(10,*) 'replot'
+      close(j)
+    end do
+    
+  end subroutine test_retrieval_of_orbital_elements
 
   subroutine test_viscous_dissipation()
   ! function to test the viscous dissipation with a dirac function. 
