@@ -606,7 +606,7 @@ subroutine init_globals(stellar_mass)
     torque_hs_baro = 1.1d0 * (1.5d0 - sigma_index)
     torque_c_lin_baro = 0.7d0 * (1.5d0 - sigma_index)
     
-    call calculate_temperature_profile()
+    call calculate_temperature_profile(a_min=1.d0, a_max=60.d0, nb_a=400)
     
   !~   write(*,*) 'Warning: il y a un offset au couple de corotation'
 !~     write(*,*) 'Warning: h est fixé à 0.05'
@@ -773,7 +773,7 @@ end subroutine init_globals
 !~     call test_torques_fixed_a()
 !~     call test_torques_fixed_m()
 !~     call test_paardekooper_corotation()
-    call test_function_zero_temperature()
+!~     call test_function_zero_temperature()
     call test_temperature_profile()
     
   end subroutine unitary_tests
@@ -1330,17 +1330,33 @@ end subroutine init_globals
     
   end subroutine test_torques_fixed_m
   
-  subroutine calculate_temperature_profile()
-! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
-! A gnuplot file and a data file are created to display the temperature profile.
-! TODO calculer aussi l'exposant local du profil de température
+  subroutine calculate_temperature_profile(a_min, a_max, nb_a)                                                                                              
+! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.                       
+!                                                                                                                                                     
+! Parameters                                                                                                                                          
+! a_min : the left boundary radius of the temperature profile. Must be close to 0 (1 AU for example)                                                  
+! a_max : the outer boundary radius of the temperature profile. Must be quite huge, on order of tens AU (for a first test I took 60AU)                
+! nb_a : the number of point for the radius sample (and thus the temperature sample). For example 400                                                 
 
     implicit none
-    
-    integer, parameter :: nb_a = 400
-    real(double_precision), parameter :: a_min = 1 ! in AU
-    real(double_precision), parameter :: a_max = 60. ! in AU
-    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+
+    ! Input                                                                                                                                           
+    integer, intent(in) :: nb_a                                                                                                                       
+    real(double_precision), intent(in) :: a_min! in AU                                                                                                
+    real(double_precision), intent(in) :: a_max! in AU                                                                                                
+                                                                                                                                                      
+                                                                                                                                                      
+    real(double_precision) :: a_step ! step between values of 'a'.   
+!~ ! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
+!~ ! A gnuplot file and a data file are created to display the temperature profile.
+!~ ! TODO calculer aussi l'exposant local du profil de température
+!~ 
+!~     implicit none
+!~     
+!~     integer, parameter :: nb_a = 400
+!~     real(double_precision), parameter :: a_min = 1 ! in AU
+!~     real(double_precision), parameter :: a_max = 60. ! in AU
+!~     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
     real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
     
@@ -1352,6 +1368,8 @@ end subroutine init_globals
     
     integer :: i,j ! for loops
     
+    a_step = (a_max - a_min) / (nb_a - 1.d0)
+    
     position(:) = 0.d0
     velocity(:) = 0.d0
     
@@ -1361,9 +1379,7 @@ end subroutine init_globals
     ! We open the file where we want to write the outputs
     open(10, file='temperature_profile.dat', status='replace')
     
-    write(10,*) '# exponant ; a in AU ; temperature (in K)'    
-    ! We generate cartesian coordinate for the given semi major axis
-    position(1) = a
+    write(10,*) '# log(a) ; log(T) ; exponant ; a in AU ; temperature (in K)'    
     
     a = 0.9d0 * a_min
     ! We generate cartesian coordinate for the given semi major axis
@@ -1410,23 +1426,9 @@ end subroutine init_globals
 
     implicit none
     
-    integer, parameter :: nb_a = 400
-    real(double_precision), parameter :: a_min = 1 ! in AU
-    real(double_precision), parameter :: a_max = 60. ! in AU
-    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    real(double_precision) :: stellar_mass
     
-    real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
-    
-    real(double_precision) :: a
-    real(double_precision) :: stellar_mass, position(3), velocity(3), temperature, exponant
-    type(PlanetProperties) :: p_prop
-    ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
-    real(double_precision) :: a_old, temperature_old 
-    
-    integer :: i,j ! for loops
-    
-    position(:) = 0.d0
-    velocity(:) = 0.d0
+    integer :: j ! for loops
     
     ! stellar mass
     stellar_mass = 1.d0 * K2
