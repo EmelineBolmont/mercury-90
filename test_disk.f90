@@ -62,9 +62,10 @@ program test_disk
     call study_opacity_profile()
     call study_torques_fixed_a(stellar_mass=stellar_mass)
     call study_torques_fixed_m(stellar_mass=stellar_mass)
-    call study_temperature_profile(stellar_mass=stellar_mass)
-    call study_optical_depth_profile(stellar_mass=stellar_mass)
-    call study_thermal_diffusivity_profile(stellar_mass=stellar_mass)
+    call study_ecc_corot(stellar_mass=stellar_mass)
+    call study_temperature_profile()
+    call study_optical_depth_profile()
+    call study_thermal_diffusivity_profile()
     call study_scaleheight_profile()
     
     ! Test dissipation
@@ -422,7 +423,7 @@ program test_disk
     
     implicit none
     
-    real(double_precision), intent(in) :: stellar_mass
+    real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2
@@ -1019,13 +1020,11 @@ program test_disk
   end subroutine test_turbulence_mode
 
 ! %%% Physical behaviour %%%
-  subroutine study_temperature_profile(stellar_mass)
+  subroutine study_temperature_profile()
 ! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 
     implicit none
-    
-    real(double_precision), intent(in) :: stellar_mass
     
     integer :: j ! for loops
     
@@ -1129,13 +1128,11 @@ program test_disk
   
   end subroutine study_scaleheight_profile
   
-  subroutine study_optical_depth_profile(stellar_mass)
+  subroutine study_optical_depth_profile()
 ! Subroutine that test the finding of the optical depth profile and store a plot of the temperature profile of the disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 
     implicit none
-    
-    real(double_precision), intent(in) :: stellar_mass
     
     integer :: j ! for loops
     
@@ -1171,13 +1168,11 @@ program test_disk
   
   end subroutine study_optical_depth_profile
   
-  subroutine study_thermal_diffusivity_profile(stellar_mass)
+  subroutine study_thermal_diffusivity_profile()
 ! Subroutine that test the finding of the optical depth profile and store a plot of the temperature profile of the disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 
     implicit none
-    
-    real(double_precision), intent(in) :: stellar_mass
     
     integer :: j ! for loops
     
@@ -1280,7 +1275,7 @@ program test_disk
   ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
     implicit none
     
-    real(double_precision), intent(in) :: stellar_mass
+    real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     integer, parameter :: nb_mass = 100
     real(double_precision), parameter :: mass_min = 1. ! in earth mass
@@ -1356,6 +1351,7 @@ program test_disk
           write(*,*) 'Warning: The torque rule cannot be found.'
           write(*,*) 'Given value :', TORQUE_TYPE
           write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
+          stop
       end select
       
       total_torque = lindblad_torque + corotation_torque
@@ -1446,7 +1442,7 @@ program test_disk
   ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
     implicit none
     
-    real(double_precision), intent(in) :: stellar_mass
+    real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     integer, parameter :: nb_a = 400
     real(double_precision), parameter :: a_min = 0.1 ! in AU
@@ -1522,6 +1518,7 @@ program test_disk
           write(*,*) 'Warning: The torque rule cannot be found.'
           write(*,*) 'Given value :', TORQUE_TYPE
           write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
+          stop
       end select
       
       total_torque = lindblad_torque + corotation_torque
@@ -1594,6 +1591,132 @@ program test_disk
     
   end subroutine study_torques_fixed_m
   
+  subroutine study_ecc_corot(stellar_mass)
+  ! subroutine that test the function 'get_corotation_torque'
+  
+  ! Return:
+  !  a data file 'torques_fixed_m.dat' 
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  
+    use orbital_elements, only : mco_el2x
+    
+    implicit none
+    
+    real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
+    
+    integer, parameter :: nb_e = 400
+    real(double_precision), parameter :: e_min = 1e-5 ! eccentricity
+    real(double_precision), parameter :: e_max = 1.-1.e-5 ! eccentricity
+    real(double_precision), parameter :: e_step = (e_max / e_min)**(1 / (nb_e - 1.d0))
+    
+    real(double_precision), parameter :: mass = 1. * EARTH_MASS * K2
+    real(double_precision), parameter :: a = 6. ! in AU
+    real(double_precision), parameter :: I = 0. ! in radians
+    
+    real(double_precision) :: total_torque, corotation_torque, lindblad_torque, torque_ref
+    real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
+    real(double_precision) :: e, q, gm
+    real(double_precision) :: position(3), velocity(3)
+    type(PlanetProperties) :: p_prop
+    
+    integer :: j ! for loops
+    
+    write(*,*) 'Evolution of the torque in function of the eccentricity'
+    
+    gm = stellar_mass + mass ! Masses are already in [msun * K2]
+    position(1:3) = 0.d0
+    velocity(1:3) = 0.d0
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='unitary_tests/ecc_corot.dat')
+    
+    write(10,*) '# eccentricity ; ecc correction ; total_torque'
+
+    
+    do j=1,nb_e
+      e = e_min * e_step**(j - 1)
+      q = a * (1 - e)
+      
+      ! We calculate position and velocities in function of orbital elements
+      call mco_el2x(gm,q,e,I,0.d0, 0.d0, 0.d0,& ! Inputs
+                    position(1),position(2),position(3),velocity(1),velocity(2),velocity(3)) ! Outputs
+      
+      ! we store in global parameters various properties of the planet
+      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+       p_prop=p_prop) ! Output
+      
+      !------------------------------------------------------------------------------
+      ! Calculation of the acceleration due to migration
+      select case(TORQUE_TYPE)
+        case('real') ! The normal torque profile, calculated form properties of the disk
+          call get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
+        
+        ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+        case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
+        
+        case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
+          call get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
+        
+        case('mass_dependant')
+          call get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
+        
+        case('manual')
+          call get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_torque, &
+          lindblad_torque, torque_ref, ecc_corot=ecc_corot)
+          
+        case default
+          write(*,*) 'Warning: The torque rule cannot be found.'
+          write(*,*) 'Given value :', TORQUE_TYPE
+          write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
+          stop
+      end select
+      
+      total_torque = lindblad_torque + ecc_corot * corotation_torque
+      
+      
+              
+      write(10,*) e, ecc_corot, total_torque
+    end do
+    
+    close(10)
+
+    
+    
+    open(10, file="unitary_tests/ecc_corot.gnuplot")
+
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) "set output 'ecc_corot.pdf'"
+    write(10,*) 'set multiplot layout 2, 1 \'
+    write(10,'(a,f4.1,3a)') 'title "mass = ',mass / (EARTH_MASS * K2),' m_{earth} ; a = ',a ,&
+                            '; torque type = ', trim(TORQUE_TYPE),'"'
+
+!~     write(10,*) 'set lmargin 10'
+!~     write(10,*) 'set rmargin 2'
+    write(10,*) 'set xlabel "eccentricity"'
+    write(10,*) 'set logscale x'
+    write(10,*) 'set grid'
+    write(10,*) 'set xrange [',e_min ,':1]'
+
+    write(10,*) "plot 'ecc_corot.dat' using 1:2 with lines title 'eccentricity correction'"
+    
+    write(10,*) 'set xlabel "eccentricity"'
+    write(10,*) 'set ylabel "torque [{/Symbol G}_0]"'
+    write(10,*) 'set grid'
+    write(10,*) 'set xrange [',e_min ,':1]'
+    write(10,*) "plot 'ecc_corot.dat' using 1:3 with lines title '{/Symbol G}_{tot}'"
+    
+    write(10,*) 'unset multiplot'
+    
+    close(10)
+
+    
+  end subroutine study_ecc_corot
+
 
   subroutine study_torques(stellar_mass)
   ! subroutine that test the function 'get_corotation_torque'
@@ -1606,7 +1729,7 @@ program test_disk
     
     implicit none
     
-    real(double_precision), intent(in) :: stellar_mass
+    real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
@@ -1714,6 +1837,7 @@ program test_disk
             write(*,*) 'Warning: The torque rule cannot be found.'
             write(*,*) 'Given value :', TORQUE_TYPE
             write(*,*) 'Values possible : real ; linear_indep ; tanh_indep ; manual'
+            stop
         end select
         
         total_torque(i,j) = lindblad_torque + corotation_torque
@@ -1837,7 +1961,7 @@ program test_disk
     
     implicit none
     
-    real(double_precision), intent(in) :: stellar_mass
+    real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     ! mass sample
     integer, parameter :: nb_mass = 150

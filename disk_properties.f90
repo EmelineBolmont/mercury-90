@@ -136,7 +136,7 @@ integer :: unit
   write(unit,'(a)')            '|#  Properties of the disk at the   #'
   write(unit,'(a)')            '|#     location of the planet       #'
   write(unit,'(a)')            '|####################################'
-  write(unit,'(a,es10.2e2,a)')     '| Sigma : ', p_prop%sigma , ' [Msun.AU^-2]'
+  write(unit,'(a,es10.2e2,a)') '| Sigma : ', p_prop%sigma , ' [Msun.AU^-2]'
   write(unit,'(a,f9.2)')       '| Sigma_index : ', p_prop%sigma_index
   write(unit,'(a,f9.2,a)')     '| Scaleheight : ', p_prop%scaleheight , ' [AU]'
   write(unit,'(a,f6.4)')       '| Aspect_ratio : ', p_prop%aspect_ratio 
