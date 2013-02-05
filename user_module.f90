@@ -464,6 +464,62 @@ subroutine read_disk_properties()
   
 end subroutine read_disk_properties
 
+subroutine write_disk_properties()
+! subroutine that write the parameters of the user_module into the file 'disk.out'
+
+! Global Parameters
+! B_OVER_H : the smoothing length for the planet's potential
+! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
+! MEAN_MOLECULAR_WEIGHT : the mean molecular weight in mass of a proton
+! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
+! INITIAL_SIGMA_INDEX : the negative slope of the surface density power law (alpha in the paper)
+! INITIAL_SIGMA_0_NUM : the surface density at (R=1AU) [Msun/AU^2]
+! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! viscosity : the viscosity of the disk in [cm^2/s]
+! DISSIPATION_TYPE : integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
+! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+
+  implicit none
+  
+  open(10, file='disk.out')
+  
+  write(10,*) '------------------------------------'
+  write(10,*) '|   Properties of the disk         |'
+  write(10,*) '------------------------------------'
+  write(10,'(a,f4.2)') 'b/h = ',B_OVER_H
+  write(10,'(a,f4.2)') 'adiabatic index = ', ADIABATIC_INDEX
+  write(10,'(a,f4.2)') 'mean molecular weight = ', MEAN_MOLECULAR_WEIGHT
+  write(10,'(a,es10.1e2,a)') 'viscosity = ', viscosity, ' (cm^2/s)'
+  write(10,'(a,f6.1,a,f4.2 ,a)') 'initial surface density = ',INITIAL_SIGMA_0, ' * R^(-',INITIAL_SIGMA_INDEX,') (g/cm^2)'
+  write(10,*) ''
+  write(10,*) "Possible values : 'open', 'closed'"
+  write(10,*) 'inner boundary condition = ', trim(INNER_BOUNDARY_CONDITION)
+  write(10,*) 'outer boundary condition = ', trim(OUTER_BOUNDARY_CONDITION)
+  write(10,*) ''
+  write(10,'(a,f6.1,a)') 'inner edge of the disk = ',INNER_BOUNDARY_RADIUS, ' (AU)'
+  write(10,'(a,f6.1,a)') 'outer edge of the disk = ',OUTER_BOUNDARY_RADIUS, ' (AU)'
+  write(10,*) ''
+  write(10,*) 'Possible values : 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile'
+  write(10,'(a,i1)') 'dissipation of the disk = ',DISSIPATION_TYPE
+  write(10,'(a,es10.1e2)') 'characteristic time for decay (only valid for exponential decay) = ',TAU_DISSIPATION
+  write(10,*) ''
+  write(10,*) '------------------------------------'
+  write(10,*) '|     Interactions disk/planets     |'
+  write(10,*) '------------------------------------'
+  write(10,*) 'when the inclination damping stops'
+  write(10,'(a,es10.1e2,a)') 'inclination cutoff = ',INCLINATION_CUTOFF, ' (rad)'
+  write(10,*) ''
+  write(10,*) "Possible values : 'real', 'mass_independant', 'mass_dependant'"
+  write(10,*) 'torque type = ', trim(TORQUE_TYPE)
+  write(10,*) ''
+  
+  close(10)
+  
+end subroutine write_disk_properties
+
 subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 
 ! subroutine that return numerous properties of the planet and its environment given its mass, position and velocity
@@ -549,7 +605,6 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   real(double_precision), intent(out) :: corotation_torque
   real(double_precision), intent(out) :: lindblad_torque !  lindblad torque exerted by the disk on the planet [\Gamma_0]
   real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
-
 
   !Local
   
@@ -653,6 +708,8 @@ subroutine init_globals(stellar_mass)
     FirstCall = .False.
     
     call read_disk_properties()
+    ! we write all the values used by user_module, those given by the user, and the default ones, in 'disk.out' file
+    call write_disk_properties() 
     
     allocate(distance_sample(NB_SAMPLE_PROFILES))
     distance_sample(1:NB_SAMPLE_PROFILES) = 0.d0
@@ -2807,13 +2864,13 @@ end subroutine print_planet_properties
     
     integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 20. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     real(double_precision), dimension(nb_mass) :: mass
     
     integer, parameter :: nb_points = 100
     real(double_precision), parameter :: a_min = 0.01
-    real(double_precision), parameter :: a_max = 50.
+    real(double_precision), parameter :: a_max = 15.
     ! step for log sampling
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
     real(double_precision), dimension(nb_points) :: a
