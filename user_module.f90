@@ -245,29 +245,19 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         
         
         
-!~         if (p_prop%semi_major_axis.gt.4.) then
-!~           call print_planet_properties(p_prop)
+      end if
+!~       if (time.gt.9.825225e6) then
+!~         if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%radius.gt.INNER_BOUNDARY_RADIUS)) then
+!~         
 !~           call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
 !~                        time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
 !~                        turbulence_acceleration)
-!~           write(*,*) 'torque=', torque
-!~ !          write (*,*) sqrt(sum(vect_product(position(1:3,planet), acceleration(1:3,planet))))
-!~ !          stop
 !~         end if
-
-      end if
-      if (time.gt.9.825225e6) then
-        if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%radius.gt.INNER_BOUNDARY_RADIUS)) then
-        
-          call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
-                       time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &
-                       turbulence_acceleration)
-        end if
-        open(12, file="debug.out", access='append')
-        write (12,*) "time = ", time, " ; planet", planet
-        close(12)
-        call print_planet_properties(p_prop)
-      end if
+!~         open(12, file="debug.out", access='append')
+!~         write (12,*) "time = ", time, " ; planet", planet
+!~         close(12)
+!~         call print_planet_properties(p_prop)
+!~       end if
     end if
   end do
   
