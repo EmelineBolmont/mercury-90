@@ -162,7 +162,7 @@ program test_disk
     real(double_precision) :: temperature
     
     real(double_precision), parameter :: T_min = 0.
-    real(double_precision), parameter :: T_max = 50000.
+    real(double_precision), parameter :: T_max = 10000.
     integer, parameter :: nb_points = 2000
 !~     real(double_precision), parameter :: T_step = (T_max/T_min) ** (1/(nb_points-1.d0))
     real(double_precision), parameter :: T_step = (T_max - T_min) / (nb_points - 1.d0)
@@ -178,16 +178,15 @@ program test_disk
     real(double_precision) :: orbital_position, temperature_old, scaleheight_old, distance_old
 
   !------------------------------------------------------------------------------
-    orbital_position = 0.1d0
+    orbital_position = 100.d0
   
   
     position(1:3) = 0.d0
     velocity(1:3) = 0.d0
     
     ! we define a fantom point
-!~     distance_old = orbital_position * 1.1
-    distance_old = 0.14876810783010108
-    temperature_old = 20264.092666269127 ! we force the temperature to be 10K for this fantom point
+    distance_old = orbital_position * 1.1
+    temperature_old = 10.d0 ! we force the temperature to be 10K for this fantom point
     position(1) = distance_old
     velocity(2) = sqrt((stellar_mass + mass) / position(1))
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
@@ -227,8 +226,6 @@ program test_disk
       call zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
                               scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=prefactor,& ! Input
                               funcv=zero_function, optical_depth=tmp) ! Output
-!~       zero_function = zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, &
-!~                                                omega=p_prop%omega, prefactor=prefactor)
       
       write(10,*) temperature, zero_function
     end do
