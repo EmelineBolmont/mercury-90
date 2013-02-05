@@ -41,12 +41,12 @@ program test_disk
     ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
     call study_torques(stellar_mass)
     
-!~     ! we store in a .dat file the temperature profile
+    ! we store in a .dat file the temperature profile
     call store_temperature_profile(filename='temperature_profile.dat')
     call store_density_profile(filename='density_profile.dat')
     call store_scaleheight_profile()
-!~     
-!~     ! Unitary tests
+    
+    ! Unitary tests
     call test_functions_FGK()
     call test_function_zero_temperature(stellar_mass)
     call test_temperature_interpolation()
@@ -77,7 +77,7 @@ program test_disk
   ! subroutine that test the functions 'get_F', 'get_G' and 'get_K' and 
   
   ! Return:
-  !  a data file 'test_functions_FGK.dat' 
+  !  a data file 'functions_FGK.dat' 
   ! and an associated gnuplot file 'functions_FGK.gnuplot' that display values for get_F, get_G and get_K for a range of p values.
     implicit none
     
@@ -93,7 +93,7 @@ program test_disk
     write(*,*) 'test of functions F, G, K from (paardekooper, 2010)'
     
     ! We open the file where we want to write the outputs
-    open(10, file='unitary_tests/test_functions_FGK.dat')
+    open(10, file='unitary_tests/functions_FGK.dat')
     write(10,*) "Correspond to the figure 2 of II. Effects of diffusion"
     write(10,*) '# p ; F(p) ; G(p) ; K(p)'
     
@@ -117,7 +117,7 @@ program test_disk
     write(10,*) 'set mxtics 10'
     write(10,*) 'set grid xtics ytics mxtics'
     write(10,*) 'set xrange [', p_min, ':', p_max, ']'
-    write(10,*) 'plot "test_functions_FGK.dat" using 1:2 with lines title "F(p)",\'
+    write(10,*) 'plot "functions_FGK.dat" using 1:2 with lines title "F(p)",\'
     write(10,*) "     '' using 1:3 with lines title 'G(p)',\"
     write(10,*) "     '' using 1:4 with lines title 'K(p)'"
     write(10,*) '#pause -1 # wait until a carriage return is hit'
@@ -161,7 +161,7 @@ program test_disk
     write(*,*) 'Test of the zero function used to calculate the temperature at a given radius'
     
     ! We open the file where we want to write the outputs
-    open(10, file='unitary_tests/test_function_zero_temperature.dat')
+    open(10, file='unitary_tests/function_zero_temperature.dat')
     
     ! We generate cartesian coordinate for the given semi major axis
     position(1) = 1.d0
@@ -202,7 +202,7 @@ program test_disk
     write(10,*) 'set ylabel "zero function"'
     write(10,*) 'set grid'
     write(10,*) 'set xrange [', T_min, ':', T_max, ']'
-    write(10,*) "plot 'test_function_zero_temperature.dat' using 1:2 with lines notitle"
+    write(10,*) "plot 'function_zero_temperature.dat' using 1:2 with lines notitle"
     write(10,*) "#pause -1 # wait until a carriage return is hit"
     write(10,*) "set terminal pdfcairo enhanced"
     write(10,*) "set output 'function_zero_temperature.pdf'"
@@ -227,7 +227,7 @@ program test_disk
     
     write(*,*) 'Test of the temperature interpolation'
     
-    open(10, file='unitary_tests/test_temperature_interpolation.dat')
+    open(10, file='unitary_tests/temperature_interpolation.dat')
     do j=1,nb_a
       a = (a_min + a_step * (j - 1.d0))
       ! We generate cartesian coordinate for the given semi major axis
@@ -253,7 +253,7 @@ program test_disk
     write(10,*) 'set grid'
 
 
-    write(10,*) 'plot "test_temperature_interpolation.dat" using 1:2 with lines title "Interpolation",\'
+    write(10,*) 'plot "temperature_interpolation.dat" using 1:2 with lines title "Interpolation",\'
     write(10,*) '     "../temperature_profile.dat" using 1:2 with lines title "Profile"'
         
 
@@ -288,7 +288,7 @@ program test_disk
     
     write(*,*) 'Test of the surface density interpolation'
     
-    open(10, file='unitary_tests/test_density_interpolation.dat')
+    open(10, file='unitary_tests/density_interpolation.dat')
     do j=1,nb_a
       a = (a_min + a_step * (j - 1.d0))
       ! We generate cartesian coordinate for the given semi major axis
@@ -313,7 +313,7 @@ program test_disk
     write(10,*) 'set grid'
 
 
-    write(10,*) 'plot "test_density_interpolation.dat" using 1:2 with lines title "Interpolation",\'
+    write(10,*) 'plot "density_interpolation.dat" using 1:2 with lines title "Interpolation",\'
     write(10,*) '     "../density_profile.dat" using 1:2 with lines title "Profile"'
         
 
@@ -368,7 +368,7 @@ program test_disk
     
     call read_torque_profile()
     
-    open(10, file='unitary_tests/test_torque_interpolation.dat')
+    open(10, file='unitary_tests/torque_interpolation.dat')
     do j=1,NB_SAMPLE_PROFILES
       
       
@@ -389,7 +389,7 @@ program test_disk
     write(10,*) 'set grid'
     write(10,*) 'set yrange [',minval(torque_profile)-1., ':', maxval(torque_profile)+1,']'
 
-    write(10,*) 'plot "test_torque_interpolation.dat" using 1:2 with lines linetype -1 title "Interpolated profile",\'
+    write(10,*) 'plot "torque_interpolation.dat" using 1:2 with lines linetype -1 title "Interpolated profile",\'
     write(10,*) '     "../torque_profile.dat" using 1:2 with points linetype 1 pointtype 2 linewidth 3 title "Read Profile"'
         
 
@@ -413,7 +413,7 @@ program test_disk
   ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
-  !  a data file 'test_total_torque.dat' 
+  !  a data file 'retrieval_aeI.dat' 
   ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
   
     use contour
@@ -444,7 +444,7 @@ program test_disk
     velocity(1:3) = 0.d0
     
     ! We open the file where we want to write the outputs
-    open(10, file='unitary_tests/test_retrieval_aeI.dat')
+    open(10, file='unitary_tests/retrieval_aeI.dat')
     
     write(10,*) '# initial a (AU) ; final a (AU) ; initial e ; final e ; initial I (degrees) ; final I (degrees)'
     
@@ -490,13 +490,13 @@ program test_disk
       write(j,*) 'set grid xtics ytics mxtics'
     end do
     
-    write(10,*) 'plot "test_retrieval_a.dat" using 1:2 with lines title "a",\'
+    write(10,*) 'plot "retrieval_a.dat" using 1:2 with lines title "a",\'
     write(10,*) '                        " " using 1:3 with lines title "r",\'
     write(10,*) '                        " " using 1:4 with lines title "a2",\'
     write(10,*) '                        " " using 1:5 with lines title "r2"'
-    write(11,*) 'plot "test_retrieval_e.dat" using 1:2 with lines title "e",\'
+    write(11,*) 'plot "retrieval_e.dat" using 1:2 with lines title "e",\'
     write(11,*) '"" using 1:3 with lines title "e2"'
-    write(12,*) 'plot "test_retrieval_I.dat" using 1:2 with lines title "I",\'
+    write(12,*) 'plot "retrieval_I.dat" using 1:2 with lines title "I",\'
     write(12,*) '"" using 1:3 with lines title "I2"'
     
     do j=10,12
@@ -888,7 +888,7 @@ program test_disk
   implicit none
   
   integer, parameter :: nb_points = 10000 ! the time through which we compute the turbulence
-  integer, parameter :: nb_bins = 1000 ! the number of bins for the histogram of the turbulence torque
+  integer, parameter :: nb_bins = 100 ! the number of bins for the histogram of the turbulence torque
   
   real(double_precision) :: initial_time = 0.d0
   type(PlanetProperties) :: p_prop ! various properties of a planet
@@ -932,72 +932,58 @@ program test_disk
   call get_polar_coordinates(position(1), position(2), position(3), radius_planet, theta_planet) 
   ! This radius must be used instead of p_prop%radius because p_prop is the same during the calculation of the derivative
   
+  open(10, file="unitary_tests/turbulence_torque.dat")
   do i=1, nb_points
     time = initial_time + i * delta_t
     
     call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
-    turbulence_torque(i) = - sin(theta_planet) * turbulence_acceleration(1) + cos(theta_planet) * turbulence_acceleration(2)
+    turbulence_torque(i) = (- sin(theta_planet) * turbulence_acceleration(1) + cos(theta_planet) * turbulence_acceleration(2)) * &
+                          DAY**2 / AU
+!~     turbulence_torque(i) = turbulence_acceleration(2)
     
+    write(10,*) time, turbulence_torque(i)
   end do
+  close(10)
   
-  ! Line only used for TESTS !!! To be erased afterwards
-!~   turbulence_torque( 1) = 3.5
-!~   turbulence_torque( 2) = 0.
-!~   turbulence_torque( 3) = 4.
-!~   turbulence_torque( 4) = 2.1
-!~   turbulence_torque( 5) = 2.9
-!~   turbulence_torque( 6) = 2.5
-!~   turbulence_torque( 7) = 3.1
-!~   turbulence_torque( 8) = 3.0
-!~   turbulence_torque( 9) = 2.2
-!~   turbulence_torque(10) = 2.3
-  ! Je dois avoir
-!~   0.5 0.1
-!~   1.5 0
-!~   2.5 0.7
-!~   3.5 0.2
+  ! We initialize the values of the counting array
+  bin_y_values(1:nb_bins) = 0
   
 
-!~   ! We initialize the values of the counting array
-!~   bin_y_values(1:nb_bins) = 0
-!~   
-!~ 
-!~   ! From the list of values, we get the values for the histogram
-!~   max_value = maxval(turbulence_torque(1:nb_points))
-!~   min_value = minval(turbulence_torque(1:nb_points))
-!~   
-!~   delta_bin = (max_value - min_value) / float(nb_bins)
-!~   
-!~   do i=1,nb_bins
-!~     bin_x_values(i) = min_value + (i-0.5d0) * delta_bin
-!~   end do
-!~     
-!~   do i=1, nb_points
-!~     ! if the value is exactly equal to max_value, we force the index to be nb_bins
-!~     index_bin = min(floor((turbulence_torque(i) - min_value) / delta_bin)+1, nb_bins)
-!~     
-!~     ! With floor, we get the immediate integer below the value. Since the index start at 1, we add 1 to the value, because the 
-!~     ! calculation will get from 0 to the number of bins. Thus, for the max value, we will get nb_bins +1, which is not possible. 
-!~     ! As a consequence, we take the lower value between the index and nb_bins, to ensure that for the max value, we get an index 
-!~     ! of nb_bins.
-!~     
-!~     bin_y_values(index_bin) = bin_y_values(index_bin) + 1
-!~   end do
-!~ 
-!~   ! We normalize the histogram
-!~   bin_y_values(1:nb_bins) = bin_y_values(1:nb_bins) / float(nb_points)
+  ! From the list of values, we get the values for the histogram
+  max_value = maxval(turbulence_torque(1:nb_points))
+  min_value = minval(turbulence_torque(1:nb_points))
   
-  open(10, file="unitary_tests/test_turbulence_torque.dat")
+  delta_bin = (max_value - min_value) / float(nb_bins)
+  
+  do i=1,nb_bins
+    bin_x_values(i) = min_value + (i - 0.5d0) * delta_bin
+  end do
+    
   do i=1, nb_points
-!~     write(10,*) bin_x_values(i), bin_y_values(i)
-    write(10,*) turbulence_torque(i)
+    ! if the value is exactly equal to max_value, we force the index to be nb_bins
+    index_bin = min(floor((turbulence_torque(i) - min_value) / delta_bin)+1, nb_bins)
+    
+    ! With floor, we get the immediate integer below the value. Since the index start at 1, we add 1 to the value, because the 
+    ! calculation will get from 0 to the number of bins. Thus, for the max value, we will get nb_bins +1, which is not possible. 
+    ! As a consequence, we take the lower value between the index and nb_bins, to ensure that for the max value, we get an index 
+    ! of nb_bins.
+    
+    bin_y_values(index_bin) = bin_y_values(index_bin) + 1
+  end do
+
+  ! We normalize the histogram
+  bin_y_values(1:nb_bins) = bin_y_values(1:nb_bins) / float(nb_points)
+  
+  open(10, file="unitary_tests/turbulence_torque.hist")
+  do i=1, nb_bins
+    write(10,*) bin_x_values(i), bin_y_values(i)
   end do
   close(10)
   
   open(10, file="unitary_tests/turbulence_torque.gnuplot")
   write(10,*) 'set xlabel "torque"'
   write(10,*) 'set ylabel "density of probability"'
-  write(10,*) 'plot "test_turbulence_torque.dat" using 1:2 with boxes'
+  write(10,*) 'plot "turbulence_torque.hist" using 1:2 with boxes'
   write(10,*) '#pause -1 # wait until a carriage return is hit'
   write(10,*) 'set terminal pdfcairo enhanced'
   write(10,*) 'set output "turbulence_torque.pdf"'
@@ -1206,7 +1192,7 @@ program test_disk
   ! subroutine that test the function 'get_opacity'
   
   ! Return:
-  ! a data file 'test_opacity.dat' 
+  ! a data file 'opacity.dat' 
   ! and an associated gnuplot file 'opacity.gnuplot' that display values for get_opacity for a range of p values.
     implicit none
     
@@ -1224,7 +1210,7 @@ program test_disk
     write(*,*) 'Test of the opacity'
     
     ! We open the file where we want to write the outputs
-    open(10, file='unitary_tests/test_opacity.dat')
+    open(10, file='unitary_tests/opacity.dat')
     write(10,*) "Correspond to the figure 9a of Bell & Lin 1994"
     write(10,*) '# Temperature (K) ; Opacity for bulk density from 1e-5 to 1e-9 by power of ten'
     
@@ -1247,7 +1233,7 @@ program test_disk
     write(10,*) 'set logscale y'
     write(10,*) 'set grid'
     write(10,*) 'set xrange [', T_min, ':', T_max, ']'
-    write(10,*) "plot 'test_opacity.dat' using 1:2 with lines title '{/Symbol r}=10^{-5}',\"
+    write(10,*) "plot 'opacity.dat' using 1:2 with lines title '{/Symbol r}=10^{-5}',\"
     write(10,*) "     '' using 1:3 with lines title '{/Symbol r}=10^{-6}',\"
     write(10,*) "     '' using 1:4 with lines title '{/Symbol r}=10^{-7}',\"
     write(10,*) "     '' using 1:5 with lines title '{/Symbol r}=10^{-8}',\"
@@ -1265,7 +1251,7 @@ program test_disk
   ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
-  !  a data file 'test_total_torque.dat' 
+  !  a data file '.dat' 
   ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
     implicit none
     
@@ -1291,10 +1277,10 @@ program test_disk
     velocity(:) = 0.d0
     
     ! We open the file where we want to write the outputs
-    open(10, file='unitary_tests/study_torques_fixed_a.dat')
-    open(11, file='unitary_tests/test_ref_torque_fixed_a.dat')
-    open(12, file='unitary_tests/study_torques_fixed_a_units.dat')
-    open(13, file='unitary_tests/test_specific_torque_fixed_a.dat')
+    open(10, file='unitary_tests/torques_fixed_a.dat')
+    open(11, file='unitary_tests/ref_torque_fixed_a.dat')
+    open(12, file='unitary_tests/torques_fixed_a_units.dat')
+    open(13, file='unitary_tests/specific_torque_fixed_a.dat')
     
     write(10,*) '# mass in earth mass ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
     write(11,*) '# mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
@@ -1338,6 +1324,7 @@ program test_disk
         case default
           write(*,*) 'Warning: The torque rule cannot be found.'
           write(*,*) 'Given value :', TORQUE_TYPE
+          write(*,*) 'Values possible : real ; linear_indep ; arctan_indep ; manual'
       end select
       
       total_torque = lindblad_torque + corotation_torque
@@ -1386,17 +1373,17 @@ program test_disk
       write(j,*) 'set xrange [', mass_min, ':', mass_max, ']'
     end do
 
-    write(10,*) "plot 'study_torques_fixed_a.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(10,*) "plot 'torques_fixed_a.dat' using 1:2 with lines title '{/Symbol G}_c',\"
     write(10,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
     write(10,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
     
-    write(11,*) "plot 'test_ref_torque_fixed_a.dat' using 1:2 with lines"
+    write(11,*) "plot 'ref_torque_fixed_a.dat' using 1:2 with lines"
     
-    write(12,*) "plot 'study_torques_fixed_a_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(12,*) "plot 'torques_fixed_a_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
     write(12,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
     write(12,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
     
-    write(13,*) "plot 'test_specific_torque_fixed_a.dat' using 1:2 with lines"
+    write(13,*) "plot 'specific_torque_fixed_a.dat' using 1:2 with lines"
     
     do j=10,13
       write(j,*) "#pause -1 # wait until a carriage return is hit"
@@ -1424,7 +1411,7 @@ program test_disk
   ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
-  !  a data file 'test_total_torque.dat' 
+  !  a data file 'torques_fixed_m.dat' 
   ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
     implicit none
     
@@ -1450,9 +1437,9 @@ program test_disk
     velocity(:) = 0.d0
     
     ! We open the file where we want to write the outputs
-    open(10, file='unitary_tests/study_torques_fixed_m.dat')
-    open(11, file='unitary_tests/test_ref_torque_fixed_m.dat')
-    open(12, file='unitary_tests/study_torques_fixed_m_units.dat')
+    open(10, file='unitary_tests/torques_fixed_m.dat')
+    open(11, file='unitary_tests/ref_torque_fixed_m.dat')
+    open(12, file='unitary_tests/torques_fixed_m_units.dat')
     
     write(10,*) '# a in AU ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
     write(11,*) '# a in AU ; reference torque in M_s.AU^2.day^{-2}'
@@ -1497,6 +1484,7 @@ program test_disk
         case default
           write(*,*) 'Warning: The torque rule cannot be found.'
           write(*,*) 'Given value :', TORQUE_TYPE
+          write(*,*) 'Values possible : real ; linear_indep ; arctan_indep ; manual'
       end select
       
       total_torque = lindblad_torque + corotation_torque
@@ -1538,13 +1526,13 @@ program test_disk
       write(j,*) 'set xrange [', a_min, ':', a_max, ']'
     end do
 
-    write(10,*) "plot 'study_torques_fixed_m.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(10,*) "plot 'torques_fixed_m.dat' using 1:2 with lines title '{/Symbol G}_c',\"
     write(10,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
     write(10,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
     
-    write(11,*) "plot 'test_ref_torque_fixed_m.dat' using 1:2 with lines"
+    write(11,*) "plot 'ref_torque_fixed_m.dat' using 1:2 with lines"
         
-    write(12,*) "plot 'study_torques_fixed_m_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(12,*) "plot 'torques_fixed_m_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
     write(12,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
     write(12,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
 
@@ -1574,7 +1562,7 @@ program test_disk
   ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
-  !  a data file 'test_total_torque.dat' 
+  !  a data file 'total_torque.dat' 
   ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
   
     use contour
@@ -1618,12 +1606,12 @@ program test_disk
     vector_limit = a_step * (deltai - 1)
     
     ! We open the file where we want to write the outputs
-    open(10, file='unitary_tests/test_corotation_torque.dat')
-    open(11, file='unitary_tests/test_total_torque.dat')
-    open(12, file='unitary_tests/test_total_torque_units.dat')
-    open(13, file='unitary_tests/test_lindblad_torque.dat')
-    open(14, file='unitary_tests/test_ref_torque.dat')
-    open(15, file='unitary_tests/test_vector_total_torque.dat')
+    open(10, file='unitary_tests/corotation_torque.dat')
+    open(11, file='unitary_tests/total_torque.dat')
+    open(12, file='unitary_tests/total_torque_units.dat')
+    open(13, file='unitary_tests/lindblad_torque.dat')
+    open(14, file='unitary_tests/ref_torque.dat')
+    open(15, file='unitary_tests/vector_total_torque.dat')
     
     write(10,*) '# semi major axis (AU) ; mass in earth mass ; corotation torque (no dim)'
     write(11,*) '# semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
@@ -1687,6 +1675,7 @@ program test_disk
           case default
             write(*,*) 'Warning: The torque rule cannot be found.'
             write(*,*) 'Given value :', TORQUE_TYPE
+            write(*,*) 'Values possible : real ; linear_indep ; arctan_indep ; manual'
         end select
         
         total_torque(i,j) = lindblad_torque + corotation_torque
@@ -1749,19 +1738,19 @@ program test_disk
       write(j,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     end do
 
-    write(10,*) "splot 'test_corotation_torque.dat' with pm3d notitle"
+    write(10,*) "splot 'corotation_torque.dat' with pm3d notitle"
     
-    write(11,*) "splot 'test_total_torque.dat' with pm3d notitle, \"
+    write(11,*) "splot 'total_torque.dat' with pm3d notitle, \"
     write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle, \"
-    write(11,*) "      'test_vector_total_torque.dat' with vector notitle head filled linestyle -1"
+    write(11,*) "      'vector_total_torque.dat' with vector notitle head filled linestyle -1"
     
-    write(12,*) "splot 'test_total_torque_units.dat' with pm3d notitle, \"
+    write(12,*) "splot 'total_torque_units.dat' with pm3d notitle, \"
     write(12,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle, \"
-    write(12,*) "      'test_vector_total_torque.dat' with vector notitle head filled linestyle -1"
+    write(12,*) "      'vector_total_torque.dat' with vector notitle head filled linestyle -1"
     
-    write(13,*) "splot 'test_lindblad_torque.dat' with pm3d notitle"
+    write(13,*) "splot 'lindblad_torque.dat' with pm3d notitle"
     
-    write(14,*) "splot 'test_ref_torque.dat' with pm3d notitle"
+    write(14,*) "splot 'ref_torque.dat' with pm3d notitle"
 
     
     do j=10,14

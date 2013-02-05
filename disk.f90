@@ -295,17 +295,45 @@ subroutine write_disk_properties()
   write(10,'(a)') 'When the inclination damping stops'
   write(10,'(a,es10.1e2,a)') 'inclination cutoff = ',INCLINATION_CUTOFF, ' (rad)'
   write(10,*) ''
-  write(10,'(a)') "Possible values : 'real', 'mass_independant', 'mass_dependant'"
+  write(10,'(a)') "Possible values : 'real', 'mass_independant', 'linear_indep', 'arctan_indep'"
   write(10,'(a, a)') 'torque type = ', trim(TORQUE_TYPE)
-  write(10,'(a)') '  Case(mass_independant) : manual torque profile with a mass independant convergence zone'
-  write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
-  write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
-  write(10,'(a)') '  Case(mass_dependant) : manual torque profile with a mass dependant convergence zone'
-  write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
-  write(10,'(a,f6.1,a)') '    minimum mass = ', MASS_DEP_M_MIN, ' (earth mass)'
-  write(10,'(a,f6.1,a)') '    maximum mass = ', MASS_DEP_M_MAX, ' (earth mass)'
-  write(10,'(a,f6.1,a)') '    CZ for minimum mass = ', MASS_DEP_CZ_M_MIN, ' (AU)'
-  write(10,'(a,f6.1,a)') '    CZ for maximum mass = ', MASS_DEP_CZ_M_MAX, ' (AU)'
+	select case(TORQUE_TYPE)
+		case('real') ! The normal torque profile, calculated form properties of the disk
+			write(10,'(a)') '  real : The torque profile is computed from the formulae of (Paardekooper, 2011)'
+		
+		! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
+		case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
+			write(10,'(a)') '  linear_indep : manual torque profile with a mass independant convergence zone and a linear &
+			                &  decrease of the torque in function of the distance to the convergence zone'
+			write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
+			write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
+		
+		case('arctan_indep') ! a defined torque profile to get a mass independant convergence zone
+			write(10,'(a)') '  arctan_indep : Mass independant convergence zone with a torque profile that saturate far from the CZ'
+			write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
+			write(10,'(a,f6.1,a)') '    Saturation torque value = ', SATURATION_TORQUE, ' (Gamma_0)'
+
+		
+		case('mass_dependant')
+			write(10,'(a)') '  mass_dependant : manual torque profile with a mass dependant convergence zone and a linear &
+			                &  decrease of the torque in function of the distance to the convergence zone'
+			write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
+			write(10,'(a,f6.1,a)') '    minimum mass = ', MASS_DEP_M_MIN, ' (earth mass)'
+			write(10,'(a,f6.1,a)') '    maximum mass = ', MASS_DEP_M_MAX, ' (earth mass)'
+			write(10,'(a,f6.1,a)') '    CZ for minimum mass = ', MASS_DEP_CZ_M_MIN, ' (AU)'
+			write(10,'(a,f6.1,a)') '    CZ for maximum mass = ', MASS_DEP_CZ_M_MAX, ' (AU)'
+		
+		case('manual')
+			write(10,'(a)') '  manual : The torque profile, mass_independant, is read from a torque profile file that contains &
+			                &  distance and torque value (in Gamma_0) as two columns'
+			
+		case default
+			write(10,'(a)') 'Warning: The torque rule cannot be found.'
+			write(10,'(a,a)') 'Given value : ', TORQUE_TYPE
+			write(10,'(a)') 'Values possible : real ; linear_indep ; arctan_indep ; manual'
+	end select
+
+
   write(10,*) ''
   close(10)
   
