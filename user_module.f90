@@ -118,9 +118,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   ! Setup
 
   do planet=1,n_bodies
-    acceleration(1,planet) = 0.d0
-    acceleration(2,planet) = 0.d0
-    acceleration(3,planet) = 0.d0
+    acceleration(1:3,planet) = 0.d0
   end do
   
   ! By default, there is disk effects. Be carefull, init_globals is only treated if there is disk effects, 
@@ -181,13 +179,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             
             migration_acc_prefactor = 1.d0 / time_mig
             
-            migration_acceleration(1) = migration_acc_prefactor * velocity(1,planet)
-            migration_acceleration(2) = migration_acc_prefactor * velocity(2,planet)
-            migration_acceleration(3) = migration_acc_prefactor * velocity(3,planet)
+            migration_acceleration(1:3) = migration_acc_prefactor * velocity(1:3,planet)
             
-            acceleration(1,planet) = acceleration(1,planet) + migration_acceleration(1)
-            acceleration(2,planet) = acceleration(2,planet) + migration_acceleration(2)
-            acceleration(3,planet) = acceleration(3,planet) + migration_acceleration(3)
+            acceleration(1:3,planet) = acceleration(1:3,planet) + migration_acceleration(1:3)
 
             
             !------------------------------------------------------------------------------
@@ -198,13 +192,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             eccentricity_acc_prefactor = -2.d0 * (position(1,planet) * velocity(1,planet) + position(2,planet) * velocity(2,planet)&
              + position(3,planet) * velocity(3,planet)) / (p_prop%radius**2 * time_ecc)
             
-            eccentricity_acceleration(1) = eccentricity_acc_prefactor * position(1,planet)
-            eccentricity_acceleration(2) = eccentricity_acc_prefactor * position(2,planet)
-            eccentricity_acceleration(3) = eccentricity_acc_prefactor * position(3,planet)
+            eccentricity_acceleration(1:3) = eccentricity_acc_prefactor * position(1:3,planet)
             
-            acceleration(1,planet) = acceleration(1,planet) + eccentricity_acceleration(1)
-            acceleration(2,planet) = acceleration(2,planet) + eccentricity_acceleration(2)
-            acceleration(3,planet) = acceleration(3,planet) + eccentricity_acceleration(3)
+            acceleration(1:3,planet) = acceleration(1:3,planet) + eccentricity_acceleration(1:3)
             
             
             !------------------------------------------------------------------------------
@@ -222,14 +212,13 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
           
         !------------------------------------------------------------------------------
         ! Calculation of the acceleration due to turbulence, if needed
-        turbulence_acceleration(1:3) = 0.d0
         
         if (IS_TURBULENCE) then
+          turbulence_acceleration(1:3) = 0.d0
+          
           call get_turbulence_acceleration(time, p_prop, position(1:3, planet), turbulence_acceleration(1:3))
           
-          acceleration(1,planet) = acceleration(1,planet) + turbulence_acceleration(1)
-          acceleration(2,planet) = acceleration(2,planet) + turbulence_acceleration(2)
-          acceleration(3,planet) = acceleration(3,planet) + turbulence_acceleration(3)
+          acceleration(1:3,planet) = acceleration(1:3,planet) + turbulence_acceleration(1:3)
         end if
         
   !~       if (time.gt.365.25) then
