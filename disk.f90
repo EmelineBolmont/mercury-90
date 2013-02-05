@@ -376,6 +376,8 @@ subroutine write_disk_properties()
 ! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
 ! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
 
+	use git_infos
+
   implicit none
   
   real(double_precision) :: timestep
@@ -396,6 +398,12 @@ subroutine write_disk_properties()
 		write(10,'(a,f5.2,a)') '  with this timestep, the simulation will not be accurate below', distance_accuracy, ' AU'
 		write(10,'(a,f6.1,a)') '  which is greater than the inner edge of the gas disk : ', INNER_BOUNDARY_RADIUS, ' AU'
   end if
+  write(10,'(a)') '------------------------------------'
+  write(10,'(a)') '|       Mercury Properties         |'
+  write(10,'(a)') '------------------------------------'
+  write(10,'(a,a)') 'branch = ', branch
+  write(10,'(a,a)') 'commit = ', commit
+  write(10,'(a)') modifs
   write(10,'(a)') '------------------------------------'
   write(10,'(a)') '|   Properties of the disk         |'
   write(10,'(a)') '------------------------------------'
