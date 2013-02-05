@@ -3,6 +3,7 @@ program test_disk
   use types_numeriques
   use disk
   use disk_properties
+  use iso_fortran_env, only : error_unit
     
   implicit none
   
@@ -596,9 +597,9 @@ program test_disk
     end do
     
     if (.not.(((r_0i.gt.0).and.(r_0i.le.NB_SAMPLE_PROFILES)))) then
-      write(*,*) 'Error: the r_0 value is not in the radial profile sample'
-      write(*,*) r_0i
-      stop
+      write(error_unit,*) 'Error: the r_0 value is not in the radial profile sample'
+      write(error_unit,*) r_0i
+      call exit(1)
     end if
     
     r_0 = distance_sample(r_0i)
@@ -1970,8 +1971,8 @@ program test_disk
       density_position = distance_sample(density_idx)
       
     else
-      write(*,*) 'Error: "density_position" is not in the disk range'
-      stop
+      write(error_unit,*) 'Error: "density_position" is not in the disk range'
+      call exit(2)
     end if
     
     
