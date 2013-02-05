@@ -147,7 +147,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   
     do planet=2,n_bodies
       ! because ongoing deletion of planets put their mass to 0 for a few steps, we must check. Else, we will have an error "NaN".
-      if (mass(planet).gt.TINY) then
+      if (mass(planet).gt.0.d0) then
         !------------------------------------------------------------------------------
         ! we store in a structure, various properties of the planet usefull in all the 
         ! subroutine to avoid multiple calculation of the same parameters
