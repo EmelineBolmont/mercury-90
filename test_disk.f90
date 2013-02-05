@@ -43,27 +43,27 @@ program test_disk
     call study_torques(stellar_mass)
     
 !~     ! we store in a .dat file the temperature profile
-!~     call store_temperature_profile(filename='temperature_profile.dat')
-!~     call store_density_profile(filename='density_profile.dat')
-!~     call store_scaleheight_profile()
+    call store_temperature_profile(filename='temperature_profile.dat')
+    call store_density_profile(filename='density_profile.dat')
+    call store_scaleheight_profile()
 !~     
 !~     ! Unitary tests
-!~     call test_functions_FGK()
-!~     call test_function_zero_temperature(stellar_mass)
-!~     call test_temperature_interpolation()
-!~     call test_manual_torque_interpolation()
-!~     call test_density_interpolation()
-!~     call test_retrieval_of_orbital_elements(stellar_mass)
+    call test_functions_FGK()
+    call test_function_zero_temperature(stellar_mass)
+    call test_temperature_interpolation()
+    call test_manual_torque_interpolation()
+    call test_density_interpolation()
+    call test_retrieval_of_orbital_elements(stellar_mass)
 
     
     ! Physical values and plots
-!~     call study_opacity_profile()
-!~     call study_torques_fixed_a(stellar_mass)
-!~     call study_torques_fixed_m(stellar_mass)
-!~     call study_temperature_profile(stellar_mass)
-!~     call study_optical_depth_profile(stellar_mass)
-!~     call study_thermal_diffusivity_profile(stellar_mass)
-!~     call study_scaleheight_profile()
+    call study_opacity_profile()
+    call study_torques_fixed_a(stellar_mass)
+    call study_torques_fixed_m(stellar_mass)
+    call study_temperature_profile(stellar_mass)
+    call study_optical_depth_profile(stellar_mass)
+    call study_thermal_diffusivity_profile(stellar_mass)
+    call study_scaleheight_profile()
     
     ! Test dissipation
 !~     call test_viscous_dissipation()
@@ -176,7 +176,7 @@ program test_disk
     ! We calculate this value outside the function because we only have to do this once per step (per radial position)
     prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 16.d0)
     
-    write(10,*) '# properties of the disk at the location of the planet hat influence the value of the temperature'
+    write(10,*) '# properties of the disk at the location of the planet that influence the value of the temperature'
     write(10,*) '# radial position of the planet (in AU) :', p_prop%radius
     write(10,*) '# viscosity :', p_prop%nu
     write(10,*) '# surface density :', p_prop%sigma
@@ -1236,7 +1236,7 @@ program test_disk
     do j=10,13
       write(j,*) 'set terminal wxt enhanced'
       write(j,*) 'set xlabel "Planet mass (m_{earth})"'
-      write(j,*) 'set title "for a semi major axis a=',a,' AU"'
+      write(j,'(a,f5.1,a)') 'set title "for a semi major axis a= ',a,' AU"'
     end do
     
     write(10,*) 'set ylabel "torque [{/Symbol G}_0]"'
@@ -1388,7 +1388,7 @@ program test_disk
     do j=10,12
       write(j,*) 'set terminal wxt enhanced'
       write(j,*) 'set xlabel "semi major axis a (in AU)"'
-      write(j,*) 'set title "for planet mass =',mass / (EARTH_MASS * K2),' m_{earth}"'
+      write(j,'(a,f4.1,a)') 'set title "for planet mass = ',mass / (EARTH_MASS * K2),' m_{earth}"'
     end do
     
     write(10,*) 'set ylabel "torque [{/Symbol G}_0]"'

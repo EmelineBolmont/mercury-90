@@ -452,18 +452,18 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010
   
-  torque_hs_ent = 7.9d0 * zeta_eff / gamma_eff
-  torque_c_lin_ent = (2.2d0 - 1.4d0 / gamma_eff) * zeta_eff
+  torque_hs_ent = 7.9d0 * zeta_eff / gamma_eff ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
+  torque_c_lin_ent = (2.2d0 - 1.4d0 / gamma_eff) * zeta_eff ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
   
   ! Since the sigma_index is dependant on the location of the planet and the time (thanks to the dissipation), we need to calculate these values at each timestep
-  torque_hs_baro = 1.1d0 * (1.5d0 - p_prop%sigma_index)
-  torque_c_lin_baro = 0.7d0 * (1.5d0 - p_prop%sigma_index)
+  torque_hs_baro = 1.1d0 * (1.5d0 - p_prop%sigma_index) ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
+  torque_c_lin_baro = 0.7d0 * (1.5d0 - p_prop%sigma_index) ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
   
   !------------------------------------------------------------------------------
 
-  corotation_torque = (1.d0 / gamma_eff) * torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
+  corotation_torque = (1.d0 / gamma_eff) * (torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
     + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
-    + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi)))
+    + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi))))
   
 
   return
