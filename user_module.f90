@@ -69,7 +69,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   use physical_constant
   use mercury_constant
   use turbulence
-  use utilities, only : vect_product
+!~   use utilities, only : vect_product
+  use utilities, only : get_mean, get_stdev, get_histogram
   
   implicit none
 
@@ -110,7 +111,15 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision), dimension(3) :: turbulence_acceleration
   real(double_precision) :: inclination_acceleration_z
   real(double_precision), save :: next_dissipation_step = -1.d0 ! next time at which we will compute the thermal properties of the disk?
-  
+!~   
+!~   ! Temp
+!~   integer, parameter :: nb_points = 100000
+!~   integer, parameter :: nb_bins = 100
+!~   integer :: i = 0
+!~   real(double_precision), dimension(nb_points), save :: turbulence_acc_log
+!~   real(double_precision) :: delta_bin
+!~   real(double_precision), dimension(nb_bins) :: bin_x_values, bin_y_values, gauss_fit
+!~   real(double_precision) :: mean, stdev, y_max
   !------------------------------------------------------------------------------
   ! Setup
   
@@ -261,6 +270,41 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         acceleration(3,planet) = migration_acceleration(3) + turbulence_acceleration(3) + & 
                                  eccentricity_acceleration(3) + inclination_acceleration_z
         
+!~         i = i + 1
+!~         if (i.le.nb_points) then
+!~           turbulence_acc_log(i) = turbulence_acceleration(1)
+!~         else
+!~           call get_histogram(turbulence_acc_log, bin_x_values, bin_y_values) 
+!~           
+!~           ! We calculate the mean and stdev value of the data set and then generate a supposed gaussian to see if this function fit the datas
+!~           ! the mean of the data set must be 0. So in order to check that, the mean is fixed to 0, to see if the gaussian looks nice.
+!~           delta_bin = (bin_x_values(2) - bin_x_values(1))
+!~           mean = get_mean(turbulence_acc_log(1:nb_points))
+!~           stdev = get_stdev(turbulence_acc_log(1:nb_points))
+!~           y_max = 1. / (stdev * sqrt(TWOPI)) * delta_bin
+!~           do i=1,nb_bins
+!~             gauss_fit(i) = y_max * exp(-(bin_x_values(i))**2 / (2. * stdev**2))
+!~           end do
+!~           
+!~           open(10, file="turbulence_torque.hist")
+!~           do i=1, nb_bins
+!~             write(10,*) bin_x_values(i), bin_y_values(i), gauss_fit(i)
+!~           end do
+!~           close(10)
+!~           
+!~           open(10, file="turbulence_torque.gnuplot")
+!~           write(10,'(a)') 'set terminal wxt enhanced'
+!~           write(10,'(a)') 'set xlabel "torque [AU^2/DAY^2]"'
+!~           write(10,'(a)') 'set ylabel "density of probability"'
+!~           write(10,'(a)') 'set grid'
+!~           write(10,'(5(a,es10.2e2))') 'set label " data : {/Symbol m}=',mean,', {/Symbol s}=',stdev,'\n&
+!~                                                  & fit  : {/Symbol m}=0, {/Symbol s}=',stdev,'" at graph 0, graph 0.9'
+!~           write(10,'(a)') 'plot "turbulence_torque.hist" using 1:2 with boxes linestyle 3 title "turbulence torque", \'
+!~           write(10,'(a)') '"turbulence_torque.hist" using 1:3 with lines linestyle 1 title "gaussian fit"'
+!~           write(10,'(a)') 'pause -1'
+!~           close(10)
+!~           stop
+!~         end if
         
 !~         if (p_prop%semi_major_axis.gt.4.) then
 !~ !          call print_planet_properties(p_prop)

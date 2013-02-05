@@ -892,7 +892,7 @@ end subroutine initial_density_profile
   call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
    p_prop=p_prop) ! Output
   
-  TURBULENT_FORCING = sqrt(get_viscosity(radius) / (140. * p_prop%omega)) / radius
+  TURBULENT_FORCING = 1.e-4!sqrt(get_viscosity(radius) / (140. * p_prop%omega)) / radius
   
 !~   write(*,'(a,es10.3e2)') 'turbulence forcing = ', TURBULENT_FORCING
 !~   stop
