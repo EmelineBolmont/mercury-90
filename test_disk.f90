@@ -892,7 +892,7 @@ program test_disk
   ! Inputs
   real(double_precision), intent(in) :: stellar_mass ! in [Msun * K2]
   
-  integer, parameter :: nb_points = 100000 ! the time through which we compute the turbulence
+  integer, parameter :: nb_points = 10000 ! the time through which we compute the turbulence
   integer, parameter :: nb_bins = 100 ! the number of bins for the histogram of the turbulence torque
   
   real(double_precision) :: initial_time = 0.d0 ! in days

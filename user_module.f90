@@ -69,8 +69,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   use physical_constant
   use mercury_constant
   use turbulence
-!~   use utilities, only : vect_product
-  use utilities, only : get_mean, get_stdev, get_histogram
+  use utilities, only : vect_product
+  use utilities, only : get_mean, get_stdev, get_histogram!, vect_product
   
   implicit none
 
@@ -112,7 +112,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision) :: inclination_acceleration_z
   real(double_precision), save :: next_dissipation_step = -1.d0 ! next time at which we will compute the thermal properties of the disk?
 !~   
-!~   ! Temp
+  ! Temp
 !~   integer, parameter :: nb_points = 100000
 !~   integer, parameter :: nb_bins = 100
 !~   integer :: i = 0
@@ -120,6 +120,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 !~   real(double_precision) :: delta_bin
 !~   real(double_precision), dimension(nb_bins) :: bin_x_values, bin_y_values, gauss_fit
 !~   real(double_precision) :: mean, stdev, y_max
+!~   real(double_precision), dimension(3) :: tmp3
   !------------------------------------------------------------------------------
   ! Setup
   
@@ -257,7 +258,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         turbulence_acceleration(1:3) = 0.d0
         
         if (IS_TURBULENCE) then
-          call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
+          call get_turbulence_acceleration(time, p_prop, position(1:3, planet), turbulence_acceleration(1:3))
         end if
         
         !------------------------------------------------------------------------------
@@ -269,10 +270,21 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
                                  eccentricity_acceleration(2)
         acceleration(3,planet) = migration_acceleration(3) + turbulence_acceleration(3) + & 
                                  eccentricity_acceleration(3) + inclination_acceleration_z
-        
+
+                                 
 !~         i = i + 1
-!~         if (i.le.nb_points) then
-!~           turbulence_acc_log(i) = turbulence_acceleration(1)
+!~         if (i.eq.1) then 
+!~         tmp3(1:3) = vect_product(position(1:3, planet), turbulence_acceleration(1:3))
+!~           
+!~           turbulence_acc_log(i) = tmp3(3)
+!~         
+!~         else if (i.le.nb_points) then
+!~           tmp3(1:3) = vect_product(position(1:3, planet), turbulence_acceleration(1:3))
+!~           
+!~           turbulence_acc_log(i) = tmp3(1)!(turbulence_acc_log(i-1) * float((i-1)) + tmp3(3)) / float(i)
+!~           open(10, file="turbulence_torque_mean.dat", access='append')
+!~           write(10,*) turbulence_acc_log(i)
+!~           close(10)
 !~         else
 !~           call get_histogram(turbulence_acc_log, bin_x_values, bin_y_values) 
 !~           
