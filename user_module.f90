@@ -740,7 +740,12 @@ end subroutine init_globals
     
     ! values for smoothing
     real(double_precision) :: smooth_low_bound, smooth_high_bound
-    real(double_precision), parameter :: smooth = 3.d0
+    real(double_precision), parameter :: smooth12 = 0.5d0 ! the smoothing length for the transition between regime 1 and 2
+    real(double_precision), parameter :: smooth23 = 1.d0
+    real(double_precision), parameter :: smooth34 = 1.d0
+    real(double_precision), parameter :: smooth45 = 5.d0
+    real(double_precision), parameter :: smooth56 = 15.d0
+    real(double_precision), parameter :: smooth67 = 50.d0
 
     ! we convert the bulk_density from numerical units(AU, MS, DAY) to physical units (CGS)
     bulk_density = num_to_phys_bulk_density * num_bulk_density
@@ -755,14 +760,14 @@ end subroutine init_globals
     if (temperature.le.trans12) then ! regime 1
       opacity_1 = 2d-4 * temperature * temperature
       opacity_2 = 2.d16 / temperature**7.d0
-      smooth_high_bound = hersant_smoothing(temperature, trans12, smooth)
+      smooth_high_bound = hersant_smoothing(temperature, trans12, smooth12)
       get_opacity = (1.d0 - smooth_high_bound) * opacity_1 + smooth_high_bound * opacity_2
     elseif ((temperature.gt.trans12).and.(temperature.le.trans23)) then ! regime 2
       opacity_1 = 2d-4 * temperature * temperature
       opacity_2 = 2.d16 / temperature**7.d0
       opacity_3 = 0.1d0 * sqrt(temperature)
-      smooth_low_bound = hersant_smoothing(temperature, trans12, smooth)
-      smooth_high_bound = hersant_smoothing(temperature, trans23, smooth)
+      smooth_low_bound = hersant_smoothing(temperature, trans12, smooth12)
+      smooth_high_bound = hersant_smoothing(temperature, trans23, smooth23)
       
       get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_1 + &
       smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_2 + smooth_low_bound * smooth_high_bound * opacity_3
@@ -772,8 +777,8 @@ end subroutine init_globals
       opacity_3 = 0.1d0 * sqrt(temperature)
       opacity_4 = 2.d81 * bulk_density / temperature**24.d0
       
-      smooth_low_bound = hersant_smoothing(temperature, trans23, smooth)
-      smooth_high_bound = hersant_smoothing(temperature, trans34, smooth)
+      smooth_low_bound = hersant_smoothing(temperature, trans23, smooth23)
+      smooth_high_bound = hersant_smoothing(temperature, trans34, smooth34)
       
       get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_2 + &
       smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_3 + smooth_low_bound * smooth_high_bound * opacity_4
@@ -781,8 +786,8 @@ end subroutine init_globals
       opacity_3 = 0.1d0 * sqrt(temperature)
       opacity_4 = 2.d81 * bulk_density / temperature**24.d0
       opacity_5 = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
-      smooth_low_bound = hersant_smoothing(temperature, trans34, smooth)
-      smooth_high_bound = hersant_smoothing(temperature, trans45, smooth)
+      smooth_low_bound = hersant_smoothing(temperature, trans34, smooth34)
+      smooth_high_bound = hersant_smoothing(temperature, trans45, smooth45)
       
       get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_3 + &
       smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_4 + smooth_low_bound * smooth_high_bound * opacity_5
@@ -790,8 +795,8 @@ end subroutine init_globals
       opacity_4 = 2.d81 * bulk_density / temperature**24.d0
       opacity_5 = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
       opacity_6 = 1.d-36 * bulk_density**THIRD * temperature**10
-      smooth_low_bound = hersant_smoothing(temperature, trans45, smooth)
-      smooth_high_bound = hersant_smoothing(temperature, trans56, smooth)
+      smooth_low_bound = hersant_smoothing(temperature, trans45, smooth45)
+      smooth_high_bound = hersant_smoothing(temperature, trans56, smooth56)
       
       get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_4 + &
       smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_5 + smooth_low_bound * smooth_high_bound * opacity_6
@@ -799,15 +804,15 @@ end subroutine init_globals
       opacity_5 = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
       opacity_6 = 1.d-36 * bulk_density**THIRD * temperature**10
       opacity_7 = 1.5d20 * bulk_density / temperature**2.5d0
-      smooth_low_bound = hersant_smoothing(temperature, trans56, smooth)
-      smooth_high_bound = hersant_smoothing(temperature, trans67, smooth)
+      smooth_low_bound = hersant_smoothing(temperature, trans56, smooth56)
+      smooth_high_bound = hersant_smoothing(temperature, trans67, smooth67)
       
       get_opacity = (1.d0 - smooth_low_bound) * (1.d0 - smooth_high_bound) * opacity_5 + &
       smooth_low_bound * (1.d0 - smooth_high_bound) * opacity_6 + smooth_low_bound * smooth_high_bound * opacity_7
     else ! regime 7
       opacity_6 = 1.d-36 * bulk_density**THIRD * temperature**10
       opacity_7 = 1.5d20 * bulk_density / temperature**2.5d0
-      smooth_low_bound = hersant_smoothing(temperature, trans67, smooth)
+      smooth_low_bound = hersant_smoothing(temperature, trans67, smooth67)
       
       get_opacity = (1.d0 - smooth_low_bound) * opacity_6 + smooth_low_bound * opacity_7
     endif
@@ -819,6 +824,58 @@ end subroutine init_globals
 
     return
   end function get_opacity
+  
+  subroutine smoothing(array, nb_smoothing, smoothed_array)
+  ! routine that smooth values of array by a progressive mean value centered on the current value. 
+  !
+  ! Parameters:
+  ! array : the array to smooth. Will also be the output array
+  ! nb_smoothing : the number of points for smoothing (in practice, this number will be the first odd number greater or equal than nb_smoothing)
+  implicit none
+  ! Input/Output
+  real(double_precision), dimension(:), intent(in) :: array
+  integer, intent(in) :: nb_smoothing
+  real(double_precision), dimension(:), intent(out) :: smoothed_array
+  ! Local
+  
+  real(double_precision) :: tmp
+  integer, dimension(size(array)) :: istart, iend
+  integer :: nb_points
+  
+  !For loops
+  integer :: i,j
+  
+  nb_points = size(array)
+  
+  ! we define normal value of starting and ending point for the calculation of the smoothed (mean) value
+  do i=1, nb_points
+    istart(i) = i - nb_smoothing / 2
+    iend(i) = i + nb_smoothing / 2
+  end do
+  
+  ! we correct theses numbers for boundary values where there are no left or right points for the smoothing. Hence, the 
+  ! smoothing is over a lower number of points that decrease until half the total number of points required for a smoothing. 
+  where (istart.lt.1)
+    istart = 1
+  end where
+  
+  ! the same goes for higher index that doesn't exist as well.
+  where (iend.gt.nb_points)
+    iend = nb_points
+  end where
+  
+  do i=1, nb_points
+  tmp = 0.d0
+    do j=istart(i), iend(i)
+    ! we do the sum of smoothing points
+    tmp = tmp + array(j)
+    end do
+  ! and divide by their number.
+  smoothed_array(i) = tmp / (1.d0 * (iend(i) - istart(i) + 1))
+  end do
+  
+  
+  end subroutine smoothing
   
   function hersant_smoothing(temperature, transition, smoothing_length)
   ! this function, based on a hyperbolic tangent is here to smooth a function at a given transition point. 
@@ -915,6 +972,7 @@ end subroutine init_globals
     ! _ get_F
     
     implicit none
+    
     
     call test_hersant_smoothing()
     call test_functions_FGK()
@@ -1621,8 +1679,8 @@ end subroutine init_globals
 
     implicit none
 
-    ! Input                                           
-    integer, intent(in) :: nb_a                       
+    ! Input
+    integer, intent(in) :: nb_a
     real(double_precision), intent(in) :: a_min! in AU
     real(double_precision), intent(in) :: a_max! in AU
     
@@ -1648,10 +1706,6 @@ end subroutine init_globals
     ! stellar mass
     stellar_mass = 1.d0 * K2  
   
-    ! We open the file where we want to write the outputs
-    open(10, file='temperature_profile.dat', status='replace')
-    
-    write(10,*) '# a in AU ; temperature (in K) ; exponant ; log(a) ; log(T)'
     
     a = 0.9d0 * a_min
     ! We generate cartesian coordinate for the given semi major axis
@@ -1693,10 +1747,9 @@ end subroutine init_globals
       ln_x(j) = log(a)
       ln_y(j) = log(temperature)
       
-      write(10,*) a, temperature, idx(j), ln_x(j), ln_y(j)
     end do
     
-    close(10)
+    call smoothing(idx,int(0.7/a_step), idx)
     
   end subroutine calculate_temperature_profile
   
@@ -1715,6 +1768,16 @@ end subroutine init_globals
     stellar_mass = 1.d0 * K2
     
     call init_globals(stellar_mass)
+    
+
+    ! We open the file where we want to write the outputs
+    open(10, file='temperature_profile.dat', status='replace')
+    write(10,*) '# a in AU ; temperature (in K) ; exponant ; log(a) ; log(T)'
+    do j=1,nb_a_sample
+      write(10,*) exp(temp_profile_x(j)), exp(temp_profile_y(j)), temp_profile_index(j), temp_profile_x(j), temp_profile_y(j)
+    end do
+    
+    close(10)
     
     
     open(10, file="unitary_tests/temperature_profile.gnuplot")
