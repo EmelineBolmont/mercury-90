@@ -52,6 +52,7 @@ module disk_properties
   !------------------------------------------------------------------------------
   ! Values for manual torque profiles (mass dependant or independant for instance)
   real(double_precision) :: TORQUE_PROFILE_STEEPNESS = 1. ! increase, in units of Gamma_0 of the torque per 10AU
+  real(double_precision) :: SATURATION_TORQUE = 1.d0
   
   ! For mass independant convergence zone
   real(double_precision) :: INDEP_CZ = 8. ! Position of the mass independant convergence zone in AU
@@ -108,26 +109,26 @@ subroutine print_planet_properties(p_prop)
   write(*,'(a)') '------------------------------------'
   write(*,'(a)') '|   Properties of the planet       |'
   write(*,'(a)') '------------------------------------'
-  write (*,*) 'angular_momentum :', p_prop%angular_momentum, ' [Ms.AU^2.day^-1]'
-  write (*,*) 'radius :', p_prop%radius, ' [AU]'
-  write (*,*) 'velocity :', p_prop%velocity , ' [AU/day]'
-  write (*,*) 'omega :', p_prop%omega , ' [day-1]'
-  write (*,*) 'mass :', p_prop%mass, ' [Msun * K2]' 
-  write (*,*) 'semi_major_axis :', p_prop%semi_major_axis, ' [AU]'
-  write (*,*) 'eccentricity :', p_prop%eccentricity 
-  write (*,*) 'inclination :', p_prop%inclination, ' [rad]'
+  write(*,*) 'angular_momentum :', p_prop%angular_momentum, ' [Ms.AU^2.day^-1]'
+  write(*,*) 'radius :', p_prop%radius, ' [AU]'
+  write(*,*) 'velocity :', p_prop%velocity , ' [AU/day]'
+  write(*,*) 'omega :', p_prop%omega , ' [day-1]'
+  write(*,*) 'mass :', p_prop%mass, ' [Msun * K2]' 
+  write(*,*) 'semi_major_axis :', p_prop%semi_major_axis, ' [AU]'
+  write(*,*) 'eccentricity :', p_prop%eccentricity 
+  write(*,*) 'inclination :', p_prop%inclination, ' [rad]'
   write(*,'(a)') '------------------------------------'
   write(*,'(a)') '|  Properties of the disk at the   |'
   write(*,'(a)') '|     location of the planet       |'
   write(*,'(a)') '------------------------------------'
-  write (*,*) 'sigma :', p_prop%sigma , ' [Msun.AU^-2]'
-  write (*,*) 'sigma_index :', p_prop%sigma_index
-  write (*,*) 'scaleheight :', p_prop%scaleheight , ' [AU]'
-  write (*,*) 'aspect_ratio :', p_prop%aspect_ratio 
-  write (*,*) 'chi :', p_prop%chi , ' [AU^2.day^-1]'
-  write (*,*) 'nu :', p_prop%nu, ' [AU^2.day^-1]'
-  write (*,*) 'temperature :', p_prop%temperature , ' [K]'
-  write (*,*) 'temperature_index:', p_prop%temperature_index
+  write(*,*) 'sigma :', p_prop%sigma , ' [Msun.AU^-2]'
+  write(*,*) 'sigma_index :', p_prop%sigma_index
+  write(*,*) 'scaleheight :', p_prop%scaleheight , ' [AU]'
+  write(*,*) 'aspect_ratio :', p_prop%aspect_ratio 
+  write(*,*) 'chi :', p_prop%chi , ' [AU^2.day^-1]'
+  write(*,*) 'nu :', p_prop%nu, ' [AU^2.day^-1]'
+  write(*,*) 'temperature :', p_prop%temperature , ' [K]'
+  write(*,*) 'temperature_index:', p_prop%temperature_index
 end subroutine print_planet_properties
 
 end module disk_properties
