@@ -196,7 +196,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       next_step = time + dissipation_timestep
       
       ! we get the density profile.
-      call calculate_density_profile()
+      call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
       
       ! we get the temperature profile.
       call calculate_temperature_profile()
@@ -555,6 +555,7 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   torque_hs_ent = 7.9d0 * zeta_eff / gamma_eff
   torque_c_lin_ent = (2.2d0 - 1.4d0 / gamma_eff) * zeta_eff
   
+  ! Since the sigma_index is dependant on the location of the planet and the time (thanks to the dissipation), we need to calculate these values at each timestep
   torque_hs_baro = 1.1d0 * (1.5d0 - p_prop%sigma_index)
   torque_c_lin_baro = 0.7d0 * (1.5d0 - p_prop%sigma_index)
   
@@ -978,7 +979,7 @@ end subroutine initial_density_profile
     
   end subroutine calculate_temperature_profile
   
-  subroutine calculate_density_profile()
+  subroutine dissipate_density_profile()
 ! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
 ! 
 ! Global Parameters 
@@ -995,43 +996,29 @@ end subroutine initial_density_profile
     implicit none
 
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
-    real(double_precision) :: a_im1, a_i, a_ip1, a_ip2 ! ip1 == (i+1) ; im1 == (i-1)
-    real(double_precision) :: f_i, f_ip1, f_ip2
-    real(double_precision) :: flux_im1, flux_i, flux_ip1, flux_ip2 ! ip1 == (i+1) ; im1 == (i-1)
+    real(double_precision) :: a_i
+    real(double_precision) :: f_im1, f_i, f_ip1 ! ip1 == (i+1) ; im1 == (i-1)
     integer :: i ! for loops
-    logical, save :: FirstCall = .True.
     real(double_precision) :: tmp
     
     ! The dissipation_timestep is a global variable that is the timestep between two calculation of the surface density profile 
     ! This value is calculated in mfo_user, in the 'if' loop where the re-calculation is done. This value is needed here in the 
     ! part that dissipate the disk, but is not needed for the first run of this routine.
     
-    ! On the first run, we compute the initial profile, but on the other ones, we run the diffusion equation to make it dissipate.
+    ! for i=1
+    ! surface_density_index(1) is to be defined later, using surface_density_index(2)
     
-    if (.not.FirstCall) then
-      ! Warning : X_SAMPLE_STEP is not constant because equally spaced a values does not mean equally spaced X values (due to the square root)
-            
-      ! for i=1
-      ! surface_density_index(1) is to be defined later, using surface_density_index(2)
-      
-      ! We prepare values for the first step of the loop 
-      ! (i.e i=1 because we simulate the ghost step of the loop to be able to shift the temp values)
-      a_i = 0.25d0   * x_sample(1) * x_sample(1)
-      a_ip1 = 0.25d0 * x_sample(2) * x_sample(2)
-      
-      f_i   = 1.5d0 * x_sample(1) * exp(surface_density_profile(1)) 
-      f_ip1 = 1.5d0 * x_sample(2) * exp(surface_density_profile(2))
-      f_ip2 = 1.5d0 * x_sample(3) * exp(surface_density_profile(3))
-      
-      flux_i = 3.d0 * get_viscosity(a_i) / a_i * (f_ip1 - f_i) / X_SAMPLE_STEP ! not a centered scheme, simple step, so 3 instead of 1.5 (because we divide by (X_SAMPLE_STEP) instead of (2*X_SAMPLE_STEP)
-      flux_ip1 = 1.5d0 * get_viscosity(a_ip1) / a_ip1 * (f_ip2 - f_i) / X_SAMPLE_STEP
-      
-      ! CONDITION AT THE INNER EDGE
-      select case(INNER_BOUNDARY_CONDITION)
+    ! We prepare values for the first step of the loop 
+    ! (i.e i=1 because we simulate the ghost step of the loop to be able to shift the temp values)
+    
+    f_i   = 1.5d0 * x_sample(1) * exp(surface_density_profile(1)) 
+    f_ip1 = 1.5d0 * x_sample(2) * exp(surface_density_profile(2))    
+    
+    ! CONDITION AT THE INNER EDGE
+    select case(INNER_BOUNDARY_CONDITION)
       case('closed') 
       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
-        flux_i = 0.d0
-        surface_density_profile(1) = log((f_i + dissipation_timestep * flux_ip1 / X_SAMPLE_STEP) / (1.5d0 * x_sample(i)))
+      ! if we use a closed condition, we doesn't change the density value on the edge. Else nothing can get out.
       case('open') 
       ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
       ! condition. Density is free to dissipate outside the grid.
@@ -1040,110 +1027,78 @@ end subroutine initial_density_profile
       case default
         write(*,*) 'Warning: An unknown inner boundary condition has been found'
         write(*,*) "inner_boundary_condition=", trim(INNER_BOUNDARY_CONDITION)
-      end select
+    end select
+    
+    ! We store the previous values in order to avoid the use of an array. 
+    ! This way, it should more efficient, because we don't have to create several arrays with thousands of elements
+    do i=2,NB_SAMPLE_PROFILES-2
       
-      ! We store the previous values in order to avoid the use of an array. 
-      ! This way, it should more efficient, because we don't have to create several arrays with thousands of elements
-      do i=2,NB_SAMPLE_PROFILES-3
-        
-        ! We shift the indexes by 1
-        a_im1 = a_i
-        a_i = a_ip1
-        a_ip1 = 0.25d0 * x_sample(i+1) * x_sample(i+1)
-        
-        f_i = f_ip1
-        f_ip1 = f_ip2
-        f_ip2 = 1.5d0 * x_sample(i+2) * exp(surface_density_profile(i+2))
-        
-        flux_im1 = flux_i
-        flux_i = flux_ip1
-        flux_ip1 = 1.5d0 * get_viscosity(a_ip1) / a_ip1 * (f_ip2 - f_i) / X_SAMPLE_STEP
-        
-        tmp = (f_i + dissipation_timestep * (flux_ip1 - flux_im1) / (2 * X_SAMPLE_STEP)) / (1.5d0 * x_sample(i))
-        if (tmp.lt.0.) then
-          write(*,*) 'ERROR: tmp is negative!!!!'
-          write(*,*) a_i, a_ip1, f_i, f_ip1, f_ip2, flux_i, flux_ip1
-        end if
-        surface_density_profile(i) = log(tmp) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
-        surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
-                                      / (distance_log_sample(i) - distance_log_sample(i-1))
-              
-      end do
-      !------------------------------------------------------------------------------
-      i=NB_SAMPLE_PROFILES-2
       ! We shift the indexes by 1
-      a_im1 = a_i
-      a_i = a_ip1
-      a_ip1 = 0.25d0 * x_sample(i+1) * x_sample(i+1)
+      a_i = 0.25d0 * x_sample(i) * x_sample(i)
       
+      f_im1 = f_i
       f_i = f_ip1
-      f_ip1 = f_ip2
-      f_ip2 = 1.5d0 * x_sample(i+2) * exp(surface_density_profile(i+2))
+      f_ip1 = 1.5d0 * x_sample(i+1) * exp(surface_density_profile(i+1))
       
-      flux_im1 = flux_i
-      flux_i = flux_ip1
-      flux_ip1 = 1.5d0 * get_viscosity(a_ip1) / a_ip1 * (f_ip2 - f_i) / X_SAMPLE_STEP
-      
-      
-      tmp = (f_i + dissipation_timestep * (flux_ip1 - flux_im1) / (2 * X_SAMPLE_STEP)) / (1.5d0 * x_sample(i))
+      tmp = (f_i + dissipation_timestep * (3.d0 * get_viscosity(a_i) / a_i) * (f_ip1 - 2 * f_i + f_im1) &
+                                            / (X_SAMPLE_STEP * X_SAMPLE_STEP)) / (1.5d0 * x_sample(i))
+      if (tmp.lt.0.) then
+        write(*,*) 'ERROR: tmp is negative!!!!'
+        write(*,*) a_i, f_im1, f_i, f_ip1
+      end if
       surface_density_profile(i) = log(tmp) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
       surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
                                     / (distance_log_sample(i) - distance_log_sample(i-1))
-      
-      ! The boundary condition is computed here because some values are needed by "i=NB_SAMPLE_PROFILES-1 surface density value".
-      select case(OUTER_BOUNDARY_CONDITION)
+            
+    end do
+    !------------------------------------------------------------------------------
+    
+    ! The boundary condition is computed here because some values are needed by "i=NB_SAMPLE_PROFILES-1 surface density value".
+    select case(OUTER_BOUNDARY_CONDITION)
       case('closed') 
       ! here i=NB_SAMPLE_PROFILES-2
       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
-        flux_ip2 = 0.d0
-        
-        surface_density_profile(NB_SAMPLE_PROFILES) = log((f_ip2 - dissipation_timestep * flux_ip1 / X_SAMPLE_STEP) &
-                                                          / (1.5d0 * x_sample(i+2)))
+      ! if we use a closed condition, we doesn't change the density value on the edge. Else nothing can get out.
       case('open') 
       ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
       ! condition. Density is free to dissipate outside the grid.
-        surface_density_profile(NB_SAMPLE_PROFILES) = -HUGE ! in log, '0' is not defined, so we put a huge negative value to get close to 0
+        surface_density_profile(NB_SAMPLE_PROFILES) = log(TINY) ! in log, '0' is not defined, so we put a huge negative value to get close to 0
         
-        a_ip2 = 0.25d0 * x_sample(i+2) * x_sample(i+2)
-        flux_ip2 = - 3.d0 * get_viscosity(a_ip2) / a_ip2 * f_ip1 / X_SAMPLE_STEP ! simple step, so 3 instead of 1.5 (because we divide by (X_SAMPLE_STEP) instead of (2*X_SAMPLE_STEP)
+        
       case default
         write(*,*) 'Warning: An unknown outer boundary condition has been found'
         write(*,*) "outer_boundary_condition=", trim(OUTER_BOUNDARY_CONDITION)
-      end select    
-      
-      !------------------------------------------------------------------------------
-      i=NB_SAMPLE_PROFILES-1
-      ! We shift the indexes by 1
-      f_i = f_ip1
-      f_ip1 = f_ip2
-      
-      flux_im1 = flux_i
-      flux_i = flux_ip1
-      flux_ip1 = flux_ip2 ! The outer boundary condition determiner flux_ip2
-      
-      surface_density_profile(i) = log((f_i + dissipation_timestep * (flux_ip1 - flux_im1) / (2 * X_SAMPLE_STEP)) &
-                                            / (1.5d0 * x_sample(i))) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
-      surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
-                                        / (distance_log_sample(i) - distance_log_sample(i-1))
-      
-      !------------------------------------------------------------------------------
-      ! And the last index NB_SAMPLE_PROFILES 
-      ! We DO NOT compute the surface density since it's ruled by the boundary condition. But we compute the index
-      
-      surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
+    end select    
+    
+    !------------------------------------------------------------------------------
+    i=NB_SAMPLE_PROFILES-1
+    ! We shift the indexes by 1
+    a_i = 0.25d0 * x_sample(i) * x_sample(i)
+    
+    f_im1 = f_i
+    f_i = f_ip1
+    f_ip1 = 1.5d0 * x_sample(i+1) * exp(surface_density_profile(i+1))
+    
+    tmp = (f_i + dissipation_timestep * (3.d0 * get_viscosity(a_i) / a_i) * (f_ip1 - 2 * f_i + f_im1) &
+                                            / (X_SAMPLE_STEP * X_SAMPLE_STEP)) / (1.5d0 * x_sample(i))
+    
+    surface_density_profile(i) = log(tmp)
+    surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
                                       / (distance_log_sample(i) - distance_log_sample(i-1))
+    
+    !------------------------------------------------------------------------------
+    ! And the last index NB_SAMPLE_PROFILES 
+    ! We DO NOT compute the surface density since it's ruled by the boundary condition. But we compute the index
+    i=NB_SAMPLE_PROFILES
+    surface_density_index(i) = - (surface_density_profile(i) - surface_density_profile(i-1)) &
+                                    / (distance_log_sample(i) - distance_log_sample(i-1))
+
+    !------------------------------------------------------------------------------
+    ! We copy paste the index for the first value because however it is not defined.
+    surface_density_index(2) = surface_density_index(3) ! We do this because the first two values are polluted by boundary conditions
+    surface_density_index(1) = surface_density_index(2)
   
-      !------------------------------------------------------------------------------
-      ! We copy paste the index for the first value because however it is not defined.
-      surface_density_index(2) = surface_density_index(3) ! We do this because the first two values are polluted by boundary conditions
-      surface_density_index(1) = surface_density_index(2)
-    else ! If it's the first call, we compute the initial profile
-      FirstCall = .False.
-      
-      call initial_density_profile()
-    end if
-  
-  end subroutine calculate_density_profile
+  end subroutine dissipate_density_profile
   
   subroutine store_temperature_profile(filename)
   ! subroutine that store in a '.dat' file the temperature profile and negative index of the local power law
@@ -1549,20 +1504,24 @@ end subroutine print_planet_properties
     call store_density_profile(filename='density_profile.dat')
     call store_scaleheight_profile()
     
-    call test_functions_FGK()
-    call test_opacity_profile()
-    call test_torques(stellar_mass)
-    call test_torques_fixed_a(stellar_mass)
-    call test_torques_fixed_m(stellar_mass)
-    call test_function_zero_temperature(stellar_mass)
-    call test_temperature_profile(stellar_mass)
-    call test_temperature_interpolation()
-    call test_density_interpolation()
-    call test_optical_depth_profile(stellar_mass)
-    call test_thermal_diffusivity_profile(stellar_mass)
-    call test_scaleheight_profile()
+    ! Unitary tests
+!~     call test_functions_FGK()
+!~     call test_function_zero_temperature(stellar_mass)
+!~     call test_temperature_interpolation()
+!~     call test_density_interpolation()
+    call test_dissipation(stellar_mass)
+    
+    ! Physical values and plots
+!~     call study_opacity_profile()
+!~     call study_torques(stellar_mass)
+!~     call study_torques_fixed_a(stellar_mass)
+!~     call study_torques_fixed_m(stellar_mass)
+!~     call study_temperature_profile(stellar_mass)
+!~     call study_optical_depth_profile(stellar_mass)
+!~     call study_thermal_diffusivity_profile(stellar_mass)
+!~     call study_scaleheight_profile()
 !~     
-!~     call test_dissipation_of_the_disk(stellar_mass)
+!~     call study_dissipation_of_the_disk(stellar_mass)
     
   end subroutine unitary_tests
 
@@ -1826,9 +1785,151 @@ end subroutine print_planet_properties
     close(10)
   
   end subroutine test_density_interpolation
+  
+  subroutine test_dissipation(stellar_mass)
+  ! function to test the viscous dissipation with a dirac function. 
+  
+  ! Global parameters
+  ! dissipation_timestep : the timestep between two computation of the disk [in days]
+  ! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+  ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+  ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+  ! surface_density_profile : values of the density in log() for each value of the 'a' sample
+  
+    ! Return: (in the folder 'dissipation' of the current working directory where the tests are launched)
+  !  data files with the following paterns :
+  !    surface_density*.dat : each file correspond to a data file of the surface density at one timestep (the number correspond to the index)
+  !    temperature*.dat : each file correspond to a data file of the temperature at one timestep (the number correspond to the index)
+  !    total_torque*.dat : each file correspond to a data file of the total torque exerted by the disk at one timestep (the number correspond to the index)
+  !    contour*.dat : each file correspond to the zero torque lines of the corresponding total_torque*.dat file.
+  ! IN ADDITION : There are 3 gnuplot scripts to generate the output files for the surface density, the temperature and the total torque. The last one need both total_torque and contour data files.
+  
+  use mercury_constant ! for 'HUGE' value
+  
+  implicit none
+  
+  real(double_precision), intent(in) :: stellar_mass
+  
+    real(double_precision), parameter :: mass = 20 * EARTH_MASS 
+    
+    real(double_precision), parameter :: a = 1.
+    
+    ! time sample
+    real(double_precision), parameter :: t_min = 0. ! time in years
+    real(double_precision), parameter :: t_max = 5.d4 ! time in years
+    real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
+    integer :: time_size ! the size of the array 'time'. 
+    
+    real(double_precision) :: position(3), velocity(3)
+    type(PlanetProperties) :: p_prop
+    
+    real(double_precision) :: density_min, density_max
+    character(len=80) :: filename_density
+    character(len=80) :: output_density, output_time, time_format, purcent_format
+    integer :: time_length ! the length of the displayed time, usefull for a nice display
+    
+    integer :: k ! for loops
+    integer :: nb_time ! The total number of 't' values. 
+    integer :: error ! to retrieve error, especially during allocations
+    !------------------------------------------------------------------------------
+    write(*,*) 'Evolution of the total torque during the dissipation of the disk'
+    
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    call system("rm unitary_tests/dissipation/*")
+
+    ! Before dissipating the disk, we erase the 'normal' density profile with a dirac one. 
+    surface_density_profile(1:NB_SAMPLE_PROFILES) = log(TINY)
+    surface_density_profile(NB_SAMPLE_PROFILES/2) = log(HUGE)
+    
+    ! We open the file where we want to write the outputs
+    write(filename_density, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',0,'.dat'
+    call store_density_profile(filename=filename_density)
+    
+    ! We want to know the max size of the time display in order to have a nice display, with filled spaces in the final plots
+    write(output_time, '(f0.0)') t_max
+    time_length = len(trim(output_time))
+    write(time_format, *) '(f',time_length,'.0)'
+    write(purcent_format, *) '(f',time_length,'.0,"/",f',time_length,'.0," years")'
+    
+    !------------------------------------------------------------------------------
+    k = 1
+    time_size = 512 ! the size of the array. 
+    allocate(time(time_size), stat=error)
+    time(1) = t_min * 365.25d0 ! days
+    
+!~     write(*,*) time(k), t_max*365.25d0
+    do while (time(k).lt.(t_max*365.d0))
+      ! We calculate the temperature profile for the current time (because the surface density change in function of time)
+      
+      ! We open the file where we want to write the outputs
+      write(filename_density, '(a,i0.5,a)') 'unitary_tests/dissipation/surface_density',k,'.dat'
+      
+      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
+      ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
+      
+      ! we get the density profile.
+      call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
+      
+      if (k.eq.time_size) then
+        ! If the limit of the array is reach, we copy the values in a temporary array, allocate with a double size, et paste the 
+        ! old values in the new bigger array
+        allocate(time_temp(time_size), stat=error)
+        time_temp(1:time_size) = time(1:time_size)
+        deallocate(time, stat=error)
+        time_size = time_size * 2
+        allocate(time(time_size), stat=error)
+        time(1:time_size/2) = time_temp(1:time_size/2)
+        deallocate(time_temp, stat=error)
+      end if
+      
+      write(*,purcent_format) time(k)/365.25d0, t_max ! We display on the screen how far we are from the end of the integration.
+      
+      
+      time(k+1) = time(k) + dissipation_timestep * 365.25d0 ! days
+      
+      ! we store in a .dat file the temperature profile
+      call store_density_profile(filename=filename_density)
+      
+      if (k.eq.1) then
+      ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
+        density_min = 0.
+        density_max = exp(surface_density_profile(1)) * MSUN / AU**2
+      end if
+      
+      k = k + 1 ! We increment the integer that point the time in the array (since it's a 'while' and not a 'do' loop)
+    end do
+
+    nb_time = k - 1 ! since for the last step with incremented 'k' by one step that is beyond the limit.
+    
+    !------------------------------------------------------------------------------
+    ! Gnuplot script to output the frames of the density
+    open(13, file="unitary_tests/dissipation/density.gnuplot")
+    write(13,*) "set terminal pngcairo enhanced size 800, 600"
+    write(13,*) 'set xlabel "semi major axis (AU)"'
+    write(13,*) 'set ylabel "Surface density (g/cm^2)"'
+    write(13,*) 'set grid'
+    write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'
+    write(13,*) 'set yrange [', TINY, ':', HUGE, ']'
+    write(13,*) 'set logscale y'
+    
+    do k=1, nb_time
+      write(filename_density, '(a,i0.5,a)') 'surface_density',k,'.dat'
+      write(output_density, '(a,i0.5,a)') 'surface_density',k,'.png'
+      write(output_time, time_format) time(k)/365.25
+      
+      write(13,*) "set output '",trim(output_density),"'"
+      write(13,*) 'set title "T=', trim(output_time),' years"'
+      write(13,*) "plot '",trim(filename_density),"' using 1:2 with lines notitle"
+      write(13,*) ""
+    end do
+    close(13)
+  
+  end subroutine test_dissipation
 
 ! %%% Physical behaviour %%%
-  subroutine test_temperature_profile(stellar_mass)
+  subroutine study_temperature_profile(stellar_mass)
 ! Subroutine that test the finding of the temperature profile and store a plot of the temperature profile of the disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 
@@ -1882,9 +1983,9 @@ end subroutine print_planet_properties
     close(10)
     close(11)
   
-  end subroutine test_temperature_profile
+  end subroutine study_temperature_profile
   
-  subroutine test_scaleheight_profile
+  subroutine study_scaleheight_profile
     implicit none
     
     integer :: j
@@ -1936,9 +2037,9 @@ end subroutine print_planet_properties
   close(11)
   
   
-  end subroutine test_scaleheight_profile
+  end subroutine study_scaleheight_profile
   
-  subroutine test_optical_depth_profile(stellar_mass)
+  subroutine study_optical_depth_profile(stellar_mass)
 ! Subroutine that test the finding of the optical depth profile and store a plot of the temperature profile of the disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 
@@ -1978,9 +2079,9 @@ end subroutine print_planet_properties
     
     close(10)
   
-  end subroutine test_optical_depth_profile
+  end subroutine study_optical_depth_profile
   
-  subroutine test_thermal_diffusivity_profile(stellar_mass)
+  subroutine study_thermal_diffusivity_profile(stellar_mass)
 ! Subroutine that test the finding of the optical depth profile and store a plot of the temperature profile of the disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 
@@ -2020,9 +2121,9 @@ end subroutine print_planet_properties
     
     close(10)
   
-  end subroutine test_thermal_diffusivity_profile
+  end subroutine study_thermal_diffusivity_profile
 
-  subroutine test_opacity_profile
+  subroutine study_opacity_profile
   ! subroutine that test the function 'get_opacity'
   
   ! Return:
@@ -2079,9 +2180,9 @@ end subroutine print_planet_properties
     
     close(10)
     
-  end subroutine test_opacity_profile
+  end subroutine study_opacity_profile
 
-  subroutine test_torques_fixed_a(stellar_mass)
+  subroutine study_torques_fixed_a(stellar_mass)
   ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
@@ -2111,9 +2212,9 @@ end subroutine print_planet_properties
     velocity(:) = 0.d0
     
     ! We open the file where we want to write the outputs
-    open(10, file='unitary_tests/test_torques_fixed_a.dat')
+    open(10, file='unitary_tests/study_torques_fixed_a.dat')
     open(11, file='unitary_tests/test_ref_torque_fixed_a.dat')
-    open(12, file='unitary_tests/test_torques_fixed_a_units.dat')
+    open(12, file='unitary_tests/study_torques_fixed_a_units.dat')
     open(13, file='unitary_tests/test_specific_torque_fixed_a.dat')
     
     write(10,*) '# mass in earth mass ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
@@ -2184,13 +2285,13 @@ end subroutine print_planet_properties
       write(j,*) 'set xrange [', mass_min, ':', mass_max, ']'
     end do
 
-    write(10,*) "plot 'test_torques_fixed_a.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(10,*) "plot 'study_torques_fixed_a.dat' using 1:2 with lines title '{/Symbol G}_c',\"
     write(10,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
     write(10,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
     
     write(11,*) "plot 'test_ref_torque_fixed_a.dat' using 1:2 with lines"
     
-    write(12,*) "plot 'test_torques_fixed_a_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(12,*) "plot 'study_torques_fixed_a_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
     write(12,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
     write(12,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
     
@@ -2216,9 +2317,9 @@ end subroutine print_planet_properties
     close(13)
 
     
-  end subroutine test_torques_fixed_a
+  end subroutine study_torques_fixed_a
 
-  subroutine test_torques_fixed_m(stellar_mass)
+  subroutine study_torques_fixed_m(stellar_mass)
   ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
@@ -2248,9 +2349,9 @@ end subroutine print_planet_properties
     velocity(:) = 0.d0
     
     ! We open the file where we want to write the outputs
-    open(10, file='unitary_tests/test_torques_fixed_m.dat')
+    open(10, file='unitary_tests/study_torques_fixed_m.dat')
     open(11, file='unitary_tests/test_ref_torque_fixed_m.dat')
-    open(12, file='unitary_tests/test_torques_fixed_m_units.dat')
+    open(12, file='unitary_tests/study_torques_fixed_m_units.dat')
     
     write(10,*) '# a in AU ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
     write(11,*) '# a in AU ; reference torque in M_s.AU^2.day^{-2}'
@@ -2314,13 +2415,13 @@ end subroutine print_planet_properties
       write(j,*) 'set xrange [', a_min, ':', a_max, ']'
     end do
 
-    write(10,*) "plot 'test_torques_fixed_m.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(10,*) "plot 'study_torques_fixed_m.dat' using 1:2 with lines title '{/Symbol G}_c',\"
     write(10,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
     write(10,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
     
     write(11,*) "plot 'test_ref_torque_fixed_m.dat' using 1:2 with lines"
         
-    write(12,*) "plot 'test_torques_fixed_m_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(12,*) "plot 'study_torques_fixed_m_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
     write(12,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
     write(12,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
 
@@ -2343,10 +2444,10 @@ end subroutine print_planet_properties
     close(12)
 
     
-  end subroutine test_torques_fixed_m
+  end subroutine study_torques_fixed_m
   
 
-  subroutine test_torques(stellar_mass)
+  subroutine study_torques(stellar_mass)
   ! subroutine that test the function 'get_corotation_torque'
   
   ! Return:
@@ -2505,21 +2606,26 @@ end subroutine print_planet_properties
     close(13)
     close(14)
     
-  end subroutine test_torques
+  end subroutine study_torques
   
-  subroutine test_dissipation_of_the_disk(stellar_mass)
+  subroutine study_dissipation_of_the_disk(stellar_mass)
   ! subroutine that plot several values depending on the properties of the disk during its dissipation
   
   ! Global parameters
   ! dissipation_timestep : the timestep between two computation of the disk [in days]
   ! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
   ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+  ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
   ! surface_density_profile : values of the density in log() for each value of the 'a' sample
   ! temperature_profile : values of the temperature in log() for each value of the 'a' sample
   
-  ! Return:
-  !  a data file 'test_total_torque.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  ! Return: (in the folder 'dissipation' of the current working directory where the tests are launched)
+  !  data files with the following paterns :
+  !    surface_density*.dat : each file correspond to a data file of the surface density at one timestep (the number correspond to the index)
+  !    temperature*.dat : each file correspond to a data file of the temperature at one timestep (the number correspond to the index)
+  !    total_torque*.dat : each file correspond to a data file of the total torque exerted by the disk at one timestep (the number correspond to the index)
+  !    contour*.dat : each file correspond to the zero torque lines of the corresponding total_torque*.dat file.
+  ! IN ADDITION : There are 3 gnuplot scripts to generate the output files for the surface density, the temperature and the total torque. The last one need both total_torque and contour data files.
   
     use contour
     
@@ -2543,7 +2649,7 @@ end subroutine print_planet_properties
     
     ! time sample
     real(double_precision), parameter :: t_min = 0. ! time in years
-    real(double_precision), parameter :: t_max = 1.d7 ! time in years
+    real(double_precision), parameter :: t_max = 1.d5 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
     
@@ -2602,12 +2708,16 @@ end subroutine print_planet_properties
       write(filename_contour, '(a,i0.5,a)') 'dissipation/contour',k,'.dat'
       
       open(11, file=filename_torque)
-            
+      
+      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
+      ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
+      
       ! we get the density profile.
-      call calculate_density_profile()
+      call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
       
       if (k.eq.time_size) then
-        ! If the limit of the array is reach, we copy the values in a temporary array, allocate with a double size, et paste the old values in the new bigger array
+        ! If the limit of the array is reach, we copy the values in a temporary array, allocate with a double size, et paste the 
+        ! old values in the new bigger array
         allocate(time_temp(time_size), stat=error)
         time_temp(1:time_size) = time(1:time_size)
         deallocate(time, stat=error)
@@ -2619,8 +2729,7 @@ end subroutine print_planet_properties
       
       write(*,purcent_format) time(k)/365.25d0, t_max
       
-      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
-      ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
+      
       time(k+1) = time(k) + dissipation_timestep * 365.25d0 ! days
       ! we get the temperature profile.
       call calculate_temperature_profile()
@@ -2635,7 +2744,7 @@ end subroutine print_planet_properties
         
         ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
         density_min = 0.
-        density_max = exp(surface_density_profile(1)) * MSUN / AU**2
+        density_max = exp(maxval(surface_density_profile(1:NB_SAMPLE_PROFILES))) * MSUN / AU**2
       end if
       
       write(11,*) '# semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
@@ -2758,7 +2867,7 @@ end subroutine print_planet_properties
     end do
     close(13)
   
-  end subroutine test_dissipation_of_the_disk
+  end subroutine study_dissipation_of_the_disk
 end module user_module
   
 ! TODO utiliser la masse des objets pour ne pas faire le calcul si trop massif, il faut respecter le domaine de validité des formules des couples
