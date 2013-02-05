@@ -35,7 +35,8 @@ module disk
   ! Hence, the idea is to have a cutoff sufficiently high to allow, at a given position, 
   ! 2 planet radius in the apperture of this cutoff (a triangle with angle, orbital distance and 2 planet radius)
   real(double_precision), parameter :: INCLINATION_CUTOFF = 5.d-4 ! (in rad) the value below whom there will be no inclination damping anymore.
-  
+  real(double_precision), parameter :: ECCENTRICITY_CUTOFF = 1.d0 ! the eccentricity above what the torque of the disk is deactivated
+  real(double_precision) :: SMA_CUTOFF ! in AU, the distance below which the timestep do not allow us to compute the orbit correctly (for constant timestep)
   !------------------------------------------------------------------------------
   ! prefactors
   real(double_precision) :: X_S_PREFACTOR ! prefactor for the half width of the corotation region
@@ -219,6 +220,8 @@ subroutine read_disk_properties()
 						write(*,*) "Warning: An unknown value for identificator='", trim(identificator), " has been found'"
 						write(*,*) "         value(s)='", trim(value),"'"
 					end if
+				case('turbulent_forcing')
+					read(value,*) TURBULENT_FORCING
 
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
@@ -247,6 +250,66 @@ subroutine read_disk_properties()
   INITIAL_SIGMA_0_NUM = INITIAL_SIGMA_0 * AU**2 / MSUN ! the surface density at (R=1AU) [Msun/AU^2]
   
 end subroutine read_disk_properties
+
+subroutine read_paramin(timestep)
+! subroutine that read the 'disk.in' file to retrieve disk properties. Default value exist, if a parameter is not defined
+
+! Global Parameters
+! 
+
+
+  implicit none
+  
+  ! Output
+  real(double_precision), intent(out) :: timestep ! the timestep of mercury in days
+
+  ! Locals
+  character(len=80) :: line
+  character(len=1), parameter :: comment_character = ')' ! character that will indicate that the rest of the line is a comment
+  integer :: comment_position ! the index of the comment character on the line. If zero, there is none on the current string
+  integer :: error ! to store the state of a read instruction
+  integer :: boolean ! integer value used to define a logical value (a bit complicated to define directly a boolean)
+  
+  logical :: isParameter, isDefined
+  character(len=80) :: identificator, value
+  !------------------------------------------------------------------------------
+  
+  inquire(file='param.in', exist=isDefined)
+  if (isDefined) then
+  
+    open(10, file='param.in', status='old')
+    
+    do
+      read(10, '(a80)', iostat=error), line
+      if (error /= 0) exit
+       
+      ! in param.in, comment must start from the first character, there is no comments starting from a random point of the line. 
+      ! Indeed ')' can be used elsewhere, inside the key, without meaning any comment after this.
+      if (line(1:1).ne.comment_character) then
+      
+				call get_parameter_value(line, isParameter, identificator, value)
+				
+				if (isParameter) then
+					select case(identificator)
+					case(' timestep (days)')
+						read(value, *) timestep
+
+					case default
+!~ 						write(*,*) 'Warning: An unknown parameter has been found'
+!~ 						write(*,*) "identificator='", trim(identificator), "' ; value(s)='", value,"'"
+					end select
+				end if
+      end if
+    end do
+    close(10)
+  end if
+  
+  if (isnan(timestep)) then
+    write(*,*) 'Error: There was problem while reading the timestep in "param.in"'
+    stop
+  end if
+  
+end subroutine read_paramin
 
 subroutine write_disk_properties()
 ! subroutine that write the parameters of the user_module into the file 'disk.out'
@@ -320,6 +383,9 @@ subroutine write_disk_properties()
   write(10,'(a)') '------------------------------------'
   write(10,'(a)') 'When the inclination damping stops'
   write(10,'(a,es10.1e2,a)') 'inclination cutoff = ',INCLINATION_CUTOFF, ' (rad)'
+  write(10,'(a)') 'When the torque of the disk is deactivated'
+  write(10,'(a,f5.2,a)') 'cut off : semi major axis < ',SMA_CUTOFF, ' AU'
+  write(10,'(a,f5.3)') 'cut off : eccentricity > ',ECCENTRICITY_CUTOFF
   write(10,*) ''
   write(10,'(a)') "Possible values : 'real', 'mass_independant', 'linear_indep', 'tanh_indep'"
   write(10,'(a, a)') 'torque type = ', trim(TORQUE_TYPE)
@@ -355,8 +421,8 @@ subroutine write_disk_properties()
 			
 		case default
 			write(10,'(a)') 'Warning: The torque rule cannot be found.'
-			write(10,'(a,a)') 'Given value : ', TORQUE_TYPE
-			write(10,'(a)') 'Values possible : real ; linear_indep ; tanh_indep ; manual'
+			write(10,'(a,a)') '  Given value : ', trim(TORQUE_TYPE)
+			write(10,'(a)') '  Values possible : real ; linear_indep ; tanh_indep ; manual'
 	end select
 
 
@@ -578,6 +644,7 @@ subroutine init_globals(stellar_mass, time)
 ! temp_profile_index : values of the local negative slope of the temperature profile
 ! chi_profile : thermal diffusivity
 ! tau_profile : optical depth 
+! SMA_CUTOFF : in AU, the distance above which the timestep do not allow us to compute the orbit correctly (for constant timestep)
 !
 ! Parameters
 ! stellar_mass : the mass of the central object [Msun * K2]
@@ -587,8 +654,11 @@ subroutine init_globals(stellar_mass, time)
   implicit none
   real(double_precision), intent(in) :: stellar_mass
   real(double_precision), intent(in) :: time ! the current time of the simulation [days]
+  
+  ! Locals
   logical, save :: FirstCall = .True.
   integer :: i  
+  real(double_precision) :: timestep
   
   if (FirstCall) then
     FirstCall = .False.
@@ -654,13 +724,19 @@ subroutine init_globals(stellar_mass, time)
       call read_torque_profile()
     end if
     
-    ! We initialize the value even if there is no turbulence declared, because in the tests, turbulence is not always declared, even if we test it.
-    call init_turbulence_forcing() 
+    ! We initialize the value even if there is no turbulence declared, because in the tests, 
+    ! turbulence is not always declared, even if we test it.
+    ! We only initialize the turbulence if there is no value (which would means that the value was defined in the parameter file 'disk.in'
+    if (isnan(TURBULENT_FORCING)) then
+			call init_turbulence_forcing() 
+    end if
     
     if (IS_TURBULENCE) then
       call init_turbulence(time)
     end if
     
+    call read_paramin(timestep) 
+    SMA_CUTOFF = (10. * timestep / 365.25)**TWOTHIRD
     
     ! we write all the values used by user_module, those given by the user, and the default ones, in 'disk.out' file
     call write_disk_properties() 
@@ -1675,7 +1751,7 @@ subroutine get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corota
   
   !------------------------------------------------------------------------------
   
-    x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
+  x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
   
   !------------------------------------------------------------------------------
   

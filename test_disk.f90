@@ -1446,10 +1446,10 @@ program test_disk
     
     integer, parameter :: nb_a = 400
     real(double_precision), parameter :: a_min = 0.1 ! in AU
-    real(double_precision), parameter :: a_max = 60. ! in AU
+    real(double_precision), parameter :: a_max = 15 ! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision), parameter :: mass = 15. * EARTH_MASS * K2
+    real(double_precision), parameter :: mass = 5. * EARTH_MASS * K2
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
@@ -1692,7 +1692,7 @@ program test_disk
     write(10,*) "set terminal pdfcairo enhanced"
     write(10,*) "set output 'ecc_corot.pdf'"
     write(10,*) 'set multiplot layout 2, 1 \'
-    write(10,'(a,f4.1,3a)') 'title "mass = ',mass / (EARTH_MASS * K2),' m_{earth} ; a = ',a ,&
+    write(10,'(2(a,f4.1),2a)') 'title "mass = ',mass / (EARTH_MASS * K2),' m_{earth} ; a = ',a ,&
                             '; torque type = ', trim(TORQUE_TYPE),'"'
 
     write(10,*) 'set xlabel "eccentricity"'
@@ -1867,16 +1867,16 @@ program test_disk
     close(15)
     
     
+    ! We want to get the contour for the torque equal to 0 for total torque both in physical dimension of units of gamma_0
+    mass(1:nb_mass) = mass(1:nb_mass) / (EARTH_MASS*K2)
+    call get_contour(total_torque, a, mass,'unitary_tests/contour_total_torque.dat', 0.d0) ! This line opens a file (unit=10), thus this unit must not be used at that time
+    
     open(10, file="unitary_tests/corotation_torque.gnuplot")
     open(11, file="unitary_tests/total_torque.gnuplot")
     open(12, file="unitary_tests/total_torque_units.gnuplot")
     open(13, file="unitary_tests/lindblad_torque.gnuplot")
     open(14, file="unitary_tests/ref_torque.gnuplot")
-    
-    ! We want to get the contour for the torque equal to 0 for total torque both in physical dimension of units of gamma_0
-    mass(1:nb_mass) = mass(1:nb_mass) / (EARTH_MASS*K2)
-    call get_contour(total_torque, a, mass,'unitary_tests/contour_total_torque.dat', 0.d0)
-!~     call get_contour(total_torque_units, a, mass,'unitary_tests/contour_total_torque_units.dat', 0.d0)
+
     do j=10,14
       write(j,*) 'set terminal wxt enhanced'
       write(j,*) 'set xlabel "semi major axis (AU)"'

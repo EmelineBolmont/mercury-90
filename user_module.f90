@@ -173,7 +173,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       position=position(1:3, planet), velocity=velocity(1:3,planet),& ! input
       p_prop=p_prop) ! Output
       
-      if ((p_prop%eccentricity.lt.1.d0).and.(p_prop%semi_major_axis.gt.0.3d0)) then
+      if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%semi_major_axis.gt.SMA_CUTOFF)) then
         !------------------------------------------------------------------------------
         ! prefactor calculation for eccentricity and inclination damping
         e_h = p_prop%eccentricity / p_prop%aspect_ratio
