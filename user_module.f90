@@ -29,7 +29,7 @@ module user_module
   
   ! Here we define the power law for temperature T(R) = temperature_0 * R^(-temperature_index)
   real(double_precision), parameter :: temperature_0 = 150. ! the temperature at (R=1AU) [K]
-  real(double_precision), parameter :: temperature_index = 1.6! the negativeslope of the temperature power law (beta in the paper)
+  real(double_precision), parameter :: temperature_index = 1.! the negativeslope of the temperature power law (beta in the paper)
   
   !prefactors
   real(double_precision) :: x_s_prefactor
@@ -143,7 +143,7 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
   real(double_precision), intent(in) :: stellar_mass, mass, position(3), velocity(3)
   
   real(double_precision), intent(out) :: corotation_torque
-  real(double_precision), intent(out) :: Gamma_0 ! Normalization factor for all the torques [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
+  real(double_precision), intent(out) :: Gamma_0 ! canonical torque value [Ms.AU^2](equation (8) of Paardekooper, Baruteau, 2009)
   real(double_precision), intent(out) :: gamma_eff ! effective adiabatic index depending on several parameters [no dim]
 
   !Local
@@ -198,7 +198,7 @@ subroutine get_corotation_torque(stellar_mass, mass, position, velocity, corotat
   !------------------------------------------------------------------------------
   nu_p = alpha * omega_p * scaleheight_p**2 ! [AU^2.day-1]
   aspect_ratio_p = scaleheight_p / radius_p
-    write(*,*) nu_p * AU**2 / DAY 
+!~     write(*,'(e12.4)') nu_p * AU**2 / DAY 
   !------------------------------------------------------------------------------
   bulk_density_p = 0.5d0 * sigma_p / scaleheight_p
   !------------------------------------------------------------------------------
@@ -412,7 +412,9 @@ end subroutine init_globals
     
     call test_functions_FGK()
     call test_get_opacity()
-    call test_torques()
+!~     call test_torques()
+    call test_torques_fixed_a()
+    call test_torques_fixed_m()
     
   end subroutine unitary_tests
 
@@ -514,12 +516,12 @@ end subroutine init_globals
     write(10,*) 'set logscale y'
     write(10,*) 'set grid'
     write(10,*) 'set xrange [', T_min, ':', T_max, ']'
-    write(10,*) "plot 'test_opacity.dat' using 1:2 with lines title '{/Symbol r}=10^{-5'},\"
+    write(10,*) "plot 'test_opacity.dat' using 1:2 with lines title '{/Symbol r}=10^{-5}',\"
     write(10,*) "     '' using 1:3 with lines title '{/Symbol r}=10^{-6}',\"
     write(10,*) "     '' using 1:4 with lines title '{/Symbol r}=10^{-7}',\"
     write(10,*) "     '' using 1:5 with lines title '{/Symbol r}=10^{-8}',\"
     write(10,*) "     '' using 1:6 with lines title '{/Symbol r}=10^{-9}'"
-    write(10,*) "pause -1 # wait until a carriage return is hit"
+    write(10,*) "#pause -1 # wait until a carriage return is hit"
     write(10,*) "set terminal pdfcairo enhanced"
     write(10,*) "set output 'opacity.pdf'"
     write(10,*) "replot # pour générer le fichier d'output"  
@@ -593,9 +595,6 @@ end subroutine init_globals
         total_torque = torque_lindblad + corotation_torque
         total_torque_units = (torque_ref / gamma_eff) * total_torque
         
-!~         corotation_torque = torque_ref / gamma_eff * corotation_torque
-!~         torque_lindblad = torque_ref / gamma_eff * torque_lindblad
-!~         torque = torque_ref / gamma_eff * torque
                 
         write(10,*) a, mass / EARTH_MASS, corotation_torque
         write(11,*) a, mass / EARTH_MASS, total_torque
@@ -674,6 +673,263 @@ end subroutine init_globals
     close(15)
     
   end subroutine test_torques
+
+  subroutine test_torques_fixed_a
+  ! subroutine that test the function 'get_corotation_torque'
+  
+  ! Return:
+  !  a data file 'test_total_torque.dat' 
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+    implicit none
+    
+    integer, parameter :: nb_mass = 100
+    real(double_precision), parameter :: mass_min = 1. ! in earth mass
+    real(double_precision), parameter :: mass_max = 60. ! in earth mass
+    real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
+    
+    real(double_precision), parameter :: a = 1.
+    
+    real(double_precision) :: mass, total_torque, corotation_torque, gamma_eff, torque_ref
+    real(double_precision) :: lindblad_torque_units, corotation_torque_units, total_torque_units
+    real(double_precision) :: stellar_mass, position(3), velocity(3)
+    
+    integer :: i,j ! for loops
+    
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    ! stellar mass
+    stellar_mass = 1.d0
+    
+    call init_globals(stellar_mass)
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='test_torques_fixed_a.dat')
+    open(11, file='test_ref_torque_fixed_a.dat')
+    open(12, file='test_torques_fixed_a_units.dat')
+    
+    write(10,*) 'mass in earth mass ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
+    write(11,*) 'mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
+    write(12,*) 'mass in earth mass ; corotation torque (M_s.AU^2.day^{-2}), lindblad torque (M_s.AU^2.day^{-2})&
+                 &, total torque (M_s.AU^2.day^{-2})'
+
+    ! We generate cartesian coordinate for the given semi major axis
+    position(1) = a
+    
+    
+    do j=1,nb_mass
+      mass = (mass_min + mass_step * (j - 1.d0)) * EARTH_MASS
+      
+      ! We generate cartesian coordinate for the given mass and semi major axis
+      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      
+      call get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, torque_ref, gamma_eff)
+      
+      total_torque = torque_lindblad + corotation_torque
+
+      lindblad_torque_units = (torque_ref / gamma_eff) * torque_lindblad
+      corotation_torque_units = (torque_ref / gamma_eff) * corotation_torque
+      total_torque_units = (torque_ref / gamma_eff) * total_torque      
+              
+      write(10,*) mass / EARTH_MASS, corotation_torque, torque_lindblad, total_torque
+      write(11,*) mass / EARTH_MASS, torque_ref
+      write(12,*) mass / EARTH_MASS, corotation_torque_units, lindblad_torque_units, total_torque_units
+    end do
+    
+    close(10)
+    close(11)
+    close(12)
+    
+    
+    open(10, file="torques_fixed_a.gnuplot")
+    open(11, file="ref_torque_fixed_a.gnuplot")
+    open(12, file="torques_fixed_a_units.gnuplot")
+
+    
+    do j=10,12
+      write(j,*) 'set terminal x11 enhanced'
+      write(j,*) 'set xlabel "Planet mass (m_{earth})"'
+      write(j,*) 'set title "for a semi major axis a=',a,' AU"'
+    end do
+    
+    write(10,*) 'set ylabel "torque [* {/Symbol g}_{eff}/{/Symbol G}_0]"'
+    
+    write(11,*) 'set ylabel "reference torque {/Symbol G}_0 [M_s.AU^2.day^{-2}]"'
+    write(11,*) 'set nokey'
+    
+    write(12,*) 'set ylabel "torque [M_s.AU^2.day^{-2}]"'
+        
+    do j=10,12
+!~     write(j,*) 'set xrange [', a_min, ':', a_max, '] noreverse'
+      write(j,*) 'set grid'
+      write(j,*) 'set xrange [', mass_min, ':', mass_max, ']'
+    end do
+
+    write(10,*) "plot 'test_torques_fixed_a.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(10,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
+    write(10,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
+    
+    write(11,*) "plot 'test_ref_torque_fixed_a.dat' using 1:2 with lines"
+    
+    write(12,*) "plot 'test_torques_fixed_a_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(12,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
+    write(12,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
+    
+    do j=10,12
+      write(j,*) "#pause -1 # wait until a carriage return is hit"
+      write(j,*) "set terminal pdfcairo enhanced"
+    end do
+    
+    write(10,*) "set output 'torques_fixed_a.pdf'"
+    write(11,*) "set output 'ref_torque_fixed_a.pdf'"
+    write(12,*) "set output 'torques_fixed_a_units.pdf'"
+    
+    do j=10,12
+      write(j,*) "replot # pour générer le fichier d'output"
+    end do
+    
+    close(10)
+    close(11)
+    close(12)
+
+    
+  end subroutine test_torques_fixed_a
+
+  subroutine test_torques_fixed_m
+  ! subroutine that test the function 'get_corotation_torque'
+  
+  ! Return:
+  !  a data file 'test_total_torque.dat' 
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+    implicit none
+    
+    integer, parameter :: nb_a = 400
+    real(double_precision), parameter :: a_min = 0.1 ! in AU
+    real(double_precision), parameter :: a_max = 60. ! in AU
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    
+    real(double_precision), parameter :: mass = 20. * EARTH_MASS
+    
+    real(double_precision) :: a, total_torque, corotation_torque, gamma_eff, torque_ref
+    real(double_precision) :: lindblad_torque_units, corotation_torque_units, total_torque_units
+    real(double_precision) :: stellar_mass, position(3), velocity(3)
+    
+    integer :: i,j ! for loops
+    
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    ! stellar mass
+    stellar_mass = 1.d0
+    
+    call init_globals(stellar_mass)
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='test_torques_fixed_m.dat')
+    open(11, file='test_ref_torque_fixed_m.dat')
+    open(12, file='test_gamma_eff_fixed_m.dat')
+    open(13, file='test_torques_fixed_m_units.dat')
+    
+    write(10,*) 'a in AU ; corotation torque (no dim), lindblad torque (no dim), total torque (no dim)'
+    write(11,*) 'a in AU ; reference torque in M_s.AU^2.day^{-2}'
+    write(12,*) 'a in AU ; gamma effective'
+    write(13,*) 'a in AU ; corotation torque (M_s.AU^2.day^{-2}), lindblad torque (M_s.AU^2.day^{-2})&
+                 &, total torque (M_s.AU^2.day^{-2})'
+
+    ! We generate cartesian coordinate for the given semi major axis
+    position(1) = a
+    
+    
+    do j=1,nb_a
+      a = (a_min + a_step * (j - 1.d0))
+      ! We generate cartesian coordinate for the given semi major axis
+      position(1) = a
+      
+      ! We generate cartesian coordinate for the given mass and semi major axis
+      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      
+      call get_corotation_torque(stellar_mass, mass, position, velocity, corotation_torque, torque_ref, gamma_eff)
+      
+      total_torque = torque_lindblad + corotation_torque
+      
+      lindblad_torque_units = (torque_ref / gamma_eff) * torque_lindblad
+      corotation_torque_units = (torque_ref / gamma_eff) * corotation_torque
+      total_torque_units = (torque_ref / gamma_eff) * total_torque
+      
+              
+      write(10,*) a, corotation_torque, torque_lindblad, total_torque
+      write(11,*) a, torque_ref
+      write(12,*) a, gamma_eff
+      write(13,*) a, corotation_torque_units, lindblad_torque_units, total_torque_units
+    end do
+    
+    close(10)
+    close(11)
+    close(12)
+    close(13)
+    
+    
+    open(10, file="torques_fixed_m.gnuplot")
+    open(11, file="ref_torque_fixed_m.gnuplot")
+    open(12, file="gamma_eff_fixed_m.gnuplot")
+    open(13, file="torques_fixed_m_units.gnuplot")
+    
+    do j=10,13
+      write(j,*) 'set terminal x11 enhanced'
+      write(j,*) 'set xlabel "semi major axis a (in AU)"'
+      write(j,*) 'set title "for planet mass =',mass / EARTH_MASS,' m_{earth}"'
+    end do
+    
+    write(10,*) 'set ylabel "torque [* {/Symbol g}_{eff}/{/Symbol G}_0]"'
+    
+    write(11,*) 'set ylabel "reference torque {/Symbol G}_0 [M_s.AU^2.day^{-2}]"'
+    write(11,*) 'set nokey'
+    
+    write(12,*) 'set ylabel "{/Symbol g}_{eff}"'
+    write(12,*) 'set nokey'
+    
+    write(13,*) 'set ylabel "torque [M_s.AU^2.day^{-2}]"'
+    
+    do j=10,13
+!~     write(j,*) 'set xrange [', a_min, ':', a_max, '] noreverse'
+      write(j,*) 'set grid'
+      write(j,*) 'set xrange [', a_min, ':', a_max, ']'
+    end do
+
+    write(10,*) "plot 'test_torques_fixed_m.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(10,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
+    write(10,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
+    
+    write(11,*) "plot 'test_ref_torque_fixed_m.dat' using 1:2 with lines"
+    
+    write(12,*) "plot 'test_gamma_eff_fixed_m.dat' using 1:2 with lines"
+    
+    write(13,*) "plot 'test_torques_fixed_m_units.dat' using 1:2 with lines title '{/Symbol G}_c',\"
+    write(13,*) "                             '' using 1:3 with lines title '{/Symbol G}_L',\"
+    write(13,*) "                             '' using 1:4 with lines title '{/Symbol G}_{tot}'"
+
+    
+    do j=10,13
+      write(j,*) "#pause -1 # wait until a carriage return is hit"
+      write(j,*) "set terminal pdfcairo enhanced"
+    end do
+    
+    write(10,*) "set output 'torques_fixed_m.pdf'"
+    write(11,*) "set output 'ref_torque_fixed_m.pdf'"
+    write(12,*) "set output 'gamma_eff_fixed_m.pdf'"
+    write(13,*) "set output 'torques_fixed_m_units.pdf'"
+    
+    do j=10,13
+      write(j,*) "replot # pour générer le fichier d'output"
+    end do
+    
+    close(10)
+    close(11)
+    close(12)
+    close(13)
+
+    
+  end subroutine test_torques_fixed_m
 
 end module user_module
 
