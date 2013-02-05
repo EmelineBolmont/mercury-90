@@ -141,15 +141,15 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   real(double_precision), dimension(3), intent(out) :: turbulence_acceleration ! The gravitational potential induced by the turbulence
   
   ! Locals
-  real(double_precision), parameter :: delta_distance = 0.001 ! The infinitesimal distance used to compute the numerical derivation [AU]
-  real(double_precision), parameter :: acc_prefactor = - (64.d0 / (MSUN * PI * PI)) * 0.5d0 / delta_distance ! the prefactor used to calculate the acceleration
-  real(double_precision) :: r_xp1, r_xm1, r_yp1, r_ym1
-  real(double_precision) :: phi_xp1, phi_xm1, phi_yp1, phi_ym1
+  real(double_precision), parameter :: acc_prefactor = (64.d0 / (MSUN * PI * PI)) ! the prefactor used to calculate the acceleration
+  real(double_precision) :: r, phi ! polar coordinates of the planet
   real(double_precision), dimension(3) :: shifted_position
   real(double_precision) :: single_prefactor ! common prefactor for a given mode, for each position
   real(double_precision) :: planet_prefactor ! prefactor including properties of the planet that must be calculated each time.
-  real(double_precision) :: tmp
-  real(double_precision) :: potential_xp1, potential_xm1, potential_yp1, potential_ym1
+  real(double_precision) :: argument ! argument for cos and sin of the single potential (created by one mode)
+  real(double_precision) :: lambda_cm, lambda_sm ! single potential created by one mode (and its derivative) used for the expression of the force.
+  real(double_precision) :: sum_element_r, sum_element_theta ! result of the sum on all the modes for the r or theta part of the force
+  real(double_precision) :: force_radius, force_theta ! force exerted by the turbulence, on r or theta direction
   real(double_precision) :: relative_time ! the current time, with respect to the creation time of a given mode
   integer :: k ! for loops  
   
@@ -157,17 +157,11 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   
   ! initialisation
   ! You must call once the subroutine "init_turbulence", in the global code or whatever
-
-  potential_xp1 = 0.d0
-  potential_xm1 = 0.d0
-  potential_yp1 = 0.d0
-  potential_ym1 = 0.d0
+  sum_element_r = 0.d0
+  sum_element_theta  = 0.d0
   
-  call get_polar_coordinates(position(1) + delta_distance, position(2), position(3), r_xp1, phi_xp1)
-  call get_polar_coordinates(position(1) - delta_distance, position(2), position(3), r_xm1, phi_xm1)
-  call get_polar_coordinates(position(1), position(2) + delta_distance, position(3), r_yp1, phi_yp1)
-  call get_polar_coordinates(position(1), position(2) - delta_distance, position(3), r_ym1, phi_ym1)
-! This radius must be used instead of p_prop%radius because p_prop is the same during the calculation of the derivative
+  ! We get the polar coordinates of the planet
+  call get_polar_coordinates(position(1), position(2), position(3), r, phi)
 
   ! la on calcule le potentiel turbulent, on fait la smme de tous les
   ! modes en tenant compte de leur evolution temporelle
@@ -181,31 +175,32 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
 	end if
 
 	if (turbulence_mode(k)%wavenumber.le.wavenumber_cutoff) then
-	  single_prefactor = turbulence_mode(k)%chi * sin(PI * relative_time / turbulence_mode(k)%lifetime)
-	  tmp = turbulence_mode(k)%phi - p_prop%omega * relative_time
+	  single_prefactor = turbulence_mode(k)%chi * sin(PI * relative_time / turbulence_mode(k)%lifetime) * &
+						 exp(-((r - turbulence_mode(k)%r) / turbulence_mode(k)%radial_extent)**2)
+	  argument = turbulence_mode(k)%wavenumber * phi - turbulence_mode(k)%phi - p_prop%omega * relative_time
+	
+	  lambda_cm = single_prefactor * cos(argument) ! equation (7) (Ogihara, 2007)
+	  lambda_sm = single_prefactor * sin(argument) ! equation (10) (Ogihara, 2007)
+	
+	  sum_element_r = sum_element_r + (1.d0 + 2.d0 * r * (r - turbulence_mode(k)%r) / turbulence_mode(k)%radial_extent**2) * &
+	                  lambda_cm
+	  sum_element_theta = sum_element_theta + turbulence_mode(k)%wavenumber * lambda_sm
+	  
 
-	  potential_xp1 = potential_xp1 + single_prefactor * &
-					   exp(-(r_xp1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
-					   cos(turbulence_mode(k)%wavenumber * phi_xp1 - tmp)
-	  potential_xm1 = potential_xm1 + single_prefactor * &
-					   exp(-(r_xm1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
-					   cos(turbulence_mode(k)%wavenumber * phi_xm1 - tmp)
-	  potential_yp1 = potential_yp1 + single_prefactor * &
-					   exp(-(r_yp1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
-					   cos(turbulence_mode(k)%wavenumber * phi_yp1 - tmp)
-	  potential_ym1 = potential_ym1 + single_prefactor * &
-					   exp(-(r_ym1 - turbulence_mode(k)%r)**2 / turbulence_mode(k)%radial_extent) * &
-					   cos(turbulence_mode(k)%wavenumber * phi_ym1 - tmp)
 	endif
   enddo
 
   ! We apply at the end the prefactor of the gravitational potential
-  planet_prefactor = acc_prefactor * turbulent_forcing * p_prop%radius**4 * p_prop%omega**2 * p_prop%sigma
+  planet_prefactor = acc_prefactor * turbulent_forcing * p_prop%radius**3 * p_prop%omega**2 * p_prop%sigma
   
-  ! To get the turbulence acceleration, we use (4), (5) and (6) of (ogihara, 2007). Some constant calculation is putted in a 
+  force_radius = planet_prefactor * sum_element_r
+  force_theta  = planet_prefactor * sum_element_theta
+  
+  ! To get the turbulence acceleration, we use (28), (29) and (30) of (ogihara, 2007). Some constant calculation is putted in a 
   ! prefactor, some other calculation that depend upon the planet are calculed in another prefactor
-  turbulence_acceleration(1) = planet_prefactor * (potential_xp1 - potential_xm1) ! The acceleration in one direction equal minus the gradient of the potential
-  turbulence_acceleration(2) = planet_prefactor * (potential_yp1 - potential_ym1) 
+  
+  turbulence_acceleration(1) = cos(phi) * force_radius - sin(phi) * force_theta
+  turbulence_acceleration(2) = sin(phi) * force_radius + cos(phi) * force_theta
   turbulence_acceleration(3) = 0.d0
 
 end subroutine get_turbulence_acceleration
