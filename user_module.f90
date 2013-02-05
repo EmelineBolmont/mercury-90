@@ -1108,7 +1108,7 @@ end subroutine init_globals
     
     do j=10,14
       write(j,*) "#pause -1 # wait until a carriage return is hit"
-      write(j,*) "set terminal pngcairo enhanced"
+      write(j,*) "set terminal pngcairo enhanced size 1024, 768"
     end do
     
     write(10,*) "set output 'corotation_torque.png'"
