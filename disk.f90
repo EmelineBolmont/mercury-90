@@ -2170,14 +2170,18 @@ real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega
 ! Local
 real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
 real(double_precision) :: rho ! the bulk density of the disk at a given position
+real(double_precision) :: envelope_heating, viscous_heating
 !------------------------------------------------------------------------------
 scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
 rho = 0.5d0 * sigma / scaleheight
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
 
+
+envelope_heating = -SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
+viscous_heating = prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
+
 ! 1.7320508075688772d0 = sqrt(3)
-funcv = SIGMA_STEFAN * temperature**4 + prefactor * &
-                           (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
+funcv = SIGMA_STEFAN * temperature**4 + viscous_heating + envelope_heating
 
 !~ if (distance_new.lt.0.4) then
 !~   write(*,'(a)')            '------------------------------------------------'
