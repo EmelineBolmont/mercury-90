@@ -31,8 +31,8 @@ module user_module
   !prefactors
   real(double_precision) :: x_s_prefactor
   real(double_precision) :: chi_p_prefactor
-  real(double_precision) :: prefactor_lindblad ! prefactor for the lindblad torque
   
+  real(double_precision) :: torque_lindblad ! prefactor for the lindblad torque
   real(double_precision) :: torque_hs_baro ! barotropic part of the horseshoe drag
   real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
   
@@ -96,11 +96,11 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   acceleration(:,:) = 0.d0
   !------------------------------------------------------------------------------
   
-  x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / mass(1) ! mass(1) is here for the ratio of mass q
+  x_s_prefactor = 1.1d0 * (b_over_h / 0.4d0)**0.25d0 / sqrt(mass(1)) ! mass(1) is here for the ratio of mass q
 
   chi_p_prefactor = (16.d0  / 3.d0) * adiabatic_index * (adiabatic_index - 1.d0) * SIGMA_STEFAN
   
-  prefactor_lindblad = -2.5d0 - 1.7d0 * temperature_index + 0.1d0 * sigma_index
+  torque_lindblad = -2.5d0 - 1.7d0 * temperature_index + 0.1d0 * sigma_index
   torque_hs_baro = 1.1d0 * (3.d0/2.d0 - sigma_index)
   torque_c_lin_baro = 0.7d0 * (3.d0/2.d0 - sigma_index)
   
@@ -175,17 +175,17 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   
   ! WE CALCULATE PROPERTIES OF THE PLANETS
   gm = K2 * (stellar_mass + mass)
+  ! We get semi_major_axis, radius_p and vel_squared
   call mco_x2a (gm,position(1), position(2), position(3), velocity(1),velocity(2), velocity(3),semi_major_axis,radius_p,vel_squared)
-  velocity_p = sqrt(vel_squared)
-  radius_p = sqrt(position(1) * position(1) + position(2) * position(2) + position(3) * position(3))
+  
   
   !------------------------------------------------------------------------------
-  omega_p = sqrt(gm / (semi_major_axis * semi_major_axis * semi_major_axis)) ! [day-1]
-  write(*,*) "Warning: Units for omega_p are currently not verified"
-  
   sigma_p = sigma_0_num * radius_p ** sigma_index ! [N.U.]
   temperature_p = temperature_0 * radius_p**temperature_index ! [K]
   aspect_ratio_p = aspect_ratio
+  
+  velocity_p = sqrt(vel_squared)
+  omega_p = sqrt(gm / (semi_major_axis * semi_major_axis * semi_major_axis)) ! [day-1]
   
   !------------------------------------------------------------------------------
   bulk_density_p = 0.5d0 * sigma_p / (aspect_ratio_p * radius_p)
@@ -198,12 +198,13 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   
   chi_p = chi_p_prefactor * temperature_p**4 / (opacity_p * sigma_p**2 * omega_p**2)
   
-  ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h : 
+  !------------------------------------------------------------------------------
+  ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
   Q_p = TWOTHIRD * chi_p / (aspect_ratio_p**3 * radius_p**2 * omega_p)
   !------------------------------------------------------------------------------
   
   gamma_eff = 2.d0 * Q_p * adiabatic_index / (adiabatic_index * Q_p + 0.5d0 * &
-  sqrt(2.d0 * sqrt((adiabatic_index * adiabatic_index * Q_p * Q_p + 1)**2 + 16.d0 * Q_p * Q_p * (adiabatic_index - 1.d0)) &
+  sqrt(2.d0 * sqrt((adiabatic_index * adiabatic_index * Q_p * Q_p + 1.d0)**2 + 16.d0 * Q_p * Q_p * (adiabatic_index - 1.d0)) &
   + 2.d0 * adiabatic_index * adiabatic_index * Q_p * Q_p - 2.d0))
   
   !------------------------------------------------------------------------------
@@ -211,6 +212,7 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   
   x_s = x_s_prefactor / gamma_eff**0.25d0 * sqrt(mass / aspect_ratio_p)
   
+  !------------------------------------------------------------------------------
   ! k_p is defined to limit the number of operation and to have a value independant from chi_p or nu_p
   k_p = radius_p * radius_p * omega_p * x_s * x_s * x_s / (2.d0 * PI)
   
@@ -225,9 +227,9 @@ function get_total_torque(stellar_mass, mass, position, velocity)
   
   !------------------------------------------------------------------------------
 
-  get_total_torque = (Gamma_0 / gamma_eff) * (prefactor_lindblad &
+  get_total_torque = (Gamma_0 / gamma_eff) * (torque_lindblad &
     + torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
-    + torque_hs_ent * get_F(p_nu) * get_G(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
+    + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
     + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi))))
 
   
@@ -273,7 +275,7 @@ end function get_total_torque
 
       
     if (p.lt.p_0) then
-      get_G = (16.d0 / 25.d0) * (p / p_0)**(3.d0/2.d0)
+      get_G = (16.d0 / 25.d0) * (p / p_0)**(1.5d0)
     else
       get_G = 1.d0 - (9.d0 / 25.d0) * (p_0 / p)**(8.d0/3.d0)
     end if
@@ -334,19 +336,19 @@ end function get_total_torque
     temp56 = 10000.d0 * bulk_density**(1.d0/21.d0)
     temp67 = 30000.d0 * bulk_density**(4.d0/75.d0)
     
-    if (temperature.le.166.81d0) then
+    if (temperature.le.166.81d0) then ! regime 1
       get_opacity = 2d-4 * temperature * temperature
-    elseif ((temperature.gt.166.81d0).and.(temperature.le.202.677d0)) then
+    elseif ((temperature.gt.166.81d0).and.(temperature.le.202.677d0)) then ! regime 2
       get_opacity = 2.d16 / temperature**7.d0
-    elseif ((temperature.gt.202.677d0).and.(temperature.le.temp34)) then
+    elseif ((temperature.gt.202.677d0).and.(temperature.le.temp34)) then ! regime 3
       get_opacity = 0.1d0 * sqrt(temperature)
-    elseif ((temperature.gt.temp34).and.(temperature.le.temp45)) then
+    elseif ((temperature.gt.temp34).and.(temperature.le.temp45)) then ! regime 4
       get_opacity = 2.d81 * bulk_density / temperature**24.d0
-    elseif ((temperature.gt.temp45).and.(temperature.le.temp56)) then
+    elseif ((temperature.gt.temp45).and.(temperature.le.temp56)) then ! regime 5
       get_opacity = 1.d-8 * bulk_density**TWOTHIRD * temperature**3
-    elseif ((temperature.gt.temp56).and.(temperature.le.temp67)) then
+    elseif ((temperature.gt.temp56).and.(temperature.le.temp67)) then ! regime 6
       get_opacity = 1.d-36 * bulk_density**THIRD * temperature**10
-    else
+    else ! regime 7
       get_opacity = 1.5d20 * bulk_density / temperature**2.5d0
     endif
     
@@ -557,7 +559,7 @@ end function get_total_torque
       temperature = T_min * T_step ** (i-1)
       
       do j=1,5
-        opacity(j) = get_opacity(temperature, bulk_density(j))
+        opacity(j) = get_opacity(temperature, bulk_density(j)) * MSUN / AU**3
       end do
       
       write(10,*) temperature, opacity(1), opacity(2), opacity(3), opacity(4), opacity(5)
@@ -566,21 +568,21 @@ end function get_total_torque
     
     open(10, file="opacity.gnuplot")
 
-    write(10,*) 'set xlabel "Temperature"'
-    write(10,*) 'set ylabel "Opacity"'
+    write(10,*) 'set xlabel "Temperature $T$"'
+    write(10,*) 'set ylabel "Opacity $\kappa$"'
     write(10,*) 'set logscale x'
     write(10,*) 'set logscale y'
     write(10,*) 'set grid'
     write(10,*) 'set xrange [', T_min, ':', T_max, ']'
     write(10,*) "plot 'test_opacity.dat' using 1:2 with lines title 'rho=1e-5',\"
-    write(10,*) "     'test_opacity.dat' using 1:3 with lines title 'rho=1e-6',\"
-    write(10,*) "     'test_opacity.dat' using 1:4 with lines title 'rho=1e-7',\"
-    write(10,*) "     'test_opacity.dat' using 1:5 with lines title 'rho=1e-8',\"
-    write(10,*) "     'test_opacity.dat' using 1:6 with lines title 'rho=1e-9'"
+    write(10,*) "     '' using 1:3 with lines title 'rho=1e-6',\"
+    write(10,*) "     '' using 1:4 with lines title 'rho=1e-7',\"
+    write(10,*) "     '' using 1:5 with lines title 'rho=1e-8',\"
+    write(10,*) "     '' using 1:6 with lines title 'rho=1e-9'"
     write(10,*) "pause -1 # wait until a carriage return is hit"
-  !~   write(10,*) "set terminal svg rounded size 450,360"
-  !~   write(10,*) "set output 'corotation.svg'"
-  !~   write(10,*) "plot 'test_corotation_torque.dat' using 1:2 with lines"  
+    write(10,*) "set terminal pdfcairo"
+    write(10,*) "set output 'opacity.pdf'"
+    write(10,*) "replot # pour générer le fichier d'output"  
     
     close(10)
     
