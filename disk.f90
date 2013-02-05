@@ -239,6 +239,25 @@ subroutine read_disk_properties()
         case('torque_type')
           read(value, *) TORQUE_TYPE
           
+        case('torque_profile_steepness')
+          read(value, *) TORQUE_PROFILE_STEEPNESS
+          
+        case('indep_cz') ! For mass independant convergence zone
+          read(value, *) INDEP_CZ
+          
+        ! For mass dependant convergence zone
+        case('mass_dep_m_min')
+          read(value, *) MASS_DEP_M_MIN
+          
+        case('mass_dep_m_max')
+          read(value, *) MASS_DEP_M_MAX
+          
+        case('mass_dep_cz_m_min')
+          read(value, *) MASS_DEP_CZ_M_MIN
+          
+        case('mass_dep_cz_m_max')
+          read(value, *) MASS_DEP_CZ_M_MAX
+
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
           write(*,*) "identificator='", trim(identificator), "' ; value(s)='", trim(value),"'"
@@ -323,6 +342,7 @@ subroutine write_disk_properties()
   write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
   write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
   write(10,'(a)') '  Case(mass_dependant) : manual torque profile with a mass independant convergence zone'
+  write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
   write(10,'(a,f6.1,a)') '    minimum mass = ', MASS_DEP_M_MIN, ' (earth mass)'
   write(10,'(a,f6.1,a)') '    maximum mass = ', MASS_DEP_M_MAX, ' (earth mass)'
   write(10,'(a,f6.1,a)') '    CZ for minimum mass = ', MASS_DEP_CZ_M_MIN, ' (AU)'
