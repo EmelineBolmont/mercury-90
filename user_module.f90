@@ -84,8 +84,8 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   
   ! WE CALCULATE PROPERTIES OF THE PLANETS
   ! Not for all the bodies because there might be problem to divide by radial position of the star.
-  radius_p(:) = sqrt(position(1,2:)**2 + position(2,2:)**2)
-  velocity_p(:) = sqrt(velocity(1,2:)**2 + velocity(2,2:)**2)
+  radius_p(:) = sqrt(position(1,2:) * position(1,2:) + position(2,2:) * position(2,2:))
+  velocity_p(:) = sqrt(velocity(1,2:) * velocity(1,2:) + velocity(2,2:) * velocity(2,2:))
   
   ! \vect{v} = \vect{\omega} \wedge \vect{x}
   ! By assuming that the planet is in the plane of the disk (which is false) we get =
