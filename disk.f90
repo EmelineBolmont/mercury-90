@@ -2064,8 +2064,8 @@ if (no_sign_change) then
   write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_min : f(',a,') = ', fa
   write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_max : f(',b,') = ', fb
   write(error_unit,'(a)')            '------------------------------------------------'
-  write(error_unit,'(a,f6.1,a)') 'Previous Orbital Distance = ', distance_old, ' [AU]'
-  write(error_unit,'(a,f6.1,a)') 'Previous Scaleheight = ', scaleheight_old, ' [AU]'
+  write(error_unit,'(a,f7.3,a)') 'Previous Orbital Distance = ', distance_old, ' [AU]'
+  write(error_unit,'(a,f7.3,a)') 'Previous Scaleheight = ', scaleheight_old, ' [AU]'
   write(error_unit,'(a)')            '------------------------------------------------'
   write(error_unit,'(a,f6.1,a)')     '| Orbital Distance : ', p_prop%radius, ' [AU]'
   write(error_unit,'(a,es10.2e2,a)') '| Angular Speed : ', p_prop%omega , ' [day-1]'
