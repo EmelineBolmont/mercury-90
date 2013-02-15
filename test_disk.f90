@@ -1199,6 +1199,7 @@ program test_disk
     implicit none
     
     real(double_precision), dimension(5) :: bulk_density = (/ 1.d-5, 1.d-6, 1.d-7, 1.d-8, 1.d-9/)
+!~     real(double_precision), dimension(5) :: bulk_density = (/1.d-9, 1.d-10, 1.d-11, 1.d-12, 1.d-13/)
     real(double_precision), dimension(5) :: opacity, opacity_zhu, opacity_bell
     real(double_precision) :: temperature
     
