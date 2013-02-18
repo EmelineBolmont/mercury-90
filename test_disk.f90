@@ -172,7 +172,7 @@ program test_disk
     
     real(double_precision) :: zero_function, tmp ! value that we want to output and a dummy argument 'tmp'
     
-    integer :: i,j ! for loops
+    integer :: i ! for loops
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
@@ -349,13 +349,6 @@ program test_disk
   
     implicit none
     
-    integer, parameter :: nb_a = 1000
-    real(double_precision), parameter :: a_min = 0.d0 ! in AU
-    real(double_precision), parameter :: a_max = 100.d0! in AU
-    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
-    
-    real(double_precision) :: a, sigma, sigma_index
-    
     integer :: i,j ! for loops
     
     logical :: isDefined
@@ -425,7 +418,6 @@ program test_disk
     
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
-    integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2
     
     integer, parameter :: nb_points = 100
@@ -772,13 +764,7 @@ program test_disk
     real(double_precision), parameter :: t_min = 0. ! time in years
     real(double_precision), parameter :: t_max = 1.d7 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
-    integer, parameter :: max_frames = 100 ! Parameter to have a control over the number of output frames. (I had near 80 000 once)
-    integer :: nb_dissipation_per_step
     integer :: time_size ! the size of the array 'time'. 
-    
-    real(double_precision), parameter :: a = 1.
-    
-    
     
     real(double_precision) :: density_min, density_max
     character(len=80) :: filename_density, filename_density_ref
@@ -786,10 +772,9 @@ program test_disk
     integer :: time_length ! the length of the displayed time, usefull for a nice display
     real(double_precision) :: next_dissipation_step
     
-    integer :: i,k ! for loops
+    integer :: k ! for loops
     integer :: nb_time ! The total number of 't' values. 
     integer :: error ! to retrieve error, especially during allocations
-    real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
     logical :: isDefined
     !------------------------------------------------------------------------------
     write(*,*) 'Test dissipation of the disk'
@@ -1134,9 +1119,6 @@ program test_disk
 
     implicit none
     
-    integer :: j ! for loops
-    
-    
     open(10, file="unitary_tests/optical_depth_profile.gnuplot")
     
     write(*,*) 'Test of the optical depth'
@@ -1166,8 +1148,6 @@ program test_disk
 ! A gnuplot file and a data file are created to display the temperature profile.
 
     implicit none
-    
-    integer :: j ! for loops
     
     write(*,*) 'Test of the thermal diffusivity'
     
@@ -1301,7 +1281,7 @@ program test_disk
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     
-    integer :: i,j ! for loops
+    integer :: j ! for loops
     
     write(*,*) 'Evolution of the torque for a fixed distance "a"'
     
@@ -1436,7 +1416,7 @@ program test_disk
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     
-    integer :: i,j ! for loops
+    integer :: j ! for loops
     
     write(*,*) 'Evolution of the torque for a fixed planet mass "m"'
 
@@ -1681,7 +1661,7 @@ program test_disk
     real(double_precision), parameter :: a = 6. ! in AU
     real(double_precision) :: I = 0. ! in radians
     
-    real(double_precision) :: total_torque, corotation_torque, lindblad_torque, torque_ref
+    real(double_precision) :: corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
     real(double_precision) :: e, q, gm, x_s, gamma_eff, Q_p, n
     real(double_precision) :: position(3), velocity(3)
@@ -1978,7 +1958,6 @@ program test_disk
     real(double_precision), parameter :: t_max = 1.d7 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     real(double_precision), dimension(:), allocatable :: density, density_temp ! surface density in MSUN/AU^2
-    integer :: nb_dissipation_per_step
     integer :: time_size ! the size of the array 'time'. 
     
     real(double_precision) :: density_position = 2. ! in AU
@@ -1987,10 +1966,9 @@ program test_disk
     
     real(double_precision) :: next_dissipation_step
     
-    integer :: i,k ! for loops
+    integer :: k ! for loops
     integer :: nb_time
     integer :: error ! to retrieve error, especially during allocations
-    real(double_precision) :: tmp, tmp2(5) ! temporary value for various calculations
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of surface density at one location through dissipation'
     
