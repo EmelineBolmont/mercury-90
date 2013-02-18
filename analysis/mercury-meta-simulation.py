@@ -254,7 +254,7 @@ adiabatic_index = 1.4 # The adiabatic index of the disk
 
 viscosity = 1.e15 # cm^2/s
 
-opacity_type = bell # bell, chambers or zhu
+opacity_type = bell # bell, chambers, zhu or hure
 
 disk_edges = (0.1, 100.) # (the inner and outer edge of the disk in AU)
 ## The width of the region where the surface density decay to become 0 at the inner edge

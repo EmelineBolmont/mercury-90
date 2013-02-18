@@ -455,11 +455,14 @@ subroutine write_disk_properties()
     
     case('chambers') !
       write(10,'(a)') ' (Opacity table from (Chambers, 2009))'
+      
+    case('hure') !
+      write(10,'(a)') ' (Opacity table from (Hure, 2000))'
     
     case default
-      write(10,'(a)') '/!\ \nWarning: The opacity rule cannot be found.'
-      write(10,'(a,a)') '  Given value : ', trim(OPACITY_TYPE)
-      write(10,'(a)') '  Values possible : zhu ; bell ; chambers'
+      write(10,'(a)') ' /!\' 
+      write(10,'(a)') '  Warning: The opacity rule cannot be found.'
+      write(10,'(a)') '  Values possible : zhu ; bell ; chambers ; hure'
   end select
   write(10,*) ''
   write(10,'(a,l,a)') 'is turbulence = ', IS_TURBULENCE, ' (T:True;F:False)'
