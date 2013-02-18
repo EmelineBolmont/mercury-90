@@ -27,6 +27,7 @@ program test_disk
     ! For the moment, the function that are tested :
     ! _ get_F
     
+    use opacity_hure, only : test_opacity_interpolation
     
     implicit none
     
@@ -75,6 +76,7 @@ program test_disk
     call test_retrieval_of_orbital_elements(stellar_mass=stellar_mass)
 !     call test_turbulence_torque(stellar_mass=stellar_mass)
     call test_turbulence_mode()
+    call test_opacity_interpolation() ! subroutine inside the module opacity_hure.f90
 
     
     ! Physical values and plots
@@ -1203,9 +1205,9 @@ program test_disk
     real(double_precision), dimension(5) :: opacity, opacity_zhu, opacity_bell
     real(double_precision) :: temperature
     
-    real(double_precision), parameter :: T_min = 80.
-    real(double_precision), parameter :: T_max = 4.5d5
-    integer, parameter :: nb_points = 400
+    real(double_precision), parameter :: T_min = 10.
+    real(double_precision), parameter :: T_max = 10000.
+    integer, parameter :: nb_points = 1000
     real(double_precision), parameter :: T_step = (T_max/T_min) ** (1/(nb_points-1.d0))
     
     integer :: i,j ! for loops
