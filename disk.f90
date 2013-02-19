@@ -26,6 +26,7 @@ module disk
   use turbulence
   use disk_properties
   use iso_fortran_env, only : error_unit
+  use opacity_hure
 
   implicit none
   
@@ -454,11 +455,14 @@ subroutine write_disk_properties()
     
     case('chambers') !
       write(10,'(a)') ' (Opacity table from (Chambers, 2009))'
+      
+    case('hure') !
+      write(10,'(a)') ' (Opacity table from (Hure, 2000))'
     
     case default
-      write(10,'(a)') '/!\ \nWarning: The opacity rule cannot be found.'
-      write(10,'(a,a)') '  Given value : ', trim(OPACITY_TYPE)
-      write(10,'(a)') '  Values possible : zhu ; bell ; chambers'
+      write(10,'(a)') ' /!\' 
+      write(10,'(a)') '  Warning: The opacity rule cannot be found.'
+      write(10,'(a)') '  Values possible : zhu ; bell ; chambers ; hure'
   end select
   write(10,*) ''
   write(10,'(a,l,a)') 'is turbulence = ', IS_TURBULENCE, ' (T:True;F:False)'
@@ -887,10 +891,14 @@ subroutine init_globals(stellar_mass, time)
       
       case('chambers')
         get_opacity => get_opacity_chambers
+      
+      case('hure')
+        get_opacity => get_opacity_hure
+        call init_opacity_hure()
         
       case default
         write (error_unit,*) 'The opacity type="', OPACITY_TYPE,'" cannot be found.'
-        write(error_unit,*) 'Values possible : zhu ; bell ; chambers'
+        write(error_unit,*) 'Values possible : zhu ; bell ; chambers ; hure'
         write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
         call exit(8)
     end select
