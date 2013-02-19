@@ -465,14 +465,14 @@ subroutine write_disk_properties()
       write(10,'(a)') '  Values possible : zhu ; bell ; chambers ; hure'
   end select
   write(10,*) ''
-  write(10,'(a,l,a)') 'is turbulence = ', IS_TURBULENCE, ' (T:True;F:False)'
   if (IS_TURBULENCE) then
+    write(10,'(a)') 'is turbulence = True'
     write(10,'(a,es10.2e2,a)') '  turbulence_forcing = ', TURBULENT_FORCING, ' (adim)'
     write(10,'(a,i4)') '  total number of modes = ', nb_modes
     write(10,'(a,2(i3,a))') '  wavenumber in [', wavenumber_min, ';', wavenumber_max, ']'
     write(10,'(a,i2)') '  wavenumber cutoff = ', wavenumber_cutoff
   else
-    write(10,'(a)') '  No turbulence'
+    write(10,'(a)') 'is turbulence = False'
   end if
   write(10,*) ''
   write(10,'(a,f5.2,a)') 'The orbits will be resolved as low as ', distance_accuracy, ' AU'
@@ -486,11 +486,13 @@ subroutine write_disk_properties()
     write(10,'(a,f6.4,a)') 'inner smoothing width = ',INNER_SMOOTHING_WIDTH * INNER_BOUNDARY_RADIUS, ' (AU)'
   end if
   write(10,*) ''
-  write(10,'(a,l,a)') 'is irradiation = ', IS_IRRADIATION, ' (T:True;F:False)'
   if (IS_IRRADIATION) then
+    write(10,'(a)') 'is irradiation = True'
     write(10,'(a,f8.1,a)') 'Stellar surface temperature = ',T_STAR, ' K'
     write(10,'(a,es7.2e1,a)') 'Stellar radius = ',R_STAR, ' AU'
     write(10,'(a,f5.3)') 'Disk Albedo = ',DISK_ALBEDO
+  else
+     write(10,'(a)') 'is irradiation = False'
   end if
   write(10,*) ''
   write(10,'(a)') 'Possible values : &
@@ -925,7 +927,7 @@ subroutine init_globals(stellar_mass, time)
       allocate(temperature_profile(NB_SAMPLE_PROFILES))
       allocate(temp_profile_index(NB_SAMPLE_PROFILES))
     end if
-    temperature_profile(1:NB_SAMPLE_PROFILES) = 0.d0
+    temperature_profile(1:NB_SAMPLE_PROFILES) = 1.d0
     temp_profile_index(1:NB_SAMPLE_PROFILES) = 0.d0
     
     if (.not.allocated(chi_profile)) then
@@ -1675,8 +1677,8 @@ end subroutine initial_density_profile
   
   implicit none
   
-  real(double_precision), intent(in) :: time ! days
-  real(double_precision), intent(out) :: next_dissipation_step ! days
+  real(double_precision), intent(in) :: time ! The absolute time, in days, at which the dissipation is done
+  real(double_precision), intent(out) :: next_dissipation_step ! the next absolute time at which we must dissipate the disk (in days)
   
   ! Locals
   real(double_precision) :: sigma, sigma_index
@@ -2346,7 +2348,7 @@ if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. distance_sample(NB_SA
   
   ln_x1 = log(distance_sample(closest_low_id))
   ln_x2 = log(distance_sample(closest_low_id + 1))
-  ln_y1 = log(temperature_profile(closest_low_id))
+  ln_y1 = log(temperature_profile(closest_low_id)) ! This could be a problem when creating the temperature profil because we will have a log(0). But in application we do not use this value. This is just a part of a generic function that we do not use when there is a problem
   ln_y2 = log(temperature_profile(closest_low_id + 1))
 
   temperature = exp(ln_y2 + (ln_y1 - ln_y2) * (log(radius) - ln_x2) / (ln_x1 - ln_x2))
