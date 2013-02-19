@@ -496,30 +496,31 @@ subroutine write_disk_properties()
   end if
   write(10,*) ''
   write(10,'(a)') 'Possible values : &
-  0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile'
-  write(10,'(a,i1)') 'dissipation of the disk = ',DISSIPATION_TYPE
+  &0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile'
+  write(10,'(a,i1)', advance='no') 'dissipation of the disk = ',DISSIPATION_TYPE
   select case(DISSIPATION_TYPE)
     case(0) 
-      write(10,'(a)') '  0 : no dissipation of the density profile.'
+      write(10,'(a)') ' : no dissipation of the density profile.'
     
     case(1) 
-      write(10,'(a)') '  1 : viscous dissipation of the surface density profile'
+      write(10,'(a)') ' : viscous dissipation of the surface density profile'
       write(10,'(a)') "    Possible values : 'open', 'closed'"
       write(10,'(a, a)') '    inner boundary condition = ', trim(INNER_BOUNDARY_CONDITION)
       write(10,'(a, a)') '    outer boundary condition = ', trim(OUTER_BOUNDARY_CONDITION)
     
     case(2) 
-      write(10,'(a)') '  2 : Exponential decay of the surface density profile (no modification of the steepness though'
+      write(10,'(a)') ' : Exponential decay of the surface density profile (no modification of the steepness though'
       write(10,'(a,es10.1e2,a)') '    characteristic time for decay = ',TAU_DISSIPATION, 'years'
     
     case(3)
-      write(10,'(a)') '  3 : mixed dissipation, both viscously and with photoevaporation, with two timescales'
+      write(10,'(a)') ' : mixed dissipation, both viscously and with photoevaporation, with two timescales'
       write(10,'(a,es8.1e2,a)') '    characteristic time for viscous decay = ',TAU_VISCOUS, ' years'
       write(10,'(a,es8.1e2,a)') '    characteristic time for photoevaporation decay = ',TAU_PHOTOEVAP, ' years'
       write(10,'(a,es8.1e2,a)') '    switch time from viscous to photoevap = ', &
                                   DISSIPATION_TIME_SWITCH, ' years'
 
     case default
+      write(10,'(a)') ' /!\'
       write(10,'(a)') 'Warning: The dissipation type cannot be found.'
       write(10,'(a,a,a)') 'Given value : "', DISSIPATION_TYPE, '"'
       write(10,'(a)') 'Values possible : 0 ; 1 ; 2 ; 3'
@@ -536,26 +537,26 @@ subroutine write_disk_properties()
   write(10,'(a,f5.3)') 'cut off : eccentricity > ',ECCENTRICITY_CUTOFF
   write(10,*) ''
   write(10,'(a)') "Possible values : 'real', 'mass_independant', 'linear_indep', 'tanh_indep'"
-  write(10,'(a, a)') 'torque type = ', trim(TORQUE_TYPE)
+  write(10,'(a, a)', advance='no') 'torque type = ', trim(TORQUE_TYPE)
   select case(TORQUE_TYPE)
     case('real') ! The normal torque profile, calculated form properties of the disk
-      write(10,'(a)') '  real : The torque profile is computed from the formulae of (Paardekooper, 2011)'
+      write(10,'(a)') ' : The torque profile is computed from the formulae of (Paardekooper, 2011)'
     
     ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
     case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone
-      write(10,'(a)') '  linear_indep : manual torque profile with a mass independant convergence zone and a linear &
+      write(10,'(a)') ' : manual torque profile with a mass independant convergence zone and a linear &
                       &  decrease of the torque in function of the distance to the convergence zone'
       write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
       write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
     
     case('tanh_indep') ! a defined torque profile to get a mass independant convergence zone
-      write(10,'(a)') '  tanh_indep : Mass independant convergence zone with a torque profile that saturate far from the CZ'
+      write(10,'(a)') ' : Mass independant convergence zone with a torque profile that saturate far from the CZ'
       write(10,'(a,f6.1,a)') '    position of the convergence zone = ', INDEP_CZ, ' (AU)'
       write(10,'(a,f6.1,a)') '    Saturation torque value = ', SATURATION_TORQUE, ' (Gamma_0)'
 
     
     case('mass_dependant')
-      write(10,'(a)') '  mass_dependant : manual torque profile with a mass dependant convergence zone and a linear &
+      write(10,'(a)') ' : manual torque profile with a mass dependant convergence zone and a linear &
                       &  decrease of the torque in function of the distance to the convergence zone'
       write(10,'(a,f6.1,a)') '    steepness of the torque profile = ', TORQUE_PROFILE_STEEPNESS, ' (unit/10 AU)'
       write(10,'(a,f6.1,a)') '    minimum mass = ', MASS_DEP_M_MIN, ' (earth mass)'
@@ -564,10 +565,11 @@ subroutine write_disk_properties()
       write(10,'(a,f6.1,a)') '    CZ for maximum mass = ', MASS_DEP_CZ_M_MAX, ' (AU)'
     
     case('manual')
-      write(10,'(a)') '  manual : The torque profile, mass_independant, is read from a torque profile file that contains&
+      write(10,'(a)') ' : The torque profile, mass_independant, is read from a torque profile file that contains&
                       & distance and torque value (in Gamma_0) as two columns'
       
     case default
+      write(10,'(a)') ' /!\'
       write(10,'(a)') 'Warning: The torque rule cannot be found.'
       write(10,'(a,a)') '  Given value : ', trim(TORQUE_TYPE)
       write(10,'(a)') '  Values possible : real ; linear_indep ; tanh_indep ; manual'
