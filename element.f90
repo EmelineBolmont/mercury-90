@@ -334,7 +334,7 @@ program element
            if (temp.gt.0) then
               call mce_spin (1.d0,el(18,k)*K2,temp*K2,el(21,k)*rhocgs,el(20,k))
               temp = s(3) / temp
-              if (abs(temp).lt.1) then
+              if (abs(temp).lt.1.d0) then
                  is(k) = acos (temp)
                  ns(k) = atan2 (s(1), -s(2))
               else
@@ -453,7 +453,7 @@ program element
               temp = (el(8,k)*(1.d0 + el(2,k))/el(16,k) - 1.d0) /el(2,k)
               temp = sign (min(abs(temp), 1.d0), temp)
               el(17,k) = acos(temp)
-              if (sin(el(6,k)).lt.0) el(17,k) = TWOPI - el(17,k)
+              if (sin(el(6,k)).lt.0.d0) el(17,k) = TWOPI - el(17,k)
            end if
            ! Calculate obliquity
            el(19,k) = acos (cos(el(3,k))*cos(is(k))+ sin(el(3,k))*sin(is(k))*cos(ns(k) - el(5,k)))
