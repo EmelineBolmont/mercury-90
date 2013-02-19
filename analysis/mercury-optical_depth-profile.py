@@ -44,8 +44,8 @@ for ligne in tableau:
     ai = float(colonne[0])
     Ti = float(colonne[1])
     indexi = float(colonne[2])
-    tau_i = float(colonne[3])
-    chi_i = float(colonne[4])
+    chi_i = float(colonne[3])
+    tau_i = float(colonne[4])
   except:
     pass
   tau.append(tau_i) # optical depth
@@ -70,7 +70,7 @@ pl.figure(1)
 pl.clf()
 # On crée des sous plots. Pour subplot(231), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
 pl.subplot(211)
-pl.plot(a, tau)
+pl.semilogy(a, tau)
 
 pl.xlabel(unicode("a [UA]",'utf-8'))
 pl.ylabel(unicode("optical depth",'utf-8'))

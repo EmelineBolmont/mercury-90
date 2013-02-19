@@ -1890,6 +1890,8 @@ end subroutine initial_density_profile
   
   character(len=*), intent(in) :: filename
   
+  real(double_precision) :: num_to_phys_chi = DAY / AU**2
+  
   integer :: j ! for loops
   
   ! We open the file where we want to write the outputs
@@ -1898,7 +1900,7 @@ end subroutine initial_density_profile
               &; chi (thermal diffusivity) ;    tau (optical depth)'
 
   do j=1,NB_SAMPLE_PROFILES
-    write(10,*) distance_sample(j), temperature_profile(j), temp_profile_index(j), chi_profile(j), tau_profile(j)!, distance_sample(j), temperature_profile(j)
+    write(10,*) distance_sample(j), temperature_profile(j), temp_profile_index(j), chi_profile(j) * num_to_phys_chi, tau_profile(j)!, distance_sample(j), temperature_profile(j)
   end do
   
   close(10)
