@@ -22,7 +22,7 @@ problem_message = "Given in parameters is the name of the source code you want t
 " * help : display a little help message on HOW to use various options" + "\n" + \
 " * name : (default='%s')The filename of the sourcecode you want to compile" % filename + "\n" + \
 "Example :" + "\n" + \
-"maketest.py resultant_torque.f90"
+"maketest.py name=resultant_torque.f90"
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
