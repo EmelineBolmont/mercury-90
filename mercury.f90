@@ -228,7 +228,7 @@ program mercury
   
   ! If this is a new integration, integrate all the objects to a common epoch.
   if (opflag.eq.-2) then
-     open (23,file=outfile(3),status='old',access='append',iostat=error)
+     open (23,file=outfile(3),status='old',position='append',iostat=error)
      if (error /= 0) then
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
         stop
@@ -278,7 +278,7 @@ program mercury
        id,ngf,epoch,opflag)
   
   ! Calculate and record the overall change in energy and ang. momentum
-  open  (23, file=outfile(3), status='old', access='append',iostat=error)
+  open  (23, file=outfile(3), status='old', position='append',iostat=error)
   if (error /= 0) then
      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
      stop
@@ -438,7 +438,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   if (oldflag) then
      inquire (file=outfile(3), exist=test)
      if (.not.test) call mio_err (6,mem(81),lmem(81),mem(88),lmem(88),' ',1,outfile(3),80)
-     open(23,file=outfile(3),status='old',access='append',iostat=error)
+     open(23,file=outfile(3),status='old',position='append',iostat=error)
      if (error /= 0) then
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
         stop
@@ -955,14 +955,14 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
   ! Initialize variables. DTFLAG = 0 implies first ever call to ONESTEP
   dtout  = abs(dtout)
-  dtdump = abs(h0) * ndump
-  dtfun  = abs(h0) * nfun
+  dtdump = abs(h0) * dfloat(ndump)
+  dtfun  = abs(h0) * dfloat(nfun)
   dtflag = 0
   nstored = 0
   tsmall = h0 * 1.d-8
   h = h0
   do j = 2, nbod
-     ce(j) = 0.d0
+     ce(j) = 0
   end do
   
   ! Calculate close-encounter limits and physical radii for massive bodies
@@ -1189,8 +1189,8 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
   ! Initialize variables. DTFLAG = 0/2: first call ever/normal
   dtout  = abs(dtout)
-  dtdump = abs(h0) * ndump
-  dtfun  = abs(h0) * nfun
+  dtdump = abs(h0) * dfloat(ndump)
+  dtfun  = abs(h0) * dfloat(nfun)
   dtflag = 0
   nstored = 0
   hby2 = 0.500001d0 * abs(h0)
