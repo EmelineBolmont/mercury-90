@@ -10,11 +10,13 @@ import git_infos
 debug = False
 gdb = False
 profiling = False
+force = False # To force the compilation of every module
 
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
+" * force : To force the compilation of every module even those not modified" + "\n" + \
 " * debug : [%s] activate debug options" % debug + "\n" + \
 " * gdb : [%s] activate options for gdb" % gdb + "\n" + \
 " * profiling : [%s] activate options for profiling" % profiling + "\n" + \
@@ -29,6 +31,8 @@ for arg in sys.argv[1:]:
     key = arg
   if (key == 'debug'):
     debug = True
+  elif (key == 'force'):
+    force = True
   elif (key == 'gdb'):
     gdb = True
   elif (key == 'profiling'):
@@ -48,7 +52,8 @@ git_infos.write_infos_in_f90_file()
 isModifs = git_infos.is_non_committed_modifs()
 
 # We clean undesirable files. Indeed, we will compile everything everytime.
-clean(["o", "mod"])
+if force:
+  clean(["o", "mod"])
 
 #~ sourceFile.setCompilator("ifort")
 #~ sourceFile.setCompilingOptions("-check all")
