@@ -246,7 +246,7 @@ end if
 !                     Reference LINE 0 we
 !                     know has a change in sign
 
-open(10, file=filename, access='append')
+open(10, file=filename, position='append')
 write(10,*) x_start, y_start, lvl
 
 do while (.not.end_of_line)

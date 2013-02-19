@@ -111,8 +111,8 @@ program test_disk
     
     real(double_precision) :: p, f_p, g_p, k_p
     
-    real(double_precision), parameter :: p_min = 0.1
-    real(double_precision), parameter :: p_max = 100.
+    real(double_precision), parameter :: p_min = 0.1d0
+    real(double_precision), parameter :: p_max = 100.d0
     integer, parameter :: nb_points = 100
     real(double_precision), parameter :: p_step = (p_max/p_min) ** (1/(nb_points-1.d0))
     
@@ -164,8 +164,8 @@ program test_disk
     
     real(double_precision) :: temperature
     
-    real(double_precision), parameter :: T_min = 0.
-    real(double_precision), parameter :: T_max = 10000.
+    real(double_precision), parameter :: T_min = 0.1d0
+    real(double_precision), parameter :: T_max = 10000.d0
     integer, parameter :: nb_points = 2000
 !~     real(double_precision), parameter :: T_step = (T_max/T_min) ** (1/(nb_points-1.d0))
     real(double_precision), parameter :: T_step = (T_max - T_min) / (nb_points - 1.d0)
@@ -397,7 +397,7 @@ program test_disk
     write(10,*) 'set ylabel "torque [?]"'
       
     write(10,*) 'set grid'
-    write(10,*) 'set yrange [',minval(torque_profile)-1., ':', maxval(torque_profile)+1,']'
+    write(10,*) 'set yrange [',minval(torque_profile)-1.d0, ':', maxval(torque_profile)+1.d0,']'
 
     write(10,*) 'plot "torque_interpolation.dat" using 1:2 with lines linetype -1 title "Interpolated profile",\'
     write(10,*) '     "../torque_profile.dat" using 1:2 with points linetype 1 pointtype 2 linewidth 3 title "Read Profile"'
@@ -423,8 +423,8 @@ program test_disk
     real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2
     
     integer, parameter :: nb_points = 100
-    real(double_precision), parameter :: a_min = 0.01
-    real(double_precision), parameter :: a_max = 50.
+    real(double_precision), parameter :: a_min = 0.01d0
+    real(double_precision), parameter :: a_max = 50.d0
     
     ! step for log sampling
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points-1.d0)
@@ -529,14 +529,14 @@ program test_disk
     real(double_precision), intent(in) :: stellar_mass
     
     ! time sample
-    real(double_precision), parameter :: t_min = 0. ! time in years
+    real(double_precision), parameter :: t_min = 0.d0 ! time in years
     real(double_precision), parameter :: t_max = 1.d5 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer, parameter :: max_frames = 100 ! Parameter to have a control over the number of output frames. (I had near 80 000 once)
     integer :: nb_dissipation_per_step
     integer :: time_size ! the size of the array 'time'. 
     
-    real(double_precision), parameter :: a = 1.
+    real(double_precision), parameter :: a = 1.d0
     
     
     
@@ -549,16 +549,16 @@ program test_disk
     ! For the definition of the diffusion function
     real(double_precision) :: r_0 = 50.d0 ! position of the dirac function (in AU)
     integer :: r_0i ! integer that correspond to the closest 'a' value from r_0
-    real(double_precision), parameter :: t_0 = 0.016 ! the time at which the diffusion begin. Because we test a dirac function that 
+    real(double_precision), parameter :: t_0 = 0.016d0 ! the time at which the diffusion begin. Because we test a dirac function that 
                                                ! cannot be computed so we start after the beginning of the theoritical diffusion.
-    real(double_precision), parameter :: nu = 1.e-6 ! the viscosity for the dissipation test with a dirac in AU^2/day. (to compare with kley, 1999)
+    real(double_precision), parameter :: nu = 1.d-6 ! the viscosity for the dissipation test with a dirac in AU^2/day. (to compare with kley, 1999)
     real(double_precision) :: t_nu ! the viscous spreading time
     real(double_precision) :: sigma_prefactor ! the prefactor of the theoritical function for the spreading of the dirac function (taken from kley, 1999)
     real(double_precision) :: tau ! dimensionless time
     real(double_precision) :: x ! normalized radius
     real(double_precision) :: Ix, Kx, Ixp, Kxp ! the value of the I_1/4 modified bessel function (Kx, Ixp, Kxp are not used here be the subroutine return them anyway)
     
-    real(double_precision), dimension(5), parameter :: ref_tau = (/0.018, 0.044, 0.074, 0.120, 0.184/)
+    real(double_precision), dimension(5), parameter :: ref_tau = (/0.018d0, 0.044d0, 0.074d0, 0.120d0, 0.184d0/)
     
     integer :: i,k ! for loops
     integer :: nb_time ! The total number of 't' values. 
@@ -603,7 +603,7 @@ program test_disk
     open(10, file=filename_density_ref)
     write(10,*) '# radial length (no dim) ; profile for t=',ref_tau 
     do i=1,200
-      x = 0.01 * i
+      x = 0.01d0 * i
       
       do k=1,5
         tau = ref_tau(k)
@@ -654,7 +654,7 @@ program test_disk
     allocate(time(time_size), stat=error)
     time(1) = t_min * 365.25d0 ! days
     write(*,*) X_SAMPLE_STEP, get_viscosity(a)
-    dissipation_timestep = 0.9d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(a)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
+    dissipation_timestep = 0.9d0 * X_SAMPLE_STEP**2 / (4.d0 * get_viscosity(a)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
     ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
     nb_dissipation_per_step = int((t_max - t_min)* 365.25d0 / (max_frames * dissipation_timestep))
     
@@ -682,7 +682,9 @@ program test_disk
       
       ! we get the new dissipated surface density profile. For that goal, we dissipate as many times as needed to reach the required time for the next frame.
       do i=1,nb_dissipation_per_step
-        call dissipate_density_profile() ! global parameter 'dissipation_timestep' must exist !
+      
+        call dissipate_disk(time=time(k), next_dissipation_step=time(k+1)) ! global parameter 'dissipation_timestep' must exist !
+        
       end do
       
       ! we expand the 'time' array if the limit is reached
@@ -763,7 +765,7 @@ program test_disk
     real(double_precision), intent(in) :: stellar_mass
     
     ! time sample
-    real(double_precision), parameter :: t_min = 0. ! time in years
+    real(double_precision), parameter :: t_min = 0.d0 ! time in years
     real(double_precision), parameter :: t_max = 1.d7 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
@@ -904,7 +906,7 @@ program test_disk
   real(double_precision), dimension(nb_points) :: turbulence_torque ! in AU^2/DAY^2
   
   ! planet parameters
-  real(double_precision), parameter :: a = 6. ! in AU
+  real(double_precision), parameter :: a = 6.d0 ! in AU
   real(double_precision), parameter :: mass = 1. * K2 * EARTH_MASS ! in [Msun * K2]
   real(double_precision) :: delta_t = 365.25d0!365.25d0 * a**1.5d0 ! the timestep in days between two calculation of the turbulence torque. Must be greater than the coherence time of the turbulence to make the test of the turbulence usefull
 
@@ -959,7 +961,7 @@ program test_disk
   delta_bin = (bin_x_values(2) - bin_x_values(1))
   mean = get_mean(turbulence_torque(1:nb_points))
   stdev = get_stdev(turbulence_torque(1:nb_points))
-  y_max = 1. / (stdev * sqrt(TWOPI)) * delta_bin
+  y_max = 1.d0 / (stdev * sqrt(TWOPI)) * delta_bin
   do i=1,nb_bins
     gauss_fit(i) = y_max * exp(-(bin_x_values(i))**2 / (2. * stdev**2))
   end do
@@ -1185,8 +1187,8 @@ program test_disk
     real(double_precision), dimension(5) :: opacity, opacity_zhu, opacity_bell
     real(double_precision) :: temperature
     
-    real(double_precision), parameter :: T_min = 10.
-    real(double_precision), parameter :: T_max = 10000.
+    real(double_precision), parameter :: T_min = 10.d0
+    real(double_precision), parameter :: T_max = 10000.d0
     integer, parameter :: nb_points = 1000
     real(double_precision), parameter :: T_step = (T_max/T_min) ** (1/(nb_points-1.d0))
     
@@ -1272,11 +1274,11 @@ program test_disk
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     integer, parameter :: nb_mass = 100
-    real(double_precision), parameter :: mass_min = 1. ! in earth mass
-    real(double_precision), parameter :: mass_max = 75. ! in earth mass
+    real(double_precision), parameter :: mass_min = 1.d0 ! in earth mass
+    real(double_precision), parameter :: mass_max = 75.d0 ! in earth mass
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     
-    real(double_precision), parameter :: a = 5.2
+    real(double_precision), parameter :: a = 5.2d0
     
     real(double_precision) :: mass, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
@@ -1407,8 +1409,8 @@ program test_disk
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     integer, parameter :: nb_a = 400
-    real(double_precision), parameter :: a_min = 1 ! in AU
-    real(double_precision), parameter :: a_max = 9 ! in AU
+    real(double_precision), parameter :: a_min = 1d0 ! in AU
+    real(double_precision), parameter :: a_max = 9d0 ! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
     real(double_precision), parameter :: mass = 10. * EARTH_MASS * K2
@@ -1531,11 +1533,11 @@ program test_disk
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     integer, parameter :: nb_a = 400
-    real(double_precision), parameter :: a_min = 0.1 ! in AU
-    real(double_precision), parameter :: a_max = 15 ! in AU
+    real(double_precision), parameter :: a_min = 0.1d0 ! in AU
+    real(double_precision), parameter :: a_max = 15d0 ! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision), parameter :: mass = 10. * EARTH_MASS * K2
+    real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
@@ -1549,12 +1551,12 @@ program test_disk
     integer :: i,j ! for loops
     
     write(*,*) 'Evolution of the torque for a fixed planet mass "m"'
-    x_s = 1.
-    eccentricities(1) = 0.   ! in units of x_s 
-    eccentricities(2) = 0.25 ! in units of x_s 
-    eccentricities(3) = 0.5  ! in units of x_s
-    eccentricities(4) = 1.   ! in units of x_s
-    eccentricities(5) = 2.   ! in units of x_s
+    x_s = 1.d0
+    eccentricities(1) = 0.d0   ! in units of x_s 
+    eccentricities(2) = 0.25d0 ! in units of x_s 
+    eccentricities(3) = 0.5d0  ! in units of x_s
+    eccentricities(4) = 1.d0   ! in units of x_s
+    eccentricities(5) = 2.d0   ! in units of x_s
     
     do i=1, 5
       corot_damping(i) = get_corotation_damping(e=eccentricities(i), x_s=x_s)
@@ -1656,13 +1658,13 @@ program test_disk
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
     integer, parameter :: nb_e = 400
-    real(double_precision), parameter :: e_min = 1e-5 ! eccentricity
-    real(double_precision), parameter :: e_max = 1.-1.e-5 ! eccentricity
+    real(double_precision), parameter :: e_min = 1d-5 ! eccentricity
+    real(double_precision), parameter :: e_max = 1.d0-1.d-5 ! eccentricity
     real(double_precision), parameter :: e_step = (e_max / e_min)**(1 / (nb_e - 1.d0))
     
-    real(double_precision), parameter :: mass = 1. * EARTH_MASS * K2
-    real(double_precision), parameter :: a = 6. ! in AU
-    real(double_precision) :: I = 0. ! in radians
+    real(double_precision), parameter :: mass = 1.d0 * EARTH_MASS * K2
+    real(double_precision), parameter :: a = 6.d0 ! in AU
+    real(double_precision) :: I = 0.d0 ! in radians
     
     real(double_precision) :: corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
@@ -1782,7 +1784,7 @@ program test_disk
     
     !------------------------------------------------------------------------------
     a_min = INNER_BOUNDARY_RADIUS + INNER_SMOOTHING_WIDTH
-    a_max = 20.
+    a_max = 20.d0
     a_step = (a_max - a_min) / (nb_points-1.d0)
 !~     a_step = (a_max / a_min)**(1 / (nb_points - 1.d0))
     
@@ -1837,7 +1839,7 @@ program test_disk
 !~         call print_planet_properties(p_prop) 
 !~         stop
         ! If the semi major axis is not well determined, we display a warning and give the values
-        if (abs(a(i)-p_prop%semi_major_axis)/a(i).gt.1e-2) then
+        if (abs(a(i)-p_prop%semi_major_axis)/a(i).gt.1d-2) then
           write(*,*) 'Warning: for manual a=',a(i), 'we get :'
           call print_planet_properties(p_prop) 
         end if
@@ -1957,13 +1959,13 @@ program test_disk
   implicit none
     
     ! time sample
-    real(double_precision), parameter :: t_min = 0. ! time in years
+    real(double_precision), parameter :: t_min = 0.d0 ! time in years
     real(double_precision), parameter :: t_max = 1.d7 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     real(double_precision), dimension(:), allocatable :: density, density_temp ! surface density in MSUN/AU^2
     integer :: time_size ! the size of the array 'time'. 
     
-    real(double_precision) :: density_position = 2. ! in AU
+    real(double_precision) :: density_position = 2.d0 ! in AU
     real(double_precision) :: x_radius
     integer :: density_idx ! the closest index to get around 1 AU
     
@@ -2093,20 +2095,20 @@ program test_disk
     
     ! mass sample
     integer, parameter :: nb_mass = 150
-    real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 20. * EARTH_MASS
+    real(double_precision), parameter :: mass_min = 0.1d0 * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 20.d0 * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     real(double_precision), dimension(nb_mass) :: mass, mass_earth
     
     ! orbital distance sample
     integer, parameter :: nb_points = 100
-    real(double_precision), parameter :: a_min = 0.01
-    real(double_precision), parameter :: a_max = 5.
+    real(double_precision), parameter :: a_min = 0.01d0
+    real(double_precision), parameter :: a_max = 5.d0
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points - 1.d0)
     real(double_precision), dimension(nb_points) :: a
     
     ! time sample
-    real(double_precision), parameter :: t_min = 0. ! time in years
+    real(double_precision), parameter :: t_min = 0.d0 ! time in years
     real(double_precision), parameter :: t_max = 2.7d6 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
@@ -2158,11 +2160,11 @@ program test_disk
     call store_density_profile(filename=filename_density_ref)
     
 
-    temp_max = 1e4
-    temp_min = 1.
+    temp_max = 1d4
+    temp_min = 1.d0
     
     ! We want the extremum of the surface density during the dissipation of the disk in order to have nice plots
-    density_min = 0.
+    density_min = 0.d0
     density_max = maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * SIGMA_NUM2CGS
 
     
@@ -2265,7 +2267,7 @@ program test_disk
       
       if (k.eq.1) then
         torque_min = minval(total_torque)
-        torque_max = 7.5 ! maxval(total_torque)
+        torque_max = 7.5d0 ! maxval(total_torque)
       end if
       
       k = k + 1 ! We increment the integer that point the time in the array (since it's a 'while' and not a 'do' loop)

@@ -50,7 +50,7 @@ if force:
 
 sourceFile.setCompilator("gfortran")
 
-sourceFile.setCompilingOptions("-O0 -finit-real=nan")
+sourceFile.setCompilingOptions("")
 
 sources_filename = lister("*.f90")
 
