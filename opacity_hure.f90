@@ -313,8 +313,10 @@ contains
     
     ! We initialise the two width, for temperature and r, between each sample value
     ! /!\ these widths must be constant over the opacity table
-    dlog_t = hure_t(2) - hure_t(1)
-    dlog_r = hure_r(2) - hure_r(1)
+    ! dlog_t and dlog_r must be as accurate as possible to avoid problem for the last point because a 
+    ! thousand times a tiny difference can make a difference of 1 here, which in turn might become a bad index problem in the array
+    dlog_t = (hure_t(nb_t_points) - hure_t(1)) / dfloat(nb_t_points - 1)
+    dlog_r = (hure_r(nb_r_points) - hure_r(1)) / dfloat(nb_r_points - 1)
     
     
     
@@ -369,8 +371,11 @@ contains
   log_t = log10(temperature)
   log_r = log10(bulk_density) + 18.d0 - 3.d0 * log_t
   
+  ! dlog_t and dlog_r must be as accurate as possible to avoid problem for the last point because a 
+  ! thousand times a tiny difference can make a difference of 1 here, which in turn might become a bad index problem in the array
   id_t1 = 1 + int((log_t - hure_t(1)) / dlog_t)
   id_r1 = 1 + int((log_r - hure_r(1)) / dlog_r)
+  
   
   ! if exterior or equal to the boundaries, we consider the boundaries, without interpolation. 
   ! actually there will be an interpolation, but between equal values.
