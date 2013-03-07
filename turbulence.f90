@@ -16,7 +16,7 @@ module turbulence
     
   integer, parameter :: nb_modes = 50 ! The total number of mode existing at the same time and that represent the turbulence in the disk at any time.
   integer :: wavenumber_min = 1
-  integer :: wavenumber_max = 96
+  integer :: wavenumber_max = 150
   integer :: wavenumber_cutoff = 6 ! If the wavenumber if greater than this number, then we set the gravitational potential of this mode to 0, to gain computational time.
   
   ! We define a new type for the properties of the planet
