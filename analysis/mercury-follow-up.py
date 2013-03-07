@@ -122,7 +122,7 @@ else:
 # We get the execution time, if any (must be a job, and not a manual execution)
 ####################
 
-
+infoAll = [] # The array where to store display infos as strings (in tuple to allow sorting)
 for jobID in jobIDs:
   (ellapsed_time, cwd) = getJobInfos(jobID)
   
@@ -172,10 +172,21 @@ for jobID in jobIDs:
     
     
   # Print infos
-  print("jobID %d : %s" % (jobID, cwd))
-  print("  Integration time : %g / %g years (%.1f%%)" % (current_time, integration_time, percentage))
+  infos = "jobID %d\n" % jobID
+  infos += "    %s\n" % cwd
 
   if isVerbose:
-    print("  Number of bodies : Initial=%d ; Current=%d" % (init_nb_bodies, current_nb_bodies))
-    print("  Remaining time < %s" % remaining_time)
-    
+    infos += "    Integration time : %g / %g years (%.1f%%)\n" % (current_time, integration_time, percentage)
+    infos += "    Number of bodies : Initial=%d ; Current=%d\n" % (init_nb_bodies, current_nb_bodies)
+    infos += "    Remaining time < %s\n" % remaining_time
+  else:
+    infos += "    [end] %s (%.1f%%)\n" % (remaining_time, percentage)
+  
+  infoAll.append((remaining_time.temps, infos))
+
+# To display infos in some order
+infoAll.sort(reverse=True)
+
+for (ti, info) in infoAll:
+  print(info)
+  
