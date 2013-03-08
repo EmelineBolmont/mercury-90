@@ -62,7 +62,12 @@ problem_message = " This script will show information about a running simulation
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * all : to have info on all the running simulations"  + "\n" + \
-" * help : display a little help message on HOW to use various options" 
+" * verbose : to display more infos about the simulations (must be defined after 'all' option)"  + "\n" + \
+" * help : display a little help message on HOW to use various options"   + "\n" + \
+"\nExample:"  + "\n" + \
+"> mercury-follow-up.py"  + "\n" + \
+"> mercury-follow-up.py all"  + "\n" + \
+"> mercury-follow-up.py all verbose"
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
