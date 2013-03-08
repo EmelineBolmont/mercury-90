@@ -167,8 +167,7 @@ for jobID in jobIDs:
 
   percentage = current_time / integration_time * 100.
   
-
-  remaining_time = autiwa.Temps(ellapsed_time.temps / (percentage/100.))
+  remaining_time = autiwa.Temps(ellapsed_time.temps * (100. / percentage - 1.))
     
     
   # Print infos
