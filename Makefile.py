@@ -47,7 +47,7 @@ if isProblem:
   print(problem_message)
   exit()
 
-git_infos.write_infos_in_f90_file()
+git_infos.write_infos_in_f90_file(main_branch='migration')
 
 isModifs = git_infos.is_non_committed_modifs()
 
