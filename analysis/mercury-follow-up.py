@@ -12,6 +12,116 @@ import subprocess
 # Get the machine hostname
 #~ hostname = simulations_utilities.getHostname()
 
+class Temps(object):
+  """Classe qui dÃ©finit un temps. 
+  Ceci permet d'additionner deux objets temps, les afficher Ã  l'aide 
+  de print, et ainsi de les manipuler en toute transparence
+  
+  *values : (an, jour, heure, minute, seconde) liste de valeurs, 
+  au maxi 5, au mini 1. Si une seule valeur est donnÃ©e, elle sera prise
+   comme Ã©tant le nombre de seconde. Si 2 sont donnÃ©es, la premiÃ¨re 
+   sera le nombre de minutes et la 2e le nombre de secondes, et ainsi 
+   de suite au fur et Ã  mesure que les nombres de valeurs augmentent.
+  """
+  
+  NB_DIGITS = 2
+  
+  # Valeur en seconde de diffÃ©rentes durÃ©es
+  MINUTE = 60
+  HEURE = 60 * MINUTE
+  JOUR = 24 * HEURE
+  AN = 365.25 * JOUR
+  
+  def __init__(self, *values):
+    nb_values = len(values)
+    values = list(values) # On converti le tuple pour pouvoir ajouter des valeurs
+    if (nb_values > 5):
+      raise ValueError("The number of parameters must be of 5 maximum")
+    for i in range(5-nb_values):
+      values.insert(0,0)
+    
+    self.temps = float(values[0] * Temps.AN + values[1] * Temps.JOUR + values[2] * Temps.HEURE + values[3] * Temps.MINUTE + values[4])
+    self.__update()
+  
+  def __update(self):
+    """mÃ©thode privÃ©e qui met Ã  jour toutes les variables internes
+    
+    met Ã  jour self.nb_an, self.nb_jour, self.nb_heure, self.nb_minute et self.nb_seconde
+    """
+    reste = self.temps
+  
+    self.nb_an = int(reste / Temps.AN)
+    reste -= self.nb_an * Temps.AN
+    
+    self.nb_jour = int(reste / Temps.JOUR)
+    reste -= self.nb_jour * Temps.JOUR
+    
+    self.nb_heure = int(reste / Temps.HEURE)
+    reste = reste - self.nb_heure * Temps.HEURE
+    
+    self.nb_minute = int(reste / Temps.MINUTE)
+    reste = reste - self.nb_minute * Temps.MINUTE
+    
+    self.nb_seconde = round(reste, Temps.NB_DIGITS)
+  
+  def __str__(self):
+    """Permet, via print, d'afficher le temps
+    """
+    # On prÃ©pare la chaÃ®ne de caractÃ¨re
+    str_temps = ''
+    if (self.nb_an == 1):
+      str_temps += str(self.nb_an)+"an "
+    elif (self.nb_an > 1):
+      str_temps += str(self.nb_an)+"ans "
+      
+    if (self.nb_jour == 1):
+      str_temps += str(self.nb_jour)+"jour "
+    elif (self.nb_jour > 1):
+      str_temps += str(self.nb_jour)+"jours "
+      
+    if (self.nb_heure != 0):
+      str_temps += str(self.nb_heure)+"h "
+      
+    if (self.nb_minute != 0):
+      str_temps += str(self.nb_minute)+"min "
+      
+    str_temps += str(self.nb_seconde)+"s"
+    return str_temps
+  
+  def __add__(self, other):
+    """Surcharge de +"""
+    return Temps(self.temps + other.temps)
+  
+  def __sub__(self, other):
+    """Surcharge de -"""
+    return Temps(self.temps - other.temps)
+  
+  def __eq__(self, other):
+    """surcharge de =="""
+    if (self.temps == other.temps):
+      return True
+    else:
+      return False
+  
+  def __ne__(self, other):
+    """surcharge de !="""
+    return not(self.__eq__(other))
+    
+def lancer_commande(commande):
+  """lance une commande qui sera typiquement soit une liste, soit une 
+  commande seule. La fonction renvoit un tuple avec la sortie, 
+  l'erreur et le code de retour"""
+  if (type(commande)==list):
+    process = subprocess.Popen(commande, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  elif (type(commande)==str):
+    process = subprocess.Popen(commande, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+  else:
+    raise TypeError("The command is neither a string nor a list.")
+  (process_stdout, process_stderr) = process.communicate()
+  returncode = process.poll()
+  # there is .poll() or .wait() but I don't remember the difference. For some kind of things, one of the two was not working
+  return (process_stdout, process_stderr, returncode)
+
 def getJobInfos(jobID):
   """
   With the jobID (only integers) in parameter, will return in a tuple : 
@@ -22,7 +132,7 @@ def getJobInfos(jobID):
   
   """
   
-  (process_stdout, process_stderr, return_code) = autiwa.lancer_commande("qstat -j %d" % jobID)
+  (process_stdout, process_stderr, return_code) = lancer_commande("qstat -j %d" % jobID)
   
   remaining_time = "???"
 
@@ -31,7 +141,7 @@ def getJobInfos(jobID):
   length = process_stdout[index:].index(',')
   cpu_info = process_stdout[index+4:index+length]
   
-  ellapsed_time = autiwa.Temps(*map(float,cpu_info.split(":")))
+  ellapsed_time = Temps(*map(float,cpu_info.split(":")))
   
   
   index = process_stdout.index("cwd:")
@@ -93,7 +203,7 @@ if isProblem:
 if isAll:
   logname = os.getlogin()
   
-  (stdout, stderr, returnCode) = autiwa.lancer_commande('qstat -u %s' % logname)
+  (stdout, stderr, returnCode) = lancer_commande('qstat -u %s' % logname)
   if (returnCode == 0):
     lines = stdout.split("\n")
   
@@ -102,10 +212,10 @@ if isAll:
     del(lines[0])
   lines.remove('')
     
-  #~ pdb.set_trace()
+  
   jobIDs = [int(line.split()[0]) for line in lines]
 else:
-  (process_stdout, process_stderr, return_code) = autiwa.lancer_commande("ls simulation.sh.o*")
+  (process_stdout, process_stderr, return_code) = lancer_commande("ls *.o[0-9]*")
   if (return_code != 0):
     print("the command return an error "+str(return_code))
     print(process_stderr)
@@ -117,7 +227,7 @@ else:
 
   current_job = list_jobs[-1]
 
-  jobID = int(current_job.split("simulation.sh.o")[1])
+  jobID = int(current_job.split(".o")[1])
   jobIDs = [jobID]
 
 
@@ -133,8 +243,28 @@ for jobID in jobIDs:
   
   os.chdir(cwd)
   
+  # In case it exists several old jobs for the same simulation :
+  (process_stdout, process_stderr, return_code) = lancer_commande("ls *.o[0-9]*")
+  if (return_code != 0):
+    print("the command return an error "+str(return_code))
+    print(process_stderr)
+    exit()
+    
+  list_jobs = process_stdout.split("\n")
+  list_jobs.remove('') # we remove an extra element that doesn't mean anything
+  list_jobs.sort()
+  
+  if (len(list_jobs) > 1):
+    ellapsed_time = Temps(0)
+    for job in list_jobs:
+      current_ID = int(job.split(".o")[1])
+      (tmp_time, dummy) = getJobInfos(jobID)
+      ellapsed_time = ellapsed_time + tmp_time
+  
+  # NORMAL CALCULATION
+  
   # We count the initial number of bodies
-  (stdout, stderr, returnCode) = autiwa.lancer_commande('grep "m=" big.in|wc -l')
+  (stdout, stderr, returnCode) = lancer_commande('grep "m=" big.in|wc -l')
   if (returnCode == 0):
     init_nb_bodies = int(stdout)
     #~ init_nb_bodies.remove('') # we remove an extra element that doesn't mean anything
@@ -142,7 +272,7 @@ for jobID in jobIDs:
     init_nb_bodies = 0
 
   # We check which folders contain NaN
-  (stdout, stderr, returnCode) = autiwa.lancer_commande('grep "m=" big.dmp|wc -l')
+  (stdout, stderr, returnCode) = lancer_commande('grep "m=" big.dmp|wc -l')
   if (returnCode == 0):
     current_nb_bodies = int(stdout)
     #~ init_nb_bodies.remove('') # we remove an extra element that doesn't mean anything
@@ -172,7 +302,7 @@ for jobID in jobIDs:
 
   percentage = current_time / integration_time * 100.
   
-  remaining_time = autiwa.Temps(ellapsed_time.temps * (100. / percentage - 1.))
+  remaining_time = Temps(ellapsed_time.temps * (100. / percentage - 1.))
     
     
   # Print infos
