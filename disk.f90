@@ -1580,7 +1580,7 @@ end subroutine initial_density_profile
     type(PlanetProperties) :: p_prop
 
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
-    real(double_precision) :: a_old, temperature_old, tmp
+    real(double_precision) :: a_old, temperature_old, tmp, opacity, rho
     real(double_precision) :: scaleheight_old ! The scaleheight of the previous point
     
     integer :: i,j ! for loops
@@ -1631,8 +1631,12 @@ end subroutine initial_density_profile
                                 (log(distance_sample(j)) - log(distance_sample(j+1)))
       end if
       
-      chi_profile(j) = 0.75d0 * p_prop%nu * ADIABATIC_INDEX * (ADIABATIC_INDEX - 1.d0) * &
-                      (1.5d0 + sqrt(3.d0) / tau_profile(j) + 1 / tau_profile(j)**2)
+      scaleheight_old = get_scaleheight(temperature=temperature, angular_speed=p_prop%omega)
+      rho = 0.5d0 * surface_density_profile(j) / scaleheight_old
+      opacity = get_opacity(temperature, rho)
+      
+      chi_profile(j) = (64.d0 / 3.d0) * ADIABATIC_INDEX * (ADIABATIC_INDEX - 1.d0) * SIGMA_STEFAN * temperature_profile(j)**4.d0 / &
+                       (opacity * surface_density_profile(j)**2 * p_prop%omega**2)
       
       
     end do
