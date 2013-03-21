@@ -142,7 +142,7 @@ module disk_properties
   
   abstract interface 
   subroutine function_temperature_interface(temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
-                                          prefactor, funcv, optical_depth)
+                                            funcv, optical_depth)
     import
     
   ! Output
@@ -156,7 +156,6 @@ module disk_properties
   real(double_precision), intent(in) :: omega ! the angular velocity of the disk at a given position
   real(double_precision), intent(in) :: scaleheight_old ! aspect ratio of the previous point
   real(double_precision), intent(in) :: distance_old ! orbital distance of the previous point [AU]
-  real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 32.d0)
   end subroutine function_temperature_interface
   end interface
   
