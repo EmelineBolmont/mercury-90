@@ -74,7 +74,9 @@ radius_star = 0.005 # The radius of the central star in AU
 surface_density = (1700, 0.5) # (g/cm^2, power law index)
 density_file = 'surface_density_profile.dat'
 adiabatic_index = 1.4 # the adiabatic index of the disk
+viscosity_type = 'constant'
 viscosity = 1.e15 # cm^2/s
+alpha = None
 opacity_type = 'bell' # 'bell' or 'zhu' opacity table
 b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
 sample = 400
@@ -252,7 +254,10 @@ surface_density = (500, 0.5) # g/cm^2 (sigma_0, alpha) help to define a power la
 
 adiabatic_index = 1.4 # The adiabatic index of the disk
 
+viscosity_type = constant # constant, alpha
 viscosity = 1.e15 # cm^2/s
+# alpha = 1.e-2 # adim
+
 
 opacity_type = bell # bell, chambers, zhu or hure
 
@@ -316,7 +321,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
   global NB_SIMULATIONS, WALLTIME, isErase
   global integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
   global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
-  global surface_density, adiabatic_index, viscosity, b_h, torque_type, disk_edges, inner_smoothing_width
+  global surface_density, adiabatic_index, viscosity_type, viscosity, alpha, b_h, torque_type, disk_edges, inner_smoothing_width
   global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, opacity_type
   global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
   global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
@@ -398,8 +403,12 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
         inner_smoothing_width = float(value)
       elif (key == "adiabatic_index"):
         adiabatic_index = float(value)
+      elif (key == "viscosity_type"):
+        viscosity_type = simulations_utilities.str2str(value)
       elif (key == "viscosity"):
         viscosity = float(value)
+      elif (key == "alpha"):
+        alpha = float(value)
       elif (key == "opacity_type"):
         opacity_type = simulations_utilities.str2str(value)
       elif (key == "is_turbulence"):
@@ -493,7 +502,11 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
   PARAMETERS += "disk_edges = "+str(disk_edges)+" AU\n"
   PARAMETERS += "inner_smoothing_width = "+str(inner_smoothing_width)+" AU\n"
   PARAMETERS += "adiabatic_index = "+str(adiabatic_index)+"\n"
-  PARAMETERS += "viscosity = "+str(viscosity)+" cm^2/s\n"
+  PARAMETERS += "viscosity_type = "+str(viscosity_type)+"\n"
+  if (viscosity_type == 'constant'):
+    PARAMETERS += "viscosity = "+str(viscosity)+" cm^2/s\n"
+  if (viscosity_type == 'alpha'):
+    PARAMETERS += "alpha = "+str(alpha)+"\n"
   PARAMETERS += "is_turbulence = "+str(is_turbulence)+"\n"
   PARAMETERS += "turbulent_forcing = "+str(turbulent_forcing)+"\n"
   PARAMETERS += "b/h = "+str(b_h)+"\n"
@@ -675,7 +688,8 @@ def generation_simulation_parameters():
   if (user_force == "yes"):
     diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
                   is_irradiation=is_irradiation,
-                  disk_edges=disk_edges, viscosity=viscosity, opacity_type=opacity_type, sample=sample, dissipation_type=dissipation_type, 
+                  disk_edges=disk_edges, viscosity_type=viscosity_type, viscosity=viscosity, alpha=alpha, opacity_type=opacity_type, 
+                  sample=sample, dissipation_type=dissipation_type, 
                   is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing, inner_smoothing_width=inner_smoothing_width,
                   tau_viscous=tau_viscous, tau_photoevap=tau_photoevap, dissipation_time_switch=dissipation_time_switch, 
                   disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
