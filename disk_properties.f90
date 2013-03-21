@@ -64,8 +64,12 @@ module disk_properties
   ! If 'manual' is chosen, the code will read the file 'torque_profile.dat' that must exist and the first column must be semi major axis in AU, and the second one is the torque (in units of \Gamma_0 for the moment)
   character(len=80) :: TORQUE_TYPE = 'real' 
   character(len=80) :: OPACITY_TYPE = 'bell' 
+  
   ! Here we define the constant value of the viscosity of the disk
-  real(double_precision) :: viscosity = 1.d15 ! viscosity of the disk [cm^2/s] (must not be used directly into the code, use get_viscosity(radius) instead)
+  character(len=80) :: VISCOSITY_TYPE = 'constant' ! 'constant' or 'alpha'
+  real(double_precision) :: VISCOSITY = 1.d15 ! viscosity of the disk [cm^2/s] (must not be used directly into the code, use get_viscosity(radius) instead)
+  real(double_precision) :: ALPHA = 1.d-3 ! in case of alpha prescription, the alpha of the disk.
+  !------------------------------------------------------------------------------
   logical :: IS_TURBULENCE = .False. ! if there is turbulence or not inside the disk
   real(double_precision) :: TURBULENT_FORCING = 0.d0 ! the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
   ! the value of the turbulent forcing gamma is related to the alpha parameter of the viscosity prescription by : alpha = 120 (gamma / h)^2 where h is the aspect ratio
@@ -178,17 +182,18 @@ module disk_properties
   end interface
   
   abstract interface 
-  function get_viscosity_interface(radius)
+  function get_viscosity_interface(omega, scaleheight)
   ! subroutine that return the opacity of the disk at the location of the planet given various parameters
     import
     
     implicit none
     
     ! Inputs 
-    real(double_precision), intent(in) :: radius ! distance in AU
+    real(double_precision), intent(in) :: omega ! The angular speed in DAY-1
+    real(double_precision), intent(in) :: scaleheight ! the scaleheight of the disk in AU
   
     ! Outputs
-    real(double_precision) :: get_viscosity_interface
+    real(double_precision) :: get_viscosity_interface ! in [AU^2.day-1]
   
   end function get_viscosity_interface
   end interface

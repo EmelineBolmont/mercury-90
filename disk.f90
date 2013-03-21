@@ -213,8 +213,14 @@ subroutine read_disk_properties()
         case('sample')
           read(value, *) NB_SAMPLE_PROFILES
           
-        case('viscosity')
+        case('viscosity_type')
+          read(value, *) VISCOSITY_TYPE
+        
+        case('viscosity') ! if viscosity type is 1, then constant viscosity value
           read(value, *) viscosity
+        
+        case('alpha') ! if viscosity type is 2, then the alpha value for the alpha-prescription
+          read(value, *) ALPHA
           
         case('dissipation_type')
           read(value, *) DISSIPATION_TYPE
@@ -443,13 +449,27 @@ subroutine write_disk_properties()
   write(10,'(a,f4.2)') 'b/h = ',B_OVER_H
   write(10,'(a,f4.2)') 'adiabatic index = ', ADIABATIC_INDEX
   write(10,'(a,f4.2)') 'mean molecular weight = ', MEAN_MOLECULAR_WEIGHT
-  write(10,'(a,es10.1e2,a)') 'viscosity = ', viscosity, ' (cm^2/s)'
+  write(10,'(a, a)', advance='no') 'viscosity type = ', trim(VISCOSITY_TYPE)
+  select case(VISCOSITY_TYPE)
+    case('constant')
+      write(10,'(a)') ' (Constant viscosity)'
+      write(10,'(a,es10.1e2,a)') '  viscosity = ', viscosity, ' (cm^2/s)'
+    
+    case('alpha')
+      write(10,'(a)') ' (Alpha-prescription, with constant alpha)'
+      write(10,'(a,es10.1e2,a)') '  alpha = ', alpha
+    
+    case default
+      write(10,'(a)') ' /!\' 
+      write(10,'(a)') '  Warning: The viscosity rule cannot be found.'
+      write(10,'(a)') '  Values possible : constant ; alpha'
+  end select
+  
   write(10,'(a, a)', advance='no') 'opacity type = ', trim(OPACITY_TYPE)
   select case(OPACITY_TYPE)
     case('bell')
       write(10,'(a)') ' (Opacity table from (Bell & Lin, 1994))'
     
-    ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
     case('zhu')
       write(10,'(a)') ' (Opacity table from (Zhu & Hartmann, 2009))'
     
@@ -642,7 +662,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 
   !------------------------------------------------------------------------------
 !~   p_prop%nu = alpha * p_prop%omega * p_prop%scaleheight**2 ! [AU^2.day-1]
-  p_prop%nu = get_viscosity(p_prop%semi_major_axis)
+  p_prop%nu = get_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight)! [AU^2.day-1]
 
   p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
@@ -886,11 +906,10 @@ subroutine init_globals(stellar_mass, time)
     end if
     
     select case(OPACITY_TYPE)
-      case('bell') ! The normal torque profile, calculated form properties of the disk
+      case('bell')
         get_opacity => get_opacity_bell_lin_1994
       
-      ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
-      case('zhu') ! a defined torque profile to get a mass independant convergence zone
+      case('zhu')
         get_opacity => get_opacity_zhu_2009
       
       case('chambers')
@@ -907,8 +926,19 @@ subroutine init_globals(stellar_mass, time)
         call exit(8)
     end select
     
-    ! TODO change to allow various selection of viscosity prescription. For now, only constant
-    get_viscosity => get_constant_viscosity
+    select case(VISCOSITY_TYPE)
+      case('constant') ! constant viscosity over the whole disk
+        get_viscosity => get_constant_viscosity
+      
+      case('alpha') ! alpha prescription for viscosity, with constant alpha over the disk
+        get_viscosity => get_alpha_viscosity
+        
+      case default
+        write (error_unit,*) 'The viscosity type="', VISCOSITY_TYPE,'" cannot be found.'
+        write(error_unit,*) 'Values possible : constant ; alpha'
+        write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
+        call exit(8)
+    end select
     
     if (.not.allocated(distance_sample)) then
       allocate(distance_sample(NB_SAMPLE_PROFILES))
@@ -1323,7 +1353,7 @@ end subroutine initial_density_profile
     end if
   end subroutine get_surface_density
   
-  function get_constant_viscosity(radius)
+  function get_constant_viscosity(omega, scaleheight)
   ! function that return the viscosity of the disk in [AU^2.day^-1]
   
   ! Parameters
@@ -1336,12 +1366,36 @@ end subroutine initial_density_profile
   
   real(double_precision) :: get_constant_viscosity ! the viscosity of the disk in [AU^2.day^-1]
   
-  real(double_precision), intent(in) :: radius ! the distance from the central object in AU
+  real(double_precision), intent(in) :: omega ! The angular speed in DAY-1
+  real(double_precision), intent(in) :: scaleheight ! the scaleheight of the disk in AU
+  
+  real(double_precision), parameter :: phys2num = DAY / AU**2 ! Factor to convert CGS viscosity to numerical viscosity
   !------------------------------------------------------------------------------
-  get_constant_viscosity = viscosity * DAY / AU**2
+  get_constant_viscosity = viscosity * phys2num
   ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
   
   end function get_constant_viscosity
+  
+  function get_alpha_viscosity(omega, scaleheight)
+  ! function that return the viscosity of the disk in [AU^2.day^-1]
+  
+  ! Parameters
+  ! radius : The orbital distance in AU
+  
+  ! Global parameters
+  ! viscosity : the viscosity of the disk in [cm^2/s]
+  
+  implicit none
+  
+  real(double_precision) :: get_alpha_viscosity ! the viscosity of the disk in [AU^2.day^-1]
+  
+  real(double_precision), intent(in) :: omega ! The angular speed in DAY-1
+  real(double_precision), intent(in) :: scaleheight ! the scaleheight of the disk in AU
+  
+  !------------------------------------------------------------------------------
+  get_alpha_viscosity = ALPHA * omega * scaleheight**2
+  
+  end function get_alpha_viscosity
   
   subroutine init_turbulence_forcing()
   ! function that return the viscosity of the disk in [AU^2.day^-1]
@@ -1382,7 +1436,7 @@ end subroutine initial_density_profile
   call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
    p_prop=p_prop) ! Output
   
-  TURBULENT_FORCING = sqrt(get_viscosity(radius) / (140. * p_prop%omega)) / radius
+  TURBULENT_FORCING = sqrt(get_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight) / (140. * p_prop%omega)) / radius
   
 !~   write(*,'(a,es10.3e2)') 'turbulence forcing = ', TURBULENT_FORCING
 !~   stop
@@ -1694,12 +1748,6 @@ end subroutine initial_density_profile
   !------------------------------------------------------------------------------
   
   select case(DISSIPATION_TYPE)
-    case(1) ! viscous dissipation
-      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4.d0 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
-      ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
-      next_dissipation_step = time + dissipation_timestep
-      call viscously_dissipate_density_profile(dissipation_timestep)
-    
     case(2) ! exponential decay
       ! we want 1% variation : timestep = - tau * ln(0.99)
       dissipation_timestep = 0.01 * TAU_DISSIPATION * 365.25d0
@@ -1719,7 +1767,7 @@ end subroutine initial_density_profile
       call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
     case default
         write (error_unit,*) 'The dissipation_type="', DISSIPATION_TYPE,'" cannot be found.'
-        write (error_unit,*) 'Values possible : 0 for no dissipation ; 1 for viscous dissipation ; 2 for exponential decay ; &
+        write (error_unit,*) 'Values possible : 0 for no dissipation ; 2 for exponential decay ; &
              &3 for mixed exponentiel decay'
         write(error_unit,'(a)') 'Error in user_module, subroutine dissipate_disk'
         call exit(3)
@@ -1733,154 +1781,6 @@ end subroutine initial_density_profile
   end if
   
   end subroutine dissipate_disk
-  
-  subroutine viscously_dissipate_density_profile(dissipation_timestep)
-! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
-! 
-! Global Parameters 
-! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-! dissipation_timestep : the timestep between two computation of the disk [in days]
-! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
-! x_sample : values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
-! surface_density_profile : values of the density in MSUN/AU^2 for each value of the 'a' sample
-! surface_density_index : values of the local negative slope of the surface density profile
-!
-! Goal
-! This routine will update the surface_density_index and surface_density_profile for the next timestep dissipation_timestep of the disk
-
-    use mercury_constant
-
-    implicit none
-
-    real(double_precision), intent(in) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
-
-    ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
-    real(double_precision) :: a_im12, a_ip12 ! ip12 == (i+1/2) ; im12 == (i-1/2)
-    real(double_precision) :: f_i, f_ip1 ! ip1 == (i+1) ; im1 == (i-1)
-    real(double_precision) :: flux_im12, flux_ip12 ! ip12 == (i+1/2) ; im12 == (i-1/2)
-    integer :: i ! for loops
-    real(double_precision) :: tmp ! for temporary values
-    
-    ! The dissipation_timestep is a global variable that is the timestep between two calculation of the surface density profile 
-    ! This value is calculated in mfo_user, in the 'if' loop where the re-calculation is done. This value is needed here in the 
-    ! part that dissipate the disk, but is not needed for the first run of this routine.
-    
-    ! for i=1
-    ! surface_density_index(1) is to be defined later, using surface_density_index(2)
-    
-    ! We prepare values for the first step of the loop 
-    ! (i.e i=1 because we simulate the ghost step of the loop to be able to shift the temp values)
-    a_ip12 = 0.125d0 * (x_sample(1) * x_sample(1) + x_sample(2) * x_sample(2))
-    
-    f_i   = 1.5d0 * x_sample(1) * surface_density_profile(1)
-    f_ip1 = 1.5d0 * x_sample(2) * surface_density_profile(2)
-    
-    flux_ip12 = 3.d0 * get_viscosity(a_ip12) / a_ip12 * (f_ip1 - f_i) / X_SAMPLE_STEP
-    
-    ! CONDITION AT THE INNER EDGE
-    select case(INNER_BOUNDARY_CONDITION)
-      case('closed') 
-!~       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
-!~         flux_ip12 = 0.d0
-        ! If closed condition, the surface density at the boundary 'surface_density_profile(1)' doesn't change. So we do not compute anything.
-        tmp = (f_i + dissipation_timestep * flux_ip12 / X_SAMPLE_STEP) 
-      
-        surface_density_profile(1) = tmp / (1.5d0 * x_sample(1)) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
-      case('open') 
-      ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
-      ! condition. Density is free to dissipate outside the grid.
-        surface_density_profile(1) = 0.d0 ! in log, '0' is not defined, so we put a huge negative value to get close to 0
-        f_i = 0.d0 ! We impose the condition sigma=0 so in practice it should be equal to 0
-      case default
-        write(*,*) 'Warning: An unknown inner boundary condition has been found'
-        write(*,*) "inner_boundary_condition=", trim(INNER_BOUNDARY_CONDITION)
-    end select
-    
-    ! We store the previous values in order to avoid the use of an array. 
-    ! This way, it should more efficient, because we don't have to create several arrays with thousands of elements
-    do i=2,NB_SAMPLE_PROFILES-2
-      
-      ! We shift the indexes by 1
-      a_ip12 = 0.125d0 * (x_sample(i) * x_sample(i) + x_sample(i+1) * x_sample(i+1))
-      
-      f_i = f_ip1
-      f_ip1 = 1.5d0 * x_sample(i+1) * surface_density_profile(i+1)
-      
-      flux_im12 = flux_ip12
-      flux_ip12 = 3.d0 * get_viscosity(a_ip12) / a_ip12 * (f_ip1 - f_i) / X_SAMPLE_STEP
-      
-      tmp = (f_i + dissipation_timestep * (flux_ip12 - flux_im12) / X_SAMPLE_STEP)
-      
-      if (tmp.lt.0.) then
-        write(error_unit,*) 'ERROR: tmp and thus the surface density is negative!!!!'
-        write(error_unit,*) a_ip12, f_i, f_ip1, flux_im12, flux_ip12
-        call exit(4)
-      end if
-      
-      surface_density_profile(i) = tmp / (1.5d0 * x_sample(i)) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
-      surface_density_index(i) = - (log(surface_density_profile(i)) - log(surface_density_profile(i-1))) &
-                                    / (log(distance_sample(i)) - log(distance_sample(i-1)))
-            
-    end do
-    !------------------------------------------------------------------------------
-    i=NB_SAMPLE_PROFILES-1
-    ! We shift the indexes by 1
-    f_i = f_ip1
-    
-    flux_im12 = flux_ip12
-    
-    a_ip12 = 0.125d0 * (x_sample(i) * x_sample(i) + x_sample(i+1) * x_sample(i+1))
-
-    f_ip1 = 1.5d0 * x_sample(i+1) * surface_density_profile(i+1)
-
-    flux_ip12 = 3.d0 * get_viscosity(a_ip12) / a_ip12 * (f_ip1 - f_i) / X_SAMPLE_STEP
-        
-    ! The boundary condition is computed here because some values are needed by "i=NB_SAMPLE_PROFILES-1 surface density value".
-    select case(OUTER_BOUNDARY_CONDITION)
-      case('closed') 
-      ! here i=NB_SAMPLE_PROFILES-2
-!~       ! correspond to the case where the velocity at the inner edge is forced to be zero. This is equivalent to a 0-flux condition
-!~         flux_ip12 = 0.d0
-        ! If closed condition, the surface density at the boundary 'surface_density_profile(1)' doesn't change. So we do not compute anything.
-        tmp = (f_i - dissipation_timestep * flux_im12 / X_SAMPLE_STEP)
-      
-        surface_density_profile(NB_SAMPLE_PROFILES) = tmp / (1.5d0 * x_sample(NB_SAMPLE_PROFILES)) ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
-      case('open') 
-      ! correspond to the case where the surface density is forced to be zero. This is equivalent to an accretion 
-      ! condition. Density is free to dissipate outside the grid.
-        surface_density_profile(NB_SAMPLE_PROFILES) = 0.d0 ! in log, '0' is not defined, so we put a huge negative value to get close to 0
-        
-      case default
-        write(*,*) 'Warning: An unknown outer boundary condition has been found'
-        write(*,*) "outer_boundary_condition=", trim(OUTER_BOUNDARY_CONDITION)
-    end select    
-    
-    tmp = (f_i + dissipation_timestep * (flux_ip12 - flux_im12) / X_SAMPLE_STEP) / (1.5d0 * x_sample(i))
-      
-    if (tmp.lt.0.) then
-      write(error_unit,*) 'ERROR: tmp is negative!!!!'
-      write(error_unit,*) a_ip12, f_i, f_ip1, flux_im12, flux_ip12
-      call exit(4)
-    end if
-    
-    surface_density_profile(i) = tmp ! the (1.5d0 * x_i) is here to convert from 'f' to Sigma
-    surface_density_index(i) = - (log(surface_density_profile(i)) - log(surface_density_profile(i-1))) &
-                                  / (log(distance_sample(i)) - log(distance_sample(i-1)))
-    
-    !------------------------------------------------------------------------------
-    ! And the last index NB_SAMPLE_PROFILES 
-    ! We DO NOT compute the surface density since it's ruled by the boundary condition. But we compute the index
-    i=NB_SAMPLE_PROFILES
-    surface_density_index(i) = - (log(surface_density_profile(i)) - log(surface_density_profile(i-1))) &
-                                    / (log(distance_sample(i)) - log(distance_sample(i-1)))
-
-    !------------------------------------------------------------------------------
-    ! We copy paste the index for the first value because however it is not defined.
-    surface_density_index(2) = surface_density_index(3) ! We do this because the first two values are polluted by boundary conditions
-    surface_density_index(1) = surface_density_index(2)
-  
-  end subroutine viscously_dissipate_density_profile
 
   subroutine store_temperature_profile(filename)
   ! subroutine that store in a '.dat' file the temperature profile and negative index of the local power law
@@ -2220,7 +2120,7 @@ real(double_precision) :: envelope_heating, viscous_heating, black_body
 
 !------------------------------------------------------------------------------
 scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
-nu = get_viscosity(distance_new)
+nu = get_viscosity(omega=omega, scaleheight=scaleheight)
 !------------------------------------------------------------------------------
 rho = 0.5d0 * sigma / scaleheight
 !------------------------------------------------------------------------------
@@ -2297,7 +2197,7 @@ real(double_precision) :: envelope_heating, viscous_heating, irradiation, black_
 !------------------------------------------------------------------------------
 prefactor_irradiation = 2.d0 * SIGMA_STEFAN * R_STAR**2 * T_STAR**4 * (1.d0 - DISK_ALBEDO)
 scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
-nu = get_viscosity(distance_new)
+nu = get_viscosity(omega=omega, scaleheight=scaleheight)
 !------------------------------------------------------------------------------
 aspect_ratio_new = scaleheight / distance_new
 aspect_ratio_old = scaleheight_old / distance_old
