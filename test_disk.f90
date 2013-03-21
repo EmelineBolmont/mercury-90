@@ -227,7 +227,7 @@ program test_disk
       temperature = (T_min + T_step * (i - 1.d0))
       
       call zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
-                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=prefactor,& ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old,& ! Input
                               funcv=zero_function, optical_depth=tmp) ! Output
       
       write(10,*) temperature, zero_function

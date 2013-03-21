@@ -151,7 +151,7 @@ subroutine read_disk_properties()
     open(10, file='disk.in', status='old')
     
     do
-      read(10, '(a80)', iostat=error), line
+      read(10, '(a80)', iostat=error) line
       if (error /= 0) exit
         
       ! We get only what is on the left of an eventual comment parameter
@@ -362,7 +362,7 @@ subroutine read_paramin(timestep)
     open(10, file='param.in', status='old')
     
     do
-      read(10, '(a80)', iostat=error), line
+      read(10, '(a80)', iostat=error) line
       if (error /= 0) exit
        
       ! in param.in, comment must start from the first character, there is no comments starting from a random point of the line. 
@@ -772,9 +772,9 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   
   !------------------------------------------------------------------------------
 
-  corotation_torque = (1.d0 / gamma_eff) * (torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1 - get_K(p_nu)) &
+  corotation_torque = (1.d0 / gamma_eff) * (torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1.d0 - get_K(p_nu)) &
     + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
-    + torque_c_lin_ent * sqrt((1 - get_K(p_nu)) * (1 - get_K(p_chi))))
+    + torque_c_lin_ent * sqrt((1.d0 - get_K(p_nu)) * (1.d0 - get_K(p_chi))))
   
 
   return
@@ -1078,7 +1078,7 @@ subroutine initial_density_profile()
     open(10, file=filename, status='old')
     i = 0
     do
-      read(10, '(a80)', iostat=error), line
+      read(10, '(a80)', iostat=error) line
       if (error /= 0) exit
       
       if (line(1:1).ne.comment_character) then
@@ -1100,12 +1100,12 @@ subroutine initial_density_profile()
     open(10, file=filename, status='old')
     i = 0
     do
-      read(10, '(a80)', iostat=error), line
+      read(10, '(a80)', iostat=error) line
       if (error /= 0) exit
       
       if(line(1:1).ne.comment_character) then
         i = i + 1
-        read(line, *, iostat=error), radius(i), manual_surface_profile(i)
+        read(line, *, iostat=error) radius(i), manual_surface_profile(i)
       end if
     end do
     
@@ -1145,7 +1145,7 @@ subroutine initial_density_profile()
     end do
     
     i = 0
-    smoothing = 0.5
+    smoothing = 0.5d0
     ! We do not allow to modify the last point of the profile (especially to avoid problems with the slope calculation of the profile.)
     do while ((smoothing.lt.1.d0).and.(i.lt.NB_SAMPLE_PROFILES)) 
       i = i + 1
@@ -1314,7 +1314,7 @@ end subroutine initial_density_profile
       sigma_index = surface_density_index(closest_low_id) ! for the temperature index, no interpolation.
     else if (radius .lt. INNER_BOUNDARY_RADIUS) then
       sigma = surface_density_profile(1)
-      sigma_index = 0.
+      sigma_index = 0.d0
     else if (radius .ge. distance_sample(NB_SAMPLE_PROFILES-1)) then
       sigma = surface_density_profile(NB_SAMPLE_PROFILES)
       sigma_index = surface_density_index(NB_SAMPLE_PROFILES)
@@ -1358,7 +1358,7 @@ end subroutine initial_density_profile
   ! Parameter
   real(double_precision) :: radius ! the distance from the central object in AU
   real(double_precision), parameter :: mass = 1. * EARTH_MASS ! in [Msun], the mass of a planet (needed to compute the angular velocity)
-  real(double_precision), parameter :: stellar_mass = 1. ! stellar mass in [Msun]
+  real(double_precision), parameter :: stellar_mass = 1.d0 ! stellar mass in [Msun]
   
   ! Locals
   real(double_precision), dimension(3) :: position
@@ -1458,8 +1458,8 @@ end subroutine initial_density_profile
     real(double_precision) :: get_opacity_chambers
     
     ! Local
-    real(double_precision), parameter :: temp_e = 1380. ! K
-    real(double_precision), parameter :: kappa_0 = 3. ! cm^2/g
+    real(double_precision), parameter :: temp_e = 1380.d0 ! K
+    real(double_precision), parameter :: kappa_0 = 3.d0 ! cm^2/g
     real(double_precision), parameter :: phys_to_num_opacity = MSUN / AU**2
 
     
@@ -1534,7 +1534,7 @@ end subroutine initial_density_profile
       get_opacity_zhu_2009 = 1.067416d19 * temperature**(-2.432000) * bulk_density**(0.928000)
     else
       ! regime 8 : ?
-      get_opacity_zhu_2009 = 0.33113112
+      get_opacity_zhu_2009 = 0.33113112d0
     endif
     
     
@@ -1693,7 +1693,7 @@ end subroutine initial_density_profile
   
   select case(DISSIPATION_TYPE)
     case(1) ! viscous dissipation
-      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
+      dissipation_timestep = 0.5d0 * X_SAMPLE_STEP**2 / (4.d0 * get_viscosity(1.d0)) ! a correction factor of 0.5 has been applied. No physical reason to that, just intuition and safety
       ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
       next_dissipation_step = time + dissipation_timestep
       call viscously_dissipate_density_profile(dissipation_timestep)
@@ -2049,7 +2049,7 @@ viscous_prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 32.d0
 
 b = boundaries_list(1)
 call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
-                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old,& ! Input
                               funcv=fb, optical_depth=tau_b) ! Output
 
 
@@ -2064,7 +2064,7 @@ do while ((i.lt.nb_boundaries).and.no_sign_change)
   
   b = boundaries_list(i)
   call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
-                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old,& ! Input
                               funcv=fb, optical_depth=tau_b) ! Output
   
   
@@ -2161,7 +2161,7 @@ do iter=1,ITMAX
   b = b + merge(d, sign(tol1,xm), abs(d) .gt. tol1)
   
   call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
-                              scaleheight_old=scaleheight_old, distance_old=distance_old, prefactor=viscous_prefactor,& ! Input
+                              scaleheight_old=scaleheight_old, distance_old=distance_old,& ! Input
                                 funcv=fb, optical_depth=tau_b) ! Output
 end do
 write(*,*) 'Warning: zbrent exceeding maximum iterations'
@@ -2171,7 +2171,7 @@ return
 end subroutine zbrent
 
 subroutine temperature_pure_viscous(temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
-                                    prefactor, funcv, optical_depth)
+                                    funcv, optical_depth)
 ! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
 ! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
 ! We also use the opacity given in Bell & lin 1994. 
@@ -2193,23 +2193,46 @@ real(double_precision), intent(in) :: distance_new ! current orbital distance [A
 real(double_precision), intent(in) :: omega ! the angular velocity of the disk at a given position
 real(double_precision), intent(in) :: scaleheight_old ! aspect ratio of the previous point
 real(double_precision), intent(in) :: distance_old ! orbital distance of the previous point [AU]
-real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 32.d0)
 
 ! Local
 real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
 real(double_precision) :: rho ! the bulk density of the disk at a given position
-real(double_precision) :: envelope_heating, viscous_heating
+real(double_precision) :: nu ! the viscosity in numerical units
+real(double_precision) :: tau_eff
+real(double_precision) :: envelope_heating, viscous_heating, black_body
+!------------------------------------------------------------------------------
+!~ scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
+!~ rho = 0.5d0 * sigma / scaleheight
+!~ optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
+!~ 
+!~ 
+!~ envelope_heating = -SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
+!~ viscous_heating = prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
+!~ 
+!~ ! 1.7320508075688772d0 = sqrt(3)
+!~ funcv = SIGMA_STEFAN * temperature**4 + viscous_heating + envelope_heating
+
+! All surface terms have a factor 2 because the disk has 2 surfaces (top and bottom). 
+! Only the viscous term does not have this 2 factor so far
+! Heating terms are positive, cooling terms are negative
+
 !------------------------------------------------------------------------------
 scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
+nu = get_viscosity(distance_new)
+!------------------------------------------------------------------------------
 rho = 0.5d0 * sigma / scaleheight
+!------------------------------------------------------------------------------
 optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
 
-
-envelope_heating = -SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
-viscous_heating = prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
-
+!------------------------------------------------------------------------------
+envelope_heating = 2.d0 * SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
+viscous_heating = (9.d0 * nu * sigma * omega**2 / 4.d0)
 ! 1.7320508075688772d0 = sqrt(3)
-funcv = SIGMA_STEFAN * temperature**4 + viscous_heating + envelope_heating
+tau_eff = (0.25d0 * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth)))
+black_body = -2.d0 * SIGMA_STEFAN * temperature**4 / tau_eff ! cooling term
+!------------------------------------------------------------------------------
+
+funcv =  black_body + viscous_heating + envelope_heating
 
 !~ if (distance_new.lt.0.4) then
 !~   write(*,'(a)')            '------------------------------------------------'
@@ -2229,7 +2252,7 @@ return
 end subroutine temperature_pure_viscous
 
 subroutine temperature_with_irradiation(temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
-                                        prefactor, funcv, optical_depth)
+                                        funcv, optical_depth)
 ! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
 ! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
 ! We also use the opacity given in Bell & lin 1994. 
@@ -2255,19 +2278,24 @@ real(double_precision), intent(in) :: distance_new ! current orbital distance [A
 real(double_precision), intent(in) :: omega ! the angular velocity of the disk at a given position
 real(double_precision), intent(in) :: scaleheight_old ! aspect ratio of the previous point
 real(double_precision), intent(in) :: distance_old ! orbital distance of the previous point [AU]
-real(double_precision), intent(in) :: prefactor ! = - (9.d0 * nu * sigma * omega**2 / 32.d0)
 
 ! Local
 real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
 real(double_precision) :: rho ! the bulk density of the disk at a given position
 real(double_precision) :: flaring_angle ! the angle of the protoplanetary disk at the current orbital distance
+real(double_precision) :: nu ! the viscosity in numerical units
 real(double_precision) :: aspect_ratio_new, aspect_ratio_old
-real(double_precision) :: prefactor_irradiation
-real(double_precision) :: envelope_heating, viscous_heating, irradiation
+real(double_precision) :: prefactor_irradiation, tau_eff
+real(double_precision) :: envelope_heating, viscous_heating, irradiation, black_body
+
+! All surface terms have a factor 2 because the disk has 2 surfaces (top and bottom). 
+! Only the viscous term does not have this 2 factor so far
+! Heating terms are positive, cooling terms are negative
 
 !------------------------------------------------------------------------------
-prefactor_irradiation = - SIGMA_STEFAN * R_STAR**2 * T_STAR**4 * (1.d0 - DISK_ALBEDO)
+prefactor_irradiation = 2.d0 * SIGMA_STEFAN * R_STAR**2 * T_STAR**4 * (1.d0 - DISK_ALBEDO)
 scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
+nu = get_viscosity(distance_new)
 !------------------------------------------------------------------------------
 aspect_ratio_new = scaleheight / distance_new
 aspect_ratio_old = scaleheight_old / distance_old
@@ -2279,13 +2307,16 @@ optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if ther
 flaring_angle = distance_new * ((aspect_ratio_old - aspect_ratio_new) / (distance_old - distance_new)) + &
                 0.4d0 * R_STAR / distance_new
 !------------------------------------------------------------------------------
-envelope_heating = -SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
+envelope_heating = 2.d0 * SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
 irradiation = prefactor_irradiation * flaring_angle / distance_new**2
+
+viscous_heating = (9.d0 * nu * sigma * omega**2 / 4.d0)
 ! 1.7320508075688772d0 = sqrt(3)
-viscous_heating = prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
+tau_eff = (0.25d0 * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth)))
+black_body = -2.d0 * SIGMA_STEFAN * temperature**4 / tau_eff ! cooling term
 !------------------------------------------------------------------------------
 
-funcv = SIGMA_STEFAN * temperature**4 + irradiation + viscous_heating + envelope_heating
+funcv =  black_body + irradiation + viscous_heating + envelope_heating
 
 !~ write(error_unit,'(a)')            '------------------------------------------------'
 !~ write(error_unit,'(a,es10.3e2)') 'old aspect ratio = ',aspect_ratio_old
@@ -2362,7 +2393,7 @@ if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. distance_sample(NB_SA
   chi = chi_profile(closest_low_id)
 else if (radius .lt. INNER_BOUNDARY_RADIUS) then
   temperature = temperature_profile(1)
-  temperature_index = 0.
+  temperature_index = 0.d0
   chi = chi_profile(1)
 else if (radius .ge. distance_sample(NB_SAMPLE_PROFILES-1)) then
   temperature = temperature_profile(NB_SAMPLE_PROFILES)
@@ -2705,7 +2736,7 @@ subroutine read_torque_profile()
     open(10, file=filename, status='old')
     i = 0
     do
-      read(10, '(a80)', iostat=error), line
+      read(10, '(a80)', iostat=error) line
       if (error /= 0) exit
       i = i + 1
     end do
@@ -2723,7 +2754,7 @@ subroutine read_torque_profile()
     ! We get the values of the torque profile in the file
     open(10, file=filename, status='old')
     do i=1, nb_values
-      read(10, *, iostat=error), radius(i), torque(i)
+      read(10, *, iostat=error) radius(i), torque(i)
     end do
     
     ! We now want to interpolate and have a torque profile that fit the array definitions of our simulation.
