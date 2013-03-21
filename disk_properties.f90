@@ -32,15 +32,15 @@ module disk_properties
   
   !------------------------------------------------------------------------------
   ! Default values for parameters that are to be read in the parameter file 'disk.in'
-  real(double_precision) :: B_OVER_H = 0.4 ! the smoothing length for the planet's potential
-  real(double_precision) :: ADIABATIC_INDEX = 1.4 ! the adiabatic index for the gas equation of state
-  real(double_precision) :: MEAN_MOLECULAR_WEIGHT = 2.35 ! the mean molecular weight in mass of a proton
+  real(double_precision) :: B_OVER_H = 0.4d0 ! the smoothing length for the planet's potential
+  real(double_precision) :: ADIABATIC_INDEX = 1.4d0 ! the adiabatic index for the gas equation of state
+  real(double_precision) :: MEAN_MOLECULAR_WEIGHT = 2.35d0 ! the mean molecular weight in mass of a proton
   
   ! Here we define the power law for surface density sigma(R) = INITIAL_SIGMA_0 * R^(-INITIAL_SIGMA_INDEX)
   logical :: IS_MANUAL_SURFACE_DENSITY = .false. ! If true, the surface density profile is read from the file 'surface_density_profile.dat' instead of being a power law following the 2 next parameters.
-  real(double_precision) :: GROUND_SURFACE_DENSITY = 5. ! (g/cm^2) the minimum surface density (for dissipation or for inner edge smoothing)
-  real(double_precision) :: INITIAL_SIGMA_0 = 450 ! the surface density at (R=1AU) [g/cm^2]
-  real(double_precision) :: INITIAL_SIGMA_INDEX = 0.5! the negative slope of the surface density power law (alpha in the paper)
+  real(double_precision) :: GROUND_SURFACE_DENSITY = 5.d0 ! (g/cm^2) the minimum surface density (for dissipation or for inner edge smoothing)
+  real(double_precision) :: INITIAL_SIGMA_0 = 450.d0 ! the surface density at (R=1AU) [g/cm^2]
+  real(double_precision) :: INITIAL_SIGMA_INDEX = 0.5d0! the negative slope of the surface density power law (alpha in the paper)
   real(double_precision), parameter :: SIGMA_CGS2NUM = AU**2 / MSUN ! The factor to convert surface density from g/cm^2 to MSUN/AU^2 (the numerical units)
   real(double_precision), parameter :: SIGMA_NUM2CGS = MSUN / AU**2 ! The factor to convert surface density from MSUN/AU^2 (numerical units) to g/cm^2 (CGS)
   
@@ -53,7 +53,7 @@ module disk_properties
   real(double_precision) :: TAU_DISSIPATION = -1.d0 ! the characteristic time for the exponential decay of the surface density (in years) (dissipation_type=2)
   
   
-  real(double_precision) :: DISSIPATION_TIME_SWITCH = 2e6 ! (years) the time at which we switch from viscous to photoevaporation exponential decrease (dissipatio_type=3)
+  real(double_precision) :: DISSIPATION_TIME_SWITCH = 2d6 ! (years) the time at which we switch from viscous to photoevaporation exponential decrease (dissipatio_type=3)
   real(double_precision) :: TAU_VISCOUS = 1.d7 ! (years) the characteristic time for the viscous exponential decay
   real(double_precision) :: TAU_PHOTOEVAP = 3.d4 ! (years) the characteristic time for the photoevaporation exponential decay
   
@@ -72,26 +72,26 @@ module disk_properties
   
   !------------------------------------------------------------------------------
   ! Values for manual torque profiles (mass dependant or independant for instance)
-  real(double_precision) :: TORQUE_PROFILE_STEEPNESS = 1. ! increase, in units of Gamma_0 of the torque per 10AU
+  real(double_precision) :: TORQUE_PROFILE_STEEPNESS = 1.d0 ! increase, in units of Gamma_0 of the torque per 10AU
   real(double_precision) :: SATURATION_TORQUE = 1.d0
   
   ! For mass independant convergence zone
-  real(double_precision) :: INDEP_CZ = 8. ! Position of the mass independant convergence zone in AU
+  real(double_precision) :: INDEP_CZ = 8.d0 ! Position of the mass independant convergence zone in AU
   
   ! For mass dependant convergence zone
   ! boundary mass values that have a zero torque zone
-  real(double_precision) :: MASS_DEP_M_MIN = 1.  ! Minimum mass for the mass dependant convergence zone (in earth mass)
-  real(double_precision) :: MASS_DEP_M_MAX = 60. ! Maximum mass for the mass dependant convergence zone (in earth mass)
+  real(double_precision) :: MASS_DEP_M_MIN = 1.d0  ! Minimum mass for the mass dependant convergence zone (in earth mass)
+  real(double_precision) :: MASS_DEP_M_MAX = 60.d0 ! Maximum mass for the mass dependant convergence zone (in earth mass)
   
   ! position of the zero torque zone for the minimum and maximum mass
-  real(double_precision) :: MASS_DEP_CZ_M_MIN = 4.  ! position of the mass dependant convergence zone for the minimum mass (in AU)
-  real(double_precision) :: MASS_DEP_CZ_M_MAX = 30. ! position of the mass dependant convergence zone for the maximum mass (in AU)
+  real(double_precision) :: MASS_DEP_CZ_M_MIN = 4.d0  ! position of the mass dependant convergence zone for the minimum mass (in AU)
+  real(double_precision) :: MASS_DEP_CZ_M_MAX = 30.d0 ! position of the mass dependant convergence zone for the maximum mass (in AU)
   
   !------------------------------------------------------------------------------
   ! Here we define properties common to the profiles
   real(double_precision) :: INNER_BOUNDARY_RADIUS = 0.2d0
   real(double_precision) :: OUTER_BOUNDARY_RADIUS = 100.d0
-  real(double_precision) :: INNER_SMOOTHING_WIDTH = 0.05 ! the width (in unit of the inner boundary radius) of the inner region where the surface density is smoothed to 0
+  real(double_precision) :: INNER_SMOOTHING_WIDTH = 0.05d0 ! the width (in unit of the inner boundary radius) of the inner region where the surface density is smoothed to 0
   integer :: NB_SAMPLE_PROFILES = 200 ! number of points for the sample of radius of the temperature profile
   
   ! We define a new type for the properties of the planet
@@ -121,6 +121,7 @@ module disk_properties
   procedure(get_torques_interface), pointer :: get_torques
   procedure(function_temperature_interface), pointer :: zero_finding_temperature
   procedure(get_opacity_interface), pointer :: get_opacity
+  procedure(get_viscosity_interface), pointer :: get_viscosity
   
   abstract interface 
   subroutine get_torques_interface(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0, ecc_corot)
@@ -174,6 +175,22 @@ module disk_properties
     real(double_precision) :: get_opacity_interface
   
   end function get_opacity_interface
+  end interface
+  
+  abstract interface 
+  function get_viscosity_interface(radius)
+  ! subroutine that return the opacity of the disk at the location of the planet given various parameters
+    import
+    
+    implicit none
+    
+    ! Inputs 
+    real(double_precision), intent(in) :: radius ! distance in AU
+  
+    ! Outputs
+    real(double_precision) :: get_viscosity_interface
+  
+  end function get_viscosity_interface
   end interface
 contains
 

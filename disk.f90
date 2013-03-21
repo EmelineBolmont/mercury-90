@@ -907,6 +907,8 @@ subroutine init_globals(stellar_mass, time)
         call exit(8)
     end select
     
+    ! TODO change to allow various selection of viscosity prescription. For now, only constant
+    get_viscosity => get_constant_viscosity
     
     if (.not.allocated(distance_sample)) then
       allocate(distance_sample(NB_SAMPLE_PROFILES))
@@ -1321,7 +1323,7 @@ end subroutine initial_density_profile
     end if
   end subroutine get_surface_density
   
-  function get_viscosity(radius)
+  function get_constant_viscosity(radius)
   ! function that return the viscosity of the disk in [AU^2.day^-1]
   
   ! Parameters
@@ -1332,14 +1334,14 @@ end subroutine initial_density_profile
   
   implicit none
   
-  real(double_precision) :: get_viscosity ! the viscosity of the disk in [AU^2.day^-1]
+  real(double_precision) :: get_constant_viscosity ! the viscosity of the disk in [AU^2.day^-1]
   
   real(double_precision), intent(in) :: radius ! the distance from the central object in AU
   !------------------------------------------------------------------------------
-  get_viscosity = viscosity * DAY / AU**2
+  get_constant_viscosity = viscosity * DAY / AU**2
   ! TODO if the viscosity is not constant anymore, the formulae for the dissipation timestep must be changed
   
-  end function get_viscosity
+  end function get_constant_viscosity
   
   subroutine init_turbulence_forcing()
   ! function that return the viscosity of the disk in [AU^2.day^-1]
