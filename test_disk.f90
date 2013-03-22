@@ -81,6 +81,7 @@ program test_disk
     
     ! Physical values and plots
     call study_opacity_profile()
+    call study_viscosity(stellar_mass=stellar_mass)
     call study_torques_fixed_a(stellar_mass=stellar_mass)
     call study_torques_fixed_m(stellar_mass=stellar_mass)
     call study_ecc_corot(stellar_mass=stellar_mass)
@@ -1285,6 +1286,86 @@ program test_disk
 
     
   end subroutine study_torques_fixed_m
+  
+  subroutine study_viscosity(stellar_mass)
+  ! subroutine that test the function 'get_corotation_torque'
+  
+  ! Return:
+  !  a data file 'torques_fixed_m.dat' 
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+    implicit none
+    
+    real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
+    
+    integer, parameter :: nb_a = 100
+    real(double_precision), parameter :: a_min = 0.1d0 ! in AU
+    real(double_precision), parameter :: a_max = 15d0 ! in AU
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    
+    real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2
+    real(double_precision), parameter :: num2phys = AU**2 / DAY ! convert numerical viscosity to CGS viscosity
+    
+    real(double_precision) :: a
+    real(double_precision) :: viscosity
+    real(double_precision) :: position(3), velocity(3)
+    type(PlanetProperties) :: p_prop
+    
+    
+    integer :: i ! for loops
+    
+    write(*,*) 'Evolution of the viscosity in function of the position'
+
+    position(:) = 0.d0
+    velocity(:) = 0.d0
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='unitary_tests/viscosity.dat')
+
+    
+    write(10,'(a)') '# a in AU ; viscosity'
+
+    
+    do i=1,nb_a
+      a = (a_min + a_step * (i - 1.d0))
+      ! We generate cartesian coordinate for the given semi major axis
+      position(1) = a
+      
+      ! We generate cartesian coordinate for the given mass and semi major axis
+      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      
+      ! we store in global parameters various properties of the planet
+      call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
+       p_prop=p_prop) ! Output
+      
+      !------------------------------------------------------------------------------
+      ! Calculation of the acceleration due to migration
+      viscosity = get_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight)
+      
+      write(10,*) a, viscosity * num2phys
+    end do
+    
+    close(10)
+    
+    
+    open(10, file="unitary_tests/viscosity.gnuplot")
+    
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) "set output 'viscosity.pdf'"
+    
+    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set ylabel "viscosity [cm^2/s]"'
+    
+    write(10,*) 'set grid'
+    write(10,*) 'set xrange [', a_min, ':', a_max, ']'
+    
+    write(10,'(a,i2,a, f4.2,a)') ' plot "viscosity.dat" using 1:2 with lines notitle'
+    
+    
+    close(10)
+
+
+    
+  end subroutine study_viscosity
   
   subroutine study_eccentricity_effect_on_corotation(stellar_mass)
   ! subroutine that test the function 'get_corotation_torque'
