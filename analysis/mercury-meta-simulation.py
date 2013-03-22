@@ -305,6 +305,12 @@ is_turbulence = 0 # is there turbulence or not?
   demo_parameter_file.write(DEMO_FILE)
   demo_parameter_file.close()
 
+def generate_diskin():
+  """function that will generate a default 'disk.in' file"""
+  
+  diskin = mercury.Disk()
+  diskin.demo()
+
 def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR="="):
   """function that read the parameter file associated with meta 
   simulations to get values that define the meta simulation
@@ -742,6 +748,7 @@ problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
 " * norun : will create the various folders and file, but will not run the simulation" + "\n" + \
+" * disk : will create a 'disk.in' demo file (without anything else)" + "\n" + \
 " * demo : will create a 'meta_simulation.in' file " + "\n" + \
 "   (needed by the current script) to show what can be defined"
 
@@ -756,6 +763,10 @@ for arg in sys.argv[1:]:
   elif (key == 'demo'):
     print("A demo file 'meta_simulation.in' is being generated...")
     generate_meta_simulationin()
+    exit()
+  elif (key == 'disk'):
+    print("A demo file 'disk.in' is being generated...")
+    generate_diskin()
     exit()
   elif (key == 'help'):
     isProblem = True
