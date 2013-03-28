@@ -566,7 +566,7 @@ def generation_simulation_parameters():
   else:
     nb_planets = NB_PLANETS
     
-    m = simulations_utilities.setParameter(mass_parameters, nb_planets)
+    m = simulations_utilities.setParameter(mass_parameters, nb_planets, vmin=0.)
     m = [mi * MT / MS for mi in m]
   
   # By default, we do not specify density
@@ -626,9 +626,9 @@ def generation_simulation_parameters():
     #~ print("total_mass=%f" % total_mass)
     
   else:
-    a = simulations_utilities.setParameter(a_parameters, nb_planets)
+    a = simulations_utilities.setParameter(a_parameters, nb_planets, vmin=0.)
     
-  e = simulations_utilities.setParameter(e_parameters, nb_planets)
+  e = simulations_utilities.setParameter(e_parameters, nb_planets, vmin=0., vmax=1.)
   I = simulations_utilities.setParameter(I_parameters, nb_planets)
   
   # If there is planet beyong the ejection distance, we remove them before the simulation start :
