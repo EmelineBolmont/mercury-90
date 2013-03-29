@@ -558,14 +558,13 @@ def generation_simulation_parameters():
       exit()
     
     while (total_mass < TOTAL_MASS):
-      m0 = simulations_utilities.setParameter(mass_parameters, 1)[0] # The function return a list, and we want to have one element
+      m0 = simulations_utilities.setParameter(mass_parameters, 1, vmin=0.)[0] # The function return a list, and we want to have one element
       # the mass must be expressed relatively to the mass of the central body
       m.append(simulations_utilities.significativeRound(m0 * MT / MS, 4))
       total_mass += m0
     nb_planets = len(m)
   else:
     nb_planets = NB_PLANETS
-    
     m = simulations_utilities.setParameter(mass_parameters, nb_planets, vmin=0.)
     m = [mi * MT / MS for mi in m]
   
