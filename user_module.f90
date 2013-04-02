@@ -55,16 +55,13 @@ contains
 
     ! Local
     integer :: j, error, nptmss, iPs0
-    !integer, parameter :: flagms=0 like other flags and inttotftides
     integer :: flagrg2=0
-    integer :: flagspin=0
     integer :: flagtime=0
-    integer :: flagms=0
     integer :: ispin=0
     integer :: nintegral=0
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: nbug!=3.6525d5!3.65d5 !4.56d6 !
-    real(double_precision) :: gm,qq,ee,ii,pp,nn,ll
+    real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0
     real(double_precision) :: timebf,dt,tstop,tmp,tmp1,tmp2,k2s
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
@@ -78,6 +75,8 @@ contains
     real(double_precision), dimension(nbig+1) :: r,r2,r7,r8,v2,vv,vrad
     real(double_precision), dimension(nbig+1) :: horbn
     real(double_precision), dimension(4161) :: timeBD,radiusBD,lumiBD,HZinGJ,HZoutGJ,HZinb,HZoutb
+    real(double_precision), dimension(1065) :: timestar,radiusstar,d2radiusstar
+    real(double_precision), dimension(1065) :: timedM,radiusdM
     real(double_precision), dimension(37) :: rg2st,trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
     real(double_precision) :: Rst,Rst5,Rst10,Rstb,Rst0,Rstb0,rg2s,rg2sb,rg2s0,temp,spin0,spinp0
     real(double_precision), dimension(nbig+1) :: Ftr,Ftso,Ftpo
@@ -88,9 +87,14 @@ contains
          0.355d0,0.342d0,0.333d0,0.325d0,0.311d0,0.308d0,0.307d0,0.307d0/)
 
     ! Data 
-    save timeBD,radiusBD,spin0,Rst0,rg2s0,k2s
-    save rg2st,trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
-    save flagms,flagrg2,flagtime,flagspin,ispin,flagbug
+    if (Sun_like_star.eq.1) save timestar,radiusstar,d2radiusstar
+    if (brown_dwarf.eq.1) save timeBD,radiusBD
+    if (M_dwarf.eq.1) save timedM,radiusdM
+    
+    save spin0
+    save Rst0,Rst,rg2s0,k2s,rg2st,sigmast
+    save trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
+    save flagrg2,flagtime,ispin,flagbug
     save nbug
     save spin
     save Rp,sigmap,Rp5,Rp10,tintin
@@ -99,11 +103,6 @@ contains
     ! superzoyotte
 
     ! Acceleration initialization
-!~     write(*,*) " "
-!~     write(*,*) "xs =",x(1,1),x(2,1),x(3,1)
-!~     write(*,*) "vs =",v(1,1),v(2,1),v(3,1)
-!~     write(*,*) "xp =",x(1,2),x(2,2),x(3,2)
-!~     write(*,*) "vp =",v(1,2),v(2,2),v(3,2)
     do j = 1, nbod
        a(1,j) = 0.d0
        a(2,j) = 0.d0
@@ -142,30 +141,17 @@ contains
 !~ 	   write(*,*) "nbug = ",nbug
     else
        dt = time - timebf
-    endif
-!~     if (time.ge.73040.) then
-!~        if ((mod(flagbug,nbug).eq.0).and.(flagbug.ge.0)) then
-!~           write(*,*) " "
-!~           write(*,*) "time =",time,"dt =",dt
-!~        endif
-!~     endif  
-        
+    endif 
+    
+    ! Following calculaltions in heliocentric coordinates   
     call conversion_dh2h(nbod,nbig,m,x,v,xh,vh)    
-!~     write(*,*) "x =",x(1,2),x(2,2),x(3,2)
-!~     write(*,*) "v =",v(1,2),v(2,2),v(3,2)
-!~     write(*,*) "xh =",xh(1,2),xh(2,2),xh(3,2)
-!~     write(*,*) "vh =",vh(1,2),vh(2,2),vh(3,2)
-             
 
-    ! time in day
-!~     if (time.ge.1.*dt) then 
-
-       !************************ Tidal forces **************************
+       ! Charge host body data 
+       ! + initial condition on host body spin, radius
 
        if (brown_dwarf.eq.1) then 
-       
-          ! Initialization 
-          if (flagrg2.eq.0) then
+          ! Charge files of rg2, radius with time for BDs of different masses
+          if (flagrg2.eq.0) then    
              ! Radius of BD's gyration data
              open(1,file='rg2BD.dat')
              nptmss = 0
@@ -179,6 +165,7 @@ contains
              if ((m(1).le.0.0101*K2).and.(m(1).ge.0.0099*K2)) then
                 iPs0 = 1
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg1(j)
                 enddo
@@ -192,6 +179,7 @@ contains
              if ((m(1).le.0.0121*K2).and.(m(1).ge.0.0119*K2)) then
                 iPs0 = 2
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg2(j)
                 enddo
@@ -205,6 +193,7 @@ contains
              if ((m(1).le.0.0151*K2).and.(m(1).ge.0.0149*K2)) then
                 iPs0 = 3
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg3(j)
                 enddo     
@@ -218,6 +207,7 @@ contains
              if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then
                 iPs0 = 4
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg4(j)
                 enddo
@@ -231,6 +221,7 @@ contains
              if ((m(1).le.0.0301*K2).and.(m(1).ge.0.0299*K2)) then
                 iPs0 = 5
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg5(j)
                 enddo
@@ -244,6 +235,7 @@ contains
              if ((m(1).le.0.0401*K2).and.(m(1).ge.0.0399*K2)) then
                 iPs0 = 6
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg6(j)
                 enddo
@@ -257,6 +249,7 @@ contains
              if ((m(1).le.0.0501*K2).and.(m(1).ge.0.0499*K2)) then
                 iPs0 = 7
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg7(j)
                 enddo
@@ -270,6 +263,7 @@ contains
              if ((m(1).le.0.0601*K2).and.(m(1).ge.0.0599*K2)) then
                 iPs0 = 8
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg8(j)
                 enddo
@@ -283,6 +277,7 @@ contains
              if ((m(1).le.0.0701*K2).and.(m(1).ge.0.0699*K2)) then
                 iPs0 = 9
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg9(j)
                 enddo
@@ -296,6 +291,7 @@ contains
              if ((m(1).le.0.0721*K2).and.(m(1).ge.0.0719*K2)) then
                 iPs0 = 10
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg10(j)
                 enddo
@@ -309,6 +305,7 @@ contains
              if ((m(1).le.0.0751*K2).and.(m(1).ge.0.0749*K2)) then
                 iPs0 = 11
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg11(j)
                 enddo
@@ -322,6 +319,7 @@ contains
              if ((m(1).le.0.0801*K2).and.(m(1).ge.0.0799*K2)) then
                 iPs0 = 12
                 k2s  = k2st(iPs0)
+                Pst0 = Ps0(iPs0)
                 do j = 1,37       
                    rg2st(j) = rg12(j)
                 enddo
@@ -333,32 +331,152 @@ contains
                 end do
              endif
              
+             ! Initialization of stellar spin (day-1)
+             if (crash.eq.0) then
+                spin0 = 24.d0*TWOPI/Pst0 !day-1
+                spin(1,1) = 0.d0
+		        spin(2,1) = 0.d0
+		        spin(3,1) = spin0
+		        ! Radius of star in AU, because rsun in AU (radiusBD in Rsun)
+		        call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb0)
+		        Rst0 = Rsun * Rstb0 
+                call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
+             endif
+             if (crash.eq.1) then
+                spin(1,1) = rot_crash(1) !day-1
+			    spin(2,1) = rot_crash(2) !day-1
+                spin(3,1) = rot_crash(3) !day-1
+                call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,0.0d0,Rstb0)
+                Rst0 = Rsun * Rstb0 
+                call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,0.0d0,rg2s0)
+             endif
+             
+             ! Give good value of sigmast
+             sigmast = sigma_BD
+             
              flagrg2=1
           endif
-
-          ! m(j) = mass*K2 in AU³.day⁻2
-          ! Mst in g
-!~           Mst = m(1)*msun/K2
-
+       endif
+       
+       if (M_dwarf.eq.1) then 
+          ! Charge radius of Mdwarf 
+          if (flagrg2.eq.0) then
+             open(1,file='01Msun.dat')
+             nptmss = 0
+             do nptmss = 1,1065
+                read(1,*,iostat=error)timedM(nptmss),radiusdM(nptmss)
+             end do
+             
+             Pst = Period_st
+             rg2st = rg2_dM
+             k2s   = k2st_dM
+             
+            ! Initialization M-dwarf spin 
+            ! (radiusstar in Rsun)
+             if (crash.eq.0) then
+                ! Initialization of stellar spin (day-1)
+                spin0 = TWOPI/Pst !day-1
+                spin(1,1) = 0.d0
+		        spin(2,1) = 0.d0
+		        spin(3,1) = spin0
+                call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time,Rstb0)
+                Rst0    =  Rsun * Rstb0
+             end if
+             if (crash.eq.1) then
+                spin(1,1) = rot_crash(1) !day-1
+			    spin(2,1) = rot_crash(2) !day-1
+                spin(3,1) = rot_crash(3) !day-1
+                call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,0.0d0,Rstb0)
+                Rst0    = Rsun * Rstb0
+             end if
+             
+             ! Give good value of sigmast
+             sigmast = sigma_dM
+             
+             flagrg2 = 1
+          endif
+       endif
+       
+       if (Sun_like_star.eq.1) then 
+          ! Charge radius of Mdwarf 
+          if (flagrg2.eq.0) then
+          
+             Pst = Period_st
+             rg2st = rg2_Sun
+             k2s   = k2st_Sun
+                 
+             open(1,file='SRad_Spli_M-1_0000.dat')
+             nptmss = 0
+             do nptmss = 1,2003
+                read(1,*,iostat=error)timestar(nptmss),radiusstar(nptmss),d2radiusstar(nptmss)
+             end do
+             
+            ! Initialization Sun-like star spin 
+            ! (radiusstar in Rsun)
+             if (crash.eq.0) then
+                ! Initialization of stellar spin (day-1)
+                spin0 = TWOPI/Pst !day-1
+                spin(1,1) = 0.d0
+		        spin(2,1) = 0.d0
+		        spin(3,1) = spin0
+                call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time,Rstb0)
+                ! WARNING: radiusstar in m   
+                Rst0    =  minau * Rstb0
+             end if
+             if (crash.eq.1) then
+                spin(1,1) = rot_crash(1) !day-1
+			    spin(2,1) = rot_crash(2) !day-1
+                spin(3,1) = rot_crash(3) !day-1
+                call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,0.0d0,Rstb0)
+                ! WARNING: radiusstar in m        
+                Rst0    = minau * Rstb0
+             end if
+             
+             ! Give good value of sigmast
+             sigmast = sigma_Sun
+             
+             flagrg2 = 1
+          endif
+       endif
+       
+       if (Rscst.eq.1) then 
+          if (flagrg2.eq.0) then
+	         Pst = Period_st
+             rg2st = rg2_what
+             Rst   = radius_star*rsun
+             k2s   = k2st_what
+             sigmast = sigma_what
+             if (crash.eq.0) then
+                ! Initialization of stellar spin (day-1)
+                spin0 = TWOPI/Pst !day-1
+                spin(1,1) = 0.d0
+		        spin(2,1) = 0.d0
+		        spin(3,1) = spin0
+		     end if
+             if (crash.eq.1) then
+                spin(1,1) = rot_crash(1) !day-1
+			    spin(2,1) = rot_crash(2) !day-1
+                spin(3,1) = rot_crash(3) !day-1
+             endif
+             flagrg2 = 1
+          endif
+       endif
+       
+       
+!~       ! Calculation of r(j), powers of r(j), 
+!~       ! velocity vv(j), radial velocity vrad(j) and orbital angular momentum
+!~       ! theta_point x er = trueanom (cf textbook)
+!~       ! Distances in AU, velocities in AU/day, horb in AU^2/day
           do j=2,ntid+1
-             ! vh in AU/day, xh in AU
-             ! r is in AU, vv in AU/day
+
              r2(j) = xh(1,j)*xh(1,j)+xh(2,j)*xh(2,j)+xh(3,j)*xh(3,j)
              r(j)  = sqrt(r2(j))
              r8(j) = r2(j)*r2(j)*r2(j)*r2(j)
-             r7(j) = r2(j)*r2(j)*r2(j)*r(j)
-             
+             r7(j) = r2(j)*r2(j)*r2(j)*r(j) 
              v2(j) = vh(1,j)*vh(1,j)+vh(2,j)*vh(2,j)+vh(3,j)*vh(3,j)
-             vv(j) = sqrt(v2(j))
-             
-!~              write(*,*) ""
-!~              write(*,*) "r(j) =",r(j)," AU" 
-!~              write(*,*) "v(j) =",vv(j)," AU/day"
-             
+             vv(j) = sqrt(v2(j))         
              ! Radial velocity
              vrad(j)    = (xh(1,j)*vh(1,j)+xh(2,j)*vh(2,j)+xh(3,j)*vh(3,j))/r(j)
-!~              write(*,*) "vrad(j) =",vrad(j)
-
              ! Orbital angular momentum (without mass) in AU^2.day-1
 			 horb(1,j)  = (xh(2,j)*vh(3,j)-xh(3,j)*vh(2,j))
 		     horb(2,j)  = (xh(3,j)*vh(1,j)-xh(1,j)*vh(3,j))
@@ -373,13 +491,12 @@ contains
           end do
 
 
-          ! Initialization of many things
+!~       ! Initialization of many things concerning planets
           if (ispin.eq.0) then 
-             ! Normal start of program
+!~           ! If no crash of server (real initial conditions)
 			 if (crash.eq.0) then
 			    do j=2,ntid+1
 			       gm = m(1) + m(j)
-                   ! (m+m)*msun/K2 is in g
                    ! gm is in AU^3.day^-2
                    call mco_x2el(gm,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),qq,ee,ii,pp,nn,ll)
                    qa(j) = qq
@@ -403,58 +520,61 @@ contains
 
 			     ! Calculate the planets properties   
                  ! Planetary radius in AU (rearth in AU) Rocky planet
-                 ! sigmap (Msun-1.AU-2.day-1)     
-			       if (jupiter(j-1).ne.1) Rp(j) = rearth*((0.0592d0*0.7d0+0.0975d0) &
+    
+			       if (jupiter(j-1).eq.0) Rp(j) = rearth*((0.0592d0*0.7d0+0.0975d0) &
                      *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))**2+(0.2337d0*0.7d0+0.4938d0) &
                      *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))+0.3102d0*0.7d0+0.7932d0)
                    if (jupiter(j-1).eq.1) Rp(j) = rearth*Rjup
+                   if (jupiter(j-1).eq.2) Rp(j) = rearth*8.286d-1*Rjup
+                   if (jupiter(j-1).eq.3) Rp(j) = 2.17d0*rearth
+                   if (jupiter(j-1).eq.4) Rp(j) = rearth*0.954d0*Rjup
+                   if (jupiter(j-1).eq.5) Rp(j) = rearth*radius_p(j-1)*Rjup                
                    Rp5(j)  = Rp(j)*Rp(j)*Rp(j)*Rp(j)*Rp(j)
                    Rp10(j) = Rp5(j)*Rp5(j)
-!~                    write(*,*) "Rp5 =",Rp5(j),"Rp10 =",Rp10(j)
-                   sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                   
+                   ! Dissipation sigmap (Msun-1.AU-2.day-1)     
+                   ! Terrestrial for 0 and 3, gas giant for the rest
+                   
+                   if (jupiter(j-1).eq.0).or.(jupiter(j-1).eq.3) then
+                      sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                   endif
+                   if (jupiter(j-1).ne.0).and.(jupiter(j-1).ne.3) then
+                      sigmap(j) = dissplan(j-1)*sigma_gg
+                   endif
+                   
                    ! Factor used for GR force calculation
                    tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
+                   
                 enddo
-                ! Initialization of stellar spin (day-1)
-                spin0 = 24.d0*TWOPI/Ps0(iPs0) !day-1
-!~                 write(*,*) "spinst =",spin0, " day-1"
-                spin(1,1) = 0.d0
-			    spin(2,1) = 0.d0
-			    spin(3,1) = spin0
-			    ! Radius of star in AU, because rsun in AU
-			    call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb0)
-			    Rst0 = Rsun * Rstb0 
-                call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
+                
              end if   
 			 if (crash.eq.1) then
 			    spin(1,1) = rot_crash(1) !day-1
 			    spin(2,1) = rot_crash(2) !day-1
                 spin(3,1) = rot_crash(3) !day-1
-
                 spin(1,2) = rot_crashp1(1) !day-1
 			    spin(2,2) = rot_crashp1(2) !day-1
-                spin(3,2) = rot_crashp1(3) !day-1
-                
-                if (ntid.eq.2) then
+                spin(3,2) = rot_crashp1(3) !day-1 
+                if (ntid.ge.2) then
                    spin(1,3) = rot_crashp2(1) !day-1
 			       spin(2,3) = rot_crashp2(2) !day-1
                    spin(3,3) = rot_crashp2(3) !day-1
                 endif
-                
-			    ! Radius of star in AU, because rsun in AU
-                call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,0.0d0,Rstb0)
-                Rst0 = Rsun * Rstb0 
-                call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,0.0d0,rg2s0)
-             end if
+                if (ntid.ge.3) then
+                   spin(1,4) = rot_crashp3(1) !day-1
+			       spin(2,4) = rot_crashp3(2) !day-1
+                   spin(3,4) = rot_crashp3(3) !day-1
+                endif
+             endif
              ispin = 1
           end if
           
-          ! Interpolation to have the BD's radius and radius of gyration 
-          ! Here Rst in AU
-          if (Rscst.eq.0) then 
+          ! Interpolation to have the host body radius (and radius of gyration for BDs)
+          ! Here Rst in AU, Rst5; Rst10
+          if (brown_dwarf.eq.1) then
              if (crash.eq.0) then
                 call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb0)
-                Rst0 = Rsun * Rstb0
+                Rst0= Rsun * Rstb0
                 call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time+dt,Rstb)
                 Rst = Rsun * Rstb
                 call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
@@ -464,7 +584,7 @@ contains
              endif
              if (crash.eq.1) then
                 call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb0)
-                Rst0 = Rsun * Rstb0
+                Rst0= Rsun * Rstb0
                 call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash+dt,Rstb)
                 Rst = Rsun * Rstb
                 call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s0)
@@ -473,33 +593,55 @@ contains
                 Rst10 = Rst5*Rst5
              endif
           endif
+          if (M_dwarf.eq.1) then
+             if (crash.eq.0) then
+                call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time,Rstb0)
+                Rst0= Rsun * Rstb0
+                call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time+dt,Rstb)
+                Rst = Rsun * Rstb
+                Rst5  = Rst*Rst*Rst*Rst*Rst
+                Rst10 = Rst5*Rst5
+             endif
+             if (crash.eq.1) then
+                call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash,Rstb0)
+                Rst0= Rsun * Rstb0
+                call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash+dt,Rstb)
+                Rst = Rsun * Rstb
+                Rst5  = Rst*Rst*Rst*Rst*Rst
+                Rst10 = Rst5*Rst5
+             endif
+          endif
+          if (Sun_like_star.eq.1) then
+             if (crash.eq.0) then
+                call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time,Rstb0)
+                Rst0= minau * Rstb0
+                call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time+dt,Rstb)
+                Rst = minau * Rstb
+                Rst5  = Rst*Rst*Rst*Rst*Rst
+                Rst10 = Rst5*Rst5
+             endif
+             if (crash.eq.1) then
+                call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash,Rstb0)
+                Rst0= minau * Rstb0
+                call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash+dt,Rstb)
+                Rst = minau * Rstb
+                Rst5  = Rst*Rst*Rst*Rst*Rst
+                Rst10 = Rst5*Rst5
+             endif
+          endif
           if (Rscst.eq.1) then 
-			 Rst  = Rst0
-			 rg2s = rg2s0
 			 Rst5  = Rst*Rst*Rst*Rst*Rst
              Rst10 = Rst5*Rst5
-!~              write(*,*) "Rst =",Rst," rg2s =",rg2s
-!~              write(*,*) "Rst5 =",Rst5,"Rst10 =",Rst10
 	      endif
-	      
-!~ 	      write(*,*) "v with extra force =",sqrt(m(1)/r(2)+3.d0*m(2)*Rst5*k2s/(r(2)**6))," AU/day"
-!~ 	      write(*,*) "v2/r with extra force =",(3.d0*m(2)*Rst5*cmau**5*k2s/(r(2)**7))
-!~ 	      write(*,*) "v kepler =",sqrt(m(1)/r(2))," AU/day"	
-!~ 	      stop
-	      
-!~           if ((mod(flagbug,nbug).eq.0).and.(flagbug.ge.0)) then
-!~              write(*,*) "Rst =",Rst,"Mst =",Mst,m(1)*msun/K2,"Mp(j)",Mp(2),m(2)*msun/K2,"Rp(j)=",Rp(2)
-!~              write(*,*) "spin(1,1) =",spin(1,1)," spin(2,1) =",spin(2,1),"spin(3,1) =",spin(3,1)
-!~              write(*,*) "spin(1,2) =",spin(1,2)," spin(2,2) =",spin(2,2),"spin(3,2) =",spin(3,2)
-!~ 		  endif
+	
           ! **************************************************************
           ! **************************************************************
 
           ! Radial and orthoradial force of BD on planets
+          ! GR forces
           ! See note book for details !!!
           do j=2,ntid+1
-
-             ! Calculate tidal force
+             ! ****************** tidal force *********************
              ! Ftr, Ftso and Ftpo in AU.Msun.day-2
 			 tmp  = K2*K2
 			 tmp1 = m(1)*m(1)
@@ -509,26 +651,21 @@ contains
                   - 13.5d0*vrad(j)/(r8(j)*tmp) &
                   *(tmp2*Rst10*dissstar*sigmast &
                   +tmp1*Rp10(j)*sigmap(j))           
-!~              -3.0d0*m(j)*m(j)*Rst5*k2s/(r7(j)*K2)
-
              Ftso(j) = 4.5d0*tmp2*Rst10*dissstar*sigmast/(tmp*r7(j))
              Ftpo(j) = 4.5d0*tmp1*Rp10(j)*sigmap(j)/(tmp*r7(j))
 
-!~ 			 stop
-             !************************* GR forces ****************************
-             ! FGRr in cm.s-2 and FGRo in s-1
+             !****************** GR forces ****************************
+             ! FGRr in AU.day-2 and FGRo in day-1
              FGRr(j) = -(m(1)+m(j))/(r2(j)*C2*C2) &
                   *((1.0d0+3.0d0*tintin(j))*v2(j) &  
                     -2.d0*(2.d0+tintin(j))*(m(1)+m(j))/r(j) &
                     -1.5d0*tintin(j)*vrad(j)*vrad(j))                          
              FGRo(j) = (m(1)+m(j))/(r2(j)*C2*C2) &
                   *2.0d0*(2.0d0-tintin(j))*vrad(j)*vv(j)
-
-
           enddo   
           
+          ! Calculation of tidal torque !AU,Msun,day
           do j=2,ntid+1  
-             ! Calculate tidal torque !AU,Msun,day
              ! star
              Nts(1,j)  =  Ftso(j)*1.d0/r(j) &
                   *(xh(2,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
@@ -551,8 +688,12 @@ contains
                   *(xh(1,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)) &
                   - xh(2,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)))          
           end do
-					
+			
+		  ! **************************************************************
+          ! **************************************************************
+	
           ! Spin evolution
+          
           ! STAR
           ! Sum of the different contribution from the different planets        
           totftides(1) = 0.d0
@@ -564,7 +705,7 @@ contains
              totftides(3) = totftides(3) + Nts(3,j)
           end do
           ! d/dt(I.Omega) = - (r x F)
-          if (Rscst.eq.0) then 
+          if (Rscst.ne.0) then 
              tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
              tmp1 = - dt*K2/(rg2s*m(1)*Rst*Rst)
              spin(1,1) = tmp*spin(1,1) + tmp1*totftides(1)
@@ -577,6 +718,7 @@ contains
              spin(2,1) = spin(2,1) + tmp*totftides(2)
              spin(3,1) = spin(3,1) + tmp*totftides(3)
           endif
+          
 		  !PLANETS
 		  do j=2,ntid+1 
 		     tmp = - dt*K2/(m(j)*Rp(j)*Rp(j))
@@ -585,22 +727,28 @@ contains
 		     spin(3,j) = spin(3,j) + tmp*Ntp(3,j)/rg2p(j-1)
 		  enddo
    
+          ! Write stuff
+      
              if (flagbug.eq.0.0d0) then 
                 write(*,*) "time(yr)    spin x,y,z(day-1)     a-Rst(Rsun)"
              endif         
              if ((mod(flagbug,nbug).eq.0).and.(flagbug.ge.0)) then
-!~                 write(*,*) time/365.25d0,spin(3,1),spin(3,2),Rst/rsun,Rp(2)/rearth,sigmap(2)
                 write(*,*) "s",time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun
                 write(*,*) "p1",time/365.25d0,spin(1,2),spin(2,2),spin(3,2)
-                if (ntid.eq.2) then
+                write(*,*) "h1",time/365.25d0,horb(1,2)/horbn(2),horb(2,2)/horbn(2),horb(3,2)/horbn(2)
+                if (ntid.ge.2) then
                    write(*,*) "p2",time/365.25d0,spin(1,3),spin(2,3),spin(3,3)
                 endif
-                write(*,*) "h1",time/365.25d0,horb(1,2)/horbn(2),horb(2,2)/horbn(2),horb(3,2)/horbn(2)
-                if (ntid.eq.2) then
+                if (ntid.ge.2) then
                    write(*,*) "h2",time/365.25d0,horb(1,3)/horbn(3),horb(2,3)/horbn(3),horb(3,3)/horbn(3)
                 endif
+                if (ntid.ge.3) then
+                   write(*,*) "p3",time/365.25d0,spin(1,4),spin(2,4),spin(3,4)
+                endif
+                if (ntid.ge.3) then
+                   write(*,*) "h3",time/365.25d0,horb(1,4)/horbn(4),horb(2,4)/horbn(4),horb(3,4)/horbn(4)
+                endif
              endif
-!~ 		  endif
 
           !****************************************************************
           !******************** final accelerations ***********************
@@ -616,10 +764,6 @@ contains
              a1(3,j) = K2/m(j)*(Ftr(j)*xh(3,j)/r(j) &
                   +Ftso(j)/r(j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
                   +Ftpo(j)/r(j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)))
-!~              a1(1,j) = -(3.d0*m(2)*Rst5*cmau**5*k2s/(r(2)**7))
-!~              a1(2,j) = 0.0d0
-!~              a1(3,j) = 0.0d0
-!~ 		     write(*,*) "atides =",a1(1,j),a1(2,j),a1(3,j)," AU.day-2"
 		     
              a2(1,j) = (FGRr(j)*xh(1,j)/r(j)+FGRo(j)*vh(1,j)/vv(j))
              a2(2,j) = (FGRr(j)*xh(2,j)/r(j)+FGRo(j)*vh(2,j)/vv(j))
@@ -628,18 +772,13 @@ contains
              a(1,j) = a1(1,j)+a2(1,j)
              a(2,j) = a1(2,j)+a2(2,j)
              a(3,j) = a1(3,j)+a2(3,j)
-!~              if ((mod(flagbug,nbug).eq.0).and.(flagbug.ge.0)) then
-!~                 write(*,*) "a =",a(1,j),a(2,j),a(3,j)," AU.day-2"
-!~              endif
           end do
 
           ! Store previous value of time in order to calculate timestep
           timebf = time
           flagbug = flagbug+1
-!~ 	   if (flagbug.gt.10) stop
-          !------------------------------------------------------------------------------
-       endif
-!~     endif
+
+
     return
   end subroutine mfo_user
 
