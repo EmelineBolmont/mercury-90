@@ -544,8 +544,8 @@ isModifs = is_non_committed_modifs()
 if force:
   clean(["o", "mod"])
 
-#~ sourceFile.setCompilator("ifort")
-#~ sourceFile.setCompilingOptions("-check all")
+sourceFile.setCompilator("ifort")
+sourceFile.setCompilingOptions("-O3 -march=native -pipe -Bstatic")
 
 sourceFile.setCompilator("gfortran")
 sourceFile.setCompilingOptions("-O3 -march=native -pipe -finit-real=nan")
