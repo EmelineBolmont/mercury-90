@@ -544,7 +544,12 @@ isModifs = is_non_committed_modifs()
 if force:
   clean(["o", "mod"])
 
+#~ sourceFile.setCompilator("ifort")
+#~ sourceFile.setCompilingOptions("-check all")
 
+sourceFile.setCompilator("gfortran")
+sourceFile.setCompilingOptions("-O3 -march=native -pipe -finit-real=nan")
+#~ sourceFile.setCompilingOptions("")
 
 # Before compiling, we delete the previous compilation log. Indeed, we need to append the several warnings in the same file
 # But we do not want to have infos of the previous compilation in it.
