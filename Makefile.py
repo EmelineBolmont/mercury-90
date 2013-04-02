@@ -545,7 +545,7 @@ if force:
   clean(["o", "mod"])
 
 sourceFile.setCompilator("ifort")
-sourceFile.setCompilingOptions("-O3 -march=native -pipe -Bstatic")
+sourceFile.setCompilingOptions("-O3 -Bstatic")
 
 sourceFile.setCompilator("gfortran")
 sourceFile.setCompilingOptions("-O3 -march=native -pipe -finit-real=nan")
