@@ -61,8 +61,8 @@ contains
     integer :: nintegral=0
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: nbug!=3.6525d5!3.65d5 !4.56d6 !
-    real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0
-    real(double_precision) :: timebf,dt,tstop,tmp,tmp1,tmp2,k2s
+    real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
+    real(double_precision) :: timebf,dt,tstop,tmp,tmp1,tmp2,k2s,sigmast
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
     real(double_precision), dimension(3,nbig+1) :: a1,a2,xh,vh
@@ -87,9 +87,9 @@ contains
          0.355d0,0.342d0,0.333d0,0.325d0,0.311d0,0.308d0,0.307d0,0.307d0/)
 
     ! Data 
-    if (Sun_like_star.eq.1) save timestar,radiusstar,d2radiusstar
-    if (brown_dwarf.eq.1) save timeBD,radiusBD
-    if (M_dwarf.eq.1) save timedM,radiusdM
+    save timestar,radiusstar,d2radiusstar
+    save timeBD,radiusBD
+    save timedM,radiusdM
     
     save spin0
     save Rst0,Rst,rg2s0,k2s,rg2st,sigmast
@@ -506,7 +506,12 @@ contains
 				   na(j) = nn 
 				   la(j) = ll
 				   ! Initialization of planetary spin (day-1)
-			       spinp0 = 24.d0*TWOPI/Pp0
+				   if (pseudo_rot(j-1).eq.0) spinp0 = 24.d0*TWOPI/Pp0(j-1)
+				   if (pseudo_rot(j-1).ne.0) then 
+				      spinp0 = pseudo_rot(j-1)*(1.d0+15.d0/2.d0*ea(j)**2+45.d0/8.d0*ea(j)**4+5.d0/16.d0*ea(j)**6) &
+                           *1.d0/(1.d0+3.d0*ea(j)**2+3.d0/8.d0*ea(j)**4)*1./(1-ea(j)**2)**1.5d0*sqrt(m(1)+m(j)) &
+                           *(qa(j)/(1.d0-ea(j)))**(-1.5d0)
+		           endif
 		           if (ia(j).eq.0.0) then
 		              spin(1,j) = spinp0*sin(oblp(j-1))
 			          spin(2,j) = 0.0d0
@@ -535,10 +540,10 @@ contains
                    ! Dissipation sigmap (Msun-1.AU-2.day-1)     
                    ! Terrestrial for 0 and 3, gas giant for the rest
                    
-                   if (jupiter(j-1).eq.0).or.(jupiter(j-1).eq.3) then
+                   if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.3)) then
                       sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
                    endif
-                   if (jupiter(j-1).ne.0).and.(jupiter(j-1).ne.3) then
+                   if ((jupiter(j-1).ne.0).and.(jupiter(j-1).ne.3)) then
                       sigmap(j) = dissplan(j-1)*sigma_gg
                    endif
                    

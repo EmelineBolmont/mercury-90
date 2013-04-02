@@ -56,7 +56,7 @@ module tides_constant_GR
   
   ! If pseudo_rot eq 0 : initial period as given by Pp0 (in hr)
   ! If pseudo_rot eq toto : initial period = toto*pseudo_synchronization period 
-  real(double_precision), parameter, dimension(ntid) :: pseudo_rot = (/0,0/)
+  real(double_precision), parameter, dimension(ntid) :: pseudo_rot = (/1,1/)
   real(double_precision), parameter, dimension(ntid) :: Pp0 = (/24.d0, 24.d0/) 	
   real(double_precision), parameter, dimension(ntid) :: dissplan = (/1.d0,10.d0/)
   ! Love number of degree 2: Jup: 0.38d0, E: 0.305d0
@@ -74,7 +74,7 @@ module tides_constant_GR
   ! 3,4: 55 Cnc e and b
   ! 5: radius_p (Jupiter radius)
   integer, parameter, dimension(ntid) :: jupiter = (/0,0/)
-  real(double_precision), parameter, dimension(ntid) :: radius_p = (/0.954d0,0.954d0)
+  real(double_precision), parameter, dimension(ntid) :: radius_p = (/0.954d0,0.954d0/)
   
   
   ! Star dissipation, and caracteristics in CGS
