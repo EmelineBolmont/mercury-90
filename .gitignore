@@ -12,6 +12,7 @@ dissipation
 simu_test
 *.dat
 unitary_tests
+parameter_study
 *.bak
 *~
 *.pdf
