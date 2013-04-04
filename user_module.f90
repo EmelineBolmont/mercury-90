@@ -493,6 +493,32 @@ contains
 
 !~       ! Initialization of many things concerning planets
           if (ispin.eq.0) then 
+          
+             do j=2,ntid+1
+                ! Calculate the planets properties   
+                ! Planetary radius in AU (rearth in AU) Rocky planet
+	            if (jupiter(j-1).eq.0) Rp(j) = rearth*((0.0592d0*0.7d0+0.0975d0) &
+                  *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))**2+(0.2337d0*0.7d0+0.4938d0) &
+                  *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))+0.3102d0*0.7d0+0.7932d0)
+                if (jupiter(j-1).eq.1) Rp(j) = radius_p(j-1)*rearth
+                if (jupiter(j-1).eq.2) Rp(j) = radius_p(j-1)*rearth
+                Rp5(j)  = Rp(j)*Rp(j)*Rp(j)*Rp(j)*Rp(j)
+                Rp10(j) = Rp5(j)*Rp5(j)
+                
+                ! Dissipation sigmap (Msun-1.AU-2.day-1)     
+                ! Terrestrial for 0 and 3, gas giant for the rest
+                
+                if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.1)) then
+                   sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                endif
+                if (jupiter(j-1).eq.2) then
+                   sigmap(j) = dissplan(j-1)*sigma_gg
+                endif
+                
+                ! Factor used for GR force calculation
+                tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
+             enddo
+          
 !~           ! If no crash of server (real initial conditions)
 			 if (crash.eq.0) then
 			    do j=2,ntid+1
@@ -522,36 +548,7 @@ contains
 			          spin(2,j) = spinp0*(horb(2,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
 			          spin(3,j) = spinp0*cos(oblp(j-1)+ia(j)) 
 			       endif 
-
-			     ! Calculate the planets properties   
-                 ! Planetary radius in AU (rearth in AU) Rocky planet
-    
-			       if (jupiter(j-1).eq.0) Rp(j) = rearth*((0.0592d0*0.7d0+0.0975d0) &
-                     *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))**2+(0.2337d0*0.7d0+0.4938d0) &
-                     *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))+0.3102d0*0.7d0+0.7932d0)
-                   if (jupiter(j-1).eq.1) Rp(j) = rearth*Rjup
-                   if (jupiter(j-1).eq.2) Rp(j) = rearth*8.286d-1*Rjup
-                   if (jupiter(j-1).eq.3) Rp(j) = 2.17d0*rearth
-                   if (jupiter(j-1).eq.4) Rp(j) = rearth*0.954d0*Rjup
-                   if (jupiter(j-1).eq.5) Rp(j) = rearth*radius_p(j-1)*Rjup                
-                   Rp5(j)  = Rp(j)*Rp(j)*Rp(j)*Rp(j)*Rp(j)
-                   Rp10(j) = Rp5(j)*Rp5(j)
-                   
-                   ! Dissipation sigmap (Msun-1.AU-2.day-1)     
-                   ! Terrestrial for 0 and 3, gas giant for the rest
-                   
-                   if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.3)) then
-                      sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
-                   endif
-                   if ((jupiter(j-1).ne.0).and.(jupiter(j-1).ne.3)) then
-                      sigmap(j) = dissplan(j-1)*sigma_gg
-                   endif
-                   
-                   ! Factor used for GR force calculation
-                   tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
-                   
-                enddo
-                
+                enddo         
              end if   
 			 if (crash.eq.1) then
 			    spin(1,1) = rot_crash(1) !day-1

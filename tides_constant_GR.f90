@@ -70,11 +70,10 @@ module tides_constant_GR
   real(double_precision), parameter, dimension(ntid) :: oblp = (/0.0d0,0.0d0/)				
   real(double_precision), parameter :: Rjup = 10.9d0 !rearth	
   ! Indicate if Planet is of known parameters.
-  ! 0: Earth-like, 1: Jupiter, 2: Saturn
-  ! 3,4: 55 Cnc e and b
-  ! 5: radius_p (Jupiter radius)
+  ! 0: Earth-like, 1: Terrestrial (no mass-radius relationship), 2: Gas giant
   integer, parameter, dimension(ntid) :: jupiter = (/0,0/)
-  real(double_precision), parameter, dimension(ntid) :: radius_p = (/0.954d0,0.954d0/)
+  ! If jupiter ne 0, then indicate radius in Rearth, for ex: 1 or 0.954d0*Rjup
+  real(double_precision), parameter, dimension(ntid) :: radius_p = (/0.d0,0.d0/)
   
   
   ! Star dissipation, and caracteristics in CGS
