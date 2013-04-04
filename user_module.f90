@@ -505,20 +505,21 @@ contains
                 Rp5(j)  = Rp(j)*Rp(j)*Rp(j)*Rp(j)*Rp(j)
                 Rp10(j) = Rp5(j)*Rp5(j)
                 
-                ! Dissipation sigmap (Msun-1.AU-2.day-1)     
-                ! Terrestrial for 0 and 3, gas giant for the rest
+                
+                ! k2p, rg2p, k2pdeltap and sigmap
+                ! Terrestrial for 0 and 1, gas giant for 2
                 
                 if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.1)) then
-                   sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
                    k2p(j-1) = k2p_terr
                    rg2p(j-1) = rg2p_terr
                    k2pdeltap(j-1) = k2pdeltap_terr
+                   sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
                 endif
                 if (jupiter(j-1).eq.2) then
-                   sigmap(j) = dissplan(j-1)*sigma_gg
                    k2p(j-1) = k2p_gg
                    rg2p(j-1) = rg2p_gg
                    k2pdeltap(j-1) = k2pdeltap_gg
+                   sigmap(j) = dissplan(j-1)*sigma_gg
                 endif
                 
                 ! Factor used for GR force calculation
