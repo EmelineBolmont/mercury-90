@@ -2,38 +2,13 @@ module tides_constant_GR
   use types_numeriques
 
   implicit none
-
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  !      USER_TIDES.INC  -- for use with mercury6_tides.f
+  ! Author: Emeline Bolmont
+  ! Date: 04/04/13
   !
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  !
-  ! Author: Sean Raymond, Emeline Bolmont
-  ! Date: 07/08/09
-  !
-  ! Parameters that govern tidal evolution (from Golreich & Soter
-  !         1966 and Jackson et al 2008): 
-  !
-  !   NTID = # of tidally evolving planets, in order in BIG file 
-  !                     (must be 1 or greater)
-  !   SIGMAST = Tidal dissipation factor (Msun-1.AU-2.day-1)
-  !   RSun = Stellar radius IN AU
-  !   K2P = Love number of degree 2 of a rocky planet
-  !   k2pdeltap = k2_p*delta_p for a rocky planet in day
-  !   REARTH = Radius of Earth in AU
-  
-  !
-  !  M2EARTH = conversion from solar -> Earth masses
-  !  BIGG = Gravitational constant in AU^3.Msun-1.day-2
-  !  CMAU = conversion from cm to AU
-  !  AUCM =     "        "  AU to cm
-  !  MEARTH = Earth mass in solar mass
-  !  C2 = speed of light (in AU/day)
-  !
+  ! Number of tidally evolving planets
   integer, parameter :: ntid=2
-  integer, parameter :: tidflag=1
-  integer, parameter :: ceflag=0
+  ! Nature of host body
   integer, parameter :: brown_dwarf=1
   integer, parameter :: M_dwarf=0
   integer, parameter :: Sun_like_star=0
@@ -81,8 +56,8 @@ module tides_constant_GR
   real(double_precision), parameter :: radius_star = 0.943 !Rsun
  
   
-  !****************************************************
-  !****************************************************
+  !*********************************************************************
+  !*********************************************************************
   ! No Need to chang stuff from here
   ! Radius of gyration and love number for dM 
   real(double_precision), parameter :: rg2_dM = 2.0d-1
@@ -112,7 +87,9 @@ module tides_constant_GR
   real(double_precision), parameter :: rsun = 4.67920694d-3
   real(double_precision), parameter :: rearth = 4.25874677d-5
   real(double_precision), parameter :: m2earth = (1.9891d6/5.9794)
+  ! meter in AU
   real(double_precision), parameter :: minau = 6.68458d-12
+  ! Speed of light
   real(double_precision), parameter :: C2 = 1.731444830225d2
 
 
