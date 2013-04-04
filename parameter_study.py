@@ -6,7 +6,7 @@ import mercury                  # module that contain object for each parameter 
 import pdb                      # to debug via pdb.set_trace()
 import os                       # to create folder, change directory and so on
 import subprocess               # to launch 'runjob'
-#~ from constants import *         # Several constants, including mass of planets and so on. All constants are in CAPSLOCK
+from constants import *         # Several constants, including mass of planets and so on. All constants are in CAPSLOCK
 import shutil                   # In particular to copy a file with .copy2()
 import sys                      # To enable parameters in the script (in particular)
 from math import *
@@ -49,7 +49,7 @@ def set_default_parameters():
   opacity_type = 'bell' # 'bell' or 'zhu' or 'hure' opacity table
   b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
   sample = 400
-  disk_edges = (0.1, 100.) # (the inner and outer edge of the disk in AU)
+  disk_edges = (0.5, 100.) # (the inner and outer edge of the disk in AU)
   inner_smoothing_width = 0.05 # (in unit of the inner boundary radius) , the width of the region where the surface density decay to become 0 at the inner edge
   dissipation_type = 0
   disk_exponential_decay = None # in years
@@ -93,6 +93,9 @@ def systemCommand(command):
   process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
   (process_stdout, process_stderr) = process.communicate()
   returncode = process.poll()
+  
+  if (returncode != 0):
+    pdb.set_trace()
   # there is .poll() or .wait() but I don't remember the difference. For some kind of things, one of the two was not working
   return (process_stdout, process_stderr, returncode)
 
@@ -153,40 +156,56 @@ set_default_parameters()
 #-------------------------------------------------------------------------------
 # Definition of parameters of the script
 for opacity in ['bell', 'zhu', 'hure', 'chambers']:
+  #~ set_default_parameters()
+  #~ opacity_type = opacity
+  #~ parameter_name = 'density_index'
+  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
+  #~ parameter_values = np.linspace(0.5, 2., 16)
+  #~ study_parameter_influence()
+#~ 
+  #~ set_default_parameters()
+  #~ opacity_type = opacity
+  #~ parameter_name = 'density_constant'
+  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
+  #~ parameter_values = np.linspace(500., 2500., 21)
+  #~ study_parameter_influence()
+#~ 
+  #~ set_default_parameters()
+  #~ opacity_type = opacity
+  #~ parameter_name = 'viscosity'
+  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
+  #~ parameter_values = np.logspace(12, 16, 15)
+  #~ study_parameter_influence()
+#~ 
+  #~ set_default_parameters()
+  #~ opacity_type = opacity
+  #~ parameter_name = 'adiabatic_index'
+  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
+  #~ parameter_values = np.linspace(1, 2., 10)
+  #~ study_parameter_influence()
+#~ 
+  #~ set_default_parameters()
+  #~ opacity_type = opacity
+  #~ viscosity_type = 'alpha'
+  #~ parameter_name = 'alpha'
+  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
+  #~ parameter_values = np.logspace(-2, -4., 10)
+  #~ study_parameter_influence()
+  
   set_default_parameters()
   opacity_type = opacity
-  parameter_name = 'density_index'
-  folder_name = "%s_%s" % (opacity_type, parameter_name)
-  parameter_values = np.linspace(0.5, 2., 16)
-  study_parameter_influence()
-
-  set_default_parameters()
-  opacity_type = opacity
-  parameter_name = 'density_constant'
-  folder_name = "%s_%s" % (opacity_type, parameter_name)
-  parameter_values = np.linspace(500., 2500., 21)
-  study_parameter_influence()
-
-  set_default_parameters()
-  opacity_type = opacity
-  parameter_name = 'viscosity'
-  folder_name = "%s_%s" % (opacity_type, parameter_name)
-  parameter_values = np.logspace(12, 16, 15)
-  study_parameter_influence()
-
-  set_default_parameters()
-  opacity_type = opacity
-  parameter_name = 'adiabatic_index'
-  folder_name = "%s_%s" % (opacity_type, parameter_name)
-  parameter_values = np.linspace(1, 2., 10)
-  study_parameter_influence()
-
-  set_default_parameters()
-  opacity_type = opacity
-  viscosity_type = 'alpha'
-  parameter_name = 'alpha'
-  folder_name = "%s_%s" % (opacity_type, parameter_name)
-  parameter_values = np.logspace(-2, -4., 10)
+  parameter_name = 'surface_density'
+  M_tot = 30. # dust total mass in earth mass
+  R_int = 0.5 # AU
+  R_out = 100. # AU
+  dtg = 0.01 # Dust to gas ratio
+  
+  sigma_index = np.linspace(0.5, 1.6, 12)
+  
+  sigma_0 = (M_tot / dtg) / ((2. * pi / (2. - sigma_index)) * (R_out**(2. - sigma_index) - R_int**(2. - sigma_index))) # in earth_mass / AU**2
+  sigma_0 = sigma_0 * (MT / AU**2)
+  folder_name = "%s_constant_total_mass" % (opacity_type)
+  parameter_values = zip(sigma_0, sigma_index)
   study_parameter_influence()
 
 
