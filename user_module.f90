@@ -70,7 +70,7 @@ contains
     real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la,azi
     real(double_precision), dimension(3,nbig+1) :: Nts,Ntp
     real(double_precision), dimension(3,5) :: spin
-    real(double_precision), dimension(5) :: Rp,sigmap,Rp5,Rp10,tintin
+    real(double_precision), dimension(5) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
     ! don't use after collision
     real(double_precision), dimension(nbig+1) :: r,r2,r7,r8,v2,vv,vrad
     real(double_precision), dimension(nbig+1) :: horbn
@@ -97,7 +97,7 @@ contains
     save flagrg2,flagtime,ispin,flagbug
     save nbug
     save spin
-    save Rp,sigmap,Rp5,Rp10,tintin
+    save Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
     save timebf,nptmss
     !------------------------------------------------------------------------------
     ! superzoyotte
@@ -510,9 +510,15 @@ contains
                 
                 if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.1)) then
                    sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                   k2p(j-1) = k2p_terr
+                   rg2p(j-1) = rg2p_terr
+                   k2pdeltap(j-1) = k2pdeltap_terr
                 endif
                 if (jupiter(j-1).eq.2) then
                    sigmap(j) = dissplan(j-1)*sigma_gg
+                   k2p(j-1) = k2p_gg
+                   rg2p(j-1) = rg2p_gg
+                   k2pdeltap(j-1) = k2pdeltap_gg
                 endif
                 
                 ! Factor used for GR force calculation
