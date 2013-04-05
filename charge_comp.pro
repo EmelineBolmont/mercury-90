@@ -116,8 +116,8 @@ wb     =  dblarr(nbp,nmaxb)
 ; Table filling for big planets (PLANET)
 for i=0,nbp-1 do begin
    filename = 'PLANET'+strtrim(i+1,2)+'.aei'
-   nt = file_lines(filename)-nlineheader
-   read_array = dblarr(14,nt)
+   nlineb1 = file_lines(filename)-nlineheader
+   read_array = dblarr(14,nlineb1)
    openr,1,filename
    readf,1,header
    readf,1,read_array
