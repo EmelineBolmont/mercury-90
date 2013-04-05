@@ -214,7 +214,7 @@ for bou = 0,n_elements(horb1x)-1 do begin
               *sqrt(spinp1x(bou)^2+spinp1y(bou)^2+spinp1z(bou)^2))
    if tmp(bou) le 1 then $ 
       oblp1m(bou) = acos(tmp(bou))*180.d0/!Pi
-   if abs(tmp(bou)) gt 1 then oblp1m(bou) = 0.0d0
+   if abs(tmp(bou)) gt 1 then oblp1m(bou) = 1.0d-6
   
    tmp(bou)=(horb1x(bou)*spinstx(bou) $
              +horb1y(bou)*spinsty(bou) $
@@ -223,7 +223,7 @@ for bou = 0,n_elements(horb1x)-1 do begin
               *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
    if tmp(bou) le 1 then $ 
       obls1m(bou) = acos(tmp(bou))*180.d0/!Pi
-   if abs(tmp(bou)) gt 1 then obls1m(bou) = 0.0d0
+   if abs(tmp(bou)) gt 1 then obls1m(bou) = 1.0d-6
    
    if n_tid ge 2 then begin
       tmp(bou)=(horb2x(bou)*spinp2x(bou) $
@@ -233,7 +233,7 @@ for bou = 0,n_elements(horb1x)-1 do begin
               *sqrt(spinp2x(bou)^2+spinp2y(bou)^2+spinp2z(bou)^2))
       if tmp(bou) le 1 then $ 
          oblp2m(bou) = acos(tmp(bou))*180.d0/!Pi 
-      if abs(tmp(bou)) gt 1 then oblp2m(bou) = 0.0d0
+      if abs(tmp(bou)) gt 1 then oblp2m(bou) = 1.0d-6
       
       tmp(bou)=(horb2x(bou)*spinstx(bou) $
                 +horb2y(bou)*spinsty(bou) $
@@ -242,7 +242,7 @@ for bou = 0,n_elements(horb1x)-1 do begin
                  *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
       if tmp(bou) le 1 then $ 
          obls2m(bou) = acos(tmp(bou))*180.d0/!Pi
-      if abs(tmp(bou)) gt 1 then obls2m(bou) = 0.0d0
+      if abs(tmp(bou)) gt 1 then obls2m(bou) = 1.0d-6
    endif
    
    if n_tid ge 3 then begin
@@ -253,7 +253,7 @@ for bou = 0,n_elements(horb1x)-1 do begin
               *sqrt(spinp3x(bou)^2+spinp3y(bou)^2+spinp3z(bou)^2))
       if tmp(bou) le 1 then $ 
          oblp3m(bou) = acos(tmp(bou))*180.d0/!Pi 
-      if abs(tmp(bou)) gt 1 then oblp3m(bou) = 0.0d0
+      if abs(tmp(bou)) gt 1 then oblp3m(bou) = 1.0d-6
       
       tmp(bou)=(horb3x(bou)*spinstx(bou) $
                 +horb3y(bou)*spinsty(bou) $
@@ -262,7 +262,7 @@ for bou = 0,n_elements(horb1x)-1 do begin
                  *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
       if tmp(bou) le 1 then $ 
          obls3m(bou) = acos(tmp(bou))*180.d0/!Pi
-      if abs(tmp(bou)) gt 1 then obls3m(bou) = 0.0d0
+      if abs(tmp(bou)) gt 1 then obls3m(bou) = 1.0d-6
    endif
 endfor
 
