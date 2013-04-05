@@ -11,7 +11,7 @@ Function pseudorot,e,G,Mp,Ms
 end
 ; Constants 
 G         =  6.6742367d-11            ;m^3.kg^-1.s^-2
-AU        =  1.49588d11               ;m
+AU        =  1.49598d11               ;m
 yr        =  365.25*24*3600           ;s
 day       =  24*3600.                 ;s
 hr        =  3600.                    ;s
@@ -92,7 +92,7 @@ print,'min(e) =',min(eb(0,*)),min(eb(1,*))
 print,'max(e) =',max(eb(0,*)),max(eb(1,*))
 
 ;;! IDL
-for i = 0,nbp-1 do begin
+for i = 0,n_tid-1 do begin
    oplot,ti(i,*),ai(i,*) $
       ,thick=5,linestyle=2,color=incolor+i*indcolor
    oplot,ti(i,*),(G*(Ms+Mp(0)))^(1/3.) $
@@ -123,10 +123,13 @@ plot,tb(0,*),eb(0,*) $
      ,/ylog,/xlog
 for i = 0,nbp-1 do begin
    oplot,tb(i,0:indicend(0,i)),eb(i,0:indicend(0,i)),color=incolor+i*indcolor,thick=7,linestyle=0;,psym=2
+endfor
+for i = 0,n_tid-1 do begin
    oplot,ti(i,*),ei(i,*) $
       ,linestyle=2,color=incolor+i*indcolor,thick=5
 endfor
 multiplot,/reset
+
 endif else begin
 ;! Inclination
 multiplot,[1,3],ygap=0.01
@@ -145,10 +148,11 @@ plot,tb(0,*),incb(0,*) $
 oplot,toto1(0:indicend(1,0)),oblp1m(0:indicend(1,0)),color=incolor+0*indcolor,thick=7
 ;;! print,'oblp1m(0:7) =',oblp1m(0:7)
 ;;! print,'oblp2m(0:7) =',oblp2m(0:7)
-oplot,toto1(0:indicend(1,0)),oblp2m(0:indicend(1,0)),color=incolor+1*indcolor,thick=7
+if n_tid ge 2 then oplot,toto1(0:indicend(1,0)),oblp2m(0:indicend(1,0)),color=incolor+1*indcolor,thick=7
+if n_tid ge 3 then oplot,toto1(0:indicend(1,0)),oblp3m(0:indicend(1,0)),color=incolor+2*indcolor,thick=7
 
 ;! idl
-for i=0,nbp-1 do begin
+for i=0,n_tid-1 do begin
  oplot,ti(i,*),oblpi(i,*) $
        ,linestyle=2,color=incolor+i*indcolor,thick=5
 endfor
@@ -167,9 +171,11 @@ plot,tb(0,*),incb(0,*) $
 
 ;! Mercury
 oplot,toto1(0:indicend(1,0)),obls1m(0:indicend(1,0)),color=incolor+0*indcolor,thick=7
-oplot,toto1(0:indicend(1,0)),obls2m(0:indicend(1,0)),color=incolor+1*indcolor,thick=7
+if n_tid ge 2 then oplot,toto1(0:indicend(1,0)),obls2m(0:indicend(1,0)),color=incolor+1*indcolor,thick=7
+if n_tid ge 3 then oplot,toto1(0:indicend(1,0)),obls3m(0:indicend(1,0)),color=incolor+2*indcolor,thick=7
+
 ;! idl
-for i=0,nbp-1 do begin
+for i=0,n_tid-1 do begin
  oplot,ti(i,*),oblsi(i,*) $
        ,linestyle=2,color=incolor+i*indcolor,thick=5
 endfor
@@ -199,15 +205,18 @@ i=0
 oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
    /(sqrt(spinp1x(0:indicend(1,i))^2+spinp1y(0:indicend(1,i))^2+spinp1z(0:indicend(1,i))^2)) $
       ,thick=7,linestyle=0,color=incolor+0*indcolor
-oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
+if n_tid ge 2 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
 	/(sqrt(spinp2x(0:indicend(1,i))^2+spinp2y(0:indicend(1,i))^2+spinp2z(0:indicend(1,i))^2)) $
-      ,thick=7,linestyle=0,color=incolor+1*indcolor      
+      ,thick=7,linestyle=0,color=incolor+1*indcolor    
+if n_tid ge 3 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
+	/(sqrt(spinp3x(0:indicend(1,i))^2+spinp3y(0:indicend(1,i))^2+spinp3z(0:indicend(1,i))^2)) $
+      ,thick=7,linestyle=0,color=incolor+2*indcolor    
 oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
    /(sqrt(spinstx(0:indicend(1,i))^2+spinsty(0:indicend(1,i))^2+spinstz(0:indicend(1,i))^2)) $
       ,thick=7,linestyle=0;,color=incolor+1*indcolor
 
 ;! idl
-for i = 0,nbp-1 do begin
+for i = 0,n_tid-1 do begin
    oplot,ti(i,*),2*!Pi/(rotpi(i,*)*hr) $
          ,linestyle=2,color=incolor+i*indcolor,thick=5
    oplot,ti(i,*),2*!Pi/(rotsi(i,*)*hr) $
