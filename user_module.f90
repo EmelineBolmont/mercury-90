@@ -714,7 +714,7 @@ contains
              totftides(3) = totftides(3) + Nts(3,j)
           end do
           ! d/dt(I.Omega) = - (r x F)
-          if (Rscst.ne.0) then 
+          if (Rscst.eq.0) then 
              tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
              tmp1 = - dt*K2/(rg2s*m(1)*Rst*Rst)
              spin(1,1) = tmp*spin(1,1) + tmp1*totftides(1)
