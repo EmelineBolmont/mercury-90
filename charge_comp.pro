@@ -5,6 +5,8 @@
 nbp = 2
 ;! Number of planets tidally evolving
 n_tid = 2
+;! If comparison with IDL simulations 1, if not 0
+idl = 1
 
 nlineheader = 4                 ;! number of header lines in the data files
 
@@ -14,12 +16,14 @@ for i=0,nbp-1 do begin
    nlineb(i) = file_lines(filename)-nlineheader
 endfor
 
-filename4 = 'datatides_18.0000_0.00000_12_2_3_3_0.0261799_0.00000_0.dat'
-print,filename4
-nlineb4 = file_lines(filename4)-1
-filename5 = 'datatides_100.000_50.0000_12_5_3_4_0.0174533_0.00000_0.dat'
-print,filename5
-nlineb5 = file_lines(filename5)-1
+if idl eq 1 then begin
+   filename4 = 'datatides_18.0000_0.00000_12_2_3_3_0.0261799_0.00000_0.dat'
+   print,filename4
+   nlineb4 = file_lines(filename4)-1
+   filename5 = 'datatides_100.000_50.0000_12_5_3_4_0.0174533_0.00000_0.dat'
+   print,filename5
+   nlineb5 = file_lines(filename5)-1
+endif
 
 filenames = 'spins.dat'
 print,filenames
@@ -50,7 +54,7 @@ endif
 
 ; n line maximum
 nmaxb = max(nlineb)
-nline = max([nlineb4,nlineb5])
+if idl eq 1 then nline = max([nlineb4,nlineb5])
 
 ;; mass = [0.01,0.012,0.015,0.02,0.03,0.04,0.05,0.06,0.07,0.072,0.075,0.08]
 
@@ -135,56 +139,57 @@ for i=0,nbp-1 do begin
    wb[i,0:nlineb1-1] = read_array(13,*)
 endfor
 
-;**************************************
-; Table for the idl planet (DATATIDES) : 
-ti         =  dblarr(n_tid,nline)
-ai         =  dblarr(n_tid,nline)
-ei         =  dblarr(n_tid,nline)
-oblpi      =  dblarr(n_tid,nline)
-oblsi      =  dblarr(n_tid,nline)
-rotpi      =  dblarr(n_tid,nline)
-rotsi      =  dblarr(n_tid,nline)
-Rpi        =  dblarr(n_tid,nline)
-Rsi        =  dblarr(n_tid,nline)
-rg2si      =  dblarr(n_tid,nline)
-
-headeri = strarr(1)
-nlineb4 = file_lines(filename4)-1
-read_array = dblarr(10,nlineb4)
-openr,1,filename4
-readf,1,headeri
-readf,1,read_array
-close,1
-
-ti[0,0:nlineb4-1] = read_array(0,*);+toto1(0)
-ai[0,0:nlineb4-1] = read_array(1,*)
-ei[0,0:nlineb4-1] = read_array(2,*)
-oblpi[0,0:nlineb4-1] = read_array(3,*)
-oblsi[0,0:nlineb4-1] = read_array(4,*)
-rotpi[0,0:nlineb4-1] = read_array(5,*)
-rotsi[0,0:nlineb4-1] = read_array(6,*)
-Rpi[0,0:nlineb4-1] = read_array(7,*)
-Rsi[0,0:nlineb4-1] = read_array(8,*)
-rg2si[0,0:nlineb4-1] = read_array(9,*)
-
-nlineb5 = file_lines(filename5)-1
-read_array = dblarr(10,nlineb5)
-openr,1,filename5
-readf,1,headeri
-readf,1,read_array
-close,1
-
-ti[1,0:nlineb5-1] = read_array(0,*);+toto1(0)
-ai[1,0:nlineb5-1] = read_array(1,*)
-ei[1,0:nlineb5-1] = read_array(2,*)
-oblpi[1,0:nlineb5-1] = read_array(3,*)
-oblsi[1,0:nlineb5-1] = read_array(4,*)
-rotpi[1,0:nlineb5-1] = read_array(5,*)
-rotsi[1,0:nlineb5-1] = read_array(6,*)
-Rpi[1,0:nlineb5-1] = read_array(7,*)
-Rsi[1,0:nlineb5-1] = read_array(8,*)
-rg2si[1,0:nlineb5-1] = read_array(9,*)
-
+if idl eq 1 then begin
+   ;!**************************************
+   ;! Table for the idl planet (DATATIDES) : 
+   ti         =  dblarr(n_tid,nline)
+   ai         =  dblarr(n_tid,nline)
+   ei         =  dblarr(n_tid,nline)
+   oblpi      =  dblarr(n_tid,nline)
+   oblsi      =  dblarr(n_tid,nline)
+   rotpi      =  dblarr(n_tid,nline)
+   rotsi      =  dblarr(n_tid,nline)
+   Rpi        =  dblarr(n_tid,nline)
+   Rsi        =  dblarr(n_tid,nline)
+   rg2si      =  dblarr(n_tid,nline)
+   
+   headeri = strarr(1)
+   nlineb4 = file_lines(filename4)-1
+   read_array = dblarr(10,nlineb4)
+   openr,1,filename4
+   readf,1,headeri
+   readf,1,read_array
+   close,1
+   
+   ti[0,0:nlineb4-1] = read_array(0,*);+toto1(0)
+   ai[0,0:nlineb4-1] = read_array(1,*)
+   ei[0,0:nlineb4-1] = read_array(2,*)
+   oblpi[0,0:nlineb4-1] = read_array(3,*)
+   oblsi[0,0:nlineb4-1] = read_array(4,*)
+   rotpi[0,0:nlineb4-1] = read_array(5,*)
+   rotsi[0,0:nlineb4-1] = read_array(6,*)
+   Rpi[0,0:nlineb4-1] = read_array(7,*)
+   Rsi[0,0:nlineb4-1] = read_array(8,*)
+   rg2si[0,0:nlineb4-1] = read_array(9,*)
+   
+   nlineb5 = file_lines(filename5)-1
+   read_array = dblarr(10,nlineb5)
+   openr,1,filename5
+   readf,1,headeri
+   readf,1,read_array
+   close,1
+   
+   ti[1,0:nlineb5-1] = read_array(0,*);+toto1(0)
+   ai[1,0:nlineb5-1] = read_array(1,*)
+   ei[1,0:nlineb5-1] = read_array(2,*)
+   oblpi[1,0:nlineb5-1] = read_array(3,*)
+   oblsi[1,0:nlineb5-1] = read_array(4,*)
+   rotpi[1,0:nlineb5-1] = read_array(5,*)
+   rotsi[1,0:nlineb5-1] = read_array(6,*)
+   Rpi[1,0:nlineb5-1] = read_array(7,*)
+   Rsi[1,0:nlineb5-1] = read_array(8,*)
+   rg2si[1,0:nlineb5-1] = read_array(9,*)
+endif
 
 ;! Obliquities calculations
 
@@ -271,12 +276,15 @@ for j = 0,nbp-1 do begin
       endelse
    endfor
 endfor
-for i = 0,n_elements(toto1(*))-1 do begin
-   if toto1(i) le 1.d10 then begin
-      indicend(1,0) = i
-      indicend(1,1) = i
-   endif else begin
-      break
-   endelse
-endfor   
+if idl eq 1 then begin
+   for i = 0,n_elements(toto1(*))-1 do begin
+      if toto1(i) le 1.d10 then begin
+         indicend(1,0) = i
+         indicend(1,1) = i
+      endif else begin
+         break
+      endelse
+   endfor 
+endif  
+
 END

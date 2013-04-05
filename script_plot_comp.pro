@@ -88,17 +88,19 @@ oplot,toto1(*), $
             ,thick=7;,color=255
             
 print,'Porb =',2.d0*!Pi/sqrt(G*(Ms+Mp))*(ab(0,0)*AU)^(3.d0/2.d0)*1.0d0/(86400.d0),' days'
-print,'min(e) =',min(eb(0,*)),min(eb(1,*))
-print,'max(e) =',max(eb(0,*)),max(eb(1,*))
+print,'min(e) =',min(eb(0,*));!,min(eb(1,*))
+print,'max(e) =',max(eb(0,*));!,max(eb(1,*))
 
 ;;! IDL
-for i = 0,n_tid-1 do begin
-   oplot,ti(i,*),ai(i,*) $
-      ,thick=5,linestyle=2,color=incolor+i*indcolor
-   oplot,ti(i,*),(G*(Ms+Mp(0)))^(1/3.) $
-      *(rotsi(i,*))^(-2./3.)/AU $
-      ,thick=5,linestyle=2;,color=255
-endfor
+if idl eq 1 then begin
+   for i = 0,n_tid-1 do begin
+      oplot,ti(i,*),ai(i,*) $
+         ,thick=5,linestyle=2,color=incolor+i*indcolor
+      oplot,ti(i,*),(G*(Ms+Mp(0)))^(1/3.) $
+         *(rotsi(i,*))^(-2./3.)/AU $
+         ,thick=5,linestyle=2;,color=255
+   endfor
+endif
 ;;! oplot,ti(nbp-1,*),Rsi(nbp-1,*),thick=5,color=255,linestyle=2    ;,thick=5,linestyle=2
 ;;! print,'Rsi=',Rsi(nbp-1,0)
 ;; xyouts,4.1d7,1.55d-2,'1 M!dearth!n,'+greek('sigma')+'!dp!n' $
@@ -124,10 +126,12 @@ plot,tb(0,*),eb(0,*) $
 for i = 0,nbp-1 do begin
    oplot,tb(i,0:indicend(0,i)),eb(i,0:indicend(0,i)),color=incolor+i*indcolor,thick=7,linestyle=0;,psym=2
 endfor
-for i = 0,n_tid-1 do begin
-   oplot,ti(i,*),ei(i,*) $
-      ,linestyle=2,color=incolor+i*indcolor,thick=5
-endfor
+if idl eq 1 then begin
+   for i = 0,n_tid-1 do begin
+      oplot,ti(i,*),ei(i,*) $
+         ,linestyle=2,color=incolor+i*indcolor,thick=5
+   endfor
+endif
 multiplot,/reset
 
 endif else begin
@@ -152,10 +156,12 @@ if n_tid ge 2 then oplot,toto1(0:indicend(1,0)),oblp2m(0:indicend(1,0)),color=in
 if n_tid ge 3 then oplot,toto1(0:indicend(1,0)),oblp3m(0:indicend(1,0)),color=incolor+2*indcolor,thick=7
 
 ;! idl
-for i=0,n_tid-1 do begin
- oplot,ti(i,*),oblpi(i,*) $
-       ,linestyle=2,color=incolor+i*indcolor,thick=5
-endfor
+if idl eq 1 then begin
+   for i=0,n_tid-1 do begin
+    oplot,ti(i,*),oblpi(i,*) $
+          ,linestyle=2,color=incolor+i*indcolor,thick=5
+   endfor
+endif
 
 multiplot
 plot,tb(0,*),incb(0,*) $
@@ -175,10 +181,12 @@ if n_tid ge 2 then oplot,toto1(0:indicend(1,0)),obls2m(0:indicend(1,0)),color=in
 if n_tid ge 3 then oplot,toto1(0:indicend(1,0)),obls3m(0:indicend(1,0)),color=incolor+2*indcolor,thick=7
 
 ;! idl
-for i=0,n_tid-1 do begin
- oplot,ti(i,*),oblsi(i,*) $
-       ,linestyle=2,color=incolor+i*indcolor,thick=5
-endfor
+if idl eq 1 then begin
+   for i=0,n_tid-1 do begin
+    oplot,ti(i,*),oblsi(i,*) $
+          ,linestyle=2,color=incolor+i*indcolor,thick=5
+   endfor
+endif
 ;; for i = 0,nbp-1 do begin
 ;;    oplot,tb(i,*),incb(i,*),color=255,thick=5,linestyle=5
 ;; endfor
@@ -216,18 +224,21 @@ oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
       ,thick=7,linestyle=0;,color=incolor+1*indcolor
 
 ;! idl
-for i = 0,n_tid-1 do begin
-   oplot,ti(i,*),2*!Pi/(rotpi(i,*)*hr) $
-         ,linestyle=2,color=incolor+i*indcolor,thick=5
-   oplot,ti(i,*),2*!Pi/(rotsi(i,*)*hr) $
-         ,linestyle=2,thick=5
-   ;; oplot,ti(i,*),2*!Pi/(pseudorot(ei(i,*),G,Mp(i),Ms)*(ai(i,*)*AU)^(-3./2.)*hr) $
-   ;;       ,color=255,thick=3,linestyle=5     
-   ;; oplot,tb(i,*),2*!Pi/(pseudorot(eb(i,*),G,Mp(i),Ms)*(ab(i,*)*AU)^(-3./2.)*hr) $
-   ;;       ,color=255,thick=3,linestyle=5
+if idl eq 1 then begin
+   for i = 0,n_tid-1 do begin
+      oplot,ti(i,*),2*!Pi/(rotpi(i,*)*hr) $
+            ,linestyle=2,color=incolor+i*indcolor,thick=5
+      oplot,ti(i,*),2*!Pi/(rotsi(i,*)*hr) $
+            ,linestyle=2,thick=5
+      ;; oplot,ti(i,*),2*!Pi/(pseudorot(ei(i,*),G,Mp(i),Ms)*(ai(i,*)*AU)^(-3./2.)*hr) $
+      ;;       ,color=255,thick=3,linestyle=5     
+      ;; oplot,tb(i,*),2*!Pi/(pseudorot(eb(i,*),G,Mp(i),Ms)*(ab(i,*)*AU)^(-3./2.)*hr) $
+      ;;       ,color=255,thick=3,linestyle=5
 endfor
- 
+endif
+
 multiplot,/reset
 endelse
+
 END
 
