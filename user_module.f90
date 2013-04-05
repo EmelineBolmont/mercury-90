@@ -78,7 +78,7 @@ contains
     real(double_precision), dimension(1065) :: timestar,radiusstar,d2radiusstar
     real(double_precision), dimension(1065) :: timedM,radiusdM
     real(double_precision), dimension(37) :: rg2st,trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
-    real(double_precision) :: Rst,Rst5,Rst10,Rstb,Rst0,Rstb0,rg2s,rg2sb,rg2s0,temp,spin0,spinp0
+    real(double_precision) :: Rst,Rst5,Rst10,Rstb,Rst0,Rstb0,rg2s,rg2s0,temp,spin0,spinp0
     real(double_precision), dimension(nbig+1) :: Ftr,Ftso,Ftpo
     real(double_precision), dimension(nbig+1) :: FGRo,FGRr
     real(double_precision), parameter, dimension(12) :: Ps0 = (/8.d0,13.d0,19.d0,24.d0,30.d0,36.d0,41.d0, &
@@ -92,7 +92,7 @@ contains
     save timedM,radiusdM
     
     save spin0
-    save Rst0,Rst,rg2s0,k2s,rg2st,sigmast
+    save Rst0,Rst,rg2s0,k2s,rg2st,sigmast,rg2s
     save trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
     save flagrg2,flagtime,ispin,flagbug
     save nbug
@@ -368,7 +368,7 @@ contains
              end do
              
              Pst = Period_st
-             rg2st = rg2_dM
+             rg2s = rg2_dM
              k2s   = k2st_dM
              
             ! Initialization M-dwarf spin 
@@ -402,7 +402,7 @@ contains
           if (flagrg2.eq.0) then
           
              Pst = Period_st
-             rg2st = rg2_Sun
+             rg2s = rg2_Sun
              k2s   = k2st_Sun
                  
              open(1,file='SRad_Spli_M-1_0000.dat')
@@ -442,7 +442,7 @@ contains
        if (Rscst.eq.1) then 
           if (flagrg2.eq.0) then
 	         Pst = Period_st
-             rg2st = rg2_what
+             rg2s = rg2_what
              Rst   = radius_star*rsun
              k2s   = k2st_what
              sigmast = sigma_what
