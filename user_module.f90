@@ -92,7 +92,7 @@ contains
     save timedM,radiusdM
     
     save spin0
-    save Rst0,Rst,rg2s0,k2s,rg2st,sigmast,rg2s
+    save Rst0,Rst,Rst5,Rst10,rg2s0,k2s,rg2st,sigmast,rg2s
     save trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
     save flagrg2,flagtime,ispin,flagbug
     save nbug
@@ -444,6 +444,8 @@ contains
 	         Pst = Period_st
              rg2s = rg2_what
              Rst   = radius_star*rsun
+             Rst5  = Rst*Rst*Rst*Rst*Rst
+             Rst10 = Rst5*Rst5
              k2s   = k2st_what
              sigmast = sigma_what
              if (crash.eq.0) then
@@ -638,11 +640,7 @@ contains
                 Rst10 = Rst5*Rst5
              endif
           endif
-          if (Rscst.eq.1) then 
-			 Rst5  = Rst*Rst*Rst*Rst*Rst
-             Rst10 = Rst5*Rst5
-	      endif
-	
+
           ! **************************************************************
           ! **************************************************************
 
