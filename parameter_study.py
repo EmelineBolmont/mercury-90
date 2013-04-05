@@ -33,7 +33,7 @@ def set_default_parameters():
   global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, opacity_type
   global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
   global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
-  global is_turbulence, turbulent_forcing, saturation_torque
+  global is_turbulence, turbulent_forcing, saturation_torque, density_index, density_constant
   
   #----------------------------------
   # Parameters for the disk
@@ -100,6 +100,8 @@ def systemCommand(command):
   return (process_stdout, process_stderr, returncode)
 
 def study_parameter_influence():
+  global surface_density
+  
   os.chdir("parameter_study")
   if os.path.exists(folder_name):
     raise NameError("The folder %s already exists" % folder_name)
@@ -122,7 +124,6 @@ def study_parameter_influence():
     surface_density = (density_constant, density_index)
     
     generation_simulation_parameters()
-    
     
     sys.stdout.write("%3d %s : %s                          \r" % (index, parameter_name, value))
     sys.stdout.flush()
@@ -153,22 +154,25 @@ binaryPath = os.path.join(scriptFolder, os.path.pardir)
 
 set_default_parameters()
 
+if not(os.path.exists("parameter_study")):
+  os.mkdir("parameter_study")
+
 #-------------------------------------------------------------------------------
 # Definition of parameters of the script
 for opacity in ['bell', 'zhu', 'hure', 'chambers']:
-  #~ set_default_parameters()
-  #~ opacity_type = opacity
-  #~ parameter_name = 'density_index'
-  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
-  #~ parameter_values = np.linspace(0.5, 2., 16)
-  #~ study_parameter_influence()
+  set_default_parameters()
+  opacity_type = opacity
+  parameter_name = 'density_index'
+  folder_name = "%s_%s" % (opacity_type, parameter_name)
+  parameter_values = np.linspace(0.1, 1.9, 19)
+  study_parameter_influence()
 #~ 
-  #~ set_default_parameters()
-  #~ opacity_type = opacity
-  #~ parameter_name = 'density_constant'
-  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
-  #~ parameter_values = np.linspace(500., 2500., 21)
-  #~ study_parameter_influence()
+  set_default_parameters()
+  opacity_type = opacity
+  parameter_name = 'density_constant'
+  folder_name = "%s_%s" % (opacity_type, parameter_name)
+  parameter_values = np.linspace(50., 2500., 21)
+  study_parameter_influence()
 #~ 
   #~ set_default_parameters()
   #~ opacity_type = opacity
@@ -192,21 +196,21 @@ for opacity in ['bell', 'zhu', 'hure', 'chambers']:
   #~ parameter_values = np.logspace(-2, -4., 10)
   #~ study_parameter_influence()
   
-  set_default_parameters()
-  opacity_type = opacity
-  parameter_name = 'surface_density'
-  M_tot = 30. # dust total mass in earth mass
-  R_int = 0.5 # AU
-  R_out = 100. # AU
-  dtg = 0.01 # Dust to gas ratio
-  
-  sigma_index = np.linspace(0.5, 1.6, 12)
-  
-  sigma_0 = (M_tot / dtg) / ((2. * pi / (2. - sigma_index)) * (R_out**(2. - sigma_index) - R_int**(2. - sigma_index))) # in earth_mass / AU**2
-  sigma_0 = sigma_0 * (MT / AU**2)
-  folder_name = "%s_constant_total_mass" % (opacity_type)
-  parameter_values = zip(sigma_0, sigma_index)
-  study_parameter_influence()
+  #~ set_default_parameters()
+  #~ opacity_type = opacity
+  #~ parameter_name = 'surface_density'
+  #~ M_tot = 30. # dust total mass in earth mass
+  #~ R_int = 0.5 # AU
+  #~ R_out = 100. # AU
+  #~ dtg = 0.01 # Dust to gas ratio
+  #~ 
+  #~ sigma_index = np.linspace(0.5, 1.6, 12)
+  #~ 
+  #~ sigma_0 = (M_tot / dtg) / ((2. * pi / (2. - sigma_index)) * (R_out**(2. - sigma_index) - R_int**(2. - sigma_index))) # in earth_mass / AU**2
+  #~ sigma_0 = sigma_0 * (MT / AU**2)
+  #~ folder_name = "%s_constant_total_mass" % (opacity_type)
+  #~ parameter_values = zip(sigma_0, sigma_index)
+  #~ study_parameter_influence()
 
 
   
