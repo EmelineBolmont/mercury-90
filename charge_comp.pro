@@ -276,15 +276,15 @@ for j = 0,nbp-1 do begin
       endelse
    endfor
 endfor
-if idl eq 1 then begin
-   for i = 0,n_elements(toto1(*))-1 do begin
-      if toto1(i) le 1.d10 then begin
-         indicend(1,0) = i
-         indicend(1,1) = i
-      endif else begin
-         break
-      endelse
-   endfor 
-endif  
+
+for i = 0,n_elements(toto1(*))-1 do begin
+   if toto1(i) le 1.d10 then begin
+      indicend(1,0) = i
+      indicend(1,1) = i
+   endif else begin
+      break
+   endelse
+endfor 
+
 
 END
