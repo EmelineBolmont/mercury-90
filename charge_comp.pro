@@ -1,22 +1,18 @@
 ;PRO charge
 
 
-; Indicate here the number of big planets you took into account: 
-; Compare idlcode results with 
-; mercury_tides and mercury_tides_GR
-
+;! Number planets
 nbp = 2
+;! Number of planets tidally evolving
+n_tid = 2
 
-nlineheader = 4                 ; number of header lines in the data files
-nlineb1 = fltarr(1)
-nlineb2 = fltarr(1)
+nlineheader = 4                 ;! number of header lines in the data files
 
-filename1 = 'PLANET1.aei'
-nlineb1 = file_lines(filename1)-nlineheader
-filename2 = 'PLANET2.aei'
-nlineb2 = file_lines(filename2)-nlineheader
-;;! filename3 = 'PLANET1.aei'
-;;! nlineb3 = file_lines(filename3)-nlineheader
+nlineb = fltarr(nbp)
+for i=0,nbp-1 do begin
+   filename = 'PLANET'+strtrim(i+1,2)+'.aei'
+   nlineb(i) = file_lines(filename)-nlineheader
+endfor
 
 filename4 = 'datatides_18.0000_0.00000_12_2_3_3_0.0261799_0.00000_0.dat'
 print,filename4
@@ -31,18 +27,29 @@ readcol,filenames,sss,toto1,spinstx,spinsty,spinstz,Rst,format='A,F,F,F,F,F'
 filenamep1 = 'spinp1.dat'
 print,filenamep1
 readcol,filenamep1,ppp,toto1,spinp1x,spinp1y,spinp1z,format='A,F,F,F,F'
-filenamep2 = 'spinp2.dat'
-print,filenamep2
-readcol,filenamep2,ppp,toto1,spinp2x,spinp2y,spinp2z,format='A,F,F,F,F'
 filenameh1 = 'horb1.dat'
 print,filenameh1
 readcol,filenameh1,hhh,toto1,horb1x,horb1y,horb1z,format='A,F,F,F,F'
-filenameh2 = 'horb2.dat'
-print,filenameh2
-readcol,filenameh2,hhh,toto1,horb2x,horb2y,horb2z,format='A,F,F,F,F'
+if n_tid ge 2 then begin
+   filenamep2 = 'spinp2.dat'
+   print,filenamep2
+   readcol,filenamep2,ppp,toto1,spinp2x,spinp2y,spinp2z,format='A,F,F,F,F'
+   filenameh2 = 'horb2.dat'
+   print,filenameh2
+   readcol,filenameh2,hhh,toto1,horb2x,horb2y,horb2z,format='A,F,F,F,F'
+endif
+if n_tid ge 3 then begin
+   filenamep3 = 'spinp3.dat'
+   print,filenamep3
+   readcol,filenamep3,ppp,toto1,spinp3x,spinp3y,spinp3z,format='A,F,F,F,F'
+   filenameh3 = 'horb3.dat'
+   print,filenameh3
+   readcol,filenameh3,hhh,toto1,horb3x,horb3y,horb3z,format='A,F,F,F,F'
+endif
+
 
 ; n line maximum
-nmaxb = max([nlineb1,nlineb2]);,nlineb3
+nmaxb = max(nlineb)
 nline = max([nlineb4,nlineb5])
 
 ;; mass = [0.01,0.012,0.015,0.02,0.03,0.04,0.05,0.06,0.07,0.072,0.075,0.08]
@@ -103,83 +110,43 @@ wb     =  dblarr(nbp,nmaxb)
 ;; print,nmaxb,nlineb1,nlineb2
 ;**************************************
 ; Table filling for big planets (PLANET)
+for i=0,nbp-1 do begin
+   filename = 'PLANET'+strtrim(i+1,2)+'.aei'
+   nt = file_lines(filename)-nlineheader
+   read_array = dblarr(14,nt)
+   openr,1,filename
+   readf,1,header
+   readf,1,read_array
+   close,1
 
-nlineb1 = file_lines(filename1)-nlineheader
-read_array = dblarr(14,nlineb1)
-openr,1,filename1
-readf,1,header
-readf,1,read_array
-close,1
-
-tb[0,0:nlineb1-1] = read_array(0,*)
-ab[0,0:nlineb1-1] = read_array(1,*)
-eb[0,0:nlineb1-1] = read_array(2,*)
-incb[0,0:nlineb1-1] = read_array(3,*)
-perib[0,0:nlineb1-1] = read_array(4,*)
-nodeb[0,0:nlineb1-1] = read_array(5,*)
-manomb[0,0:nlineb1-1] = read_array(6,*)
-mb[0,0:nlineb1-1] = read_array(7,*)
-xb[0,0:nlineb1-1] = read_array(8,*)
-yb[0,0:nlineb1-1] = read_array(9,*)
-zb[0,0:nlineb1-1] = read_array(10,*)
-ub[0,0:nlineb1-1] = read_array(11,*)
-vb[0,0:nlineb1-1] = read_array(12,*)
-wb[0,0:nlineb1-1] = read_array(13,*)
-
-;;;;**************************************
-nlineb2 = file_lines(filename2)-nlineheader
-read_array = dblarr(14,nlineb2)
-openr,1,filename2
-readf,1,header
-readf,1,read_array
-close,1
-
-tb[1,0:nlineb2-1] = read_array(0,*)
-ab[1,0:nlineb2-1] = read_array(1,*)
-eb[1,0:nlineb2-1] = read_array(2,*)
-incb[1,0:nlineb2-1] = read_array(3,*)
-perib[1,0:nlineb2-1] = read_array(4,*)
-nodeb[1,0:nlineb2-1] = read_array(5,*)
-manomb[1,0:nlineb2-1] = read_array(6,*)
-mb[1,0:nlineb2-1] = read_array(7,*)
-xb[1,0:nlineb2-1] = read_array(8,*)
-yb[1,0:nlineb2-1] = read_array(9,*)
-zb[1,0:nlineb2-1] = read_array(10,*)
-ub[1,0:nlineb2-1] = read_array(11,*)
-vb[1,0:nlineb2-1] = read_array(12,*)
-wb[1,0:nlineb2-1] = read_array(13,*)
-
-
-
-;; ;;;;**************************************
-;; nlineb3 = file_lines(filename3)-nlineheader
-;; read_array = dblarr(8,nlineb3)
-;; openr,1,filename3
-;; readf,1,header
-;; readf,1,read_array
-;; close,1
-
-;; tb[2,0:nlineb3-1] = read_array(0,*)
-;; ab[2,0:nlineb3-1] = read_array(1,*)
-;; eb[2,0:nlineb3-1] = read_array(2,*)
-;; incb[2,0:nlineb3-1] = read_array(3,*)
-;; perib[2,0:nlineb3-1] = read_array(4,*)
-;; nodeb[2,0:nlineb3-1] = read_array(5,*)
-;; manomb[2,0:nlineb3-1] = read_array(6,*)
-;; mb[2,0:nlineb3-1] = read_array(7,*)
+   tb[i,0:nlineb1-1] = read_array(0,*)
+   ab[i,0:nlineb1-1] = read_array(1,*)
+   eb[i,0:nlineb1-1] = read_array(2,*)
+   incb[i,0:nlineb1-1] = read_array(3,*)
+   perib[i,0:nlineb1-1] = read_array(4,*)
+   nodeb[i,0:nlineb1-1] = read_array(5,*)
+   manomb[i,0:nlineb1-1] = read_array(6,*)
+   mb[i,0:nlineb1-1] = read_array(7,*)
+   xb[i,0:nlineb1-1] = read_array(8,*)
+   yb[i,0:nlineb1-1] = read_array(9,*)
+   zb[i,0:nlineb1-1] = read_array(10,*)
+   ub[i,0:nlineb1-1] = read_array(11,*)
+   vb[i,0:nlineb1-1] = read_array(12,*)
+   wb[i,0:nlineb1-1] = read_array(13,*)
+endfor
 
 ;**************************************
 ; Table for the idl planet (DATATIDES) : 
-ti         =  dblarr(2,nline)
-ai         =  dblarr(2,nline)
-ei         =  dblarr(2,nline)
-oblpi      =  dblarr(2,nline)
-oblsi      =  dblarr(2,nline)
-rotpi      =  dblarr(2,nline)
-rotsi      =  dblarr(2,nline)
-Rpi        =  dblarr(2,nline)
-Rsi        =  dblarr(2,nline)
-rg2si      =  dblarr(2,nline)
+ti         =  dblarr(n_tid,nline)
+ai         =  dblarr(n_tid,nline)
+ei         =  dblarr(n_tid,nline)
+oblpi      =  dblarr(n_tid,nline)
+oblsi      =  dblarr(n_tid,nline)
+rotpi      =  dblarr(n_tid,nline)
+rotsi      =  dblarr(n_tid,nline)
+Rpi        =  dblarr(n_tid,nline)
+Rsi        =  dblarr(n_tid,nline)
+rg2si      =  dblarr(n_tid,nline)
 
 headeri = strarr(1)
 nlineb4 = file_lines(filename4)-1
@@ -223,11 +190,18 @@ rg2si[1,0:nlineb5-1] = read_array(9,*)
 
 tmp     = dblarr(n_elements(horb1x))
 oblp1m  = dblarr(n_elements(horb1x))
-oblp2m  = dblarr(n_elements(horb1x))
 obls1m  = dblarr(n_elements(horb1x))
-obls2m  = dblarr(n_elements(horb1x))
+if n_tid ge 2 then begin
+   oblp2m  = dblarr(n_elements(horb1x))
+   obls2m  = dblarr(n_elements(horb1x))
+endif
+if n_tid ge 3 then begin
+   oblp3m  = dblarr(n_elements(horb1x))
+   obls3m  = dblarr(n_elements(horb1x))
+endif
 
 for bou = 0,n_elements(horb1x)-1 do begin
+
    tmp(bou)=(horb1x(bou)*spinp1x(bou) $
              +horb1y(bou)*spinp1y(bou) $
              +horb1z(bou)*spinp1z(bou)) $
@@ -236,16 +210,7 @@ for bou = 0,n_elements(horb1x)-1 do begin
    if tmp(bou) le 1 then $ 
       oblp1m(bou) = acos(tmp(bou))*180.d0/!Pi
    if tmp(bou) gt 1 then oblp1m(bou) = 0.0d0
-   
-   tmp(bou)=(horb2x(bou)*spinp2x(bou) $
-             +horb2y(bou)*spinp2y(bou) $
-             +horb2z(bou)*spinp2z(bou)) $
-            /(sqrt(horb2x(bou)^2+horb2y(bou)^2+horb2z(bou)^2) $
-              *sqrt(spinp2x(bou)^2+spinp2y(bou)^2+spinp2z(bou)^2))
-   if tmp(bou) le 1 then $ 
-      oblp2m(bou) = acos(tmp(bou))*180.d0/!Pi 
-   if tmp(bou) gt 1 then oblp2m(bou) = 0.0d0
-   
+  
    tmp(bou)=(horb1x(bou)*spinstx(bou) $
              +horb1y(bou)*spinsty(bou) $
              +horb1z(bou)*spinstz(bou)) $
@@ -255,14 +220,45 @@ for bou = 0,n_elements(horb1x)-1 do begin
       obls1m(bou) = acos(tmp(bou))*180.d0/!Pi
    if tmp(bou) gt 1 then obls1m(bou) = 0.0d0
    
-   tmp(bou)=(horb2x(bou)*spinstx(bou) $
-             +horb2y(bou)*spinsty(bou) $
-             +horb2z(bou)*spinstz(bou)) $
+   if n_tid ge 2 then begin
+      tmp(bou)=(horb2x(bou)*spinp2x(bou) $
+             +horb2y(bou)*spinp2y(bou) $
+             +horb2z(bou)*spinp2z(bou)) $
             /(sqrt(horb2x(bou)^2+horb2y(bou)^2+horb2z(bou)^2) $
-              *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
-   if tmp(bou) le 1 then $ 
-      obls2m(bou) = acos(tmp(bou))*180.d0/!Pi
-   if tmp(bou) gt 1 then obls2m(bou) = 0.0d0
+              *sqrt(spinp2x(bou)^2+spinp2y(bou)^2+spinp2z(bou)^2))
+      if tmp(bou) le 1 then $ 
+         oblp2m(bou) = acos(tmp(bou))*180.d0/!Pi 
+      if tmp(bou) gt 1 then oblp2m(bou) = 0.0d0
+      
+      tmp(bou)=(horb2x(bou)*spinstx(bou) $
+                +horb2y(bou)*spinsty(bou) $
+                +horb2z(bou)*spinstz(bou)) $
+               /(sqrt(horb2x(bou)^2+horb2y(bou)^2+horb2z(bou)^2) $
+                 *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
+      if tmp(bou) le 1 then $ 
+         obls2m(bou) = acos(tmp(bou))*180.d0/!Pi
+      if tmp(bou) gt 1 then obls2m(bou) = 0.0d0
+   endif
+   
+   if n_tid ge 3 then begin
+      tmp(bou)=(horb3x(bou)*spinp3x(bou) $
+             +horb3y(bou)*spinp3y(bou) $
+             +horb3z(bou)*spinp3z(bou)) $
+            /(sqrt(horb3x(bou)^2+horb3y(bou)^2+horb3z(bou)^2) $
+              *sqrt(spinp3x(bou)^2+spinp3y(bou)^2+spinp3z(bou)^2))
+      if tmp(bou) le 1 then $ 
+         oblp3m(bou) = acos(tmp(bou))*180.d0/!Pi 
+      if tmp(bou) gt 1 then oblp3m(bou) = 0.0d0
+      
+      tmp(bou)=(horb3x(bou)*spinstx(bou) $
+                +horb3y(bou)*spinsty(bou) $
+                +horb3z(bou)*spinstz(bou)) $
+               /(sqrt(horb3x(bou)^2+horb3y(bou)^2+horb3z(bou)^2) $
+                 *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
+      if tmp(bou) le 1 then $ 
+         obls3m(bou) = acos(tmp(bou))*180.d0/!Pi
+      if tmp(bou) gt 1 then obls3m(bou) = 0.0d0
+   endif
 endfor
 
 indicend = dblarr(2,nbp)
