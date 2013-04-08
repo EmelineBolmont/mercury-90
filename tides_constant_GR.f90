@@ -38,9 +38,14 @@ module tides_constant_GR
   
   ! Indicate if Planet is of known parameters.
   ! 0: Earth-like, 1: Terrestrial (no mass-radius relationship), 2: Gas giant
+  ! 3: others (like Neptune)
   integer, parameter, dimension(ntid) :: jupiter = (/0,0/)
   ! If jupiter ne 0, then indicate radius in Rearth, for ex: 1 or 0.954d0*Rjup
   real(double_precision), parameter, dimension(ntid) :: radius_p = (/0.d0,0.d0/)
+  ! Radius of gyration, love number and k2delta_t for other planets (jupiter=3)
+  real(double_precision), parameter :: rg2p_what = 3.308d-1
+  real(double_precision), parameter :: k2p_what = 0.305d0
+  real(double_precision), parameter :: k2pdeltap_what = 2.465278d-3
   
   ! Star dissipation, and caracteristics in CGS
   real(double_precision), parameter :: dissstar = 1.0d0!1.0d0!1.d2

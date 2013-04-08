@@ -523,6 +523,12 @@ contains
                    k2pdeltap(j-1) = k2pdeltap_gg
                    sigmap(j) = dissplan(j-1)*sigma_gg
                 endif
+                if (jupiter(j-1).eq.3) then
+                   k2p(j-1) = k2p_what
+                   rg2p(j-1) = rg2p_what
+                   k2pdeltap(j-1) = k2pdeltap_what
+                   sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                endif
                 
                 ! Factor used for GR force calculation
                 tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
