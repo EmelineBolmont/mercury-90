@@ -502,8 +502,7 @@ contains
 	            if (jupiter(j-1).eq.0) Rp(j) = rearth*((0.0592d0*0.7d0+0.0975d0) &
                   *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))**2+(0.2337d0*0.7d0+0.4938d0) &
                   *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))+0.3102d0*0.7d0+0.7932d0)
-                if (jupiter(j-1).eq.1) Rp(j) = radius_p(j-1)*rearth
-                if (jupiter(j-1).eq.2) Rp(j) = radius_p(j-1)*rearth
+                if (jupiter(j-1).ne.0) Rp(j) = radius_p(j-1)*rearth
                 Rp5(j)  = Rp(j)*Rp(j)*Rp(j)*Rp(j)*Rp(j)
                 Rp10(j) = Rp5(j)*Rp5(j)
                 
