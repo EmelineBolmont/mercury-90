@@ -212,18 +212,18 @@ for bou = 0,n_elements(horb1x)-1 do begin
              +horb1z(bou)*spinp1z(bou)) $
             /(sqrt(horb1x(bou)^2+horb1y(bou)^2+horb1z(bou)^2) $
               *sqrt(spinp1x(bou)^2+spinp1y(bou)^2+spinp1z(bou)^2))
-   if tmp(bou) le 1 then $ 
+   if abs(tmp(bou)) le 1.d0 then $ 
       oblp1m(bou) = acos(tmp(bou))*180.d0/!Pi
-   if abs(tmp(bou)) gt 1 then oblp1m(bou) = 1.0d-6
+   if abs(tmp(bou)) gt 1.d0 then oblp1m(bou) = 1.0d-6
   
    tmp(bou)=(horb1x(bou)*spinstx(bou) $
              +horb1y(bou)*spinsty(bou) $
              +horb1z(bou)*spinstz(bou)) $
             /(sqrt(horb1x(bou)^2+horb1y(bou)^2+horb1z(bou)^2) $
               *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
-   if tmp(bou) le 1 then $ 
+   if abs(tmp(bou)) le 1.d0 then $ 
       obls1m(bou) = acos(tmp(bou))*180.d0/!Pi
-   if abs(tmp(bou)) gt 1 then obls1m(bou) = 1.0d-6
+   if abs(tmp(bou)) gt 1.d0 then obls1m(bou) = 1.0d-6
    
    if n_tid ge 2 then begin
       tmp(bou)=(horb2x(bou)*spinp2x(bou) $
@@ -231,18 +231,18 @@ for bou = 0,n_elements(horb1x)-1 do begin
              +horb2z(bou)*spinp2z(bou)) $
             /(sqrt(horb2x(bou)^2+horb2y(bou)^2+horb2z(bou)^2) $
               *sqrt(spinp2x(bou)^2+spinp2y(bou)^2+spinp2z(bou)^2))
-      if tmp(bou) le 1 then $ 
+      if abs(tmp(bou)) le 1.d0 then $ 
          oblp2m(bou) = acos(tmp(bou))*180.d0/!Pi 
-      if abs(tmp(bou)) gt 1 then oblp2m(bou) = 1.0d-6
+      if abs(tmp(bou)) gt 1.d0 then oblp2m(bou) = 1.0d-6
       
       tmp(bou)=(horb2x(bou)*spinstx(bou) $
                 +horb2y(bou)*spinsty(bou) $
                 +horb2z(bou)*spinstz(bou)) $
                /(sqrt(horb2x(bou)^2+horb2y(bou)^2+horb2z(bou)^2) $
                  *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
-      if tmp(bou) le 1 then $ 
+      if abs(tmp(bou)) le 1.d0 then $ 
          obls2m(bou) = acos(tmp(bou))*180.d0/!Pi
-      if abs(tmp(bou)) gt 1 then obls2m(bou) = 1.0d-6
+      if abs(tmp(bou)) gt 1.d0 then obls2m(bou) = 1.0d-6
    endif
    
    if n_tid ge 3 then begin
@@ -251,18 +251,18 @@ for bou = 0,n_elements(horb1x)-1 do begin
              +horb3z(bou)*spinp3z(bou)) $
             /(sqrt(horb3x(bou)^2+horb3y(bou)^2+horb3z(bou)^2) $
               *sqrt(spinp3x(bou)^2+spinp3y(bou)^2+spinp3z(bou)^2))
-      if tmp(bou) le 1 then $ 
+      if abs(tmp(bou)) le 1.d0 then $ 
          oblp3m(bou) = acos(tmp(bou))*180.d0/!Pi 
-      if abs(tmp(bou)) gt 1 then oblp3m(bou) = 1.0d-6
+      if abs(tmp(bou)) gt 1.d0 then oblp3m(bou) = 1.0d-6
       
       tmp(bou)=(horb3x(bou)*spinstx(bou) $
                 +horb3y(bou)*spinsty(bou) $
                 +horb3z(bou)*spinstz(bou)) $
                /(sqrt(horb3x(bou)^2+horb3y(bou)^2+horb3z(bou)^2) $
                  *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
-      if tmp(bou) le 1 then $ 
+      if abs(tmp(bou)) le 1.d0 then $ 
          obls3m(bou) = acos(tmp(bou))*180.d0/!Pi
-      if abs(tmp(bou)) gt 1 then obls3m(bou) = 1.0d-6
+      if abs(tmp(bou)) gt 1.d0 then obls3m(bou) = 1.0d-6
    endif
 endfor
 
