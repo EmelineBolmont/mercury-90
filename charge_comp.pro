@@ -215,6 +215,10 @@ if n_tid ge 3 then begin
    oblp3m  = dblarr(n_elements(horb1x))
    obls3m  = dblarr(n_elements(horb1x))
 endif
+if n_tid ge 4 then begin
+   oblp4m  = dblarr(n_elements(horb1x))
+   obls4m  = dblarr(n_elements(horb1x))
+endif
 
 for bou = 0,n_elements(horb1x)-1 do begin
 
