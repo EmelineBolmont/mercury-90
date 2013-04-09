@@ -34,6 +34,7 @@ def set_default_parameters():
   global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
   global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
   global is_turbulence, turbulent_forcing, saturation_torque, density_index, density_constant
+  global mean_molecular_weight
   
   #----------------------------------
   # Parameters for the disk
@@ -48,6 +49,7 @@ def set_default_parameters():
   alpha = None
   opacity_type = 'bell' # 'bell' or 'zhu' or 'hure' opacity table
   b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
+  mean_molecular_weight = 2.35
   sample = 400
   disk_edges = (0.5, 100.) # (the inner and outer edge of the disk in AU)
   inner_smoothing_width = 0.05 # (in unit of the inner boundary radius) , the width of the region where the surface density decay to become 0 at the inner edge
@@ -75,7 +77,7 @@ def generation_simulation_parameters():
   """the function generate simulations files in the current working directory, given the parameters on top of the script
   """
   
-  diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
+  diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=mean_molecular_weight, surface_density=surface_density, 
                 is_irradiation=is_irradiation,
                 disk_edges=disk_edges, viscosity_type=viscosity_type, viscosity=viscosity, alpha=alpha, opacity_type=opacity_type, 
                 sample=sample, dissipation_type=dissipation_type, 
@@ -162,17 +164,31 @@ if not(os.path.exists("parameter_study")):
 for opacity in ['bell', 'zhu', 'hure', 'chambers']:
   set_default_parameters()
   opacity_type = opacity
-  parameter_name = 'density_index'
+  parameter_name = 'mean_molecular_weight'
   folder_name = "%s_%s" % (opacity_type, parameter_name)
-  parameter_values = np.linspace(0.1, 1.9, 19)
+  parameter_values = np.linspace(0.6, 2.35, 10)
   study_parameter_influence()
+  
+  #~ set_default_parameters()
+  #~ opacity_type = opacity
+  #~ parameter_name = 'is_irradiation'
+  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
+  #~ parameter_values = [0,1]
+  #~ study_parameter_influence()
+  #~ 
+  #~ set_default_parameters()
+  #~ opacity_type = opacity
+  #~ parameter_name = 'density_index'
+  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
+  #~ parameter_values = np.linspace(0.1, 1.9, 19)
+  #~ study_parameter_influence()
 #~ 
-  set_default_parameters()
-  opacity_type = opacity
-  parameter_name = 'density_constant'
-  folder_name = "%s_%s" % (opacity_type, parameter_name)
-  parameter_values = np.linspace(50., 2500., 21)
-  study_parameter_influence()
+  #~ set_default_parameters()
+  #~ opacity_type = opacity
+  #~ parameter_name = 'density_constant'
+  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
+  #~ parameter_values = np.linspace(50., 2500., 21)
+  #~ study_parameter_influence()
 #~ 
   #~ set_default_parameters()
   #~ opacity_type = opacity
