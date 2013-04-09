@@ -69,8 +69,8 @@ contains
     real(double_precision), dimension(3,nbig+1) :: horb,trueanom!,vperp
     real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la,azi
     real(double_precision), dimension(3,nbig+1) :: Nts,Ntp
-    real(double_precision), dimension(3,5) :: spin
-    real(double_precision), dimension(5) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
+    real(double_precision), dimension(3,6) :: spin
+    real(double_precision), dimension(6) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
     ! don't use after collision
     real(double_precision), dimension(nbig+1) :: r,r2,r7,r8,v2,vv,vrad
     real(double_precision), dimension(nbig+1) :: horbn
@@ -508,7 +508,7 @@ contains
                 
                 
                 ! k2p, rg2p, k2pdeltap and sigmap
-                ! Terrestrial for 0 and 1, gas giant for 2
+                ! Terrestrial for 0 and 1, gas giant for 2, what you want for 3
                 
                 if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.1)) then
                    k2p(j-1) = k2p_terr
@@ -580,6 +580,11 @@ contains
                    spin(1,4) = rot_crashp3(1) !day-1
 			       spin(2,4) = rot_crashp3(2) !day-1
                    spin(3,4) = rot_crashp3(3) !day-1
+                endif
+                if (ntid.ge.4) then
+                   spin(1,5) = rot_crashp4(1) !day-1
+			       spin(2,5) = rot_crashp4(2) !day-1
+                   spin(3,5) = rot_crashp4(3) !day-1
                 endif
              endif
              ispin = 1
@@ -759,6 +764,12 @@ contains
                 endif
                 if (ntid.ge.3) then
                    write(*,*) "h3",time/365.25d0,horb(1,4)/horbn(4),horb(2,4)/horbn(4),horb(3,4)/horbn(4)
+                endif
+                if (ntid.ge.4) then
+                   write(*,*) "p4",time/365.25d0,spin(1,5),spin(2,5),spin(3,5)
+                endif
+                if (ntid.ge.4) then
+                   write(*,*) "h4",time/365.25d0,horb(1,5)/horbn(5),horb(2,5)/horbn(5),horb(3,5)/horbn(5)
                 endif
              endif
 

@@ -25,6 +25,7 @@ module tides_constant_GR
   real(double_precision), parameter, dimension(3) :: rot_crashp1 = (/0.0,0.0,0.0/)
   real(double_precision), parameter, dimension(3) :: rot_crashp2 = (/0.0,0.0,0.0/)
   real(double_precision), parameter, dimension(3) :: rot_crashp3 = (/0.0,0.0,0.0/)
+  real(double_precision), parameter, dimension(3) :: rot_crashp4 = (/0.0,0.0,0.0/)
 
   ! Planet dissipation, and caracteristics
   
