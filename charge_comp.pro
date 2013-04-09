@@ -25,15 +25,17 @@ if idl eq 1 then begin
    nlineb5 = file_lines(filename5)-1
 endif
 
-filenames = 'spins.dat'
-print,filenames
-readcol,filenames,sss,toto1,spinstx,spinsty,spinstz,Rst,format='A,F,F,F,F,F'
-filenamep1 = 'spinp1.dat'
-print,filenamep1
-readcol,filenamep1,ppp,toto1,spinp1x,spinp1y,spinp1z,format='A,F,F,F,F'
-filenameh1 = 'horb1.dat'
-print,filenameh1
-readcol,filenameh1,hhh,toto1,horb1x,horb1y,horb1z,format='A,F,F,F,F'
+if n_tid ge 1 then begin
+   filenames = 'spins.dat'
+   print,filenames
+   readcol,filenames,sss,toto1,spinstx,spinsty,spinstz,Rst,format='A,F,F,F,F,F'
+   filenamep1 = 'spinp1.dat'
+   print,filenamep1
+   readcol,filenamep1,ppp,toto1,spinp1x,spinp1y,spinp1z,format='A,F,F,F,F'
+   filenameh1 = 'horb1.dat'
+   print,filenameh1
+   readcol,filenameh1,hhh,toto1,horb1x,horb1y,horb1z,format='A,F,F,F,F'
+endif
 if n_tid ge 2 then begin
    filenamep2 = 'spinp2.dat'
    print,filenamep2
@@ -191,6 +193,7 @@ if idl eq 1 then begin
    rg2si[1,0:nlineb5-1] = read_array(9,*)
 endif
 
+if n_tid ge 1 then begin
 ;! Obliquities calculations
 
 tmp     = dblarr(n_elements(horb1x))
@@ -265,7 +268,7 @@ for bou = 0,n_elements(horb1x)-1 do begin
       if abs(tmp(bou)) gt 1.d0 then obls3m(bou) = 1.0d-6
    endif
 endfor
-
+endif
 indicend = dblarr(2,nbp)
 for j = 0,nbp-1 do begin
    for i = 0,n_elements(tb(j,*))-1 do begin
@@ -276,15 +279,15 @@ for j = 0,nbp-1 do begin
       endelse
    endfor
 endfor
-
-for i = 0,n_elements(toto1(*))-1 do begin
-   if toto1(i) le 1.d10 then begin
-      indicend(1,0) = i
-      indicend(1,1) = i
-   endif else begin
-      break
-   endelse
-endfor 
-
+if n_tid ge 1 then begin
+   for i = 0,n_elements(toto1(*))-1 do begin
+      if toto1(i) le 1.d10 then begin
+         indicend(1,0) = i
+         indicend(1,1) = i
+      endif else begin
+         break
+      endelse
+   endfor 
+endif
 
 END

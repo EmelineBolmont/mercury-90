@@ -83,9 +83,10 @@ for i = 0,nbp-1 do begin
 endfor
 
 ;; oplot,toto1(*),Rst(*)*Rsun/AU,thick=5,color=255
-oplot,toto1(*), $
-      (G*(Ms+Mp(0)))^(1/3.)*(sqrt(spinstz(*)^2+spinstx(*)^2+spinsty(*)^2)/86400.d0)^(-2./3.)/AU $
-            ,thick=7;,color=255
+if n_tid ge 1 then $
+   oplot,toto1(*), $
+         (G*(Ms+Mp(0)))^(1/3.)*(sqrt(spinstz(*)^2+spinstx(*)^2+spinsty(*)^2)/86400.d0)^(-2./3.)/AU $
+               ,thick=7;,color=255
             
 print,'Porb =',2.d0*!Pi/sqrt(G*(Ms+Mp))*(ab(0,0)*AU)^(3.d0/2.d0)*1.0d0/(86400.d0),' days'
 print,'min(e) =',min(eb(0,*));!,min(eb(1,*))
@@ -149,7 +150,7 @@ plot,tb(0,*),incb(0,*) $
      ,/xlog;,/ylog
 
 ;! Mercury
-oplot,toto1(0:indicend(1,0)),oblp1m(0:indicend(1,0)),color=incolor+0*indcolor,thick=7
+if n_tid ge 1 then oplot,toto1(0:indicend(1,0)),oblp1m(0:indicend(1,0)),color=incolor+0*indcolor,thick=7
 ;;! print,'oblp1m(0:7) =',oblp1m(0:7)
 ;;! print,'oblp2m(0:7) =',oblp2m(0:7)
 if n_tid ge 2 then oplot,toto1(0:indicend(1,0)),oblp2m(0:indicend(1,0)),color=incolor+1*indcolor,thick=7
@@ -176,7 +177,7 @@ plot,tb(0,*),incb(0,*) $
      ,/xlog,/ylog
 
 ;! Mercury
-oplot,toto1(0:indicend(1,0)),obls1m(0:indicend(1,0)),color=incolor+0*indcolor,thick=7
+if n_tid ge 1 then oplot,toto1(0:indicend(1,0)),obls1m(0:indicend(1,0)),color=incolor+0*indcolor,thick=7
 if n_tid ge 2 then oplot,toto1(0:indicend(1,0)),obls2m(0:indicend(1,0)),color=incolor+1*indcolor,thick=7
 if n_tid ge 3 then oplot,toto1(0:indicend(1,0)),obls3m(0:indicend(1,0)),color=incolor+2*indcolor,thick=7
 
@@ -210,7 +211,7 @@ plot,tb(0,*),ab(0,*) $
  
 ;! Mercury
 i=0
-oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
+if n_tid ge 1 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
    /(sqrt(spinp1x(0:indicend(1,i))^2+spinp1y(0:indicend(1,i))^2+spinp1z(0:indicend(1,i))^2)) $
       ,thick=7,linestyle=0,color=incolor+0*indcolor
 if n_tid ge 2 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
@@ -219,7 +220,7 @@ if n_tid ge 2 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
 if n_tid ge 3 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
 	/(sqrt(spinp3x(0:indicend(1,i))^2+spinp3y(0:indicend(1,i))^2+spinp3z(0:indicend(1,i))^2)) $
       ,thick=7,linestyle=0,color=incolor+2*indcolor    
-oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
+if n_tid ge 1 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
    /(sqrt(spinstx(0:indicend(1,i))^2+spinsty(0:indicend(1,i))^2+spinstz(0:indicend(1,i))^2)) $
       ,thick=7,linestyle=0;,color=incolor+1*indcolor
 
