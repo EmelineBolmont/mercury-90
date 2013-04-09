@@ -77,16 +77,16 @@ plot,tb(0,*),ab(0,*) $
 
 ;;! Mercury
 for i = 0,nbp-1 do begin
-   oplot,tb(i,0:indicend(0,i)),ab(i,0:indicend(0,i)),color=incolor+i*indcolor,thick=7
-   oplot,tb(i,0:indicend(0,i)),ab(i,0:indicend(0,i))*(1-eb(i,0:indicend(0,i))),color=incolor+i*indcolor,thick=7,linestyle=2
-   oplot,tb(i,0:indicend(0,i)),ab(i,0:indicend(0,i))*(1+eb(i,0:indicend(0,i))),color=incolor+i*indcolor,thick=7,linestyle=2
+   oplot,tb(i,0:indicend(0,i)),ab(i,0:indicend(0,i)),color=incolor+i*indcolor,thick=12
+   oplot,tb(i,0:indicend(0,i)),ab(i,0:indicend(0,i))*(1-eb(i,0:indicend(0,i))),color=incolor+i*indcolor,thick=6,linestyle=2
+   oplot,tb(i,0:indicend(0,i)),ab(i,0:indicend(0,i))*(1+eb(i,0:indicend(0,i))),color=incolor+i*indcolor,thick=6,linestyle=2
 endfor
 
 ;; oplot,toto1(*),Rst(*)*Rsun/AU,thick=5,color=255
 if n_tid ge 1 then $
    oplot,toto1(*), $
          (G*(Ms+Mp(0)))^(1/3.)*(sqrt(spinstz(*)^2+spinstx(*)^2+spinsty(*)^2)/86400.d0)^(-2./3.)/AU $
-               ,thick=7;,color=255
+               ,thick=10;,color=255
             
 print,'Porb =',2.d0*!Pi/sqrt(G*(Ms+Mp))*(ab(0,0)*AU)^(3.d0/2.d0)*1.0d0/(86400.d0),' days'
 print,'min(e) =',min(eb(0,*));!,min(eb(1,*))
@@ -125,7 +125,7 @@ plot,tb(0,*),eb(0,*) $
      ,xstyle=1,ystyle=1 $
      ,/ylog,/xlog
 for i = 0,nbp-1 do begin
-   oplot,tb(i,0:indicend(0,i)),eb(i,0:indicend(0,i)),color=incolor+i*indcolor,thick=7,linestyle=0;,psym=2
+   oplot,tb(i,0:indicend(0,i)),eb(i,0:indicend(0,i)),color=incolor+i*indcolor,thick=12,linestyle=0;,psym=2
 endfor
 if idl eq 1 then begin
    for i = 0,n_tid-1 do begin
@@ -150,11 +150,12 @@ plot,tb(0,*),incb(0,*) $
      ,/xlog;,/ylog
 
 ;! Mercury
-if n_tid ge 1 then oplot,toto1(0:indicend(1,0)),oblp1m(0:indicend(1,0)),color=incolor+0*indcolor,thick=7
+if n_tid ge 1 then oplot,toto1(0:indicend(1,0)),oblp1m(0:indicend(1,0)),color=incolor+0*indcolor,thick=12
 ;;! print,'oblp1m(0:7) =',oblp1m(0:7)
 ;;! print,'oblp2m(0:7) =',oblp2m(0:7)
-if n_tid ge 2 then oplot,toto1(0:indicend(1,0)),oblp2m(0:indicend(1,0)),color=incolor+1*indcolor,thick=7
-if n_tid ge 3 then oplot,toto1(0:indicend(1,0)),oblp3m(0:indicend(1,0)),color=incolor+2*indcolor,thick=7
+if n_tid ge 2 then oplot,toto1(0:indicend(1,0)),oblp2m(0:indicend(1,0)),color=incolor+1*indcolor,thick=12
+if n_tid ge 3 then oplot,toto1(0:indicend(1,0)),oblp3m(0:indicend(1,0)),color=incolor+2*indcolor,thick=12
+if n_tid ge 4 then oplot,toto1(0:indicend(1,0)),oblp4m(0:indicend(1,0)),color=incolor+3*indcolor,thick=12
 
 ;! idl
 if idl eq 1 then begin
@@ -177,9 +178,10 @@ plot,tb(0,*),incb(0,*) $
      ,/xlog,/ylog
 
 ;! Mercury
-if n_tid ge 1 then oplot,toto1(0:indicend(1,0)),obls1m(0:indicend(1,0)),color=incolor+0*indcolor,thick=7
-if n_tid ge 2 then oplot,toto1(0:indicend(1,0)),obls2m(0:indicend(1,0)),color=incolor+1*indcolor,thick=7
-if n_tid ge 3 then oplot,toto1(0:indicend(1,0)),obls3m(0:indicend(1,0)),color=incolor+2*indcolor,thick=7
+if n_tid ge 1 then oplot,toto1(0:indicend(1,0)),obls1m(0:indicend(1,0)),color=incolor+0*indcolor,thick=12
+if n_tid ge 2 then oplot,toto1(0:indicend(1,0)),obls2m(0:indicend(1,0)),color=incolor+1*indcolor,thick=12
+if n_tid ge 3 then oplot,toto1(0:indicend(1,0)),obls3m(0:indicend(1,0)),color=incolor+2*indcolor,thick=12
+if n_tid ge 4 then oplot,toto1(0:indicend(1,0)),obls4m(0:indicend(1,0)),color=incolor+3*indcolor,thick=12
 
 ;! idl
 if idl eq 1 then begin
@@ -213,16 +215,19 @@ plot,tb(0,*),ab(0,*) $
 i=0
 if n_tid ge 1 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
    /(sqrt(spinp1x(0:indicend(1,i))^2+spinp1y(0:indicend(1,i))^2+spinp1z(0:indicend(1,i))^2)) $
-      ,thick=7,linestyle=0,color=incolor+0*indcolor
+      ,thick=12,linestyle=0,color=incolor+0*indcolor
 if n_tid ge 2 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
 	/(sqrt(spinp2x(0:indicend(1,i))^2+spinp2y(0:indicend(1,i))^2+spinp2z(0:indicend(1,i))^2)) $
-      ,thick=7,linestyle=0,color=incolor+1*indcolor    
+      ,thick=12,linestyle=0,color=incolor+1*indcolor    
 if n_tid ge 3 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
 	/(sqrt(spinp3x(0:indicend(1,i))^2+spinp3y(0:indicend(1,i))^2+spinp3z(0:indicend(1,i))^2)) $
-      ,thick=7,linestyle=0,color=incolor+2*indcolor    
+      ,thick=12,linestyle=0,color=incolor+2*indcolor 
+if n_tid ge 4 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
+	/(sqrt(spinp4x(0:indicend(1,i))^2+spinp4y(0:indicend(1,i))^2+spinp4z(0:indicend(1,i))^2)) $
+      ,thick=12,linestyle=0,color=incolor+3*indcolor 
 if n_tid ge 1 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
    /(sqrt(spinstx(0:indicend(1,i))^2+spinsty(0:indicend(1,i))^2+spinstz(0:indicend(1,i))^2)) $
-      ,thick=7,linestyle=0;,color=incolor+1*indcolor
+      ,thick=10,linestyle=0;,color=incolor+1*indcolor
 
 ;! idl
 if idl eq 1 then begin

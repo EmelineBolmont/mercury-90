@@ -52,6 +52,14 @@ if n_tid ge 3 then begin
    print,filenameh3
    readcol,filenameh3,hhh,toto1,horb3x,horb3y,horb3z,format='A,F,F,F,F'
 endif
+if n_tid ge 4 then begin
+   filenamep4 = 'spinp4.dat'
+   print,filenamep4
+   readcol,filenamep4,ppp,toto1,spinp4x,spinp4y,spinp4z,format='A,F,F,F,F'
+   filenameh4 = 'horb4.dat'
+   print,filenameh4
+   readcol,filenameh4,hhh,toto1,horb4x,horb4y,horb4z,format='A,F,F,F,F'
+endif
 
 
 ; n line maximum
@@ -266,6 +274,26 @@ for bou = 0,n_elements(horb1x)-1 do begin
       if abs(tmp(bou)) le 1.d0 then $ 
          obls3m(bou) = acos(tmp(bou))*180.d0/!Pi
       if abs(tmp(bou)) gt 1.d0 then obls3m(bou) = 1.0d-6
+   endif
+   
+   if n_tid ge 4 then begin
+      tmp(bou)=(horb4x(bou)*spinp4x(bou) $
+             +horb4y(bou)*spinp4y(bou) $
+             +horb4z(bou)*spinp4z(bou)) $
+            /(sqrt(horb4x(bou)^2+horb4y(bou)^2+horb4z(bou)^2) $
+              *sqrt(spinp4x(bou)^2+spinp4y(bou)^2+spinp4z(bou)^2))
+      if abs(tmp(bou)) le 1.d0 then $ 
+         oblp4m(bou) = acos(tmp(bou))*180.d0/!Pi 
+      if abs(tmp(bou)) gt 1.d0 then oblp4m(bou) = 1.0d-6
+      
+      tmp(bou)=(horb4x(bou)*spinstx(bou) $
+                +horb4y(bou)*spinsty(bou) $
+                +horb4z(bou)*spinstz(bou)) $
+               /(sqrt(horb4x(bou)^2+horb4y(bou)^2+horb4z(bou)^2) $
+                 *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
+      if abs(tmp(bou)) le 1.d0 then $ 
+         obls4m(bou) = acos(tmp(bou))*180.d0/!Pi
+      if abs(tmp(bou)) gt 1.d0 then obls4m(bou) = 1.0d-6
    endif
 endfor
 endif
