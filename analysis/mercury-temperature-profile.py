@@ -20,7 +20,7 @@ OUTPUT_EXTENSION = 'pdf'
 # T : temperature in K
 
 # On récupère les données orbitales
-(a, T, index, tau, chi) = np.loadtxt("temperature_profile.dat", skiprows=1, usecols = (0,1,2,3,4), dtype=float, unpack=True)
+(a, T, index, chi, tau) = np.loadtxt("temperature_profile.dat", skiprows=1, usecols = (0,1,2,3,4), dtype=float, unpack=True)
 #~ (franckH_a, franckH_T) = np.loadtxt("franckH_temp_profile.dat", usecols = (0,1), dtype=float, unpack=True)
 #~ 
 #~ franckH_a1 = np.log(franckH_a[0:-1])
