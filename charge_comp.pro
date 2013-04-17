@@ -178,16 +178,16 @@ if idl eq 1 then begin
       readf,1,read_array
       close,1
       
-      ti[i,0:nlineb4-1] = read_array(0,*);+toto1(0)
-      ai[i,0:nlineb4-1] = read_array(1,*)
-      ei[i,0:nlineb4-1] = read_array(2,*)
-      oblpi[i,0:nlineb4-1] = read_array(3,*)
-      oblsi[i,0:nlineb4-1] = read_array(4,*)
-      rotpi[i,0:nlineb4-1] = read_array(5,*)
-      rotsi[i,0:nlineb4-1] = read_array(6,*)
-      Rpi[i,0:nlineb4-1] = read_array(7,*)
-      Rsi[i,0:nlineb4-1] = read_array(8,*)
-      rg2si[i,0:nlineb4-1] = read_array(9,*)
+      ti[i,0:nline-1] = read_array(0,*);+toto1(0)
+      ai[i,0:nline-1] = read_array(1,*)
+      ei[i,0:nline-1] = read_array(2,*)
+      oblpi[i,0:nline-1] = read_array(3,*)
+      oblsi[i,0:nline-1] = read_array(4,*)
+      rotpi[i,0:nline-1] = read_array(5,*)
+      rotsi[i,0:nline-1] = read_array(6,*)
+      Rpi[i,0:nline-1] = read_array(7,*)
+      Rsi[i,0:nline-1] = read_array(8,*)
+      rg2si[i,0:nline-1] = read_array(9,*)
    endfor
  
 endif
@@ -304,8 +304,7 @@ endfor
 if n_tid ge 1 then begin
    for i = 0,n_elements(toto1(*))-1 do begin
       if toto1(i) le 1.d10 then begin
-         indicend(1,0) = i
-         indicend(1,1) = i
+         indicend(1,*) = is
       endif else begin
          break
       endelse
