@@ -213,17 +213,13 @@ plot,tb(0,*),ab(0,*) $
  
 ;! Mercury
 i=0
-if n_tid ge 1 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
-   /(sqrt(spinp1x(0:indicend(1,i))^2+spinp1y(0:indicend(1,i))^2+spinp1z(0:indicend(1,i))^2)) $
+if n_tid ge 1 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi/spinp1(0:indicend(1,i)) $
       ,thick=12,linestyle=0,color=incolor+0*indcolor
-if n_tid ge 2 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
-	/(sqrt(spinp2x(0:indicend(1,i))^2+spinp2y(0:indicend(1,i))^2+spinp2z(0:indicend(1,i))^2)) $
+if n_tid ge 2 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi/spinp2(0:indicend(1,i)) $
       ,thick=12,linestyle=0,color=incolor+1*indcolor    
-if n_tid ge 3 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
-	/(sqrt(spinp3x(0:indicend(1,i))^2+spinp3y(0:indicend(1,i))^2+spinp3z(0:indicend(1,i))^2)) $
+if n_tid ge 3 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi/spinp3(0:indicend(1,i)) $
       ,thick=12,linestyle=0,color=incolor+2*indcolor 
-if n_tid ge 4 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
-	/(sqrt(spinp4x(0:indicend(1,i))^2+spinp4y(0:indicend(1,i))^2+spinp4z(0:indicend(1,i))^2)) $
+if n_tid ge 4 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi/spinp4(0:indicend(1,i)) $
       ,thick=12,linestyle=0,color=incolor+3*indcolor 
 if n_tid ge 1 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
    /(sqrt(spinstx(0:indicend(1,i))^2+spinsty(0:indicend(1,i))^2+spinstz(0:indicend(1,i))^2)) $
