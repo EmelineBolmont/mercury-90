@@ -229,6 +229,13 @@ if n_tid ge 1 then oplot,toto1(0:indicend(1,i)),24.*2*!Pi $
    /(sqrt(spinstx(0:indicend(1,i))^2+spinsty(0:indicend(1,i))^2+spinstz(0:indicend(1,i))^2)) $
       ,thick=10,linestyle=0;,color=incolor+1*indcolor
 
+for j = 0,n_tid-1 do begin
+   i = n_tid-1-j 
+   oplot,tb(i,0:indicend(0,i)),2.d0*!Pi $
+      /(pseudorot(eb(i,0:indicend(0,i)),G,Mp(i),Ms)*(ab(i,0:indicend(0,i))*AU)^(-3./2.)*hr) $
+		,color=incolor+i*indcolor,thick=9,linestyle=5
+endfor
+
 ;! idl
 if idl eq 1 then begin
    for i = 0,n_tid-1 do begin
