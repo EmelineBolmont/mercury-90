@@ -7,6 +7,13 @@ nbp = 2
 n_tid = 2
 ;! If comparison with IDL simulations 1, if not 0
 idl = 1
+nbp_idl =2
+nline_idl = dblarr(nbp_idl)
+filename_idl = strarr(nbp_idl)
+filename_idl(0) = 'datatides_18.0000_0.00000_12_2_3_3_0.0261799_0.00000_0.dat'
+filename_idl(1) = 'datatides_100.000_50.0000_12_5_3_4_0.0174533_0.00000_0.dat'
+
+;************************************************************
 
 nlineheader = 4                 ;! number of header lines in the data files
 
@@ -17,12 +24,11 @@ for i=0,nbp-1 do begin
 endfor
 
 if idl eq 1 then begin
-   filename4 = 'datatides_18.0000_0.00000_12_2_3_3_0.0261799_0.00000_0.dat'
-   print,filename4
-   nlineb4 = file_lines(filename4)-1
-   filename5 = 'datatides_100.000_50.0000_12_5_3_4_0.0174533_0.00000_0.dat'
-   print,filename5
-   nlineb5 = file_lines(filename5)-1
+   for i=0,nbp_idl-1 do begin
+      filename = filename_idl(i)
+      print,filename
+      nline_idl(i) = file_lines(filename)-1
+   endfor
 endif
 
 if n_tid ge 1 then begin
@@ -64,7 +70,7 @@ endif
 
 ; n line maximum
 nmaxb = max(nlineb)
-if idl eq 1 then nline = max([nlineb4,nlineb5])
+if idl eq 1 then nline = max(nline_idl)
 
 ;; mass = [0.01,0.012,0.015,0.02,0.03,0.04,0.05,0.06,0.07,0.072,0.075,0.08]
 
@@ -152,58 +158,42 @@ endfor
 if idl eq 1 then begin
    ;!**************************************
    ;! Table for the idl planet (DATATIDES) : 
-   ti         =  dblarr(n_tid,nline)
-   ai         =  dblarr(n_tid,nline)
-   ei         =  dblarr(n_tid,nline)
-   oblpi      =  dblarr(n_tid,nline)
-   oblsi      =  dblarr(n_tid,nline)
-   rotpi      =  dblarr(n_tid,nline)
-   rotsi      =  dblarr(n_tid,nline)
-   Rpi        =  dblarr(n_tid,nline)
-   Rsi        =  dblarr(n_tid,nline)
-   rg2si      =  dblarr(n_tid,nline)
+   ti         =  dblarr(nbp_idl,nline)
+   ai         =  dblarr(nbp_idl,nline)
+   ei         =  dblarr(nbp_idl,nline)
+   oblpi      =  dblarr(nbp_idl,nline)
+   oblsi      =  dblarr(nbp_idl,nline)
+   rotpi      =  dblarr(nbp_idl,nline)
+   rotsi      =  dblarr(nbp_idl,nline)
+   Rpi        =  dblarr(nbp_idl,nline)
+   Rsi        =  dblarr(nbp_idl,nline)
+   rg2si      =  dblarr(nbp_idl,nline)
    
-   headeri = strarr(1)
-   nlineb4 = file_lines(filename4)-1
-   read_array = dblarr(10,nlineb4)
-   openr,1,filename4
-   readf,1,headeri
-   readf,1,read_array
-   close,1
-   
-   ti[0,0:nlineb4-1] = read_array(0,*);+toto1(0)
-   ai[0,0:nlineb4-1] = read_array(1,*)
-   ei[0,0:nlineb4-1] = read_array(2,*)
-   oblpi[0,0:nlineb4-1] = read_array(3,*)
-   oblsi[0,0:nlineb4-1] = read_array(4,*)
-   rotpi[0,0:nlineb4-1] = read_array(5,*)
-   rotsi[0,0:nlineb4-1] = read_array(6,*)
-   Rpi[0,0:nlineb4-1] = read_array(7,*)
-   Rsi[0,0:nlineb4-1] = read_array(8,*)
-   rg2si[0,0:nlineb4-1] = read_array(9,*)
-   
-   nlineb5 = file_lines(filename5)-1
-   read_array = dblarr(10,nlineb5)
-   openr,1,filename5
-   readf,1,headeri
-   readf,1,read_array
-   close,1
-   
-   ti[1,0:nlineb5-1] = read_array(0,*);+toto1(0)
-   ai[1,0:nlineb5-1] = read_array(1,*)
-   ei[1,0:nlineb5-1] = read_array(2,*)
-   oblpi[1,0:nlineb5-1] = read_array(3,*)
-   oblsi[1,0:nlineb5-1] = read_array(4,*)
-   rotpi[1,0:nlineb5-1] = read_array(5,*)
-   rotsi[1,0:nlineb5-1] = read_array(6,*)
-   Rpi[1,0:nlineb5-1] = read_array(7,*)
-   Rsi[1,0:nlineb5-1] = read_array(8,*)
-   rg2si[1,0:nlineb5-1] = read_array(9,*)
+   for i = 0,nbp_idl-1 do begin
+      headeri = strarr(1)
+      nline = file_lines(filename_idl(i))-1
+      read_array = dblarr(10,nline)
+      openr,1,filename_idl(i)
+      readf,1,headeri
+      readf,1,read_array
+      close,1
+      
+      ti[i,0:nlineb4-1] = read_array(0,*);+toto1(0)
+      ai[i,0:nlineb4-1] = read_array(1,*)
+      ei[i,0:nlineb4-1] = read_array(2,*)
+      oblpi[i,0:nlineb4-1] = read_array(3,*)
+      oblsi[i,0:nlineb4-1] = read_array(4,*)
+      rotpi[i,0:nlineb4-1] = read_array(5,*)
+      rotsi[i,0:nlineb4-1] = read_array(6,*)
+      Rpi[i,0:nlineb4-1] = read_array(7,*)
+      Rsi[i,0:nlineb4-1] = read_array(8,*)
+      rg2si[i,0:nlineb4-1] = read_array(9,*)
+   endfor
+ 
 endif
 
 if n_tid ge 1 then begin
 ;! Obliquities calculations
-
 tmp     = dblarr(n_elements(horb1x))
 oblp1m  = dblarr(n_elements(horb1x))
 obls1m  = dblarr(n_elements(horb1x))
