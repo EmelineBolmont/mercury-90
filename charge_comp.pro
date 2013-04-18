@@ -310,6 +310,9 @@ for bou = 0,n_elements(horb1x)-1 do begin
    endif
 endfor
 endif
+
+
+
 indicend = dblarr(2,nbp)
 for j = 0,nbp-1 do begin
    for i = 0,n_elements(tb(j,*))-1 do begin
