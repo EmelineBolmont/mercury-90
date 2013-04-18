@@ -234,8 +234,8 @@ for bou = 0,n_elements(horb1x)-1 do begin
       obls1m(bou) = acos(tmp(bou))*180.d0/!Pi
    if abs(tmp(bou)) gt 1.d0 then obls1m(bou) = 1.0d-6
    
-   spinp1(bou) = sqrt(spinp1x(0:indicend(1,i))^2 $
-          +spinp1y(0:indicend(1,i))^2+spinp1z(0:indicend(1,i))^2)
+   spinp1(bou) = sqrt(spinp1x(bou)^2 $
+          +spinp1y(bou)^2+spinp1z(bou)^2)
    
    if n_tid ge 2 then begin
       tmp(bou)=(horb2x(bou)*spinp2x(bou) $
@@ -256,8 +256,8 @@ for bou = 0,n_elements(horb1x)-1 do begin
          obls2m(bou) = acos(tmp(bou))*180.d0/!Pi
       if abs(tmp(bou)) gt 1.d0 then obls2m(bou) = 1.0d-6
       
-      spinp2(bou) = sqrt(spinp2x(0:indicend(1,i))^2 $
-            +spinp2y(0:indicend(1,i))^2+spinp2z(0:indicend(1,i))^2)
+      spinp2(bou) = sqrt(spinp2x(bou)^2 $
+            +spinp2y(bou)^2+spinp2z(bou)^2)
       
    endif
    
@@ -280,8 +280,8 @@ for bou = 0,n_elements(horb1x)-1 do begin
          obls3m(bou) = acos(tmp(bou))*180.d0/!Pi
       if abs(tmp(bou)) gt 1.d0 then obls3m(bou) = 1.0d-6
       
-      spinp3(bou) = sqrt(spinp3x(0:indicend(1,i))^2 $
-            +spinp3y(0:indicend(1,i))^2+spinp3z(0:indicend(1,i))^2)
+      spinp3(bou) = sqrt(spinp3x(bou)^2 $
+            +spinp3y(bou)^2+spinp3z(bou)^2)
       
    endif
    
@@ -304,8 +304,8 @@ for bou = 0,n_elements(horb1x)-1 do begin
          obls4m(bou) = acos(tmp(bou))*180.d0/!Pi
       if abs(tmp(bou)) gt 1.d0 then obls4m(bou) = 1.0d-6
       
-      spinp4(bou) = sqrt(spinp4x(0:indicend(1,i))^2 $
-            +spinp4y(0:indicend(1,i))^2+spinp4z(0:indicend(1,i))^2)
+      spinp4(bou) = sqrt(spinp4x(bou)^2 $
+            +spinp4y(bou)^2+spinp4z(bou)^2)
       
    endif
 endfor
