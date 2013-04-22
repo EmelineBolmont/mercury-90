@@ -491,6 +491,7 @@ subroutine write_disk_properties()
     write(10,'(a,i4)') '  total number of modes = ', nb_modes
     write(10,'(a,2(i3,a))') '  wavenumber in [', wavenumber_min, ';', wavenumber_max, ']'
     write(10,'(a,i2)') '  wavenumber cutoff = ', wavenumber_cutoff
+    write(10,*) ' random seed = ', SEED
   else
     write(10,'(a)') 'is turbulence = False'
   end if
