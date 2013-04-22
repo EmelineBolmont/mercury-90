@@ -57,6 +57,10 @@ indcolor = 200
 incolor  = 50;50
 
 ae = 1
+; If you want to check conservation of tot angular momentum
+conservation = 0
+
+if conservation eq 0 then begin
 if ae eq 1 then begin
 ;! semi-major axis with respect to t
 multiplot,[1,2],ygap=0.01
@@ -248,6 +252,65 @@ endif
 
 multiplot,/reset
 endelse
+endif
+
+if conservation eq 1 then begin
+
+   horb_vec = dblarr(n_elements(horb1x))
+   horbx= dblarr(n_elements(horb1x))
+   horby= dblarr(n_elements(horb1x))
+   horbz= dblarr(n_elements(horb1x))
+   horb = dblarr(n_elements(horb1x))
+   spinst = dblarr(n_elements(horb1x))
+   
+   for i=0,n_elements(horb1x)-1 do begin
+      horbx(i)=(yb(i)*wb(i)-zb(i)*vb(i))
+      horby(i)=(zb(i)*ub(i)-xb(i)*wb(i))
+      horbz(i)=(xb(i)*vb(i)-yb(i)*ub(i))
+      
+      ; With x,y,z,u,v,w
+      horb_vec(i) = Ms*Mp(0)/(Ms+Mp(0))*sqrt(horbx(i)^2+horby(i)^2+horbz(i)^2)*(AU^2/day) ; kg.m^2.s-1
+      ; With a and e
+      horb(i) = Mp(0)*Ms*sqrt(G*(ab(0,i)*AU)*(1-eb(0,i)^2)/(Mp(0)+Ms))
+      
+      spinst(i) = sqrt(spinstx(i)^2+spinsty(i)^2+spinstz(i)^2)/day ; s-1
+   endfor
+
+   Ip = 3.308d-1*Mp(0)*(1.01034d0*Rearth)^2
+   Is = 0.254d0*Ms*(Rst*Rsun)^2
+   Isi = 0.254d0*Ms*(Rsi*Rsun)^2
+   
+   plot,tb(0,*),ab(0,*) $
+        ,/nodata $
+        ,xrange=[Tinf,Tsup],yrange=[1d-20,1d20] $
+        ,charsize=2.5,charthick=3.5 $ ;,charsize=1.8,charthick=3
+        ,xtitle='Time (years)' $
+        ,ytitle='Fractional change of total angular momentum' $
+        ,xGRIDSTYLE=1,xTICKLEN=0.5 $
+        ,xstyle=1,ystyle=1 $
+        ,/xlog,/ylog
+
+   oplot,toto1(*),abs((horb_vec(*)-horb_vec(0))/horb_vec(0)),linestyle=0,thick=12,color=20    
+   oplot,toto1(*),abs((Ip*spinp1(*)/day-Ip*spinp1(0)/day)/(Ip*spinp1(0)/day)),linestyle=2,thick=12,color=80    
+   oplot,toto1(*),abs((Is(*)*spinst(*)-Is(0)*spinst(0))/(Is(0)*spinst(0))),linestyle=3,thick=12,color=140 
+
+   ;; oplot,toto1(*),abs((horb_vec(*)+Ip*spinp1(*)/day+Is(*)*spinst(*)-(horb_vec(0)+Ip*spinp1(0)/day+Is(0)*spinst(0))) $
+   ;;      /(horb_vec(0)+Ip*spinp1(0)/day+Is(0)*spinst(0))),linestyle=0,thick=12,color=20   
+     
+   ;; oplot,toto1(*),abs((horb(*)+Ip*spinp1(*)/day+Is(*)*spinst(*)-(horb(0)+Ip*spinp1(0)/day+Is(0)*spinst(0))) $
+   ;;      /(horb(0)+Ip*spinp1(0)/day+Is(0)*spinst(0))),linestyle=0,thick=12,color=40
+
+   ;; if idl eq 1 then begin
+   ;;    for i = 0,n_tid-1 do begin
+   ;;       oplot,ti(i,*),abs((Mp(0)*Ms*sqrt(G*ai(i,*)*AU*(1-ei(i,*)^2)/(Mp(0)+Ms)) $
+   ;; 	+Ip*rotpi(i,*)+Isi(*)*rotsi(i,*)-(Mp(0)*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(Mp(0)+Ms)) $
+   ;; 	+Ip*rotpi(i,0)+Isi(0)*rotsi(i,0)))/(Mp(0)*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(Mp(0)+Ms)) $
+   ;; 	+Ip*rotpi(i,0)+Isi(0)*rotsi(i,0))) $
+   ;;             ,linestyle=2,color=incolor+i*indcolor,thick=12
+   ;;    endfor
+   ;; endif
+   
+endif
 
 END
 
