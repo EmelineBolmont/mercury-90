@@ -52,11 +52,11 @@ for i=0,n_tid-1 do begin
    readcol,filenamep,ppp,toto1,spinp1x,spinp1y,spinp1z,format='A,F,F,F,F'
    spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpy(i,*) = spinp1y
    
-   filenameh = 'horb'+strtrim(i+1,2)+.dat'
+   filenameh = 'horb'+strtrim(i+1,2)+'.dat'
    print,filenameh
    readcol,filenameh,hhh,toto1,horb1x,horb1y,horb1z,format='A,F,F,F,F'
    horbx(i,*) = horb1x & horby(i,*) = horb1y & horbz(i,*) = horb1z  
-endif
+endfor
 
 ; n line maximum
 nmaxb = max(nlineb)
