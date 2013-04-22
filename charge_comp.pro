@@ -1,4 +1,3 @@
-rg2p      = [3.308d-1,2.54d-1]
 Msun      =  1.98892d30               ;kg
 
 ;! Mass star:
@@ -216,6 +215,12 @@ if n_tid ge 1 then begin
       endfor
    endfor
 endif
+
+rg2p      = [3.308d-1,2.54d-1]
+Rsun      =  6.96d8                   ;m
+AU        =  1.49598d11               ;m
+day       =  24*3600.                 ;s
+Rearth    =  6371.0d3                 ;m
 
 ; Angular momentum calculation
 horb_vec = dblarr(nbp,n_elements(horb1x))
