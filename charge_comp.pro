@@ -1,10 +1,15 @@
-;PRO charge
+rg2p      = [3.308d-1,2.54d-1]
+Msun      =  1.98892d30               ;kg
 
-
+;! Mass star:
+Ms = 0.08*Msun
 ;! Number planets
 nbp = 2
 ;! Number of planets tidally evolving
 n_tid = 2
+;! if terrestrial: jupiter =0, if gas giant: jupiter=1
+jupiter = [0,0]
+
 ;! If comparison with IDL simulations 1, if not 0
 idl = 1
 nbp_idl =2
@@ -31,42 +36,27 @@ if idl eq 1 then begin
    endfor
 endif
 
-if n_tid ge 1 then begin
-   filenames = 'spins.dat'
-   print,filenames
-   readcol,filenames,sss,toto1,spinstx,spinsty,spinstz,Rst,format='A,F,F,F,F,F'
-   filenamep1 = 'spinp1.dat'
-   print,filenamep1
-   readcol,filenamep1,ppp,toto1,spinp1x,spinp1y,spinp1z,format='A,F,F,F,F'
-   filenameh1 = 'horb1.dat'
-   print,filenameh1
-   readcol,filenameh1,hhh,toto1,horb1x,horb1y,horb1z,format='A,F,F,F,F'
-endif
-if n_tid ge 2 then begin
-   filenamep2 = 'spinp2.dat'
-   print,filenamep2
-   readcol,filenamep2,ppp,toto1,spinp2x,spinp2y,spinp2z,format='A,F,F,F,F'
-   filenameh2 = 'horb2.dat'
-   print,filenameh2
-   readcol,filenameh2,hhh,toto1,horb2x,horb2y,horb2z,format='A,F,F,F,F'
-endif
-if n_tid ge 3 then begin
-   filenamep3 = 'spinp3.dat'
-   print,filenamep3
-   readcol,filenamep3,ppp,toto1,spinp3x,spinp3y,spinp3z,format='A,F,F,F,F'
-   filenameh3 = 'horb3.dat'
-   print,filenameh3
-   readcol,filenameh3,hhh,toto1,horb3x,horb3y,horb3z,format='A,F,F,F,F'
-endif
-if n_tid ge 4 then begin
-   filenamep4 = 'spinp4.dat'
-   print,filenamep4
-   readcol,filenamep4,ppp,toto1,spinp4x,spinp4y,spinp4z,format='A,F,F,F,F'
-   filenameh4 = 'horb4.dat'
-   print,filenameh4
-   readcol,filenameh4,hhh,toto1,horb4x,horb4y,horb4z,format='A,F,F,F,F'
-endif
+filenames = 'spins.dat'
+print,filenames
+readcol,filenames,sss,toto1,spinstx,spinsty,spinstz,Rst,format='A,F,F,F,F,F'
+spinpx = dblarr(n_tid,n_elements(toto1))
+spinpy = dblarr(n_tid,n_elements(toto1))
+spinpz = dblarr(n_tid,n_elements(toto1))
+horbx  = dblarr(n_tid,n_elements(toto1))
+horby  = dblarr(n_tid,n_elements(toto1))
+horbZ  = dblarr(n_tid,n_elements(toto1))
 
+for i=0,n_tid-1 do begin 
+   filenamep = 'spinp'+strtrim(i+1,2)+'.dat'
+   print,filenamep
+   readcol,filenamep,ppp,toto1,spinp1x,spinp1y,spinp1z,format='A,F,F,F,F'
+   spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpy(i,*) = spinp1y
+   
+   filenameh = 'horb'+strtrim(i+1,2)+.dat'
+   print,filenameh
+   readcol,filenameh,hhh,toto1,horb1x,horb1y,horb1z,format='A,F,F,F,F'
+   horbx(i,*) = horb1x & horby(i,*) = horb1y & horbz(i,*) = horb1z  
+endif
 
 ; n line maximum
 nmaxb = max(nlineb)
@@ -193,124 +183,83 @@ if idl eq 1 then begin
 endif
 
 if n_tid ge 1 then begin
-;! Obliquities calculations
-tmp     = dblarr(n_elements(horb1x))
-oblp1m  = dblarr(n_elements(horb1x))
-obls1m  = dblarr(n_elements(horb1x))
-spinp1  = dblarr(n_elements(horb1x))
-if n_tid ge 2 then begin
-   oblp2m  = dblarr(n_elements(horb1x))
-   obls2m  = dblarr(n_elements(horb1x))
-   spinp2  = dblarr(n_elements(horb1x))
-endif
-if n_tid ge 3 then begin
-   oblp3m  = dblarr(n_elements(horb1x))
-   obls3m  = dblarr(n_elements(horb1x))
-   spinp3  = dblarr(n_elements(horb1x))
-endif
-if n_tid ge 4 then begin
-   oblp4m  = dblarr(n_elements(horb1x))
-   obls4m  = dblarr(n_elements(horb1x))
-   spinp4  = dblarr(n_elements(horb1x))
+   ;! Obliquities calculations
+   tmp     = dblarr(n_elements(horb1x))
+   oblpm  = dblarr(n_tid,n_elements(horb1x))
+   oblsm  = dblarr(n_tid,n_elements(horb1x))
+   spinp  = dblarr(n_tid,n_elements(horb1x))
+   
+   for i = 0,n_tid-1 do begin
+      for bou = 0,n_elements(horb1x)-1 do begin
+      
+         tmp(bou)=(horbx(i,bou)*spinpx(i,bou) $
+                   +horby(i,bou)*spinpy(i,bou) $
+                   +horbz(i,bou)*spinpz(i,bou)) $
+                  /(sqrt(horbx(i,bou)^2+horby(i,bou)^2+horbz(i,bou)^2) $
+                    *sqrt(spinpx(i,bou)^2+spinpy(i,bou)^2+spinpz(i,bou)^2))
+         if abs(tmp(bou)) le 1.d0 then $ 
+            oblpm(i,bou) = acos(tmp(bou))*180.d0/!Pi
+         if abs(tmp(bou)) gt 1.d0 then oblpm(i,bou) = 1.0d-6
+        
+         tmp(bou)=(horbx(bou)*spinstx(bou) $
+                   +horby(bou)*spinsty(bou) $
+                   +horbz(bou)*spinstz(bou)) $
+                  /(sqrt(horbx(bou)^2+horby(bou)^2+horbz(bou)^2) $
+                    *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
+         if abs(tmp(bou)) le 1.d0 then $ 
+            oblsm(i,bou) = acos(tmp(bou))*180.d0/!Pi
+         if abs(tmp(bou)) gt 1.d0 then oblsm(i,bou) = 1.0d-6
+         
+         spinp(i,bou) = sqrt(spinpx(i,bou)^2 $
+                +spinpy(i,bou)^2+spinpz(i,bou)^2)
+        
+      endfor
+   endfor
 endif
 
-for bou = 0,n_elements(horb1x)-1 do begin
+; Angular momentum calculation
+horb_vec = dblarr(nbp,n_elements(horb1x))
+horbx= dblarr(nbp,n_elements(horb1x))
+horby= dblarr(nbp,n_elements(horb1x))
+horbz= dblarr(nbp,n_elements(horb1x))
+horb = dblarr(n_elements(horb1x))
+spinst = dblarr(n_elements(horb1x))
+momspin = dblarr(n_tid,n_elements(horb1x))
+momspitot = dblarr(n_elements(horb1x))
+momstar = dblarr(n_elements(horb1x))
 
-   tmp(bou)=(horb1x(bou)*spinp1x(bou) $
-             +horb1y(bou)*spinp1y(bou) $
-             +horb1z(bou)*spinp1z(bou)) $
-            /(sqrt(horb1x(bou)^2+horb1y(bou)^2+horb1z(bou)^2) $
-              *sqrt(spinp1x(bou)^2+spinp1y(bou)^2+spinp1z(bou)^2))
-   if abs(tmp(bou)) le 1.d0 then $ 
-      oblp1m(bou) = acos(tmp(bou))*180.d0/!Pi
-   if abs(tmp(bou)) gt 1.d0 then oblp1m(bou) = 1.0d-6
-  
-   tmp(bou)=(horb1x(bou)*spinstx(bou) $
-             +horb1y(bou)*spinsty(bou) $
-             +horb1z(bou)*spinstz(bou)) $
-            /(sqrt(horb1x(bou)^2+horb1y(bou)^2+horb1z(bou)^2) $
-              *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
-   if abs(tmp(bou)) le 1.d0 then $ 
-      obls1m(bou) = acos(tmp(bou))*180.d0/!Pi
-   if abs(tmp(bou)) gt 1.d0 then obls1m(bou) = 1.0d-6
-   
-   spinp1(bou) = sqrt(spinp1x(bou)^2 $
-          +spinp1y(bou)^2+spinp1z(bou)^2)
-   
-   if n_tid ge 2 then begin
-      tmp(bou)=(horb2x(bou)*spinp2x(bou) $
-             +horb2y(bou)*spinp2y(bou) $
-             +horb2z(bou)*spinp2z(bou)) $
-            /(sqrt(horb2x(bou)^2+horb2y(bou)^2+horb2z(bou)^2) $
-              *sqrt(spinp2x(bou)^2+spinp2y(bou)^2+spinp2z(bou)^2))
-      if abs(tmp(bou)) le 1.d0 then $ 
-         oblp2m(bou) = acos(tmp(bou))*180.d0/!Pi 
-      if abs(tmp(bou)) gt 1.d0 then oblp2m(bou) = 1.0d-6
+Ip   = dblarr(n_tid)
+if Ms le 0.3*Msun then Is = 0.254d0*Ms*(Rst*Rsun)^2
+if Ms gt 0.3*Msun then Is = 5.9d-2*Ms*(Rst*Rsun)^2
+Isi = rg2si*Ms*(Rsi*Rsun)^2
+
+for j=0,nbp-1 do begin
+   for i=0,n_elements(horb1x)-1 do begin
+      horbx(j,i)=(yb(j,i)*wb(j,i)-zb(j,i)*vb(j,i))
+      horby(j,i)=(zb(j,i)*ub(j,i)-xb(j,i)*wb(j,i))
+      horbz(j,i)=(xb(j,i)*vb(j,i)-yb(j,i)*ub(j,i))
       
-      tmp(bou)=(horb2x(bou)*spinstx(bou) $
-                +horb2y(bou)*spinsty(bou) $
-                +horb2z(bou)*spinstz(bou)) $
-               /(sqrt(horb2x(bou)^2+horb2y(bou)^2+horb2z(bou)^2) $
-                 *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
-      if abs(tmp(bou)) le 1.d0 then $ 
-         obls2m(bou) = acos(tmp(bou))*180.d0/!Pi
-      if abs(tmp(bou)) gt 1.d0 then obls2m(bou) = 1.0d-6
-      
-      spinp2(bou) = sqrt(spinp2x(bou)^2 $
-            +spinp2y(bou)^2+spinp2z(bou)^2)
-      
-   endif
-   
-   if n_tid ge 3 then begin
-      tmp(bou)=(horb3x(bou)*spinp3x(bou) $
-             +horb3y(bou)*spinp3y(bou) $
-             +horb3z(bou)*spinp3z(bou)) $
-            /(sqrt(horb3x(bou)^2+horb3y(bou)^2+horb3z(bou)^2) $
-              *sqrt(spinp3x(bou)^2+spinp3y(bou)^2+spinp3z(bou)^2))
-      if abs(tmp(bou)) le 1.d0 then $ 
-         oblp3m(bou) = acos(tmp(bou))*180.d0/!Pi 
-      if abs(tmp(bou)) gt 1.d0 then oblp3m(bou) = 1.0d-6
-      
-      tmp(bou)=(horb3x(bou)*spinstx(bou) $
-                +horb3y(bou)*spinsty(bou) $
-                +horb3z(bou)*spinstz(bou)) $
-               /(sqrt(horb3x(bou)^2+horb3y(bou)^2+horb3z(bou)^2) $
-                 *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
-      if abs(tmp(bou)) le 1.d0 then $ 
-         obls3m(bou) = acos(tmp(bou))*180.d0/!Pi
-      if abs(tmp(bou)) gt 1.d0 then obls3m(bou) = 1.0d-6
-      
-      spinp3(bou) = sqrt(spinp3x(bou)^2 $
-            +spinp3y(bou)^2+spinp3z(bou)^2)
-      
-   endif
-   
-   if n_tid ge 4 then begin
-      tmp(bou)=(horb4x(bou)*spinp4x(bou) $
-             +horb4y(bou)*spinp4y(bou) $
-             +horb4z(bou)*spinp4z(bou)) $
-            /(sqrt(horb4x(bou)^2+horb4y(bou)^2+horb4z(bou)^2) $
-              *sqrt(spinp4x(bou)^2+spinp4y(bou)^2+spinp4z(bou)^2))
-      if abs(tmp(bou)) le 1.d0 then $ 
-         oblp4m(bou) = acos(tmp(bou))*180.d0/!Pi 
-      if abs(tmp(bou)) gt 1.d0 then oblp4m(bou) = 1.0d-6
-      
-      tmp(bou)=(horb4x(bou)*spinstx(bou) $
-                +horb4y(bou)*spinsty(bou) $
-                +horb4z(bou)*spinstz(bou)) $
-               /(sqrt(horb4x(bou)^2+horb4y(bou)^2+horb4z(bou)^2) $
-                 *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
-      if abs(tmp(bou)) le 1.d0 then $ 
-         obls4m(bou) = acos(tmp(bou))*180.d0/!Pi
-      if abs(tmp(bou)) gt 1.d0 then obls4m(bou) = 1.0d-6
-      
-      spinp4(bou) = sqrt(spinp4x(bou)^2 $
-            +spinp4y(bou)^2+spinp4z(bou)^2)
-      
-   endif
+      ; With x,y,z,u,v,w
+      horb_vec(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
+      horb(i) = horb(i)+horb_vec(j,i)
+      spinst(i) = sqrt(spinstx(i)^2+spinsty(i)^2+spinstz(i)^2)/day ; s-1
+   endfor
 endfor
-endif
-
+for i=0,n_elements(horb1x)-1 do begin
+   momstar(i)=Is(i)*spinst(i) 
+endfor
+ 
+for j=0,n_tid-1 do begin
+   Ip(j) = 3.308d-1*mb(j,0)*Msun*(1.01034d0*Rearth)^2
+   for i=0,n_elements(horb1x)-1 do begin
+      momspin(j,i) = Ip(j)*spinp(j,i)/day
+   endfor
+endfor
+for i=0,n_elements(horb1x)-1 do begin
+   for j=0,n_tid-1 do begin
+      momspitot(i)=momspitot(i)+momspin(j,i)
+   endfor
+endfor
 
 
 indicend = dblarr(2,nbp)
