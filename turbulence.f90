@@ -13,7 +13,9 @@ module turbulence
   use disk_properties
 
   implicit none
-    
+  
+  integer, dimension(:), allocatable :: SEED ! The seed for random numbers. 
+  
   integer, parameter :: nb_modes = 50 ! The total number of mode existing at the same time and that represent the turbulence in the disk at any time.
   integer :: wavenumber_min = 1
   integer :: wavenumber_max = 150
@@ -228,17 +230,19 @@ end subroutine get_turbulence_acceleration
 
 subroutine init_random_seed()
   integer :: i, n, clock
-  integer, dimension(:), allocatable :: seed
 
+  ! We get the minimal size need for random numbers (obscure for me but still)
   call random_seed(size = n)
-  allocate(seed(n))
-
+  if (allocated(SEED)) then
+    deallocate(seed)
+  end if
+  allocate(SEED(n))
   call system_clock(count=clock)
 
-  seed = clock + 37 * (/ (i - 1, i = 1, n) /)
-  call random_seed(put = seed)
-
-  deallocate(seed)
+  SEED = clock + 37 * (/ (i - 1, i = 1, n) /)
+  call random_seed(put = SEED)
+  
+  ! deallocate(seed)
 end subroutine
 
 subroutine normal(x)
