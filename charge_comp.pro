@@ -50,7 +50,7 @@ for i=0,n_tid-1 do begin
    filenamep = 'spinp'+strtrim(i+1,2)+'.dat'
    print,filenamep
    readcol,filenamep,ppp,toto1,spinp1x,spinp1y,spinp1z,format='A,F,F,F,F'
-   spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpy(i,*) = spinp1y
+   spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpz(i,*) = spinp1z
    
    filenameh = 'horb'+strtrim(i+1,2)+'.dat'
    print,filenameh
