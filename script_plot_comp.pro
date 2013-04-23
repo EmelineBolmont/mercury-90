@@ -213,11 +213,10 @@ plot,tb(0,*),ab(0,*) $
 ;! Mercury
 i=0
 for i=0,n_tid-1 do begin
-   oplot,toto1(*),24.*2*!Pi/spinp(i,*) $
+   oplot,toto1(*),2*!Pi/(spinp(i,*)*hr) $
       ,thick=12,linestyle=0,color=incolor+i*indcolor
 endfor
-oplot,toto1(*),24.*2*!Pi $
-   /(sqrt(spinstx(*)^2+spinsty(*)^2+spinstz(*)^2)) $
+oplot,toto1(*),2*!Pi/(spinst(*)*hr) $
       ,thick=10,linestyle=0;,color=incolor+1*indcolor
 
 for j = 0,n_tid-1 do begin

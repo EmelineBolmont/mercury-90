@@ -752,21 +752,21 @@ contains
              endif         
              if ((mod(flagbug,nbug).eq.0).and.(flagbug.ge.0)) then
                 write(*,*) "s",time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s
-                write(*,*) "p1",time/365.25d0,spin(1,2),spin(2,2),spin(3,2),Rp(2),rg2p(1)
+                write(*,*) "p1",time/365.25d0,spin(1,2),spin(2,2),spin(3,2),Rp(2)/rsun,rg2p(1)
                 write(*,*) "h1",time/365.25d0,horb(1,2)/horbn(2),horb(2,2)/horbn(2) &
                      ,horb(3,2)/horbn(2),horbn(2)
                 if (ntid.ge.2) then
-                   write(*,*) "p2",time/365.25d0,spin(1,3),spin(2,3),spin(3,3),Rp(3),rg2p(2)
+                   write(*,*) "p2",time/365.25d0,spin(1,3),spin(2,3),spin(3,3),Rp(3)/rsun,rg2p(2)
                    write(*,*) "h2",time/365.25d0,horb(1,3)/horbn(3),horb(2,3)/horbn(3) &
                      ,horb(3,3)/horbn(3),horbn(3)
                 endif
                 if (ntid.ge.3) then
-                   write(*,*) "p3",time/365.25d0,spin(1,4),spin(2,4),spin(3,4),Rp(4),rg2p(3)
+                   write(*,*) "p3",time/365.25d0,spin(1,4),spin(2,4),spin(3,4),Rp(4)/rsun,rg2p(3)
                    write(*,*) "h3",time/365.25d0,horb(1,4)/horbn(4),horb(2,4)/horbn(4) &
                      ,horb(3,4)/horbn(4),horbn(4)
                 endif
                 if (ntid.ge.4) then
-                   write(*,*) "p4",time/365.25d0,spin(1,5),spin(2,5),spin(3,5),Rp(5),rg2p(4)
+                   write(*,*) "p4",time/365.25d0,spin(1,5),spin(2,5),spin(3,5),Rp(5)/rsun,rg2p(4)
                    write(*,*) "h4",time/365.25d0,horb(1,5)/horbn(5),horb(2,5)/horbn(5) &
                      ,horb(3,5)/horbn(5),horbn(5)
                 endif

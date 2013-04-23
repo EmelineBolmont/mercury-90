@@ -11,11 +11,13 @@ jupiter = [0,0]
 
 ;! If comparison with IDL simulations 1, if not 0
 idl = 1
-nbp_idl =2
-nline_idl = dblarr(nbp_idl)
-filename_idl = strarr(nbp_idl)
-filename_idl(0) = 'datatides_18.0000_0.00000_12_2_3_3_0.0261799_0.00000_0.dat'
-filename_idl(1) = 'datatides_100.000_50.0000_12_5_3_4_0.0174533_0.00000_0.dat'
+if idl eq 1 then begin
+   nbp_idl =2
+   nline_idl = dblarr(nbp_idl)
+   filename_idl = strarr(nbp_idl)
+   filename_idl(0) = 'datatides_18.0000_0.00000_12_2_3_3_0.0261799_0.00000_0.dat'
+   if nbp_idl eq 2 then filename_idl(1) = 'datatides_100.000_50.0000_12_5_3_4_0.0174533_0.00000_0.dat'
+endif
 
 ;************************************************************
 
@@ -37,24 +39,29 @@ endif
 
 filenames = 'spins.dat'
 print,filenames
-readcol,filenames,sss,toto1,spinstx,spinsty,spinstz,Rst,format='A,F,F,F,F,F'
+readcol,filenames,sss,toto1,spinstx,spinsty,spinstz,Rst,rg2s,format='A,F,F,F,F,F'
+
 spinpx = dblarr(n_tid,n_elements(toto1))
 spinpy = dblarr(n_tid,n_elements(toto1))
 spinpz = dblarr(n_tid,n_elements(toto1))
 horbx  = dblarr(n_tid,n_elements(toto1))
 horby  = dblarr(n_tid,n_elements(toto1))
-horbZ  = dblarr(n_tid,n_elements(toto1))
+horbz  = dblarr(n_tid,n_elements(toto1))
+horbp  = dblarr(n_tid,n_elements(toto1))
+Rp     = dblarr(n_tid) & rg2p   = dblarr(n_tid)
 
 for i=0,n_tid-1 do begin 
    filenamep = 'spinp'+strtrim(i+1,2)+'.dat'
    print,filenamep
-   readcol,filenamep,ppp,toto1,spinp1x,spinp1y,spinp1z,format='A,F,F,F,F'
+   readcol,filenamep,ppp,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='A,F,F,F,F'
    spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpz(i,*) = spinp1z
+   Rp(i) = Rp1(0) & rg2p(i) = rg2p1
    
    filenameh = 'horb'+strtrim(i+1,2)+'.dat'
    print,filenameh
-   readcol,filenameh,hhh,toto1,horb1x,horb1y,horb1z,format='A,F,F,F,F'
+   readcol,filenameh,hhh,toto1,horb1x,horb1y,horb1z,horb1,format='A,F,F,F,F'
    horbx(i,*) = horb1x & horby(i,*) = horb1y & horbz(i,*) = horb1z  
+   horbp(i,*) = horb1
 endfor
 
 ; n line maximum
@@ -210,7 +217,7 @@ if n_tid ge 1 then begin
          if abs(tmp(bou)) gt 1.d0 then oblsm(i,bou) = 1.0d-6
          
          spinp(i,bou) = sqrt(spinpx(i,bou)^2 $
-                +spinpy(i,bou)^2+spinpz(i,bou)^2)
+                +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
         
       endfor
    endfor
@@ -234,8 +241,7 @@ momspitot = dblarr(n_elements(horb1x))
 momstar = dblarr(n_elements(horb1x))
 
 Ip   = dblarr(n_tid)
-if Ms le 0.3*Msun then Is = 0.254d0*Ms*(Rst*Rsun)^2
-if Ms gt 0.3*Msun then Is = 5.9d-2*Ms*(Rst*Rsun)^2
+Is = rg2s*Ms*(Rst*Rsun)^2
 Isi = rg2si*Ms*(Rsi*Rsun)^2
 
 for j=0,nbp-1 do begin
@@ -246,6 +252,7 @@ for j=0,nbp-1 do begin
       
       ; With x,y,z,u,v,w
       horb_vec(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
+      ; Sum on number of planets to have total orbital momentum
       horb(i) = horb(i)+horb_vec(j,i)
       spinst(i) = sqrt(spinstx(i)^2+spinsty(i)^2+spinstz(i)^2)/day ; s-1
    endfor
@@ -255,9 +262,9 @@ for i=0,n_elements(horb1x)-1 do begin
 endfor
  
 for j=0,n_tid-1 do begin
-   Ip(j) = 3.308d-1*mb(j,0)*Msun*(1.01034d0*Rearth)^2
+   Ip(j) = rg2p(j)*mb(j,0)*Msun*(Rp(j)*rsun)^2
    for i=0,n_elements(horb1x)-1 do begin
-      momspin(j,i) = Ip(j)*spinp(j,i)/day
+      momspin(j,i) = Ip(j)*spinp(j,i)
    endfor
 endfor
 for i=0,n_elements(horb1x)-1 do begin
