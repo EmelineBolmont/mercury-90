@@ -717,20 +717,21 @@ contains
           totftides(2) = 0.d0
           totftides(3) = 0.d0
           do j=2,ntid+1 
-             totftides(1) = totftides(1) + Nts(1,j)
-             totftides(2) = totftides(2) + Nts(2,j)
-             totftides(3) = totftides(3) + Nts(3,j)
+             tmp = K2/(m(1)+m(j))
+             totftides(1) = totftides(1) + tmp*Nts(1,j)
+             totftides(2) = totftides(2) + tmp*Nts(2,j)
+             totftides(3) = totftides(3) + tmp*Nts(3,j)
           end do
           ! d/dt(I.Omega) = - (r x F)
           if (Rscst.eq.0) then 
              tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
-             tmp1 = - dt*K2/(rg2s*m(1)*Rst*Rst)
+             tmp1 = - dt/(rg2s*Rst*Rst)
              spin(1,1) = tmp*spin(1,1) + tmp1*totftides(1)
              spin(2,1) = tmp*spin(2,1) + tmp1*totftides(2)
              spin(3,1) = tmp*spin(3,1) + tmp1*totftides(3)
           endif
           if (Rscst.eq.1) then 
-             tmp = - dt*K2/(rg2s*m(1)*Rst*Rst)
+             tmp = - dt/(rg2s*Rst*Rst)
              spin(1,1) = spin(1,1) + tmp*totftides(1)
              spin(2,1) = spin(2,1) + tmp*totftides(2)
              spin(3,1) = spin(3,1) + tmp*totftides(3)
@@ -738,38 +739,36 @@ contains
           
 		  !PLANETS
 		  do j=2,ntid+1 
-		     tmp = - dt*K2/(m(j)*Rp(j)*Rp(j))
-		     spin(1,j) = spin(1,j) + tmp*Ntp(1,j)/rg2p(j-1)
-		     spin(2,j) = spin(2,j) + tmp*Ntp(2,j)/rg2p(j-1)
-		     spin(3,j) = spin(3,j) + tmp*Ntp(3,j)/rg2p(j-1)
+		     tmp = - dt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
+		     spin(1,j) = spin(1,j) + tmp*Ntp(1,j)
+		     spin(2,j) = spin(2,j) + tmp*Ntp(2,j)
+		     spin(3,j) = spin(3,j) + tmp*Ntp(3,j)
 		  enddo
    
           ! Write stuff
       
              if (flagbug.eq.0.0d0) then 
-                write(*,*) "time(yr)    spin x,y,z(day-1)     a-Rst(Rsun)"
+                write(*,*) "time(yr)    spin x,y,z(day-1)     R(Rsun)   rg2 "
              endif         
              if ((mod(flagbug,nbug).eq.0).and.(flagbug.ge.0)) then
-                write(*,*) "s",time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun
-                write(*,*) "p1",time/365.25d0,spin(1,2),spin(2,2),spin(3,2)
-                write(*,*) "h1",time/365.25d0,horb(1,2)/horbn(2),horb(2,2)/horbn(2),horb(3,2)/horbn(2)
+                write(*,*) "s",time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s
+                write(*,*) "p1",time/365.25d0,spin(1,2),spin(2,2),spin(3,2),Rp(2),rg2p(1)
+                write(*,*) "h1",time/365.25d0,horb(1,2)/horbn(2),horb(2,2)/horbn(2) &
+                     ,horb(3,2)/horbn(2),horbn(2)
                 if (ntid.ge.2) then
-                   write(*,*) "p2",time/365.25d0,spin(1,3),spin(2,3),spin(3,3)
-                endif
-                if (ntid.ge.2) then
-                   write(*,*) "h2",time/365.25d0,horb(1,3)/horbn(3),horb(2,3)/horbn(3),horb(3,3)/horbn(3)
+                   write(*,*) "p2",time/365.25d0,spin(1,3),spin(2,3),spin(3,3),Rp(3),rg2p(2)
+                   write(*,*) "h2",time/365.25d0,horb(1,3)/horbn(3),horb(2,3)/horbn(3) &
+                     ,horb(3,3)/horbn(3),horbn(3)
                 endif
                 if (ntid.ge.3) then
-                   write(*,*) "p3",time/365.25d0,spin(1,4),spin(2,4),spin(3,4)
-                endif
-                if (ntid.ge.3) then
-                   write(*,*) "h3",time/365.25d0,horb(1,4)/horbn(4),horb(2,4)/horbn(4),horb(3,4)/horbn(4)
-                endif
-                if (ntid.ge.4) then
-                   write(*,*) "p4",time/365.25d0,spin(1,5),spin(2,5),spin(3,5)
+                   write(*,*) "p3",time/365.25d0,spin(1,4),spin(2,4),spin(3,4),Rp(4),rg2p(3)
+                   write(*,*) "h3",time/365.25d0,horb(1,4)/horbn(4),horb(2,4)/horbn(4) &
+                     ,horb(3,4)/horbn(4),horbn(4)
                 endif
                 if (ntid.ge.4) then
-                   write(*,*) "h4",time/365.25d0,horb(1,5)/horbn(5),horb(2,5)/horbn(5),horb(3,5)/horbn(5)
+                   write(*,*) "p4",time/365.25d0,spin(1,5),spin(2,5),spin(3,5),Rp(5),rg2p(4)
+                   write(*,*) "h4",time/365.25d0,horb(1,5)/horbn(5),horb(2,5)/horbn(5) &
+                     ,horb(3,5)/horbn(5),horbn(5)
                 endif
              endif
 
