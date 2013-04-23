@@ -1605,7 +1605,7 @@ program test_disk
     
     integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass_min = 0.1 * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 20. * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 60. * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     real(double_precision), dimension(nb_mass) :: mass
     
