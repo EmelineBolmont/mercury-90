@@ -73,6 +73,55 @@ def set_default_parameters():
   turbulent_forcing = None
   is_irradiation = 1
 
+def set_prefered_disk():
+  """set the default values for various parameters"""
+  global surface_density, adiabatic_index, viscosity_type, viscosity, alpha, b_h, torque_type, disk_edges, inner_smoothing_width
+  global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, opacity_type
+  global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
+  global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
+  global is_turbulence, turbulent_forcing, saturation_torque, density_index, density_constant
+  global mean_molecular_weight
+  
+  #----------------------------------
+  # Parameters for the disk
+  # None parameters will not be displayed in the parameter file and thus, default values of the code will be used.
+  density_constant = 1700.
+  #~ density_index = 0.5
+  density_index = 1.0
+  surface_density = (density_constant, density_index) # (g/cm^2, power law index)
+  density_file = 'surface_density_profile.dat'
+  adiabatic_index = 1.4 # the adiabatic index of the disk
+  viscosity_type = 'constant' # constant, alpha
+  viscosity = 1.e15 # cm^2/s
+  alpha = None
+  #~ opacity_type = 'bell' # 'bell' or 'zhu' or 'hure' opacity table
+  opacity_type = 'hure' # 'bell' or 'zhu' or 'hure' opacity table
+  #~ b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
+  b_h = 0.6 # the smoothing length of the gravitationnal potential of the planet
+  mean_molecular_weight = 2.35
+  sample = 400
+  disk_edges = (0.5, 100.) # (the inner and outer edge of the disk in AU)
+  inner_smoothing_width = 0.05 # (in unit of the inner boundary radius) , the width of the region where the surface density decay to become 0 at the inner edge
+  dissipation_type = 0
+  disk_exponential_decay = None # in years
+  tau_viscous = None # in years
+  tau_photoevap = None # in years
+  dissipation_time_switch = None # in years
+  inner_boundary_condition = 'open'
+  outer_boundary_condition = 'open'
+  torque_type = 'real'
+  torque_file = 'torque_profile.dat'
+  torque_profile_steepness = None
+  saturation_torque = None
+  indep_cz = None
+  mass_dep_m_min = None
+  mass_dep_m_max = None
+  mass_dep_cz_m_min = None
+  mass_dep_cz_m_max = None
+  is_turbulence = None
+  turbulent_forcing = None
+  is_irradiation = 1
+
 def generation_simulation_parameters():
   """the function generate simulations files in the current working directory, given the parameters on top of the script
   """
@@ -161,13 +210,13 @@ if not(os.path.exists("parameter_study")):
 
 #-------------------------------------------------------------------------------
 # Definition of parameters of the script
-for opacity in ['bell', 'zhu', 'hure', 'chambers']:
-  set_default_parameters()
-  opacity_type = opacity
-  parameter_name = 'mean_molecular_weight'
-  folder_name = "%s_%s" % (opacity_type, parameter_name)
-  parameter_values = np.linspace(0.6, 2.35, 10)
-  study_parameter_influence()
+#~ for opacity in ['bell', 'zhu', 'hure', 'chambers']:
+  #~ set_default_parameters()
+  #~ opacity_type = opacity
+  #~ parameter_name = 'mean_molecular_weight'
+  #~ folder_name = "%s_%s" % (opacity_type, parameter_name)
+  #~ parameter_values = np.linspace(0.6, 2.35, 10)
+  #~ study_parameter_influence()
   
   #~ set_default_parameters()
   #~ opacity_type = opacity
@@ -228,7 +277,24 @@ for opacity in ['bell', 'zhu', 'hure', 'chambers']:
   #~ parameter_values = zip(sigma_0, sigma_index)
   #~ study_parameter_influence()
 
-
+# Study sigma_0 in hure case
+set_prefered_disk()
+parameter_name = 'density_constant'
+folder_name = "%s_%s" % ("steepness_1", parameter_name)
+parameter_values = np.linspace(500., 2000, 16)
+study_parameter_influence()
   
+# Study viscosity in hure case
+set_prefered_disk()
+parameter_name = 'viscosity'
+folder_name = "%s_%s" % ("steepness_1", parameter_name)
+parameter_values = np.logspace(12, 16, 15)
+study_parameter_influence()
 
-
+# Study alpha in hure case
+set_prefered_disk()
+viscosity_type = 'alpha'
+parameter_name = 'alpha'
+folder_name = "%s_%s" % ("steepness_1", parameter_name)
+parameter_values = np.logspace(-2, -4., 10)
+study_parameter_influence()
