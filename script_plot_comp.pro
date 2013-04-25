@@ -251,8 +251,8 @@ plot,tb(0,*),ab(0,*) $
      ,/nodata $
      ,xrange=[Tinf,Tsup],yrange=[1d-20,1d20] $
      ,charsize=2.5,charthick=3.5 $ ;,charsize=1.8,charthick=3
-     ,xtitle='Time (years)' $
-     ,ytitle='Fractional change of total angular momentum' $
+     ;;,xtitle='Time (years)' $
+     ;; ,ytitle='Fractional change of total angular momentum' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ,xstyle=1,ystyle=1 $
      ,/xlog,/ylog
@@ -280,7 +280,7 @@ plot,tb(0,*),ab(0,*) $
      ,xrange=[Tinf,Tsup],yrange=[1d-20,1d20] $
      ,charsize=2.5,charthick=3.5 $ ;,charsize=1.8,charthick=3
      ,xtitle='Time (years)' $
-     ,ytitle='Fractional change of total angular momentum' $
+     ;;; ,ytitle='Fractional change of total angular momentum' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ,xstyle=1,ystyle=1 $
      ,/xlog,/ylog

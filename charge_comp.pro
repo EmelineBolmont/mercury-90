@@ -55,7 +55,7 @@ for i=0,n_tid-1 do begin
    print,filenamep
    readcol,filenamep,ppp,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='A,F,F,F,F'
    spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpz(i,*) = spinp1z
-   Rp(i) = Rp1(0) & rg2p(i) = rg2p1
+   Rp(i) = Rp1(0) & rg2p(i) = rg2p1(0)
    
    filenameh = 'horb'+strtrim(i+1,2)+'.dat'
    print,filenameh
@@ -188,6 +188,12 @@ if idl eq 1 then begin
  
 endif
 
+rg2p      = [3.308d-1,2.54d-1]
+Rsun      =  6.96d8                   ;m
+AU        =  1.49598d11               ;m
+day       =  24*3600.                 ;s
+Rearth    =  6371.0d3                 ;m
+
 if n_tid ge 1 then begin
    ;! Obliquities calculations
    tmp     = dblarr(n_elements(horb1x))
@@ -222,12 +228,6 @@ if n_tid ge 1 then begin
       endfor
    endfor
 endif
-
-rg2p      = [3.308d-1,2.54d-1]
-Rsun      =  6.96d8                   ;m
-AU        =  1.49598d11               ;m
-day       =  24*3600.                 ;s
-Rearth    =  6371.0d3                 ;m
 
 ; Angular momentum calculation
 horb_vec = dblarr(nbp,n_elements(horb1x))

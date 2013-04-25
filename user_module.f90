@@ -659,7 +659,8 @@ contains
           ! See note book for details !!!
           do j=2,ntid+1
              ! ****************** tidal force *********************
-             ! Ftr, Ftso and Ftpo in AU.Msun.day-2
+             ! Ftr in Msun.AU.day-2
+             ! Ftso and Ftpo in Msun.AU.day-1
 			 tmp  = K2*K2
 			 tmp1 = m(1)*m(1)
 			 tmp2 = m(j)*m(j)
