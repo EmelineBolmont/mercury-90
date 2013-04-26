@@ -13,6 +13,7 @@ simu_test
 *.dat
 unitary_tests
 parameter_study
+interesting_disks
 *.bak
 *~
 *.pdf
