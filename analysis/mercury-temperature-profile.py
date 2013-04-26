@@ -7,6 +7,7 @@
 
 import pylab as pl
 import numpy as np
+from matplotlib.patches import Rectangle
 
 OUTPUT_EXTENSION = 'pdf'
 
@@ -21,23 +22,23 @@ OUTPUT_EXTENSION = 'pdf'
 
 # On récupère les données orbitales
 (a, T, index, chi, tau) = np.loadtxt("temperature_profile.dat", skiprows=1, usecols = (0,1,2,3,4), dtype=float, unpack=True)
-#~ (franckH_a, franckH_T) = np.loadtxt("franckH_temp_profile.dat", usecols = (0,1), dtype=float, unpack=True)
-#~ 
-#~ franckH_a1 = np.log(franckH_a[0:-1])
-#~ franckH_T1 = np.log(franckH_T[0:-1])
-#~ franckH_a2 = np.log(franckH_a[1:])
-#~ franckH_T2 = np.log(franckH_T[1:])
-
-#~ franckH_index = -(franckH_T2 - franckH_T1) / (franckH_a2 - franckH_a1)
 
 # on trace les plots
-
 fig = pl.figure(1)
 # On crée des sous plots. Pour subplot(231), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
 plot_T = fig.add_subplot(211)
 plot_T.loglog(a, T, label="my profile")
-#~ plot_T.loglog(franckH_a, franckH_T, label="FranckH profile")
-#~ plot_T.legend()
+
+(inner_edge, outer_edge) = plot_T.get_xlim()
+rect_width = outer_edge - inner_edge
+snowline_T_min = 145. # K
+snowline_T_max = 170. # K
+snowline_T_mid = (snowline_T_max + snowline_T_min)/2.
+snowline = Rectangle((inner_edge, snowline_T_min), rect_width, (snowline_T_max - snowline_T_min), color='#dddddd')
+
+plot_T.add_patch(snowline)
+plot_T.text(outer_edge, snowline_T_mid, "Snow line", horizontalalignment='right', verticalalignment='bottom', size=10)
+plot_T.plot([inner_edge, outer_edge], [snowline_T_mid, snowline_T_mid], color='#000000')
 
 plot_T.set_xlabel("a [UA]")
 plot_T.set_ylabel("Temperature [K]")
@@ -45,7 +46,6 @@ plot_T.grid(True)
 
 plot_idx = fig.add_subplot(212, sharex=plot_T)
 plot_idx.semilogx(a, index)
-#~ plot_idx.semilogx(franckH_a[0:-1], franckH_index)
 
 plot_idx.set_xlabel("a [UA]")
 plot_idx.set_ylabel("Temperature power law")
