@@ -15,6 +15,7 @@ simu_test
 unitary_tests
 interesting_disks
 parameter_study
+interesting_disks
 *.bak
 *~
 *.pdf
