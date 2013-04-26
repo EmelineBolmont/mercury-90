@@ -242,7 +242,6 @@ momstar = dblarr(n_elements(horb1x))
 
 Ip   = dblarr(n_tid)
 Is = rg2s*Ms*(Rst*Rsun)^2
-Isi = rg2si*Ms*(Rsi*Rsun)^2
 
 for j=0,nbp-1 do begin
    for i=0,n_elements(horb1x)-1 do begin
