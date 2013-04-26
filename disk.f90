@@ -748,6 +748,9 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   real(double_precision) :: torque_hs_baro ! barotropic part of the horseshoe drag
   real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
   
+  ! Temporaries
+  real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
+  
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
@@ -757,9 +760,11 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
   !------------------------------------------------------------------------------
   
-  gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
-  sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
-  + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
+  Q_gamma = Q_p * ADIABATIC_INDEX
+  
+  gamma_eff = 2.d0 * Q_gamma / (Q_gamma + 0.5d0 * &
+  sqrt(2.d0 * (sqrt((Q_gamma * Q_gamma + 1.d0)**2 - 16.d0 * Q_p * (Q_gamma - Q_p)) &
+  + Q_gamma * Q_gamma - 1.d0)))
   
 !~   write(*,*) p_prop%chi, p_prop%aspect_ratio, p_prop%scaleheight, p_prop%omega
 !~   stop
@@ -2335,6 +2340,8 @@ subroutine get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotati
   ! Properties of the disk at the location of the planet
   real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
   
+  ! Temporaries
+  real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
@@ -2344,9 +2351,11 @@ subroutine get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotati
   Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
   !------------------------------------------------------------------------------
   
-  gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
-  sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
-  + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
+  Q_gamma = Q_p * ADIABATIC_INDEX
+  
+  gamma_eff = 2.d0 * Q_gamma / (Q_gamma + 0.5d0 * &
+  sqrt(2.d0 * (sqrt((Q_gamma * Q_gamma + 1.d0)**2 - 16.d0 * Q_p * (Q_gamma - Q_p)) &
+  + Q_gamma * Q_gamma - 1.d0)))
   
   lindblad_torque = -2.5d0
   
@@ -2393,6 +2402,9 @@ subroutine get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corota
   
   ! Properties of the disk at the location of the planet
   real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
+  
+  ! Temporaries
+  real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
@@ -2402,9 +2414,10 @@ subroutine get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corota
   Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
   !------------------------------------------------------------------------------
   
-  gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
-  sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
-  + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
+  Q_gamma = Q_p * ADIABATIC_INDEX
+  
+  gamma_eff = 2.d0 * Q_gamma / (Q_gamma + 0.5d0 * sqrt(2.d0 * (sqrt((Q_gamma * Q_gamma + 1.d0)**2 - 16.d0 * Q_p * (Q_gamma - Q_p)) &
+  + Q_gamma * Q_gamma - 1.d0)))
   
   !------------------------------------------------------------------------------
   
@@ -2461,6 +2474,9 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   
   ! Properties of the disk at the location of the planet
   real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
+  
+  ! Temporaries
+  real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
   !------------------------------------------------------------------------------
   ! position of zero torque zone in function of the mass : 
   ! r(m_min) = a_min
@@ -2484,9 +2500,11 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
   !------------------------------------------------------------------------------
   
-  gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
-  sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
-  + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
+  Q_gamma = Q_p * ADIABATIC_INDEX
+  
+  gamma_eff = 2.d0 * Q_gamma / (Q_gamma + 0.5d0 * &
+  sqrt(2.d0 * (sqrt((Q_gamma * Q_gamma + 1.d0)**2 - 16.d0 * Q_p * (Q_gamma - Q_p)) &
+  + Q_gamma * Q_gamma - 1.d0)))
     
   !------------------------------------------------------------------------------
   
@@ -2542,6 +2560,8 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
   ! Properties of the disk at the location of the planet
   real(double_precision) :: x_s ! semi-width of the horseshoe region [radius_p (in unity of position of the planet)]
   
+  ! Temporaries
+  real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
   Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%radius**4 * p_prop%omega**2
@@ -2551,9 +2571,11 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
   Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
   !------------------------------------------------------------------------------
   
-  gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &
-  sqrt(2.d0 * sqrt((ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p + 1.d0)**2 - 16.d0 * Q_p * Q_p * (ADIABATIC_INDEX - 1.d0)) &
-  + 2.d0 * ADIABATIC_INDEX * ADIABATIC_INDEX * Q_p * Q_p - 2.d0))
+  Q_gamma = Q_p * ADIABATIC_INDEX
+  
+  gamma_eff = 2.d0 * Q_gamma / (Q_gamma + 0.5d0 * &
+  sqrt(2.d0 * (sqrt((Q_gamma * Q_gamma + 1.d0)**2 - 16.d0 * Q_p * (Q_gamma - Q_p)) &
+  + Q_gamma * Q_gamma - 1.d0)))
     
   !------------------------------------------------------------------------------
   
