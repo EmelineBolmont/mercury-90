@@ -244,38 +244,38 @@ endif
 
 if conservation eq 1 then begin
 
-multiplot,[1,2],ygap=0.01
+;; multiplot,[1,2],ygap=0.01
+;; plot,tb(0,*),ab(0,*) $
+;;      ,/nodata $
+;;      ,xrange=[Tinf,Tsup],yrange=[1d-20,1d20] $
+;;      ,charsize=2.5,charthick=3.5 $ ;,charsize=1.8,charthick=3
+;;      ;;,xtitle='Time (years)' $
+;;      ;; ,ytitle='Fractional change of total angular momentum' $
+;;      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
+;;      ,xstyle=1,ystyle=1 $
+;;      ,/xlog,/ylog
+;; 
+;; for j=0,nbp-1 do begin
+;;    oplot,toto1(*),horb_vec(j,*)/horb_vec(j,0),linestyle=0,thick=12,color=incolor+j*indcolor   
+;;    if j le n_tid then oplot,toto1(*),momspin(j,*)/momspin(j,0),linestyle=2,thick=12,color=incolor+j*indcolor
+;; endfor   
+;; oplot,toto1(*),momstar(*)/momstar(0),linestyle=0,thick=12,color=255
+;; 
+;; if idl eq 1 then begin
+;;     for i = 0,n_tid-1 do begin
+;;        oplot,ti(i,*),(mb(i,*)*msun*Ms*sqrt(G*ai(i,*)*AU*(1-ei(i,*)^2)/(mb(i,*)+Ms))) $
+;;           /(mb(i,0)*msun*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(mb(i,0)+Ms))) $
+;;           ,psym=sym(1),thick=1,color=incolor+j*indcolor
+;;        oplot,ti(i,*),Ip(i)*rotpi(i,*)/(Ip(i)*rotpi(i,0)),psym=sym(1),thick=1,color=incolor+j*indcolor
+;;        oplot,ti(i,*),Isi(*)*rotsi(i,*)/(Isi(0)*rotsi(i,0)),psym=sym(1),thick=1,color=incolor+j*indcolor
+;;     endfor
+;; endif
+;; 
+;; multiplot
+
 plot,tb(0,*),ab(0,*) $
      ,/nodata $
-     ,xrange=[Tinf,Tsup],yrange=[1d-20,1d20] $
-     ,charsize=2.5,charthick=3.5 $ ;,charsize=1.8,charthick=3
-     ;;,xtitle='Time (years)' $
-     ;; ,ytitle='Fractional change of total angular momentum' $
-     ,xGRIDSTYLE=1,xTICKLEN=0.5 $
-     ,xstyle=1,ystyle=1 $
-     ,/xlog,/ylog
-
-for j=0,nbp-1 do begin
-   oplot,toto1(*),horb_vec(j,*)/horb_vec(j,0),linestyle=0,thick=12,color=incolor+j*indcolor   
-   if j le n_tid then oplot,toto1(*),momspin(j,*)/momspin(j,0),linestyle=2,thick=12,color=incolor+j*indcolor
-endfor   
-oplot,toto1(*),momstar(*)/momstar(0),linestyle=0,thick=12,color=255
-
-if idl eq 1 then begin
-    for i = 0,n_tid-1 do begin
-       oplot,ti(i,*),(mb(i,*)*msun*Ms*sqrt(G*ai(i,*)*AU*(1-ei(i,*)^2)/(mb(i,*)+Ms))) $
-          /(mb(i,0)*msun*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(mb(i,0)+Ms))) $
-          ,psym=sym(1),thick=1,color=incolor+j*indcolor
-       oplot,ti(i,*),Ip(i)*rotpi(i,*)/(Ip(i)*rotpi(i,0)),psym=sym(1),thick=1,color=incolor+j*indcolor
-       oplot,ti(i,*),Isi(*)*rotsi(i,*)/(Isi(0)*rotsi(i,0)),psym=sym(1),thick=1,color=incolor+j*indcolor
-    endfor
-endif
-
-multiplot
-
-plot,tb(0,*),ab(0,*) $
-     ,/nodata $
-     ,xrange=[Tinf,Tsup],yrange=[1d-20,1d20] $
+     ,xrange=[Tinf,Tsup],yrange=[1d-10,1d0] $
      ,charsize=2.5,charthick=3.5 $ ;,charsize=1.8,charthick=3
      ,xtitle='Time (years)' $
      ;;; ,ytitle='Fractional change of total angular momentum' $
@@ -283,8 +283,8 @@ plot,tb(0,*),ab(0,*) $
      ,xstyle=1,ystyle=1 $
      ,/xlog,/ylog
 
-oplot,toto1(*),(horb(*)+momspitot(*)+momstar(*)-(horb(0)+momspitot(0)+momstar(0))) $
-      /(horb(0)+momspitot(0)+momstar(0)),linestyle=0,thick=12,color=incolor+j*indcolor
+oplot,toto1(*),abs((horb(*)+momspitot(*)+momstar(*)-(horb(0)+momspitot(0)+momstar(0))) $
+      /(horb(0)+momspitot(0)+momstar(0))),linestyle=0,thick=12,color=incolor+j*indcolor
 
 if idl eq 1 then begin
    for i = 0,n_tid-1 do begin
