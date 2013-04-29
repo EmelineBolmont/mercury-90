@@ -6,8 +6,6 @@ Ms = 0.08*Msun
 nbp = 2
 ;! Number of planets tidally evolving
 n_tid = 2
-;! if terrestrial: jupiter =0, if gas giant: jupiter=1
-jupiter = [0,0]
 
 ;! If comparison with IDL simulations 1, if not 0
 idl = 1
