@@ -23,7 +23,6 @@ Rjup      =  69173.d3                 ;m
 Rearth    =  6371.0d3                 ;m
 Rsun      =  6.96d8                   ;m
 
-Ms = 0.08*Msun
 
 device,decomposed=0
 loadct,13
