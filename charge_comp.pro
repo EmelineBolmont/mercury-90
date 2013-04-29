@@ -214,10 +214,10 @@ if n_tid ge 1 then begin
                oblpm(i,bou) = acos(tmp(bou))*180.d0/!Pi
             if abs(tmp(bou)) gt 1.d0 then oblpm(i,bou) = 1.0d-6
            
-            tmp(bou)=(horbx(bou)*spinstx(bou) $
-                      +horby(bou)*spinsty(bou) $
-                      +horbz(bou)*spinstz(bou)) $
-                     /(sqrt(horbx(bou)^2+horby(bou)^2+horbz(bou)^2) $
+            tmp(bou)=(horbx(i,bou)*spinstx(bou) $
+                      +horby(i,bou)*spinsty(bou) $
+                      +horbz(i,bou)*spinstz(bou)) $
+                     /(sqrt(horbx(i,bou)^2+horby(i,bou)^2+horbz(i,bou)^2) $
                        *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
             if abs(tmp(bou)) le 1.d0 then $ 
                oblsm(i,bou) = acos(tmp(bou))*180.d0/!Pi
