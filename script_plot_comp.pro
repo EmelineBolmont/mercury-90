@@ -38,21 +38,19 @@ loadct,13
 !x.thick = 6
 !y.thick = 6
 
-Tinf    = 1.d2;8d6;
-Tsup    = 1.d7;1.1d7;
-amin    = 5d-3;5.d-3;0.019;
-amax    = 3d-1;100d-3;6.2d-2;1.0d-2;0.021
-emin    = 1.0d-4;8	
-emax    = 1.0d0;2
-oblmin  = -5d-2
-oblmax  = 2d-1
+Tinf    = 1.d2  &  Tsup    = 1.d7
+amin    = 1d-3
+amax    = 1d0
+emin    = 1.0d-6	
+emax    = 1.0d0
+oblmin  = 1d-1
+oblmax  = 4.5d1
 incmin  = 1d-1
-incmax  = 5d0
-Trotmin = 10;20
-Trotmax = 600;200
+incmax  = 4.5d1
+Trotmin = 10
+Trotmax = 1000
 
-indcolor = 200
-incolor  = 50;50
+indcolor = 200   &  incolor  = 50
 
 ae = 1
 ; If you want to check conservation of tot angular momentum
