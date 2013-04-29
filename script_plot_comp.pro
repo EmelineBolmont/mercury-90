@@ -39,7 +39,7 @@ loadct,13
 !y.thick = 6
 
 Tinf    = 1.d2;8d6;
-Tsup    = 1.d6;1.1d7;
+Tsup    = 1.d7;1.1d7;
 amin    = 5d-3;5.d-3;0.019;
 amax    = 3d-1;100d-3;6.2d-2;1.0d-2;0.021
 emin    = 1.0d-4;8	
@@ -125,7 +125,7 @@ plot,tb(0,*),eb(0,*) $
      ,ytitle='e' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ,xstyle=1,ystyle=1 $
-     ,/ylog,/xlog
+     ,/xlog,/ylog
 for i = 0,nbp-1 do begin
    oplot,tb(i,*),eb(i,*),color=incolor+i*indcolor,thick=12,linestyle=0;,psym=2
 endfor
@@ -149,9 +149,10 @@ plot,tb(0,*),incb(0,*) $
      ;; ,xtitle='t (years)' $
      ,ytitle='obl (deg)' $
      ,xstyle=1,ystyle=1 $
-     ,/xlog;,/ylog
+     ,/xlog,/ylog
 
 ;! Mercury
+
 for i=0,n_tid-1 do begin
    oplot,toto1(*),oblpm(i,*),color=incolor+i*indcolor,thick=12
 endfor
@@ -207,7 +208,7 @@ plot,tb(0,*),ab(0,*) $
      ;; ,yticks=5 $
      ;; ,ytickv=[20,30,40,50,70,100] $
      ,xstyle=1,ystyle=1 $
-     ,/ylog,/xlog
+     ,/xlog,/ylog
  
 ;! Mercury
 i=0
