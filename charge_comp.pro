@@ -240,9 +240,6 @@ momspin = dblarr(n_tid,n_elements(horb1x))
 momspitot = dblarr(n_elements(horb1x))
 momstar = dblarr(n_elements(horb1x))
 
-Ip   = dblarr(n_tid)
-Is = rg2s*Ms*(Rst*Rsun)^2
-
 for j=0,nbp-1 do begin
    for i=0,n_elements(horb1x)-1 do begin
       horbx(j,i)=(yb(j,i)*wb(j,i)-zb(j,i)*vb(j,i))
@@ -257,13 +254,12 @@ for j=0,nbp-1 do begin
    endfor
 endfor
 for i=0,n_elements(horb1x)-1 do begin
-   momstar(i)=Is(i)*spinst(i) 
+   momstar(i)=rg2s(i)*Ms*(Rst(i)*Rsun)^2*spinst(i) 
 endfor
  
 for j=0,n_tid-1 do begin
-   Ip(j) = rg2p(j)*mb(j,0)*Msun*(Rp(j)*rsun)^2
    for i=0,n_elements(horb1x)-1 do begin
-      momspin(j,i) = Ip(j)*spinp(j,i)
+      momspin(j,i) = rg2p(j)*mb(j,0)*Msun*(Rp(j)*rsun)^2*spinp(j,i)
    endfor
 endfor
 for i=0,n_elements(horb1x)-1 do begin
