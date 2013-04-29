@@ -46,14 +46,15 @@ horbx  = dblarr(n_tid,n_elements(toto1))
 horby  = dblarr(n_tid,n_elements(toto1))
 horbz  = dblarr(n_tid,n_elements(toto1))
 horbp  = dblarr(n_tid,n_elements(toto1))
-Rp     = dblarr(n_tid) & rg2p   = dblarr(n_tid)
+Rp     = dblarr(n_tid,n_elements(toto1)) 
+rg2p   = dblarr(n_tid,n_elements(toto1))
 
 for i=0,n_tid-1 do begin 
    filenamep = 'spinp'+strtrim(i+1,2)+'.dat'
    print,filenamep
    readcol,filenamep,ppp,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='A,F,F,F,F'
    spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpz(i,*) = spinp1z
-   Rp(i) = Rp1(0) & rg2p(i) = rg2p1(0)
+   Rp(i,*) = Rp1 & rg2p(i,*) = rg2p1
    
    filenameh = 'horb'+strtrim(i+1,2)+'.dat'
    print,filenameh
@@ -186,7 +187,6 @@ if idl eq 1 then begin
  
 endif
 
-rg2p      = [3.308d-1,2.54d-1]
 Rsun      =  6.96d8                   ;m
 AU        =  1.49598d11               ;m
 day       =  24*3600.                 ;s
@@ -257,7 +257,7 @@ endfor
  
 for j=0,n_tid-1 do begin
    for i=0,n_elements(horb1x)-1 do begin
-      momspin(j,i) = rg2p(j)*mb(j,0)*Msun*(Rp(j)*rsun)^2*spinp(j,i)
+      momspin(j,i) = rg2p(j,i)*mb(j,i)*Msun*(Rp(j,i)*rsun)^2*spinp(j,i)
    endfor
 endfor
 for i=0,n_elements(horb1x)-1 do begin
