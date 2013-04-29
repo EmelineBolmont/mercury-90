@@ -63,94 +63,96 @@ if n_tid ge 1 then begin
       horbx(i,*) = horb1x & horby(i,*) = horb1y & horbz(i,*) = horb1z  
       horbp(i,*) = horb1
    endfor
+endif 
    
-   ; n line maximum
-   nmaxb = max(nlineb)
-   if idl eq 1 then nline = max(nline_idl)
+; n line maximum
+nmaxb = max(nlineb)
+if idl eq 1 then nline = max(nline_idl)
+
+;; mass = [0.01,0.012,0.015,0.02,0.03,0.04,0.05,0.06,0.07,0.072,0.075,0.08]
+
+;; nlines = dblarr(n_elements(mass))
+;; for j = 0,n_elements(mass)-1 do begin
+;;    filename = 'mass_'+strtrim(1000*mass(j),2)+'.dat' 
+;;    nlines(j) = file_lines(filename)
+;; endfor
+;; nmax = max(nlines)
+
+;; toto   = dblarr(n_elements(mass),nmax)
+;; radius = dblarr(n_elements(mass),nmax)
+;; lumi   = dblarr(n_elements(mass),nmax)
+;; HZinGJ = dblarr(n_elements(mass),nmax)
+;; HZoutGJ= dblarr(n_elements(mass),nmax)
+;; HZinb  = dblarr(n_elements(mass),nmax)
+;; HZoutb = dblarr(n_elements(mass),nmax)
+
+;; for j = 0,n_elements(mass)-1 do begin
+;;    filename = 'mass_'+strtrim(1000*mass(j),2)+'.dat' 
+;;    nt = file_lines(filename)
+;;    read_array = dblarr(7,nt)
+;;    openr,1,filename
+;;    readf,1,read_array
+;;    close,1
    
-   ;; mass = [0.01,0.012,0.015,0.02,0.03,0.04,0.05,0.06,0.07,0.072,0.075,0.08]
-   
-   ;; nlines = dblarr(n_elements(mass))
-   ;; for j = 0,n_elements(mass)-1 do begin
-   ;;    filename = 'mass_'+strtrim(1000*mass(j),2)+'.dat' 
-   ;;    nlines(j) = file_lines(filename)
-   ;; endfor
-   ;; nmax = max(nlines)
-   
-   ;; toto   = dblarr(n_elements(mass),nmax)
-   ;; radius = dblarr(n_elements(mass),nmax)
-   ;; lumi   = dblarr(n_elements(mass),nmax)
-   ;; HZinGJ = dblarr(n_elements(mass),nmax)
-   ;; HZoutGJ= dblarr(n_elements(mass),nmax)
-   ;; HZinb  = dblarr(n_elements(mass),nmax)
-   ;; HZoutb = dblarr(n_elements(mass),nmax)
-   
-   ;; for j = 0,n_elements(mass)-1 do begin
-   ;;    filename = 'mass_'+strtrim(1000*mass(j),2)+'.dat' 
-   ;;    nt = file_lines(filename)
-   ;;    read_array = dblarr(7,nt)
-   ;;    openr,1,filename
-   ;;    readf,1,read_array
-   ;;    close,1
-      
-   ;;    toto[j,0:nt-1] = read_array(0,*)
-   ;;    radius[j,0:nt-1] = read_array(1,*)
-   ;;    lumi[j,0:nt-1] = read_array(2,*)
-   ;;    HZinGJ[j,0:nt-1] = read_array(3,*)
-   ;;    HZoutGJ[j,0:nt-1] = read_array(4,*)
-   ;;    HZinb[j,0:nt-1] = read_array(5,*)
-   ;;    HZoutb[j,0:nt-1] = read_array(6,*)
-   ;; endfor
-   
-   header = strarr(nlineheader)
-   headeri = strarr(1)
-   
-   ; Table for the big planets (PLANET) : 
-   
-   tb     =  dblarr(nbp,nmaxb)
-   ab     =  dblarr(nbp,nmaxb)
-   eb     =  dblarr(nbp,nmaxb)
-   incb   =  dblarr(nbp,nmaxb)
-   perib  =  dblarr(nbp,nmaxb)
-   nodeb  =  dblarr(nbp,nmaxb)
-   manomb =  dblarr(nbp,nmaxb)
-   lambda =  dblarr(nbp,nmaxb)
-   mb     =  dblarr(nbp,nmaxb)
-   xb     =  dblarr(nbp,nmaxb)
-   yb     =  dblarr(nbp,nmaxb)
-   zb     =  dblarr(nbp,nmaxb)
-   ub     =  dblarr(nbp,nmaxb)
-   vb     =  dblarr(nbp,nmaxb)
-   wb     =  dblarr(nbp,nmaxb)
-   
-   ;; print,nmaxb,nlineb1,nlineb2
-   ;**************************************
-   ; Table filling for big planets (PLANET)
-   for i=0,nbp-1 do begin
-      filename = 'PLANET'+strtrim(i+1,2)+'.aei'
-      nlineb1 = file_lines(filename)-nlineheader
-      read_array = dblarr(14,nlineb1)
-      openr,1,filename
-      readf,1,header
-      readf,1,read_array
-      close,1
-   
-      tb[i,0:nlineb1-1] = read_array(0,*)
-      ab[i,0:nlineb1-1] = read_array(1,*)
-      eb[i,0:nlineb1-1] = read_array(2,*)
-      incb[i,0:nlineb1-1] = read_array(3,*)
-      perib[i,0:nlineb1-1] = read_array(4,*)
-      nodeb[i,0:nlineb1-1] = read_array(5,*)
-      manomb[i,0:nlineb1-1] = read_array(6,*)
-      mb[i,0:nlineb1-1] = read_array(7,*)
-      xb[i,0:nlineb1-1] = read_array(8,*)
-      yb[i,0:nlineb1-1] = read_array(9,*)
-      zb[i,0:nlineb1-1] = read_array(10,*)
-      ub[i,0:nlineb1-1] = read_array(11,*)
-      vb[i,0:nlineb1-1] = read_array(12,*)
-      wb[i,0:nlineb1-1] = read_array(13,*)
-   endfor
-   
+;;    toto[j,0:nt-1] = read_array(0,*)
+;;    radius[j,0:nt-1] = read_array(1,*)
+;;    lumi[j,0:nt-1] = read_array(2,*)
+;;    HZinGJ[j,0:nt-1] = read_array(3,*)
+;;    HZoutGJ[j,0:nt-1] = read_array(4,*)
+;;    HZinb[j,0:nt-1] = read_array(5,*)
+;;    HZoutb[j,0:nt-1] = read_array(6,*)
+;; endfor
+
+header = strarr(nlineheader)
+headeri = strarr(1)
+
+; Table for the big planets (PLANET) : 
+
+tb     =  dblarr(nbp,nmaxb)
+ab     =  dblarr(nbp,nmaxb)
+eb     =  dblarr(nbp,nmaxb)
+incb   =  dblarr(nbp,nmaxb)
+perib  =  dblarr(nbp,nmaxb)
+nodeb  =  dblarr(nbp,nmaxb)
+manomb =  dblarr(nbp,nmaxb)
+lambda =  dblarr(nbp,nmaxb)
+mb     =  dblarr(nbp,nmaxb)
+xb     =  dblarr(nbp,nmaxb)
+yb     =  dblarr(nbp,nmaxb)
+zb     =  dblarr(nbp,nmaxb)
+ub     =  dblarr(nbp,nmaxb)
+vb     =  dblarr(nbp,nmaxb)
+wb     =  dblarr(nbp,nmaxb)
+
+;; print,nmaxb,nlineb1,nlineb2
+;**************************************
+; Table filling for big planets (PLANET)
+for i=0,nbp-1 do begin
+   filename = 'PLANET'+strtrim(i+1,2)+'.aei'
+   nlineb1 = file_lines(filename)-nlineheader
+   read_array = dblarr(14,nlineb1)
+   openr,1,filename
+   readf,1,header
+   readf,1,read_array
+   close,1
+
+   tb[i,0:nlineb1-1] = read_array(0,*)
+   ab[i,0:nlineb1-1] = read_array(1,*)
+   eb[i,0:nlineb1-1] = read_array(2,*)
+   incb[i,0:nlineb1-1] = read_array(3,*)
+   perib[i,0:nlineb1-1] = read_array(4,*)
+   nodeb[i,0:nlineb1-1] = read_array(5,*)
+   manomb[i,0:nlineb1-1] = read_array(6,*)
+   mb[i,0:nlineb1-1] = read_array(7,*)
+   xb[i,0:nlineb1-1] = read_array(8,*)
+   yb[i,0:nlineb1-1] = read_array(9,*)
+   zb[i,0:nlineb1-1] = read_array(10,*)
+   ub[i,0:nlineb1-1] = read_array(11,*)
+   vb[i,0:nlineb1-1] = read_array(12,*)
+   wb[i,0:nlineb1-1] = read_array(13,*)
+endfor
+
+if n_tid ge 1 then begin   
    if idl eq 1 then begin
       ;!**************************************
       ;! Table for the idl planet (DATATIDES) : 
