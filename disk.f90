@@ -2216,7 +2216,13 @@ flaring_angle = distance_new * ((aspect_ratio_old - aspect_ratio_new) / (distanc
                 0.4d0 * R_STAR / distance_new
 !------------------------------------------------------------------------------
 envelope_heating = 2.d0 * SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
-irradiation = prefactor_irradiation * flaring_angle / distance_new**2
+
+! We only want irradiation if the flaring angle is positive. Else, we force the irradiation to be 0 because we are shadowed
+if (flaring_angle.gt.0.d0) then
+  irradiation = prefactor_irradiation * flaring_angle / distance_new**2
+else
+  irradiation = 0.d0
+end if
 
 viscous_heating = (9.d0 * nu * sigma * omega**2 / 4.d0)
 ! 1.7320508075688772d0 = sqrt(3)
