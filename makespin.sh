@@ -8,3 +8,7 @@ cat *.sh.o* |grep "Date" -v>spin.dat
 #cat spin.dat |grep "h3" >horb3.dat
 #cat spin.dat |grep "p4" >spinp4.dat
 #cat spin.dat |grep "h4" >horb4.dat
+#cat spin.dat |grep "p5" >spinp5.dat
+#cat spin.dat |grep "h5" >horb5.dat
+#cat spin.dat |grep "p6" >spinp6.dat
+#cat spin.dat |grep "h6" >horb6.dat
