@@ -69,8 +69,8 @@ contains
     real(double_precision), dimension(3,nbig+1) :: horb,trueanom!,vperp
     real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la,azi
     real(double_precision), dimension(3,nbig+1) :: Nts,Ntp
-    real(double_precision), dimension(3,6) :: spin
-    real(double_precision), dimension(6) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
+    real(double_precision), dimension(3,8) :: spin
+    real(double_precision), dimension(8) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
     ! don't use after collision
     real(double_precision), dimension(nbig+1) :: r,r2,r7,r8,v2,vv,vrad
     real(double_precision), dimension(nbig+1) :: horbn
@@ -586,6 +586,16 @@ contains
 			       spin(2,5) = rot_crashp4(2) !day-1
                    spin(3,5) = rot_crashp4(3) !day-1
                 endif
+                if (ntid.ge.5) then
+                   spin(1,6) = rot_crashp5(1) !day-1
+			       spin(2,6) = rot_crashp5(2) !day-1
+                   spin(3,6) = rot_crashp5(3) !day-1
+                endif
+                if (ntid.ge.6) then
+                   spin(1,7) = rot_crashp6(1) !day-1
+			       spin(2,7) = rot_crashp6(2) !day-1
+                   spin(3,7) = rot_crashp6(3) !day-1
+                endif
              endif
              ispin = 1
           end if
@@ -770,6 +780,16 @@ contains
                    write(*,*) "p4",time/365.25d0,spin(1,5),spin(2,5),spin(3,5),Rp(5)/rsun,rg2p(4)
                    write(*,*) "h4",time/365.25d0,horb(1,5)/horbn(5),horb(2,5)/horbn(5) &
                      ,horb(3,5)/horbn(5),horbn(5)
+                endif
+                if (ntid.ge.5) then
+                   write(*,*) "p5",time/365.25d0,spin(1,6),spin(2,6),spin(3,6),Rp(6)/rsun,rg2p(5)
+                   write(*,*) "h5",time/365.25d0,horb(1,6)/horbn(6),horb(2,6)/horbn(6) &
+                     ,horb(3,6)/horbn(6),horbn(6)
+                endif
+                if (ntid.ge.6) then
+                   write(*,*) "p6",time/365.25d0,spin(1,7),spin(2,7),spin(3,7),Rp(7)/rsun,rg2p(6)
+                   write(*,*) "h6",time/365.25d0,horb(1,7)/horbn(7),horb(2,7)/horbn(7) &
+                     ,horb(3,7)/horbn(7),horbn(7)
                 endif
              endif
 
