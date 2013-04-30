@@ -1640,8 +1640,8 @@ program test_disk
     velocity(1:3) = 0.d0
     
     ! We want to have only 10 points both in x and y for vector outputs
-    deltai = nb_points / 20
-    deltaj = nb_mass / 20
+    deltai = nb_points / 15
+    deltaj = nb_mass / 10
     
     vector_limit = a_step * (deltai - 1)
     
@@ -1705,7 +1705,7 @@ program test_disk
         write(13,*) a(i), mass(j) / (EARTH_MASS*K2), lindblad_torque
         write(14,*) a(i), mass(j) / (EARTH_MASS*K2), torque_ref
         
-        if ((modulo(i-int(deltai/2.),deltai).eq.0).and.(modulo(j,deltaj).eq.0)) then
+        if ((modulo(i-int(deltai/2.),deltai).eq.0).and.(modulo(j-int(deltaj/2.),deltaj).eq.0)) then
           write(15,*) a(i), mass(j) / (EARTH_MASS*K2), 0, &
                       sign(min(sqrt(abs(total_torque(i,j))),vector_limit), total_torque(i,j)), 0, 0
         end if
