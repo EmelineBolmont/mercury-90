@@ -203,8 +203,8 @@ WALLTIME = 119 # in hours
 integration_time = 1e7 # in years
 time_format = "years" # days or years
 relative_time = "yes" # yes or no
-nb_outputs = 100000 # number of outputs contained in xv.out (max possibility of accuracy in time)
-nb_dumps = 1000 # number of outputs contained in generated .aei files by element
+nb_outputs = 10000 # number of outputs contained in xv.out (max possibility of accuracy in time)
+nb_dumps = 100 # number of outputs contained in generated .aei files by element
 user_force = "yes" # yes or no, if we use user_module
 timestep = 0.4 # days
 
