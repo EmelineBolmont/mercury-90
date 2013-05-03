@@ -29,8 +29,9 @@ loadct,13
 
 ; Now, we plot everything !!
 
-;; ops,file='11267_evolution_ae.eps',form=1;,/landscape
-;; ops,file='11267_evolution_obl_inc_spin.eps',form=1;,/landscape
+;; ops,file='11267_ae.eps',form=1;,/landscape
+;; ops,file='11267_ois.eps',form=1;,/landscape
+;; ops,file='11267_H.eps',form=1,/landscape
 
 ;;!p.multi=[0,2,2]
 !P.Font=1
@@ -43,12 +44,12 @@ amin    = 1d-3
 amax    = 1d0
 emin    = 1.0d-6	
 emax    = 1.0d0
-oblmin  = 1d-1
+oblmin  = 1d-3
 oblmax  = 4.5d1
-incmin  = 1d-1
+incmin  = 1d-3
 incmax  = 4.5d1
 Trotmin = 10
-Trotmax = 1000
+Trotmax = 10000
 
 indcolor = 200   &  incolor  = 50
 
@@ -94,7 +95,7 @@ print,'max(e) =',max(eb(0,*));!,max(eb(1,*))
 
 ;;! IDL
 if idl eq 1 then begin
-   for i = 0,n_tid-1 do begin
+   for i = 0,nbp_idl-1 do begin
       oplot,ti(i,*),ai(i,*) $
          ,thick=5,linestyle=2,color=incolor+i*indcolor
       oplot,ti(i,*),(G*(Ms+mb(i,*)*msun))^(1/3.) $
@@ -119,7 +120,8 @@ plot,tb(0,*),eb(0,*) $
      ,xrange=[Tinf,Tsup],yrange=[emin,emax] $
      ,charsize=1.8,charthick=3 $
      ;; ,title='Eccentricity' $
-     ,xtitle='Age of BD - t!d0!n (years)' $
+     ;;,xtitle='Age of BD - t!d0!n (years)' $
+     ,xtitle='Time (years)' $
      ,ytitle='e' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ,xstyle=1,ystyle=1 $
@@ -128,7 +130,7 @@ for i = 0,nbp-1 do begin
    oplot,tb(i,*),eb(i,*),color=incolor+i*indcolor,thick=12,linestyle=0;,psym=2
 endfor
 if idl eq 1 then begin
-   for i = 0,n_tid-1 do begin
+   for i = 0,nbp_idl-1 do begin
       oplot,ti(i,*),ei(i,*) $
          ,linestyle=2,color=incolor+i*indcolor,thick=5
    endfor
@@ -157,7 +159,7 @@ endfor
 
 ;! idl
 if idl eq 1 then begin
-   for i=0,n_tid-1 do begin
+   for i=0,nbp_idl-1 do begin
     oplot,ti(i,*),oblpi(i,*) $
           ,linestyle=2,color=incolor+i*indcolor,thick=5
    endfor
@@ -182,7 +184,7 @@ endfor
 
 ;! idl
 if idl eq 1 then begin
-   for i=0,n_tid-1 do begin
+   for i=0,nbp_idl-1 do begin
     oplot,ti(i,*),oblsi(i,*) $
           ,linestyle=2,color=incolor+i*indcolor,thick=5
    endfor
@@ -226,7 +228,7 @@ endfor
 
 ;! idl
 if idl eq 1 then begin
-   for i = 0,n_tid-1 do begin
+   for i = 0,nbp_idl-1 do begin
       oplot,ti(i,*),2*!Pi/(rotpi(i,*)*hr) $
             ,linestyle=2,color=incolor+i*indcolor,thick=5
       oplot,ti(i,*),2*!Pi/(rotsi(i,*)*hr) $
@@ -278,16 +280,16 @@ plot,tb(0,*),ab(0,*) $
      ,xrange=[Tinf,Tsup],yrange=[1d-10,1d0] $
      ,charsize=2.5,charthick=3.5 $ ;,charsize=1.8,charthick=3
      ,xtitle='Time (years)' $
-     ;;; ,ytitle='Fractional change of total angular momentum' $
+     ,ytitle=''+greek('Delta')+'L/L!d0!n' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ,xstyle=1,ystyle=1 $
      ,/xlog,/ylog
 
 oplot,toto1(*),abs((horb(*)+momspitot(*)+momstar(*)-(horb(0)+momspitot(0)+momstar(0))) $
-      /(horb(0)+momspitot(0)+momstar(0))),linestyle=0,thick=12,color=incolor+j*indcolor
+      /(horb(0)+momspitot(0)+momstar(0))),linestyle=0,thick=12,color=incolor+0*indcolor
 
 if idl eq 1 then begin
-   for i = 0,n_tid-1 do begin
+   for i = 0,nbp_idl-1 do begin
       oplot,ti(i,*),abs((mb(i,*)*msun*Ms*sqrt(G*ai(i,*)*AU*(1-ei(i,*)^2)/(mb(i,*)*msun+Ms)) $
 	+Ip(i)*rotpi(i,*)+rg2si(i,*)*Ms*(Rsi(i,*)*AU)^2*rotsi(i,*)-(mb(i,0)*msun*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(mb(i,0)*msun+Ms)) $
 	+Ip(i)*rotpi(i,0)+rg2si(i,0)*Ms*(Rsi(i,0)*AU)^2*rotsi(i,0)))/(mb(i,0)*msun*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(mb(i,0)*msun+Ms)) $
