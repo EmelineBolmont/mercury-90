@@ -91,16 +91,16 @@ def set_prefered_disk():
   surface_density = (density_constant, density_index) # (g/cm^2, power law index)
   density_file = 'surface_density_profile.dat'
   adiabatic_index = 1.4 # the adiabatic index of the disk
-  viscosity_type = 'constant' # constant, alpha
-  viscosity = 1.e15 # cm^2/s
-  alpha = None
+  viscosity_type = 'alpha' # constant, alpha
+  viscosity = None # cm^2/s
+  alpha = 5e-3
   #~ opacity_type = 'bell' # 'bell' or 'zhu' or 'hure' opacity table
   opacity_type = 'hure' # 'bell' or 'zhu' or 'hure' opacity table
   #~ b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
   b_h = 0.6 # the smoothing length of the gravitationnal potential of the planet
   mean_molecular_weight = 2.35
-  sample = 400
-  disk_edges = (0.5, 100.) # (the inner and outer edge of the disk in AU)
+  sample = 800
+  disk_edges = (0.1, 100.) # (the inner and outer edge of the disk in AU)
   inner_smoothing_width = 0.05 # (in unit of the inner boundary radius) , the width of the region where the surface density decay to become 0 at the inner edge
   dissipation_type = 0
   disk_exponential_decay = None # in years
@@ -182,9 +182,13 @@ def study_parameter_influence():
     (process_stdout, process_stderr, returncode) = systemCommand("./test_disk")
     (process_stdout, process_stderr, returncode) = systemCommand("(cd unitary_tests && gnuplot total_torque.gnuplot)")
     shutil.copy2("unitary_tests/total_torque.png", "parameter_study/%s/total_torque%05d.png" % (folder_name, index))
-    shutil.copy2("disk.out", "parameter_study/%s/disk.out" % (folder_name))
-    
+    shutil.copy2("temperature_profile.dat", "parameter_study/%s/temperature_profile%05d.dat" % (folder_name, index))
     index += 1
+    
+  shutil.copy2("disk.out", "parameter_study/%s/disk.out" % (folder_name))
+  shutil.copy2("disk.in", "parameter_study/%s/disk.in" % (folder_name))
+    
+    
   
 #    .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-. 
 #  .'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `.
@@ -277,24 +281,36 @@ if not(os.path.exists("parameter_study")):
   #~ parameter_values = zip(sigma_0, sigma_index)
   #~ study_parameter_influence()
 
-# Study sigma_0 in hure case
+# independant study :
 set_prefered_disk()
-parameter_name = 'density_constant'
-folder_name = "%s_%s" % ("steepness_1", parameter_name)
-parameter_values = np.linspace(500., 2000, 16)
-study_parameter_influence()
-  
-# Study viscosity in hure case
-set_prefered_disk()
-parameter_name = 'viscosity'
-folder_name = "%s_%s" % ("steepness_1", parameter_name)
-parameter_values = np.logspace(12, 16, 15)
-study_parameter_influence()
+folder_name = "miscelaneous"
+os.chdir("parameter_study")
+if os.path.exists(folder_name):
+  (process_stdout, process_stderr, returncode) = systemCommand("rm %s/*" % folder_name)
+else:
+  os.mkdir(folder_name)
+os.chdir("..")
 
-# Study alpha in hure case
-set_prefered_disk()
-viscosity_type = 'alpha'
-parameter_name = 'alpha'
-folder_name = "%s_%s" % ("steepness_1", parameter_name)
-parameter_values = np.logspace(-2, -4., 10)
-study_parameter_influence()
+densities_0 = [300., 800., 1500.]
+densities_idx = [0.5, 1.0, 1.5]
+
+recap_file = open("parameter_study/%s/readme.txt" % folder_name, 'w')
+
+index = 0
+for density_index in densities_idx:
+  for density_constant in densities_0:
+    index += 1
+    recap_file.write("%d : %06.1f %4.2f\n" % (index, density_constant, density_index))
+    
+    surface_density = (density_constant, density_index)
+    
+    generation_simulation_parameters()
+    
+    (process_stdout, process_stderr, returncode) = systemCommand("./test_disk")
+    (process_stdout, process_stderr, returncode) = systemCommand("(cd unitary_tests && gnuplot total_torque.gnuplot)")
+    shutil.copy2("unitary_tests/total_torque.png", "parameter_study/%s/total_torque%05d.png" % (folder_name, index))
+    shutil.copy2("temperature_profile.dat", "parameter_study/%s/temperature_profile%05d.dat" % (folder_name, index))
+shutil.copy2("disk.out", "parameter_study/%s/disk.out" % (folder_name))
+shutil.copy2("disk.in", "parameter_study/%s/disk.in" % (folder_name))
+
+recap_file.close()
