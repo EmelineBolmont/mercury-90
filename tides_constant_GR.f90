@@ -33,7 +33,7 @@ module tides_constant_GR
   
   ! If pseudo_rot eq 0 : initial period as given by Pp0 (in hr)
   ! If pseudo_rot eq toto : initial period = toto*pseudo_synchronization period 
-  real(double_precision), parameter, dimension(ntid) :: pseudo_rot = (/1,1/)
+  real(double_precision), parameter, dimension(ntid) :: pseudo_rot = (/1.d0,1.d0/)
   real(double_precision), parameter, dimension(ntid) :: Pp0 = (/24.d0, 24.d0/) 	
   real(double_precision), parameter, dimension(ntid) :: dissplan = (/1.d0,10.d0/)
   ! Planets obliquities in rad
