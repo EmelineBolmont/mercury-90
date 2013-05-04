@@ -29,9 +29,9 @@ loadct,13
 
 ; Now, we plot everything !!
 
-;; ops,file='11267_ae.eps',form=1;,/landscape
-;; ops,file='11267_ois.eps',form=1;,/landscape
-;; ops,file='11267_H.eps',form=1,/landscape
+;; ops,file='XXX_ae.eps',form=1;,/landscape
+;; ops,file='XXX_ois.eps',form=1;,/landscape
+;; ops,file='XXX_H.eps',form=1,/landscape
 
 ;;!p.multi=[0,2,2]
 !P.Font=1
@@ -52,6 +52,7 @@ Trotmin = 10
 Trotmax = 10000
 
 indcolor = 200   &  incolor  = 50
+idlcol   = 200   &  idlicol  = 50
 
 ae = 1
 ; If you want to check conservation of tot angular momentum
@@ -97,7 +98,7 @@ print,'max(e) =',max(eb(0,*));!,max(eb(1,*))
 if idl eq 1 then begin
    for i = 0,nbp_idl-1 do begin
       oplot,ti(i,*),ai(i,*) $
-         ,thick=5,linestyle=2,color=incolor+i*indcolor
+         ,color=idlicol+i*idlcol,thick=5,linestyle=2
       oplot,ti(i,*),(G*(Ms+mb(i,*)*msun))^(1/3.) $
          *(rotsi(i,*))^(-2./3.)/AU $
          ,thick=5,linestyle=2;,color=255
@@ -132,7 +133,7 @@ endfor
 if idl eq 1 then begin
    for i = 0,nbp_idl-1 do begin
       oplot,ti(i,*),ei(i,*) $
-         ,linestyle=2,color=incolor+i*indcolor,thick=5
+         ,color=idlicol+i*idlcol,thick=5,linestyle=2
    endfor
 endif
 multiplot,/reset
@@ -161,7 +162,7 @@ endfor
 if idl eq 1 then begin
    for i=0,nbp_idl-1 do begin
     oplot,ti(i,*),oblpi(i,*) $
-          ,linestyle=2,color=incolor+i*indcolor,thick=5
+          ,color=idlicol+i*idlcol,thick=5,linestyle=2
    endfor
 endif
 
@@ -186,7 +187,7 @@ endfor
 if idl eq 1 then begin
    for i=0,nbp_idl-1 do begin
     oplot,ti(i,*),oblsi(i,*) $
-          ,linestyle=2,color=incolor+i*indcolor,thick=5
+          ,color=idlicol+i*idlcol,thick=5,linestyle=2
    endfor
 endif
 ;; for i = 0,nbp-1 do begin
@@ -230,9 +231,9 @@ endfor
 if idl eq 1 then begin
    for i = 0,nbp_idl-1 do begin
       oplot,ti(i,*),2*!Pi/(rotpi(i,*)*hr) $
-            ,linestyle=2,color=incolor+i*indcolor,thick=5
+            ,color=idlicol+i*idlcol,thick=5,linestyle=2
       oplot,ti(i,*),2*!Pi/(rotsi(i,*)*hr) $
-            ,linestyle=2,thick=5
+            color=255,linestyle=2,thick=5
       ;; oplot,ti(i,*),2*!Pi/(pseudorot(ei(i,*),G,mb(i,*)*Msun,Ms)*(ai(i,*)*AU)^(-3./2.)*hr) $
       ;;       ,color=255,thick=3,linestyle=5     
       ;; oplot,tb(i,*),2*!Pi/(pseudorot(eb(i,*),G,mb(i,*)*Msun,Ms)*(ab(i,*)*AU)^(-3./2.)*hr) $
@@ -294,7 +295,7 @@ if idl eq 1 then begin
 	+Ip(i)*rotpi(i,*)+rg2si(i,*)*Ms*(Rsi(i,*)*AU)^2*rotsi(i,*)-(mb(i,0)*msun*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(mb(i,0)*msun+Ms)) $
 	+Ip(i)*rotpi(i,0)+rg2si(i,0)*Ms*(Rsi(i,0)*AU)^2*rotsi(i,0)))/(mb(i,0)*msun*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(mb(i,0)*msun+Ms)) $
 	+Ip(i)*rotpi(i,0)+rg2si(i,0)*Ms*(Rsi(i,0)*AU)^2*rotsi(i,0))) $
-            ,linestyle=2,color=incolor+i*indcolor,thick=12
+            ,color=idlicol+i*idlcol,thick=5,linestyle=2
    endfor
 endif
    

@@ -137,7 +137,7 @@ contains
        tstop = bobo(1)
        dt = bobo(2)
        flagtime = flagtime+1
-       nbug = 100*365.25d0/dt
+       nbug = floor(100*365.25d0/(dt*1.0))
 !~ 	   write(*,*) "nbug = ",nbug
     else
        dt = time - timebf
