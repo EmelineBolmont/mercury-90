@@ -8,7 +8,7 @@ nbp = 2
 n_tid = 2
 
 ;! If comparison with IDL simulations 1, if not 0
-idl = 1
+idl = 0
 if idl eq 1 then begin
    nbp_idl =2
    nline_idl = dblarr(nbp_idl)

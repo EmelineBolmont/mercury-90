@@ -233,7 +233,7 @@ if idl eq 1 then begin
       oplot,ti(i,*),2*!Pi/(rotpi(i,*)*hr) $
             ,color=idlicol+i*idlcol,thick=5,linestyle=2
       oplot,ti(i,*),2*!Pi/(rotsi(i,*)*hr) $
-            color=255,linestyle=2,thick=5
+            ,color=255,linestyle=2,thick=5
       ;; oplot,ti(i,*),2*!Pi/(pseudorot(ei(i,*),G,mb(i,*)*Msun,Ms)*(ai(i,*)*AU)^(-3./2.)*hr) $
       ;;       ,color=255,thick=3,linestyle=5     
       ;; oplot,tb(i,*),2*!Pi/(pseudorot(eb(i,*),G,mb(i,*)*Msun,Ms)*(ab(i,*)*AU)^(-3./2.)*hr) $
