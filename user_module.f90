@@ -684,12 +684,14 @@ contains
 
              !****************** GR forces ****************************
              ! FGRr in AU.day-2 and FGRo in day-1
-             FGRr(j) = -(m(1)+m(j))/(r2(j)*C2*C2) &
-                  *((1.0d0+3.0d0*tintin(j))*v2(j) &  
-                    -2.d0*(2.d0+tintin(j))*(m(1)+m(j))/r(j) &
-                    -1.5d0*tintin(j)*vrad(j)*vrad(j))                          
-             FGRo(j) = (m(1)+m(j))/(r2(j)*C2*C2) &
-                  *2.0d0*(2.0d0-tintin(j))*vrad(j)*vv(j)
+             if (GenRel.eq.1) then
+                FGRr(j) = -(m(1)+m(j))/(r2(j)*C2*C2) &
+                     *((1.0d0+3.0d0*tintin(j))*v2(j) &  
+                       -2.d0*(2.d0+tintin(j))*(m(1)+m(j))/r(j) &
+                       -1.5d0*tintin(j)*vrad(j)*vrad(j))                          
+                FGRo(j) = (m(1)+m(j))/(r2(j)*C2*C2) &
+                     *2.0d0*(2.0d0-tintin(j))*vrad(j)*vv(j)
+             endif
           enddo   
           
           ! Calculation of tidal torque !AU,Msun,day
@@ -807,10 +809,11 @@ contains
              a1(3,j) = K2/m(j)*(Ftr(j)*xh(3,j)/r(j) &
                   +Ftso(j)/r(j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
                   +Ftpo(j)/r(j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)))
-		     
-             a2(1,j) = (FGRr(j)*xh(1,j)/r(j)+FGRo(j)*vh(1,j)/vv(j))
-             a2(2,j) = (FGRr(j)*xh(2,j)/r(j)+FGRo(j)*vh(2,j)/vv(j))
-             a2(3,j) = (FGRr(j)*xh(3,j)/r(j)+FGRo(j)*vh(3,j)/vv(j))
+		     if (GenRel.eq.1) then 
+                a2(1,j) = (FGRr(j)*xh(1,j)/r(j)+FGRo(j)*vh(1,j)/vv(j))
+                a2(2,j) = (FGRr(j)*xh(2,j)/r(j)+FGRo(j)*vh(2,j)/vv(j))
+                a2(3,j) = (FGRr(j)*xh(3,j)/r(j)+FGRo(j)*vh(3,j)/vv(j))
+             endif
 
              a(1,j) = a1(1,j)+a2(1,j)
              a(2,j) = a1(2,j)+a2(2,j)
