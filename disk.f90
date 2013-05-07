@@ -56,6 +56,7 @@ module disk
   real(double_precision), dimension(:), allocatable :: temp_profile_index ! values of the local negative slope of the temperature profile
   real(double_precision), dimension(:), allocatable :: chi_profile ! thermal diffusivity
   real(double_precision), dimension(:), allocatable :: tau_profile ! optical depth 
+  real(double_precision), dimension(:), allocatable :: viscosity_profile ! viscosity of the disk, in numerical units (AU^2/DAY)
   
   real(double_precision), dimension(:), allocatable :: torque_profile ! The torque profile of the disk, if the option 'manual' is specified for the type of the torque
   
@@ -222,6 +223,12 @@ subroutine read_disk_properties()
         case('alpha') ! if viscosity type is 2, then the alpha value for the alpha-prescription
           read(value, *) ALPHA
           
+        case('alpha_dz') ! if viscosity type is 3, then the alpha value for the alpha-prescription in the 3 regions
+          read(value, *) alpha_dz
+          
+        case('radius_dz') ! if viscosity type is 3, then the two radius that separate the 3 different alpha-regions
+          read(value, *) radius_dz
+          
         case('dissipation_type')
           read(value, *) DISSIPATION_TYPE
         
@@ -329,6 +336,8 @@ subroutine read_disk_properties()
       ! We initialize TAU_DISSIPATION for the first phase of dissipation of this mixed dissipation
       TAU_DISSIPATION = TAU_VISCOUS
     end if
+    
+    
     
   else
     write (*,*) 'Warning: The file "disk.in" does not exist. Default values have been used'
@@ -457,12 +466,17 @@ subroutine write_disk_properties()
     
     case('alpha')
       write(10,'(a)') ' (Alpha-prescription, with constant alpha)'
-      write(10,'(a,es10.1e2,a)') '  alpha = ', alpha
+      write(10,'(a,es10.1e2)') '  alpha = ', alpha
+      
+    case('alpha_dz')
+      write(10,'(a)') ' (Alpha-prescription, with 3 different regions)'
+      write(10,'(a,4(es10.1e2),a)') '  boundaries = [', INNER_BOUNDARY_RADIUS, radius_dz, OUTER_BOUNDARY_RADIUS,']'
+      write(10,'(a,3(es10.1e2),a)') '  alpha_dz = [', alpha_dz,']'
     
     case default
       write(10,'(a)') ' /!\' 
       write(10,'(a)') '  Warning: The viscosity rule cannot be found.'
-      write(10,'(a)') '  Values possible : constant ; alpha'
+      write(10,'(a)') '  Values possible : constant ; alpha ; alpha_dz'
   end select
   
   write(10,'(a, a)', advance='no') 'opacity type = ', trim(OPACITY_TYPE)
@@ -649,7 +663,8 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   call get_surface_density(radius=p_prop%radius, sigma=p_prop%sigma, sigma_index=p_prop%sigma_index)
 !~   call print_planet_properties(p_prop)
   call get_temperature(radius=p_prop%radius, & ! Input
-                       temperature=p_prop%temperature, temperature_index=p_prop%temperature_index, chi=p_prop%chi) ! Output
+                       temperature=p_prop%temperature, temperature_index=p_prop%temperature_index, chi=p_prop%chi, & ! Output
+                       nu=p_prop%nu) ! Output
   
   ! We calculate the angular momentum
   p_prop%angular_momentum = (mass / K2) * h_p  
@@ -663,7 +678,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 
   !------------------------------------------------------------------------------
 !~   p_prop%nu = alpha * p_prop%omega * p_prop%scaleheight**2 ! [AU^2.day-1]
-  p_prop%nu = get_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight)! [AU^2.day-1]
+!~   p_prop%nu = get_tabulated_viscosity(radius=p_prop%radius)! [AU^2.day-1]
 
   p_prop%aspect_ratio = p_prop%scaleheight / p_prop%radius
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
@@ -934,14 +949,17 @@ subroutine init_globals(stellar_mass, time)
     
     select case(VISCOSITY_TYPE)
       case('constant') ! constant viscosity over the whole disk
-        get_viscosity => get_constant_viscosity
+        get_temp_viscosity => get_constant_viscosity
       
       case('alpha') ! alpha prescription for viscosity, with constant alpha over the disk
-        get_viscosity => get_alpha_viscosity
+        get_temp_viscosity => get_alpha_viscosity
+        
+      case('alpha_dz') ! alpha prescription for viscosity, with constant alpha over the disk
+        get_temp_viscosity => get_alpha_dz_viscosity
         
       case default
         write (error_unit,*) 'The viscosity type="', VISCOSITY_TYPE,'" cannot be found.'
-        write(error_unit,*) 'Values possible : constant ; alpha'
+        write(error_unit,*) 'Values possible : constant ; alpha ; alpha_dz'
         write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
         call exit(8)
     end select
@@ -973,9 +991,11 @@ subroutine init_globals(stellar_mass, time)
     if (.not.allocated(chi_profile)) then
       allocate(chi_profile(NB_SAMPLE_PROFILES))
       allocate(tau_profile(NB_SAMPLE_PROFILES))
+      allocate(viscosity_profile(NB_SAMPLE_PROFILES))
     end if
     chi_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     tau_profile(1:NB_SAMPLE_PROFILES) = 0.d0
+    viscosity_profile(1:NB_SAMPLE_PROFILES) = 0.d0
     
     ! We calculate the initial surface density profile.
     ! First, we want a constant spaced x_sample (which is propto sqrt(r)). Because it is important for diffusion equation which is solved depending on X and not R
@@ -1359,7 +1379,7 @@ end subroutine initial_density_profile
     end if
   end subroutine get_surface_density
   
-  function get_constant_viscosity(omega, scaleheight)
+  function get_constant_viscosity(omega, scaleheight, radius)
   ! function that return the viscosity of the disk in [AU^2.day^-1]
   
   ! Parameters
@@ -1374,6 +1394,7 @@ end subroutine initial_density_profile
   
   real(double_precision), intent(in) :: omega ! The angular speed in DAY-1
   real(double_precision), intent(in) :: scaleheight ! the scaleheight of the disk in AU
+  real(double_precision), intent(in) :: radius ! the distance from the host star in AU
   
   real(double_precision), parameter :: phys2num = DAY / AU**2 ! Factor to convert CGS viscosity to numerical viscosity
   !------------------------------------------------------------------------------
@@ -1382,7 +1403,7 @@ end subroutine initial_density_profile
   
   end function get_constant_viscosity
   
-  function get_alpha_viscosity(omega, scaleheight)
+  function get_alpha_viscosity(omega, scaleheight, radius)
   ! function that return the viscosity of the disk in [AU^2.day^-1]
   
   ! Parameters
@@ -1397,11 +1418,40 @@ end subroutine initial_density_profile
   
   real(double_precision), intent(in) :: omega ! The angular speed in DAY-1
   real(double_precision), intent(in) :: scaleheight ! the scaleheight of the disk in AU
+  real(double_precision), intent(in) :: radius ! the distance from the host star in AU
   
   !------------------------------------------------------------------------------
   get_alpha_viscosity = ALPHA * omega * scaleheight**2
   
   end function get_alpha_viscosity
+  
+  function get_alpha_dz_viscosity(omega, scaleheight, radius)
+  ! function that return the viscosity of the disk in [AU^2.day^-1]
+  
+  ! Parameters
+  ! radius : The orbital distance in AU
+  
+  ! Global parameters
+  ! viscosity : the viscosity of the disk in [cm^2/s]
+  
+  implicit none
+  
+  real(double_precision) :: get_alpha_dz_viscosity ! the viscosity of the disk in [AU^2.day^-1]
+  
+  real(double_precision), intent(in) :: omega ! The angular speed in DAY-1
+  real(double_precision), intent(in) :: scaleheight ! the scaleheight of the disk in AU
+  real(double_precision), intent(in) :: radius ! the distance from the host star in AU
+  
+  !------------------------------------------------------------------------------
+  if (radius.lt.radius_dz(1)) then
+    get_alpha_dz_viscosity = alpha_dz(1) * omega * scaleheight**2
+  else if (radius.lt.radius_dz(2)) then
+    get_alpha_dz_viscosity = alpha_dz(2) * omega * scaleheight**2
+  else
+    get_alpha_dz_viscosity = alpha_dz(3) * omega * scaleheight**2
+  end if
+  
+  end function get_alpha_dz_viscosity
   
   subroutine init_turbulence_forcing()
   ! function that return the viscosity of the disk in [AU^2.day^-1]
@@ -1442,7 +1492,9 @@ end subroutine initial_density_profile
   call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
    p_prop=p_prop) ! Output
   
-  TURBULENT_FORCING = sqrt(get_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight) / (140. * p_prop%omega)) / radius
+  ! /!\ Warning : When using dead zone, the variation of turbulence throughough the disk is not taken into account !
+  TURBULENT_FORCING = sqrt(get_temp_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight, radius=radius) &
+                           / (140. * p_prop%omega)) / radius
   
 !~   write(*,'(a,es10.3e2)') 'turbulence forcing = ', TURBULENT_FORCING
 !~   stop
@@ -1642,7 +1694,7 @@ end subroutine initial_density_profile
     type(PlanetProperties) :: p_prop
 
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
-    real(double_precision) :: a_old, temperature_old, tmp, opacity, rho
+    real(double_precision) :: a_old, temperature_old, tmp, opacity, rho, nu
     real(double_precision) :: scaleheight_old ! The scaleheight of the previous point
     
     integer :: i,j ! for loops
@@ -1684,9 +1736,10 @@ end subroutine initial_density_profile
       
       call zbrent(tolerance=1d-4, p_prop=p_prop, scaleheight_old=scaleheight_old, & ! Input
                             distance_old=a_old, & ! Input
-                              temperature=temperature, optical_depth=tau_profile(j)) ! Output
+                              temperature=temperature, optical_depth=tau_profile(j), nu=nu) ! Output
       
       temperature_profile(j) = temperature
+      viscosity_profile(j) = nu
       
       if (j.ne.NB_SAMPLE_PROFILES) then
       temp_profile_index(j) = - (log(temperature_profile(j)) - log(temperature_profile(j+1))) / &
@@ -1888,7 +1941,7 @@ end subroutine initial_density_profile
   
   end subroutine store_scaleheight_profile
 
-subroutine zbrent(tolerance, p_prop, scaleheight_old, distance_old, temperature, optical_depth)
+subroutine zbrent(tolerance, p_prop, scaleheight_old, distance_old, temperature, optical_depth, nu)
 ! Using Brent's method, find the root of a function 'func' known to lie between 'x_min' and 'x_max'. 
 ! The root, returned as 'zero_finding_zbrent', will be refined until its accuray is 'tolerance'. 
 
@@ -1901,6 +1954,7 @@ subroutine zbrent(tolerance, p_prop, scaleheight_old, distance_old, temperature,
 ! Output
 real(double_precision), intent(out) :: temperature
 real(double_precision), intent(out) :: optical_depth
+real(double_precision), intent(out) :: nu
 
 ! Input 
 real(double_precision), intent(in) :: tolerance
@@ -1918,8 +1972,8 @@ integer, parameter :: ITMAX=100
 ! Locals
 integer :: iter
 real(double_precision) :: a, b, c, d, e, fa, fb, fc, p, q, r, s, tol1, xm
-real(double_precision) :: viscous_prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
 real(double_precision) :: tau_a, tau_b
+real(double_precision) :: nu_a, nu_b
 
 integer, parameter :: nb_boundaries = 12
 real(double_precision), dimension(nb_boundaries), parameter :: boundaries_list = (/1.d0, 1000.d0, 1500.d0, 2000.d0, 2500.d0, &
@@ -1954,13 +2008,10 @@ end if
 
 !------------------------------------------------------------------------------
 
-! We calculate this value outside the function because we only have to do this once per step (per radial position)
-viscous_prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 32.d0)
-
 b = boundaries_list(1)
 call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
                               scaleheight_old=scaleheight_old, distance_old=distance_old,& ! Input
-                              funcv=fb, optical_depth=tau_b) ! Output
+                              funcv=fb, optical_depth=tau_b, nu=nu_b) ! Output
 
 
 
@@ -1975,7 +2026,7 @@ do while ((i.lt.nb_boundaries).and.no_sign_change)
   b = boundaries_list(i)
   call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
                               scaleheight_old=scaleheight_old, distance_old=distance_old,& ! Input
-                              funcv=fb, optical_depth=tau_b) ! Output
+                              funcv=fb, optical_depth=tau_b, nu=nu_b) ! Output
   
   
   no_sign_change = ((fa.gt.0.).and.(fb.gt.0.)).or.((fa.lt.0.).and.(fb.lt.0.))
@@ -2030,6 +2081,7 @@ do iter=1,ITMAX
   if (abs(xm).le.tol1 .or. fb.eq.0.) then
     temperature = b
     optical_depth = tau_b
+    nu = nu_b
     return
   endif
   
@@ -2072,16 +2124,17 @@ do iter=1,ITMAX
   
   call zero_finding_temperature(temperature=b, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
                               scaleheight_old=scaleheight_old, distance_old=distance_old,& ! Input
-                                funcv=fb, optical_depth=tau_b) ! Output
+                                funcv=fb, optical_depth=tau_b, nu=nu_b) ! Output
 end do
 write(*,*) 'Warning: zbrent exceeding maximum iterations'
 temperature = b
 optical_depth = tau_b
+nu = nu_b
 return
 end subroutine zbrent
 
 subroutine temperature_pure_viscous(temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
-                                    funcv, optical_depth)
+                                    funcv, optical_depth, nu)
 ! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
 ! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
 ! We also use the opacity given in Bell & lin 1994. 
@@ -2095,6 +2148,7 @@ subroutine temperature_pure_viscous(temperature, sigma, omega, distance_new, sca
 ! Output
 real(double_precision), intent(out) :: funcv ! the value of the function
 real(double_precision), intent(out) :: optical_depth ! the optical depth at a given position
+real(double_precision), intent(out) :: nu ! the viscosity in numerical units
 
 ! Input
 real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
@@ -2107,7 +2161,6 @@ real(double_precision), intent(in) :: distance_old ! orbital distance of the pre
 ! Local
 real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
 real(double_precision) :: rho ! the bulk density of the disk at a given position
-real(double_precision) :: nu ! the viscosity in numerical units
 real(double_precision) :: tau_eff
 real(double_precision) :: envelope_heating, viscous_heating, black_body
 !------------------------------------------------------------------------------
@@ -2128,7 +2181,7 @@ real(double_precision) :: envelope_heating, viscous_heating, black_body
 
 !------------------------------------------------------------------------------
 scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
-nu = get_viscosity(omega=omega, scaleheight=scaleheight)
+nu = get_temp_viscosity(omega=omega, scaleheight=scaleheight, radius=distance_new)
 !------------------------------------------------------------------------------
 rho = 0.5d0 * sigma / scaleheight
 !------------------------------------------------------------------------------
@@ -2162,7 +2215,7 @@ return
 end subroutine temperature_pure_viscous
 
 subroutine temperature_with_irradiation(temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
-                                        funcv, optical_depth)
+                                        funcv, optical_depth, nu)
 ! function that is thought to be equal to zero when the good temperature is retrieved. For that purpose, various parameters are needed. 
 ! This f(x) = 0 function is obtained by using (37) in (36) (paardekooper, baruteau & kley 2010). 
 ! We also use the opacity given in Bell & lin 1994. 
@@ -2180,6 +2233,7 @@ subroutine temperature_with_irradiation(temperature, sigma, omega, distance_new,
 ! Output
 real(double_precision), intent(out) :: funcv ! the value of the function
 real(double_precision), intent(out) :: optical_depth ! the optical depth at a given position
+real(double_precision), intent(out) :: nu ! the viscosity in numerical units
 
 ! Input
 real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
@@ -2193,7 +2247,6 @@ real(double_precision), intent(in) :: distance_old ! orbital distance of the pre
 real(double_precision) :: scaleheight ! the scaleheight of the disk at a given position
 real(double_precision) :: rho ! the bulk density of the disk at a given position
 real(double_precision) :: flaring_angle ! the angle of the protoplanetary disk at the current orbital distance
-real(double_precision) :: nu ! the viscosity in numerical units
 real(double_precision) :: aspect_ratio_new, aspect_ratio_old
 real(double_precision) :: prefactor_irradiation, tau_eff
 real(double_precision) :: envelope_heating, viscous_heating, irradiation, black_body
@@ -2205,7 +2258,7 @@ real(double_precision) :: envelope_heating, viscous_heating, irradiation, black_
 !------------------------------------------------------------------------------
 prefactor_irradiation = 2.d0 * SIGMA_STEFAN * R_STAR**2 * T_STAR**4 * (1.d0 - DISK_ALBEDO)
 scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
-nu = get_viscosity(omega=omega, scaleheight=scaleheight)
+nu = get_temp_viscosity(omega=omega, scaleheight=scaleheight, radius=distance_new)
 !------------------------------------------------------------------------------
 aspect_ratio_new = scaleheight / distance_new
 aspect_ratio_old = scaleheight_old / distance_old
@@ -2255,7 +2308,7 @@ funcv =  black_body + irradiation + viscous_heating + envelope_heating
 return
 end subroutine temperature_with_irradiation
 
-subroutine get_temperature(radius, temperature, temperature_index, chi)
+subroutine get_temperature(radius, temperature, temperature_index, chi, nu)
 ! subroutine that interpolate a value of the temperature at a given radius with input arrays of radius (x) and temperature (y)
 
 ! Global parameters
@@ -2286,6 +2339,7 @@ real(double_precision), intent(in) :: radius
 real(double_precision), intent(out) :: temperature
 real(double_precision), intent(out) :: temperature_index
 real(double_precision), intent(out) :: chi
+real(double_precision), intent(out) :: nu ! The viscosity
 
 ! Local
 integer :: closest_low_id ! the index of the first closest lower value of radius regarding the radius value given in parameter of the subroutine. 
@@ -2307,14 +2361,17 @@ if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. distance_sample(NB_SA
   temperature = exp(ln_y2 + (ln_y1 - ln_y2) * (log(radius) - ln_x2) / (ln_x1 - ln_x2))
   temperature_index = temp_profile_index(closest_low_id) ! for the temperature index, no interpolation.
   chi = chi_profile(closest_low_id)
+  nu = viscosity_profile(closest_low_id)
 else if (radius .lt. INNER_BOUNDARY_RADIUS) then
   temperature = temperature_profile(1)
   temperature_index = 0.d0
   chi = chi_profile(1)
+  nu = viscosity_profile(1)
 else if (radius .ge. distance_sample(NB_SAMPLE_PROFILES-1)) then
   temperature = temperature_profile(NB_SAMPLE_PROFILES)
   temperature_index = temp_profile_index(NB_SAMPLE_PROFILES)
   chi = chi_profile(NB_SAMPLE_PROFILES)
+  nu = viscosity_profile(NB_SAMPLE_PROFILES)
 end if
 
 end subroutine get_temperature

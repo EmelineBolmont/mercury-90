@@ -66,9 +66,11 @@ module disk_properties
   character(len=80) :: OPACITY_TYPE = 'bell' 
   
   ! Here we define the constant value of the viscosity of the disk
-  character(len=80) :: VISCOSITY_TYPE = 'constant' ! 'constant' or 'alpha'
+  character(len=80) :: VISCOSITY_TYPE = 'constant' ! 'constant' or 'alpha', or 'alpha_dz'
   real(double_precision) :: VISCOSITY = 1.d15 ! viscosity of the disk [cm^2/s] (must not be used directly into the code, use get_viscosity(radius) instead)
   real(double_precision) :: ALPHA = 1.d-3 ! in case of alpha prescription, the alpha of the disk.
+  real(double_precision), dimension(3) :: alpha_dz ! in case of alpha_dz prescription, the alpha of the disk.
+  real(double_precision), dimension(2) :: radius_dz ! [AU] in case of alpha_dz prescription, the two radius that separate the 3 different alpha regions.
   !------------------------------------------------------------------------------
   logical :: IS_TURBULENCE = .False. ! if there is turbulence or not inside the disk
   real(double_precision) :: TURBULENT_FORCING = 0.d0 ! the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
@@ -125,7 +127,8 @@ module disk_properties
   procedure(get_torques_interface), pointer :: get_torques
   procedure(function_temperature_interface), pointer :: zero_finding_temperature
   procedure(get_opacity_interface), pointer :: get_opacity
-  procedure(get_viscosity_interface), pointer :: get_viscosity
+  procedure(get_viscosity_interface), pointer :: get_temp_viscosity ! Only used to retrieve the temperature profile. 
+  ! After that, we use a tabulated viscosity profile, fixed once and for all.
   
   abstract interface 
   subroutine get_torques_interface(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0, ecc_corot)
@@ -147,12 +150,13 @@ module disk_properties
   
   abstract interface 
   subroutine function_temperature_interface(temperature, sigma, omega, distance_new, scaleheight_old, distance_old, &
-                                            funcv, optical_depth)
+                                            funcv, optical_depth, nu)
     import
     
   ! Output
   real(double_precision), intent(out) :: funcv ! the value of the function
   real(double_precision), intent(out) :: optical_depth ! the optical depth at a given position
+  real(double_precision), intent(out) :: nu ! the viscosity in numerical units
 
   ! Input
   real(double_precision), intent(in) :: temperature ! the temperature at a given position (in K)
@@ -182,7 +186,7 @@ module disk_properties
   end interface
   
   abstract interface 
-  function get_viscosity_interface(omega, scaleheight)
+  function get_viscosity_interface(omega, scaleheight, radius)
   ! subroutine that return the opacity of the disk at the location of the planet given various parameters
     import
     
@@ -191,6 +195,7 @@ module disk_properties
     ! Inputs 
     real(double_precision), intent(in) :: omega ! The angular speed in DAY-1
     real(double_precision), intent(in) :: scaleheight ! the scaleheight of the disk in AU
+    real(double_precision), intent(in) :: radius ! the distance from the host star in AU
   
     ! Outputs
     real(double_precision) :: get_viscosity_interface ! in [AU^2.day-1]

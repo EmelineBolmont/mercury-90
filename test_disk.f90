@@ -173,12 +173,11 @@ program test_disk
     
     real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
     
-    real(double_precision) :: zero_function, tmp ! value that we want to output and a dummy argument 'tmp'
+    real(double_precision) :: zero_function, tmp, tmp2 ! value that we want to output and a dummy argument 'tmp'
     
     integer :: i ! for loops
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
-    real(double_precision) :: prefactor ! prefactor for the calculation of the function of the temperature whose zeros are searched
     real(double_precision) :: orbital_position, temperature_old, scaleheight_old, distance_old
 
   !------------------------------------------------------------------------------
@@ -212,9 +211,6 @@ program test_disk
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
     
-    ! We calculate this value outside the function because we only have to do this once per step (per radial position)
-    prefactor = - (9.d0 * p_prop%nu * p_prop%sigma * p_prop%omega**2 / 32.d0)
-    
     
     write(10,*) '# properties of the disk at the location of the planet that influence the value of the temperature'
     write(10,*) '# radial position of the planet (in AU) :', p_prop%radius
@@ -229,7 +225,7 @@ program test_disk
       
       call zero_finding_temperature(temperature=temperature, sigma=p_prop%sigma, omega=p_prop%omega, distance_new=p_prop%radius, & ! Input
                               scaleheight_old=scaleheight_old, distance_old=distance_old,& ! Input
-                              funcv=zero_function, optical_depth=tmp) ! Output
+                              funcv=zero_function, optical_depth=tmp, nu=tmp2) ! Output
       
       write(10,*) temperature, zero_function
     end do
@@ -257,7 +253,7 @@ program test_disk
     real(double_precision), parameter :: a_max = 100.d0! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision) :: a, temperature, temperature_index, chi
+    real(double_precision) :: a, temperature, temperature_index, chi, nu
     
     integer :: j ! for loops
     
@@ -269,10 +265,10 @@ program test_disk
       ! We generate cartesian coordinate for the given semi major axis
       
       call get_temperature(radius=a, & ! Input
-                           temperature=temperature, temperature_index=temperature_index, chi=chi) ! Output
+                           temperature=temperature, temperature_index=temperature_index, chi=chi, nu=nu) ! Output
       
       
-      write(10,*) a, temperature, temperature_index, chi
+      write(10,*) a, temperature, temperature_index, chi, nu
     end do
     close(10)
     
@@ -1339,7 +1335,7 @@ program test_disk
       
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to migration
-      viscosity = get_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight)
+      viscosity = get_temp_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight, radius=a)
       
       write(10,*) a, viscosity * num2phys
     end do
