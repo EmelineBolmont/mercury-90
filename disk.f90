@@ -914,7 +914,7 @@ subroutine init_globals(stellar_mass, time)
         get_torques => get_corotation_torque_manual
         
       case default
-        write (error_unit,*) 'The torque_type="', TORQUE_TYPE,'" cannot be found.'
+        write (error_unit,*) 'The torque_type="', trim(TORQUE_TYPE),'" cannot be found.'
         write(error_unit,*) 'Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
         write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
         call exit(1)
@@ -941,7 +941,7 @@ subroutine init_globals(stellar_mass, time)
         call init_opacity_hure()
         
       case default
-        write (error_unit,*) 'The opacity type="', OPACITY_TYPE,'" cannot be found.'
+        write (error_unit,*) 'The opacity type="', trim(OPACITY_TYPE),'" cannot be found.'
         write(error_unit,*) 'Values possible : zhu ; bell ; chambers ; hure'
         write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
         call exit(8)
@@ -958,7 +958,7 @@ subroutine init_globals(stellar_mass, time)
         get_temp_viscosity => get_alpha_dz_viscosity
         
       case default
-        write (error_unit,*) 'The viscosity type="', VISCOSITY_TYPE,'" cannot be found.'
+        write (error_unit,*) 'The viscosity type="', trim(VISCOSITY_TYPE),'" cannot be found.'
         write(error_unit,*) 'Values possible : constant ; alpha ; alpha_dz'
         write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
         call exit(8)
