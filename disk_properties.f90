@@ -69,8 +69,8 @@ module disk_properties
   character(len=80) :: VISCOSITY_TYPE = 'constant' ! 'constant' or 'alpha', or 'alpha_dz'
   real(double_precision) :: VISCOSITY = 1.d15 ! viscosity of the disk [cm^2/s] (must not be used directly into the code, use get_viscosity(radius) instead)
   real(double_precision) :: ALPHA = 1.d-3 ! in case of alpha prescription, the alpha of the disk.
-  real(double_precision), dimension(3) :: alpha_dz ! in case of alpha_dz prescription, the alpha of the disk.
-  real(double_precision), dimension(2) :: radius_dz ! [AU] in case of alpha_dz prescription, the two radius that separate the 3 different alpha regions.
+  real(double_precision), dimension(3) :: alpha_dz = (/ 1d-2, 1d-4, 1d-2/) ! in case of alpha_dz prescription, the alpha of the disk.
+  real(double_precision), dimension(2) :: radius_dz = (/ 1.d0, 10.d0/)! [AU] in case of alpha_dz prescription, the two radius that separate the 3 different alpha regions.
   !------------------------------------------------------------------------------
   logical :: IS_TURBULENCE = .False. ! if there is turbulence or not inside the disk
   real(double_precision) :: TURBULENT_FORCING = 0.d0 ! the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
