@@ -6,14 +6,16 @@ module tides_constant_GR
   ! Author: Emeline Bolmont
   ! Date: 04/04/13
   !
+    ! If you want Tides or not
+  integer, parameter :: tides=1
+  ! If you want General Relativity or not
+  integer, parameter :: GenRel=1
   ! Number of tidally evolving planets
   integer, parameter :: ntid=2
   ! Nature of host body
   integer, parameter :: brown_dwarf=1
   integer, parameter :: M_dwarf=0
-  integer, parameter :: Sun_like_star=0
-  ! If you want General Relativity or not
-  integer, parameter :: GenRel=1
+  integer, parameter :: Sun_like_star=0  
   ! For an utilization of the code with no changing host body
   integer, parameter :: Rscst=0 !=1 : Rs = cst, rg2s = cst
   real(double_precision), parameter :: Rjup = 10.9d0 !rearth	
