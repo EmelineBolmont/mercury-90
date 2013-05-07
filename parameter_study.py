@@ -30,7 +30,7 @@ density_index = None
 def set_default_parameters():
   """set the default values for various parameters"""
   global surface_density, adiabatic_index, viscosity_type, viscosity, alpha, b_h, torque_type, disk_edges, inner_smoothing_width
-  global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, opacity_type
+  global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, opacity_type, alpha_dz, radius_dz
   global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
   global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
   global is_turbulence, turbulent_forcing, saturation_torque, density_index, density_constant
@@ -47,6 +47,8 @@ def set_default_parameters():
   viscosity_type = 'constant' # constant, alpha
   viscosity = 1.e15 # cm^2/s
   alpha = None
+  alpha_dz = (5e-3, 1e-4, 5e-3)
+  radius_dz = (1., 10.)
   opacity_type = 'bell' # 'bell' or 'zhu' or 'hure' opacity table
   b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
   mean_molecular_weight = 2.35
@@ -76,7 +78,7 @@ def set_default_parameters():
 def set_prefered_disk():
   """set the default values for various parameters"""
   global surface_density, adiabatic_index, viscosity_type, viscosity, alpha, b_h, torque_type, disk_edges, inner_smoothing_width
-  global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, opacity_type
+  global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, opacity_type, alpha_dz, radius_dz
   global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
   global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
   global is_turbulence, turbulent_forcing, saturation_torque, density_index, density_constant
@@ -91,9 +93,11 @@ def set_prefered_disk():
   surface_density = (density_constant, density_index) # (g/cm^2, power law index)
   density_file = 'surface_density_profile.dat'
   adiabatic_index = 1.4 # the adiabatic index of the disk
-  viscosity_type = 'alpha' # constant, alpha
+  viscosity_type = 'alpha_dz' # constant, alpha
   viscosity = None # cm^2/s
   alpha = 5e-3
+  alpha_dz = (5e-3, 1e-4, 5e-3)
+  radius_dz = (1., 10.)
   #~ opacity_type = 'bell' # 'bell' or 'zhu' or 'hure' opacity table
   opacity_type = 'hure' # 'bell' or 'zhu' or 'hure' opacity table
   #~ b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
