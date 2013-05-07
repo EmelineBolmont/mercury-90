@@ -72,6 +72,7 @@ program test_disk
     call test_function_zero_temperature(stellar_mass=stellar_mass)
     call test_temperature_interpolation()
     call test_manual_torque_interpolation()
+    call test_alpha_dz()
     call test_density_interpolation()
     call test_retrieval_of_orbital_elements(stellar_mass=stellar_mass)
 !     call test_turbulence_torque(stellar_mass=stellar_mass)
@@ -785,6 +786,59 @@ program test_disk
 !~   close(10)
   
   end subroutine test_turbulence_mode
+
+  subroutine test_alpha_dz()
+  ! subroutine that test the function 'get_corotation_torque'
+  
+  ! Return:
+  !  a data file 'torques_fixed_m.dat' 
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+    implicit none
+    
+    
+    integer, parameter :: nb_a = 100
+    real(double_precision), parameter :: a_min = 0.1d0 ! in AU
+    real(double_precision), parameter :: a_max = 20d0 ! in AU
+    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    
+    
+    real(double_precision) :: a, alpha
+    
+    integer :: i ! for loops
+    
+    write(*,*) 'Evolution of alpha in function of distance (in the "alpha_dz" case for viscosity'
+    
+    ! We open the file where we want to write the outputs
+    open(10, file='unitary_tests/alpha_dz.dat')
+    
+    write(10,'(a)') '# a in AU ; alpha'
+
+    
+    do i=1,nb_a
+      a = (a_min + a_step * (i - 1.d0))
+      
+      alpha = get_alpha_dz(radius=a)
+      
+      write(10,*) a, alpha
+    end do
+    
+    close(10)
+    
+    
+    open(10, file="unitary_tests/alpha_dz.gnuplot")
+    
+    write(10,*) "set terminal pdfcairo enhanced"
+    write(10,*) "set output 'alpha_dz.pdf'"
+    
+    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set ylabel "alpha (adim)"'
+    write(10,*) 'set grid'
+    write(10,*) 'set xrange [', a_min, ':', a_max, ']'
+    
+    write(10,'(a,i2,a, f4.2,a)') ' plot "alpha_dz.dat" using 1:2 with lines notitle'
+    close(10)
+    
+  end subroutine test_alpha_dz
 
 ! %%% Physical behaviour %%%
   subroutine study_temperature_profile()

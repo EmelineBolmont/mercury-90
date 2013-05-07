@@ -955,6 +955,24 @@ subroutine init_globals(stellar_mass, time)
         get_temp_viscosity => get_alpha_viscosity
         
       case('alpha_dz') ! alpha prescription for viscosity, with constant alpha over the disk
+        if (radius_dz(1).gt.radius_dz(2)) then
+          write (error_unit,*) 'For the 3 alpha regimes ("alpha_dz" case for viscosity), &
+                               &the first transition radius cannot be larger than the second one.'
+          call exit(12)
+        end if
+        
+        if (radius_dz(1).lt.INNER_BOUNDARY_RADIUS) then
+          write (error_unit,*) 'For the 3 alpha regimes ("alpha_dz" case for viscosity), &
+                               &the first transition radius must be inside the disk.'
+          call exit(12)
+        end if
+        
+        if (radius_dz(2).gt.OUTER_BOUNDARY_RADIUS) then
+          write (error_unit,*) 'For the 3 alpha regimes ("alpha_dz" case for viscosity), &
+                               &the second transition radius must be inside the disk.'
+          call exit(12)
+        end if
+      
         get_temp_viscosity => get_alpha_dz_viscosity
         
       case default
@@ -1425,6 +1443,47 @@ end subroutine initial_density_profile
   
   end function get_alpha_viscosity
   
+  function get_alpha_dz(radius) 
+  ! function that return the alpha at a given position in the disk. 
+  
+  ! This alpha is smoothed from the 3 region allowed, with tanh functions ! The transiton between two regimes occurs on a width 
+  ! related to the radius of the transition. This transition width is equal to a given percentage of the radius of transition on 
+  ! each side of the reference radius, this percentage being defined in the parameter 'percentage'
+  
+  ! Parameters
+  ! radius : The orbital distance in AU
+  
+  ! Global parameters
+  ! radius_dz : The 2 radius that separate the 3 regions
+  ! alpha_dz : the 3 values of alpha, in the different regions
+  
+  implicit none
+  
+  real(double_precision) :: get_alpha_dz ! the alpha (from alpha-prescription) at a given position in the disk
+  
+  real(double_precision), intent(in) :: radius ! the distance from the host star in AU
+  
+  ! Local
+  real(double_precision), parameter :: percentage = 5.d0 ! in percent, i.e 10 for 10%
+  ! In other words, if 'percentage' equal 10%, that mean that at r=(1 + 10%) * r_1, the tanh will be equal to tanh(2) = 0.96
+    
+  !------------------------------------------------------------------------------ 
+  
+  ! We assume that at the center of the 2nd interval, we do not need smoothing and the value if alpha(2). Then we test whether we
+  ! are in the first or second part to change from smoothing between region 1 and 2, or between region 2 and 3 
+  
+  if (radius.lt.((radius_dz(1) + radius_dz(2)) / 2.d0)) then
+    get_alpha_dz = (alpha_dz(2) + alpha_dz(1)) / 2.d0
+    get_alpha_dz = get_alpha_dz + ((alpha_dz(2) - alpha_dz(1)) / 2.d0) * &
+                   dtanh((radius - radius_dz(1)) * percentage * 2.d0 / radius_dz(1))
+  else
+    get_alpha_dz = (alpha_dz(3) + alpha_dz(2)) / 2.d0
+    get_alpha_dz = get_alpha_dz + ((alpha_dz(3) - alpha_dz(2)) / 2.d0) * &
+                   dtanh((radius - radius_dz(2)) * percentage * 2.d0 / radius_dz(2))
+  end if
+    
+  end function get_alpha_dz
+  
   function get_alpha_dz_viscosity(omega, scaleheight, radius)
   ! function that return the viscosity of the disk in [AU^2.day^-1]
   
@@ -1443,13 +1502,8 @@ end subroutine initial_density_profile
   real(double_precision), intent(in) :: radius ! the distance from the host star in AU
   
   !------------------------------------------------------------------------------
-  if (radius.lt.radius_dz(1)) then
-    get_alpha_dz_viscosity = alpha_dz(1) * omega * scaleheight**2
-  else if (radius.lt.radius_dz(2)) then
-    get_alpha_dz_viscosity = alpha_dz(2) * omega * scaleheight**2
-  else
-    get_alpha_dz_viscosity = alpha_dz(3) * omega * scaleheight**2
-  end if
+  
+  get_alpha_dz_viscosity = get_alpha_dz(radius) * omega * scaleheight**2
   
   end function get_alpha_dz_viscosity
   
