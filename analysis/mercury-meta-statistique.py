@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # v1.0.1.1
-# Pour gÃÂÃÂ©nÃÂÃÂ©rer des histogrammes sur plusieurs simulations afin de 
-# regarder les caractÃÂÃÂ©ristiques statistiques des planÃÂÃÂ¨tes qui restent.
-
-
-# TODO
-# _ ÃÂÃÂ©crire un fichier qui stocke les paramÃÂÃÂ¨tres orbitaux des planÃÂÃÂ¨tes qu'il reste.
-# _ sÃÂÃÂ©lectionner les planÃÂÃÂ¨tes qui sont plus proche qu'une certaine valeur de leur ÃÂÃÂ©toile.
+# Goal : Generate several histograms over several folders that each represent meta-simulations that contains several simulation following a common rule. 
+# The name of the meta-simulation will be assumed to be the name of the folder.
 
 from math import *
 import pylab as pl
 import os, pdb, autiwa
+import sys # To handle options of the script, for instance
 from simu_constantes import *
 import random
 import numpy as np
@@ -28,13 +24,11 @@ rep_exec = os.getcwd()
 resonances = ["3:2", "4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 
 #######################
-# On prÃÂÃÂ©pare les plots
+# We prepare the plots
 #######################
 
 # Extensions voulues pour les fichiers de sortie
-extensions = ['pdf', 'png', 'svg']
-
-dossier_plot = "output"
+OUTPUT_EXTENSION = 'png' # default value in bitmap, because vectoriel can take time and space if there is a lot of data
 
 #######################
 # We prepare the various folders we we will read the simulations
@@ -44,7 +38,7 @@ dossier_plot = "output"
 dossier_suppr = ["output", "indiv_simu_01"]
 
 #######################
-# On se place dans le dossier de simulation souhaitÃÂÃÂ©
+# We list all the simulations of the current working directory each one of them being a 'meta simulation'
 #######################
 liste_meta_simu = [dir for dir in os.listdir(".") if os.path.isdir(dir)]
 autiwa.suppr_dossier(liste_meta_simu,dossier_suppr)
@@ -54,19 +48,6 @@ nb_meta_simu = len(liste_meta_simu)
 
 # We generate a list of colors
 colors = [ '#'+li for li in autiwa.colorList(nb_meta_simu, exclude=['000000'])]
-
-# We chose the number of plot in x and y axis for the p.multi
-# environment in order to plot ALL the resonant angles and have x and
-# y numbers as close on from another as possible. There are q+1
-# resonant angles, the period ratio and w1 - w2, i.e q+3 plots
-nb_plots_x = 1
-nb_plots_y = 1
-while (nb_plots_x * nb_plots_y < nb_meta_simu):
-  if (nb_plots_x == nb_plots_y):
-    nb_plots_y += 1
-  else:
-    nb_plots_x += 1
-subplot_index = nb_plots_x * 100 + nb_plots_y * 10
 
 #    .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-. 
 #  .'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `.
@@ -82,8 +63,44 @@ subplot_index = nb_plots_x * 100 + nb_plots_y * 10
 #  `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .'
 #    `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'
 
-# We go in each sub folder of the current working directory
+# We read options, if any
 
+isProblem = False
+problem_message = "The script can take various arguments :" + "\n" + \
+"(no spaces between the key and the values, only separated by '=')" + "\n" + \
+" * help : display a little help message on HOW to use various options" + "\n" + \
+" * ext=png : [%s] The extension for the output files" % OUTPUT_EXTENSION
+
+# We get arguments from the script
+for arg in sys.argv[1:]:
+  try:
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+  if (key == 't_min'):
+    t_min = float(value)
+  elif (key == 't_max'):
+    t_max = float(value)
+  elif (key == 'log'):
+    isLog = True
+  elif (key == 'alog'):
+    isaLog = True
+  elif (key == 'xs'):
+    isXS = True
+  elif (key == 'ext'):
+    OUTPUT_EXTENSION = value
+  elif (key == 'help'):
+    isProblem = True
+  else:
+    print("the key '"+key+"' does not match")
+    isProblem = True
+
+if isProblem:
+  print(problem_message)
+  exit()
+
+
+# We go in each sub folder of the current working directory
 for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   print("Traitement de %s"%meta_simu)
   os.chdir(os.path.join(rep_exec,meta_simu))
@@ -91,7 +108,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   meta_prefix = meta_simu # it is thought to have the initial number of planets in here
   
 
-  # On rÃÂÃÂ©cupÃÂÃÂ¨re la liste des sous-dossiers
+  # For each meta-simulation, we get the list of simulation that it contains
   liste_simu = [dir for dir in os.listdir(".") if os.path.isdir(dir)]
   autiwa.suppr_dossier(liste_simu,dossier_suppr)
   liste_simu.sort()
@@ -100,9 +117,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   nb_simu = len(liste_simu)
   
   # We initialize the variables where to store datas
-  
-  #intial_nb_planets = int(meta_prefix)
-  
+    
   # List of orbital elements of ALL the simulations
   a = [] # in AU
   e = [] # eccentricity
@@ -139,7 +154,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
     # List initialized for each new simulation that contains values of the current simulation
     a_system = [] # in AU
     e_system = [] # eccentricity
-    I_system = [] # inclination in degre??
+    I_system = [] # inclination in degre
     m_system = [] # mass in earth mass
     
     # We get rid of the header
@@ -255,7 +270,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   
   
   #######################
-  #   TracÃÂÃÂ© des plots   #
+  #   Plots
   #######################
   print("\t Computing Plots")
   os.chdir(rep_exec)
@@ -270,14 +285,12 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   pl.hist(m_clo, bins=range(25), normed=True, histtype='step', label=meta_prefix)
 
   nom_fichier_plot2 = "e_fct_m"
-  #~ m2 = [mi + random.uniform(-0.5,0.5) for mi in m]
   pl.figure(2)
   pl.xlabel("mass [Earths]")
   pl.ylabel("eccentricity")
   pl.plot(m, e, 'o', markersize=5, label=meta_prefix)
   
   nom_fichier_plot3 = "e_fct_a"
-  #~ dist = [ai - CONVERGENCE_ZONE for ai in a]
   pl.figure(3)
   pl.xlabel("distance [AU]")
   pl.ylabel("eccentricity")
@@ -297,21 +310,15 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   
   
   nom_fichier_plot6 = "m_fct_a"
-  #m2 = [mi + random.uniform(-0.5,0.5) for mi in m]
   pl.figure(6)
-  #subplot_index += 1
-  #pl.subplot(subplot_index)
-  pl.xlabel(unicode("a [AU]",'utf-8'))
+  pl.xlabel("a [AU]")
   pl.ylabel("mass [Earths]")
   pl.semilogx(a, m, 'o', markersize=3, color=colors[meta_index], label=meta_prefix)
-  #~ pl.ylim(0, 12)
-  #~ pl.xlim(1, 10)
   pl.legend()
   
   
   nom_fichier_plot7 = "histogrammes_res"
   pl.figure(7)
-  #~ pl.clf()
   pl.xlabel("Period ratio relative to the closest planet of the system from the convergence zone")
   pl.ylabel("density of probability")
   
@@ -322,81 +329,54 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   second_massive = [mi + random.uniform(-0.5, 0.5) for mi in second_massive]
   
   pl.figure(8)
-  #~ pl.clf()
   pl.xlabel("most massive [Earths]")
   pl.ylabel("second most massive [Earths]")
   pl.plot(most_massive, second_massive, 'o', markersize=5, label=meta_prefix)
   
-  #~ pl.figure(9)
-  #~ if (meta_prefix == '50'):
-    #~ m_first = [mi + random.uniform(-0.25,0.25) for mi in m_first]
-    #~ m_second = [mi + random.uniform(-0.25,0.25) for mi in m_second]
-    #~ m_clo_first = [mi + random.uniform(-0.25,0.25) for mi in m_clo_first]
-    #~ m_clo_second = [mi + random.uniform(-0.25,0.25) for mi in m_clo_second]
-    #~ nom_fichier_plot9 = "coorbital_pl_mass"
-    #~ pl.title("Mass of the coorbital planets")
-    #~ pl.xlabel("mass of the first planet [Earths]")
-    #~ pl.ylabel("mass of the second planet [Earths]")
-    #~ 
-    #~ pl.plot(m_clo_first, m_clo_second, 'ro', markersize=5, label="closest from CZ")
-    #~ pl.plot(m_first, m_second, 'bo', markersize=5, label="all others")
-    #~ ylims = list(pl.ylim())
-    #~ xlims = list(pl.xlim())
-    #~ limits = [max(xlims[0], ylims[0]), min(xlims[1], ylims[1])]
-    #~ pl.plot(limits, limits, 'k--', label="equal mass")
 
 print("Storing plots")
-for ext in [".png"]:
-  pl.figure(1)
-  pl.legend()
-  pl.savefig(nom_fichier_plot1+ext)
+pl.figure(1)
+pl.legend()
+pl.savefig("%s.%s" % (nom_fichier_plot1,OUTPUT_EXTENSION))
+
+pl.figure(2)
+pl.legend()
+pl.savefig("%s.%s" % (nom_fichier_plot2,OUTPUT_EXTENSION))
+
+pl.figure(3)
+pl.legend()
+pl.savefig("%s.%s" % (nom_fichier_plot3,OUTPUT_EXTENSION))
+
+pl.figure(4)
+pl.legend()
+pl.savefig("%s.%s" % (nom_fichier_plot4,OUTPUT_EXTENSION))
+
+pl.figure(5)
+pl.legend()
+pl.savefig("%s.%s" % (nom_fichier_plot5,OUTPUT_EXTENSION))
+
+pl.figure(6)
+pl.legend()
+pl.savefig("%s.%s" % (nom_fichier_plot6,OUTPUT_EXTENSION))
+
+pl.figure(7)
+ylims = list(pl.ylim())
+xlims = list(pl.xlim([0.6, 1.4]))
+for res in resonances:
+  nb_period = map(float, res.split(":")) # We get the two integers value of the resonance.
+  ratio = nb_period[0] / nb_period[1]
+  pl.plot([ratio, ratio], ylims, 'k--')
+  pl.plot([1./ratio, 1./ratio], ylims, 'k--')
+  pl.text(ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
+  pl.text(1./ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
+pl.legend()
+pl.savefig("%s.%s" % (nom_fichier_plot7,OUTPUT_EXTENSION))
+
+pl.figure(8)
+pl.legend()
+pl.savefig("%s.%s" % (nom_fichier_plot8,OUTPUT_EXTENSION))
   
-  pl.figure(2)
-  pl.legend()
-  pl.savefig(nom_fichier_plot2+ext)
-  
-  pl.figure(3)
-  pl.legend()
-  pl.savefig(nom_fichier_plot3+ext)
-  
-  pl.figure(4)
-  pl.legend()
-  pl.savefig(nom_fichier_plot4+ext)
-  
-  pl.figure(5)
-  pl.legend()
-  pl.savefig(nom_fichier_plot5+ext)
-  
-  pl.figure(6)
-  #~ pl.subplots_adjust(hspace = 0, wspace = 0)
-  pl.legend()
-  pl.savefig(nom_fichier_plot6+ext)
-  
-  pl.figure(7)
-  #~ pl.axis('tight')
-  ylims = list(pl.ylim())
-  xlims = list(pl.xlim([0.6, 1.4]))
-  #~ pl.text(xlims[0], 0.9*ylims[1], " For "+meta_prefix+" planets", horizontalalignment='left', verticalalignment='top', size = 15)
-  for res in resonances:
-    #~ pdb.set_trace()
-    nb_period = map(float, res.split(":")) # We get the two integers value of the resonance.
-    ratio = nb_period[0] / nb_period[1]
-    pl.plot([ratio, ratio], ylims, 'k--')
-    pl.plot([1./ratio, 1./ratio], ylims, 'k--')
-    pl.text(ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
-    pl.text(1./ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
-  pl.legend()
-  pl.savefig(nom_fichier_plot7+".pdf")
-  
-  pl.figure(8)
-  pl.legend()
-  pl.savefig(nom_fichier_plot8+ext)
-  
-  #~ pl.figure(9)
-  #~ pl.legend()
-  #~ pl.savefig(nom_fichier_plot9+ext)
 
 
 pl.show()
 
-# TODO tracer la zone de convergence et les rÃÂÃÂ©sonnances sur les plots
