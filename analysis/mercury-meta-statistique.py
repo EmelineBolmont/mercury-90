@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # v1.0.1.1
-# Pour gÃ©nÃ©rer des histogrammes sur plusieurs simulations afin de 
-# regarder les caractÃ©ristiques statistiques des planÃ¨tes qui restent.
+# Pour gÃÂÃÂ©nÃÂÃÂ©rer des histogrammes sur plusieurs simulations afin de 
+# regarder les caractÃÂÃÂ©ristiques statistiques des planÃÂÃÂ¨tes qui restent.
 
 
 # TODO
-# _ Ã©crire un fichier qui stocke les paramÃ¨tres orbitaux des planÃ¨tes qu'il reste.
-# _ sÃ©lectionner les planÃ¨tes qui sont plus proche qu'une certaine valeur de leur Ã©toile.
+# _ ÃÂÃÂ©crire un fichier qui stocke les paramÃÂÃÂ¨tres orbitaux des planÃÂÃÂ¨tes qu'il reste.
+# _ sÃÂÃÂ©lectionner les planÃÂÃÂ¨tes qui sont plus proche qu'une certaine valeur de leur ÃÂÃÂ©toile.
 
 from math import *
 import pylab as pl
@@ -19,8 +19,6 @@ import numpy as np
 # Mass threshold
 MASS_THRESHOLD = 5 # Earth mass
 
-CONVERGENCE_ZONE = 3. # in AU, the location of the convergence zone (as a reference for plotting period ratios)
-
 DELTA_RATIO = 0.005
 DELTA_M = 0.1
 
@@ -30,7 +28,7 @@ rep_exec = os.getcwd()
 resonances = ["3:2", "4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 
 #######################
-# On prÃ©pare les plots
+# On prÃÂÃÂ©pare les plots
 #######################
 
 # Extensions voulues pour les fichiers de sortie
@@ -46,7 +44,7 @@ dossier_plot = "output"
 dossier_suppr = ["output", "indiv_simu_01"]
 
 #######################
-# On se place dans le dossier de simulation souhaitÃ©
+# On se place dans le dossier de simulation souhaitÃÂÃÂ©
 #######################
 liste_meta_simu = [dir for dir in os.listdir(".") if os.path.isdir(dir)]
 autiwa.suppr_dossier(liste_meta_simu,dossier_suppr)
@@ -93,7 +91,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   meta_prefix = meta_simu # it is thought to have the initial number of planets in here
   
 
-  # On rÃ©cupÃ¨re la liste des sous-dossiers
+  # On rÃÂÃÂ©cupÃÂÃÂ¨re la liste des sous-dossiers
   liste_simu = [dir for dir in os.listdir(".") if os.path.isdir(dir)]
   autiwa.suppr_dossier(liste_simu,dossier_suppr)
   liste_simu.sort()
@@ -103,7 +101,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   
   # We initialize the variables where to store datas
   
-  intial_nb_planets = int(meta_prefix)
+  #intial_nb_planets = int(meta_prefix)
   
   # List of orbital elements of ALL the simulations
   a = [] # in AU
@@ -166,96 +164,98 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
     e.extend(e_system)
     I.extend(I_system)
     m.extend(m_system)
-    
-    m_max = max(m_system)
-    m_relat.extend([min((mi + random.uniform(-0.5,0.5))/m_max,1.) for mi in m_system])
-    
-    ###########
-    # Statistical studies
-    
-    # We search for the closest planet from the convergence zone
-    a_system = np.array(a_system)
-    a_temp = abs(a_system - CONVERGENCE_ZONE)
-    idx_clo = a_temp.argmin()
-    a_ref = a_system[idx_clo]
-    
-    a_clo.append(a_system[idx_clo])
-    e_clo.append(e_system[idx_clo])
-    I_clo.append(I_system[idx_clo])
-    m_clo.append(m_system[idx_clo])
-    
-    
-    
-    # We search for all the previous planets that are in coorbit with the reference one
-    idx_before = idx_clo # 
-    while (idx_before > 0 and (a_system[idx_before-1]/a_ref)**1.5>(1-DELTA_RATIO)):
-      idx_before -= 1
-    
-    # We search for all the outer planets that are in coorbit with the reference one
-    idx_after = idx_clo # 
-    while (idx_after < nb_planets-1 and (a_system[idx_after+1]/a_ref)**1.5<(1+DELTA_RATIO)):
-      idx_after += 1
+   
+    if (nb_planets > 0):
+      m_max = max(m_system)
+      m_relat.extend([min((mi + random.uniform(-0.5,0.5))/m_max,1.) for mi in m_system])
       
-    #~ idx_before:idx_after is the range of the coorbitals of the reference planet
-    
-    if (idx_before > 0):
-      idx_before -= 1
-    
-    if (idx_after < nb_planets-1):
-      idx_after += 1
-    
-    # We search for the two most massives planets of a system
-    tmp = list(m_system)
-    tmp.sort()
-    try:
-      mass_first = tmp[-1]
-      mass_second = tmp[-2]
-      most_massive.append(mass_first)
-      second_massive.append(mass_second)
-      #~ if (abs(mass_first - 16) < DELTA_M):
-        #~ print("meta_simu :"+meta_prefix+"\t simu :"+simu)
-    except:
-      pass
-    
-    #~ idx_before:idx_after is the range of planets between the first non coorbital inner and outer the position of the reference planet (if they exists)
-    
-    period_ratio.extend((a_system[idx_before:idx_clo]/a_ref)**(1.5))# We do not add 1 to the last index to exclude the central planet
-    period_ratio.extend((a_system[idx_clo+1:idx_after+1]/a_ref)**(1.5))# We need to add 1 the the outer index because the last index is excluded
-    
-    
-    i = 0
-    while (i<nb_planets):
-      a_ref = a_system[i]
-      m_ref = m_system[i]
-      i += 1
-      while (i<nb_planets):# We search for all the coorbitals with the current reference planet
-        tmp = (a_system[i] / a_ref)**1.5
-        res = (tmp if tmp > 1 else 1/tmp)
+      ###########
+      # Statistical studies
+      
+      # We search for the closest planet from the convergence zone
+      a_system = np.array(a_system)
+      idx_clo = np.argmax(m_system)
+      a_temp = abs(a_system - a_system[idx_clo])
+      a_ref = a_system[idx_clo]
+      
+      a_clo.append(a_system[idx_clo])
+      e_clo.append(e_system[idx_clo])
+      I_clo.append(I_system[idx_clo])
+      m_clo.append(m_system[idx_clo])
+      
+      
+      
+      # We search for all the previous planets that are in coorbit with the reference one
+      idx_before = idx_clo # 
+      while (idx_before > 0 and (a_system[idx_before-1]/a_ref)**1.5>(1-DELTA_RATIO)):
+        idx_before -= 1
+      
+      # We search for all the outer planets that are in coorbit with the reference one
+      idx_after = idx_clo # 
+      while (idx_after < nb_planets-1 and (a_system[idx_after+1]/a_ref)**1.5<(1+DELTA_RATIO)):
+        idx_after += 1
         
-        if (res<(1+DELTA_RATIO)):
-          if (m_ref>=m_system[i]):
-            m_min = m_system[i]
-            m_max = m_ref
-          else:
-            m_max = m_system[i]
-            m_min = m_ref
+      #~ idx_before:idx_after is the range of the coorbitals of the reference planet
+      
+      if (idx_before > 0):
+        idx_before -= 1
+      
+      if (idx_after < nb_planets-1):
+        idx_after += 1
+      
+      # We search for the two most massives planets of a system
+      tmp = list(m_system)
+      tmp.sort()
+      try:
+        mass_first = tmp[-1]
+        mass_second = tmp[-2]
+        most_massive.append(mass_first)
+        second_massive.append(mass_second)
+        #~ if (abs(mass_first - 16) < DELTA_M):
+          #~ print("meta_simu :"+meta_prefix+"\t simu :"+simu)
+      except:
+        pass
+      
+      #~ idx_before:idx_after is the range of planets between the first non coorbital inner and outer the position of the reference planet (if they exists)
+      
+      period_ratio.extend((a_system[idx_before:idx_clo]/a_ref)**(1.5))# We do not add 1 to the last index to exclude the central planet
+      period_ratio.extend((a_system[idx_clo+1:idx_after+1]/a_ref)**(1.5))# We need to add 1 the the outer index because the last index is excluded
+      
+      
+      i = 0
+      while (i<nb_planets):
+        a_ref = a_system[i]
+        m_ref = m_system[i]
+        i += 1
+        while (i<nb_planets):# We search for all the coorbitals with the current reference planet
+          tmp = (a_system[i] / a_ref)**1.5
+          res = (tmp if tmp > 1 else 1/tmp)
           
-          # We do not store in the same array if the coorbitals are close or not from the convergence zone
-          if (1+abs(1.-a_ref/a_system[idx_clo]) < (1+DELTA_RATIO)):
-            m_clo_first.append(m_max)
-            m_clo_second.append(m_min)
+          if (res<(1+DELTA_RATIO)):
+            if (m_ref>=m_system[i]):
+              m_min = m_system[i]
+              m_max = m_ref
+            else:
+              m_max = m_system[i]
+              m_min = m_ref
             
+            # We do not store in the same array if the coorbitals are close or not from the convergence zone
+            if (1+abs(1.-a_ref/a_system[idx_clo]) < (1+DELTA_RATIO)):
+              m_clo_first.append(m_max)
+              m_clo_second.append(m_min)
+              
+            else:
+              m_first.append(m_max)
+              m_second.append(m_min)
+            i += 1
           else:
-            m_first.append(m_max)
-            m_second.append(m_min)
-          i += 1
-        else:
-          break
-        
+            break
+    else:
+      print("%d planets in %s/%s" % (nb_planets, meta_simu, simu))
   
   
   #######################
-  #   TracÃ© des plots   #
+  #   TracÃÂÃÂ© des plots   #
   #######################
   print("\t Computing Plots")
   os.chdir(rep_exec)
@@ -267,43 +267,43 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   pl.figure(1)
   pl.xlabel(unicode("masse (en mj)",'utf-8'))
   pl.ylabel("density of probability")
-  pl.hist(m_clo, bins=range(25), normed=True, histtype='step', label='nb='+meta_prefix)
+  pl.hist(m_clo, bins=range(25), normed=True, histtype='step', label=meta_prefix)
 
   nom_fichier_plot2 = "e_fct_m"
   #~ m2 = [mi + random.uniform(-0.5,0.5) for mi in m]
   pl.figure(2)
   pl.xlabel("mass [Earths]")
   pl.ylabel("eccentricity")
-  pl.plot(m, e, 'o', markersize=5, label='nb='+meta_prefix)
+  pl.plot(m, e, 'o', markersize=5, label=meta_prefix)
   
   nom_fichier_plot3 = "e_fct_a"
   #~ dist = [ai - CONVERGENCE_ZONE for ai in a]
   pl.figure(3)
   pl.xlabel("distance [AU]")
   pl.ylabel("eccentricity")
-  pl.plot(a, e, 'o', markersize=5, label='nb='+meta_prefix)
+  pl.plot(a, e, 'o', markersize=5, label=meta_prefix)
 
   nom_fichier_plot4 = 'histogrammes_I'
   pl.figure(4)
   pl.xlabel(unicode("I (in degrees)",'utf-8'))
   pl.ylabel("density of probability")
-  pl.hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step', label='nb='+meta_prefix)
+  pl.hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step', label=meta_prefix)
   
   nom_fichier_plot5 = 'histogrammes_nb_pl'
   pl.figure(5)
   pl.xlabel(unicode("nb_final",'utf-8'))
   pl.ylabel("density of probability")
-  pl.hist(final_nb_planets, bins=range(25), histtype='step', label='nb='+meta_prefix)
+  pl.hist(final_nb_planets, bins=range(25), histtype='step', label=meta_prefix)
   
   
   nom_fichier_plot6 = "m_fct_a"
-  m2 = [mi + random.uniform(-0.5,0.5) for mi in m]
+  #m2 = [mi + random.uniform(-0.5,0.5) for mi in m]
   pl.figure(6)
-  subplot_index += 1
-  pl.subplot(subplot_index)
+  #subplot_index += 1
+  #pl.subplot(subplot_index)
   pl.xlabel(unicode("a [AU]",'utf-8'))
   pl.ylabel("mass [Earths]")
-  pl.plot(a, m2, 'o', markersize=2, color=colors[meta_index], label='nb='+meta_prefix)
+  pl.semilogx(a, m, 'o', markersize=3, color=colors[meta_index], label=meta_prefix)
   #~ pl.ylim(0, 12)
   #~ pl.xlim(1, 10)
   pl.legend()
@@ -315,7 +315,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   pl.xlabel("Period ratio relative to the closest planet of the system from the convergence zone")
   pl.ylabel("density of probability")
   
-  pl.hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step', label='nb='+meta_prefix)
+  pl.hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step', label=meta_prefix)
   
   nom_fichier_plot8 = "most_massives"
   most_massive = [mi + random.uniform(-0.5, 0.5) for mi in most_massive]
@@ -325,7 +325,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   #~ pl.clf()
   pl.xlabel("most massive [Earths]")
   pl.ylabel("second most massive [Earths]")
-  pl.plot(most_massive, second_massive, 'o', markersize=5, label='nb='+meta_prefix)
+  pl.plot(most_massive, second_massive, 'o', markersize=5, label=meta_prefix)
   
   #~ pl.figure(9)
   #~ if (meta_prefix == '50'):
@@ -344,20 +344,6 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
     #~ xlims = list(pl.xlim())
     #~ limits = [max(xlims[0], ylims[0]), min(xlims[1], ylims[1])]
     #~ pl.plot(limits, limits, 'k--', label="equal mass")
-
-fig = pl.figure(6)
-ax1 = fig.add_subplot(221)
-#~ ax1.set_xticklabels([])
-
-ax1 = fig.add_subplot(222)
-#~ ax1.set_xticklabels([])
-#~ ax1.set_yticklabels([])
-
-ax1 = fig.add_subplot(223)
-
-
-ax1 = fig.add_subplot(224)
-#~ ax1.set_yticklabels([])
 
 print("Storing plots")
 for ext in [".png"]:
@@ -413,4 +399,4 @@ for ext in [".png"]:
 
 pl.show()
 
-# TODO tracer la zone de convergence et les rÃ©sonnances sur les plots
+# TODO tracer la zone de convergence et les rÃÂÃÂ©sonnances sur les plots
