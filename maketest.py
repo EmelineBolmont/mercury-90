@@ -12,6 +12,7 @@ import sys # to be able to retrieve arguments of the script
 
 filename = "test_disk.f90"
 force = False # To force the compilation of every module
+isOptimize = False
 
 isProblem = False
 problem_message = "Given in parameters is the name of the source code you want to compile." + "\n" + \
@@ -19,6 +20,7 @@ problem_message = "Given in parameters is the name of the source code you want t
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * force : To force the compilation of every module even those not modified" + "\n" + \
+" * no_debug : will skip all debug options and use optimisation options instead" + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
 " * name : (default='%s')The filename of the sourcecode you want to compile" % filename + "\n" + \
 "Example :" + "\n" + \
@@ -32,6 +34,8 @@ for arg in sys.argv[1:]:
     key = arg
   if (key == 'help'):
     isProblem = True
+  elif (key == 'no_debug'):
+    isOptimize = True
   elif (key == 'force'):
     force = True
   elif (key == 'name'):
@@ -50,9 +54,13 @@ if force:
 
 sourceFile.setCompilator("gfortran")
 
-sourceFile.setCompilingOptions("")
-
 sources_filename = lister("*.f90")
-
-# We create the binaries
-make_binaries(sources_filename, [filename], debug=True, gdb=False, profiling=False)
+if isOptimize:
+  sourceFile.setCompilingOptions("-O3 -march=native -pipe -finit-real=nan")
+  # We create the binaries
+  make_binaries(sources_filename, [filename], debug=False, gdb=False, profiling=False)
+else:  
+  sourceFile.setCompilingOptions("")
+  
+  # We create the binaries
+  make_binaries(sources_filename, [filename], debug=True, gdb=False, profiling=False)
