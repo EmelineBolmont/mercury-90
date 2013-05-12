@@ -1058,6 +1058,12 @@ subroutine init_globals(stellar_mass, time)
       
     end if
     
+    if (ADIABATIC_INDEX.eq.1.d0) then
+      write (error_unit,*) 'The adiabatic Index must not be equal to 1, because&
+                           & in the calculation of chi, this leads to chi=0 all the time'
+      call exit(13)
+    end if
+    
     ! we get the temperature profile, but we need the surface density profile before.
     call calculate_temperature_profile() ! WARNING : SCALEHEIGHT_PREFACTOR must exist before the temperature profile is computed !
     
