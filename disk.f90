@@ -777,6 +777,8 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   
   Q_gamma = Q_p * ADIABATIC_INDEX
   
+  ! gamma_eff can cause a lot of floating point exceptions and NaN. If the adiabatic index is far from 1.4, this can be the cause. 
+  ! In particular, if gamma=2, then Q_p must be greater than 0.5, else, one make the sqrt of a negative number, causing a NaN
   gamma_eff = 2.d0 * Q_gamma / (Q_gamma + 0.5d0 * &
   sqrt(2.d0 * (sqrt((Q_gamma * Q_gamma + 1.d0)**2 - 16.d0 * Q_p * (Q_gamma - Q_p)) &
   + Q_gamma * Q_gamma - 1.d0)))
