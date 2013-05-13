@@ -36,14 +36,6 @@ program torque_diagram
     stellar_mass = 1.d0 * K2 ! [Msun * K2]
     
     
-    
-    inquire(file='unitary_tests', exist=isDefined)
-    
-    ! We create the folder 'dissipation' if he doesn't exists.
-    if (.not.isDefined) then
-      call system("mkdir unitary_tests")
-    end if
-    
     inquire(file='disk.out', exist=isDefined)
     
     ! This file is used to say if we continue an integration or not. For test_disk, 
@@ -90,7 +82,7 @@ program torque_diagram
     real(double_precision) :: a_step
     real(double_precision), dimension(nb_points) :: a
     
-    real(double_precision), dimension(nb_points, nb_mass) :: total_torque, total_torque_units
+    real(double_precision), dimension(nb_points, nb_mass) :: total_torque
     
     real(double_precision) :: corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
@@ -98,14 +90,12 @@ program torque_diagram
     type(PlanetProperties) :: p_prop
     
     integer :: i,j ! for loops
-    integer :: deltai, deltaj ! separation between to outputs for the vector part of the display (we do not want a lot of points)
-    real(double_precision) :: vector_limit ! The size limit of the vectors, to prevent chevauching.
     
     !------------------------------------------------------------------------------
-    a_min = INNER_BOUNDARY_RADIUS + INNER_SMOOTHING_WIDTH
-    a_max = 20.d0
-    a_step = (a_max - a_min) / (nb_points-1.d0)
-!~     a_step = (a_max / a_min)**(1 / (nb_points - 1.d0))
+    a_min = INNER_BOUNDARY_RADIUS
+    a_max = OUTER_BOUNDARY_RADIUS
+!~     a_step = (a_max - a_min) / (nb_points-1.d0)
+    a_step = (a_max / a_min)**(1 / (nb_points - 1.d0))
     
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total, lindblad and corotation torques depending on the planet mass and distance'
@@ -113,23 +103,14 @@ program torque_diagram
     position(1:3) = 0.d0
     velocity(1:3) = 0.d0
     
-    ! We want to have only 10 points both in x and y for vector outputs
-    deltai = nb_points / 15
-    deltaj = nb_mass / 10
-    
-    vector_limit = a_step * (deltai - 1)
-    
     ! We open the file where we want to write the outputs
     open(11, file='total_torque.dat')
-    open(15, file='vector_total_torque.dat')
     
     write(11,*) '# semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
-    write(15,*) '# semi major axis (AU) ; mass in earth mass ; Delta x ; Delta y'
-    
     
     do i=1, nb_points ! loop on the position
-      a(i) = a_min + a_step * (i-1)
-!~       a(i) = a_min * a_step**(i - 1)
+!~       a(i) = a_min + a_step * (i-1)
+      a(i) = a_min * a_step**(i - 1)
       
       ! We generate cartesian coordinate for the given semi major axis
       position(1) = a(i)
@@ -158,30 +139,22 @@ program torque_diagram
         call get_torques(stellar_mass, mass(j), p_prop, & ! input
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
         
-        total_torque(i,j) = lindblad_torque + corotation_torque
-        total_torque_units(i,j) = torque_ref * total_torque(i,j)
-        
+        total_torque(i,j) = lindblad_torque + corotation_torque        
                 
         write(11,*) a(i), mass(j) / (EARTH_MASS*K2), total_torque(i,j)
-        
-        if ((modulo(i-int(deltai/2.),deltai).eq.0).and.(modulo(j-int(deltaj/2.),deltaj).eq.0)) then
-          write(15,*) a(i), mass(j) / (EARTH_MASS*K2), 0, &
-                      sign(min(sqrt(abs(total_torque(i,j))),vector_limit), total_torque(i,j)), 0, 0
-        end if
         
       end do
       
       write(11,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
     end do
     close(11)
-    close(15)
     
     
     ! We want to get the contour for the torque equal to 0 for total torque both in physical dimension of units of gamma_0
     mass(1:nb_mass) = mass(1:nb_mass) / (EARTH_MASS*K2)
     call get_contour(total_torque, a, mass,'contour_total_torque.dat', 0.d0) ! This line opens a file (unit=10), thus this unit must not be used at that time
     
-    open(11, file="unitary_tests/total_torque.gnuplot")
+    open(11, file="total_torque.gnuplot")
 
     write(11,*) "set terminal pngcairo crop enhanced size 1200, 1000 font ',20'"
     
@@ -201,8 +174,7 @@ program torque_diagram
 
     
     write(11,*) "splot 'total_torque.dat' with pm3d notitle, \"
-    write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle, \"
-    write(11,*) "      'vector_total_torque.dat' with vector notitle head filled linestyle -1"
+    write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
     
     
     

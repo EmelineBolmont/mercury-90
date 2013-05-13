@@ -16,12 +16,19 @@ from simu_constantes import *
 import random
 import numpy as np
 import sys
+import shutil
 
 DELTA_RATIO = 0.005
 DELTA_M = 0.1
 
 PREFIX = "simu" # the prefix for the directories we want to take into the statistic.
 t_max = None # the integration time of the simulations. Assumed to be the final time of the first simulation read
+
+isDisk = True
+
+# We get the path toward the binaries
+scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
+binaryPath = os.path.join(scriptFolder, os.path.pardir)
 
 #######################
 # On prépare le fichier log
@@ -96,9 +103,49 @@ liste_simu = [dir for dir in os.listdir(".") if (os.path.isdir(dir) and dir.star
 autiwa.suppr_dossier(liste_simu,dossier_suppr)
 liste_simu.sort()
 
-
 nb_simu = len(liste_simu)
 
+# If there is a disk, we get the torque diagram
+if isDisk:
+  shutil.copy2("%s/disk.in" % liste_simu[0], ".")
+  shutil.copy2("%s/param.in" % liste_simu[0], ".")
+  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "torque_diagram"))
+  if (returncode != 0):
+    print(process_stdout)
+    print(process_stderr)
+    print("Process terminated with error %d" % returncode)
+    pdb.set_trace()
+    
+  
+  # We read the contour of the zero torque zones
+  contour_filename = "contour_total_torque.dat"
+  
+  contours_a = [[]]
+  contours_m = [[]]
+  contours_aapp = contours_a[-1].append
+  contours_mapp = contours_m[-1].append
+
+  contour_file = open(contour_filename, 'r')
+  for line in contour_file:
+    if (line == ' \n'):
+      contours_a.append([])
+      contours_m.append([])
+      contours_aapp = contours_a[-1].append
+      contours_mapp = contours_m[-1].append
+    else:
+      (a, m, dummy) = line.split()
+      contours_aapp(float(a))
+      contours_mapp(float(m))
+  
+  # We delete all the empty arrays created in the list of contours (one between each contour)
+  while True:
+    try:
+      contours_a.remove([])
+      contours_m.remove([])
+    except:
+      break
+  
+      
 # We initialize the variables where to store datas
 
 # List of orbital elements of ALL the simulations
@@ -207,18 +254,14 @@ for simu in liste_simu:
     I_clo.append(I_system[idx_clo])
     m_clo.append(m_system[idx_clo])
   
-  
-    #~ # We delete the element corresponding to the reference. Hence, each planet at '1' will be a coorbital
-    #~ a_system = np.delete(a_system, idx_clo)
-    #~ period_ratio.extend((a_system / a_ref)**(1.5))
     
     # We search for all the previous planets that are in coorbit with the reference one
-    idx_before = idx_clo # 
+    idx_before = idx_clo
     while (idx_before > 0 and (a_system[idx_before-1]/a_ref)**1.5>(1-DELTA_RATIO)):
       idx_before -= 1
     
     # We search for all the outer planets that are in coorbit with the reference one
-    idx_after = idx_clo # 
+    idx_after = idx_clo
     while (idx_after < nb_planets-1 and (a_system[idx_after+1]/a_ref)**1.5<(1+DELTA_RATIO)):
       idx_after += 1
       
@@ -229,6 +272,11 @@ for simu in liste_simu:
     
     if (idx_after < nb_planets-1):
       idx_after += 1
+    
+    # idx_before:idx_after is the range of planets between the first non coorbital inner 
+    # and outer the position of the reference planet (if they exists)
+    period_ratio.extend((a_system[idx_before:idx_clo]/a_ref)**(1.5))# We do not add 1 to the last index to exclude the central planet
+    period_ratio.extend((a_system[idx_clo+1:idx_after+1]/a_ref)**(1.5))# We need to add 1 the the outer index because the last index is excluded
     
     # We search for the two most massives planets of a system
     tmp = list(m_system)
@@ -244,13 +292,6 @@ for simu in liste_simu:
       #~ print("max eccentricity :",max(e_system),simu)
   else:
     print("in %s there is only %i planet left" % (simu, final_nb_planets[-1]))
-  
-  #~ idx_before:idx_after is the range of planets between the first non coorbital inner and outer the position of the reference planet (if they exists)
-  
-  period_ratio.extend((a_system[idx_before:idx_clo]/a_ref)**(1.5))# We do not add 1 to the last index to exclude the central planet
-  period_ratio.extend((a_system[idx_clo+1:idx_after+1]/a_ref)**(1.5))# We need to add 1 the the outer index because the last index is excluded
-  
-  
   
   i = 0
   while (i<nb_planets):
@@ -301,11 +342,10 @@ pl.xlabel(unicode("masse (en mj)",'utf-8'))
 pl.ylabel("density of probability")
 pl.hist(m_clo, bins=range(25), normed=True, histtype='step')
 
-m2 = [mi + random.uniform(-0.5,0.5) for mi in m]
 pl.subplot(232)
 pl.xlabel("mass (in earth mass)")
 pl.ylabel("eccentricity")
-pl.plot(m2, e, 'o', markersize=5)
+pl.plot(m, e, 'o', markersize=5)
 
 pl.subplot(233)
 pl.xlabel("distance (in AU)")
@@ -323,11 +363,14 @@ pl.ylabel("density of probability")
 pl.hist(final_nb_planets, bins=range(25), histtype='step')
 
 nom_fichier_plot2 = "m_fct_a"
-m2 = [mi + random.uniform(-0.5,0.5) for mi in m]
+#~ m2 = [mi + random.uniform(-0.5,0.5) for mi in m]
 pl.figure(2)
 pl.xlabel(unicode("a (in AU)",'utf-8'))
 pl.ylabel("mass (in m_earth)")
-pl.plot(a, m2, 'o', markersize=5)
+pl.grid()
+pl.semilogx(a, m, 'o', markersize=5)
+for (c_a, c_m) in zip(contours_a, contours_m):
+  pl.semilogx(c_a, c_m, color="#000000")
 
 
 nom_fichier_plot3 = "histogrammes_res"
@@ -359,7 +402,7 @@ pl.title("Mass of the coorbital planets")
 pl.xlabel("mass of the first planet (m_earth)")
 pl.ylabel("mass of the second planet (m_earth)")
 
-pl.plot(m_clo_first, m_clo_second, 'ro', markersize=5, label="closest from CZ")
+pl.plot(m_clo_first, m_clo_second, 'ro', markersize=5, label="closest from biggest")
 pl.plot(m_first, m_second, 'bo', markersize=5, label="all others")
 ylims = list(pl.ylim())
 xlims = list(pl.xlim())
