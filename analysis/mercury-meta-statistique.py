@@ -280,7 +280,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
 
   nom_fichier_plot1 = "histogrammes_m"
   pl.figure(1)
-  pl.xlabel(unicode("masse (en mj)",'utf-8'))
+  pl.xlabel("mass [Earths]")
   pl.ylabel("density of probability")
   pl.hist(m_clo, bins=range(25), normed=True, histtype='step', label=meta_prefix)
 
@@ -298,13 +298,13 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
 
   nom_fichier_plot4 = 'histogrammes_I'
   pl.figure(4)
-  pl.xlabel(unicode("I (in degrees)",'utf-8'))
+  pl.xlabel("I (in degrees)")
   pl.ylabel("density of probability")
   pl.hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step', label=meta_prefix)
   
   nom_fichier_plot5 = 'histogrammes_nb_pl'
   pl.figure(5)
-  pl.xlabel(unicode("nb_final",'utf-8'))
+  pl.xlabel("Final Number of planets")
   pl.ylabel("density of probability")
   pl.hist(final_nb_planets, bins=range(25), histtype='step', label=meta_prefix)
   
@@ -313,13 +313,13 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   pl.figure(6)
   pl.xlabel("a [AU]")
   pl.ylabel("mass [Earths]")
-  pl.semilogx(a, m, 'o', markersize=3, color=colors[meta_index], label=meta_prefix)
+  pl.semilogx(a, m, 'o', markersize=5, color=colors[meta_index], label=meta_prefix)
   pl.legend()
   
   
   nom_fichier_plot7 = "histogrammes_res"
   pl.figure(7)
-  pl.xlabel("Period ratio relative to the closest planet of the system from the convergence zone")
+  pl.xlabel("Period ratio relative to the most massive planet")
   pl.ylabel("density of probability")
   
   pl.hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step', label=meta_prefix)
