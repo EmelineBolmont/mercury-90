@@ -14,10 +14,15 @@ from fractions import Fraction
 import pylab as pl
 import autiwa
 import sys # to get access to arguments of the script
+import shutil, os
 
 ################
 ## Parameters ##
 ################
+# We get the path toward the binaries
+scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
+binaryPath = os.path.join(scriptFolder, os.path.pardir)
+
 NOM_FICHIER_PLOT = "system_resonances"
 OUTPUT_EXTENSION = "pdf"
 
@@ -85,11 +90,11 @@ def plot_res():
 
 #~ pdb.set_trace()
 isProblem = False
+isDisk = True
 problem_message = "AIM : Display in a m = f(a) diagram, all the planets of the current mercury simulation" + "\n" + \
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * cz=1 (The position of a convergence zone in AU)" + "\n" + \
-"   cz=[[1,60],[4,30]] (the list of mass (earth mass) and zero torque position (in AU) successively)" + "\n" + \
+" * nodisk to avoid torque diagram display" + "\n" + \
 " * ext=png (The extension for the output files)" + "\n" + \
 " * help : display this current message"
 
@@ -100,8 +105,8 @@ for arg in sys.argv[1:]:
     key = arg
   if (key == 'ext'):
     OUTPUT_EXTENSION = value
-  elif (key == 'cz'):
-    CZ = eval(value)
+  elif (key == 'nodisk'):
+    isDisk = False
   elif (key == 'help'):
     print(problem_message)
     exit()
@@ -111,6 +116,43 @@ for arg in sys.argv[1:]:
 
 if isProblem:
   print(problem_message)
+
+if isDisk:
+  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "torque_diagram"))
+  if (returncode != 0):
+    print(process_stdout)
+    print(process_stderr)
+    print("Process terminated with error %d" % returncode)
+    pdb.set_trace()
+    
+  
+  # We read the contour of the zero torque zones
+  contour_filename = "contour_total_torque.dat"
+  
+  contours_a = [[]]
+  contours_m = [[]]
+  contours_aapp = contours_a[-1].append
+  contours_mapp = contours_m[-1].append
+
+  contour_file = open(contour_filename, 'r')
+  for line in contour_file:
+    if (line == ' \n'):
+      contours_a.append([])
+      contours_m.append([])
+      contours_aapp = contours_a[-1].append
+      contours_mapp = contours_m[-1].append
+    else:
+      (a, m, dummy) = line.split()
+      contours_aapp(float(a))
+      contours_mapp(float(m))
+  
+  # We delete all the empty arrays created in the list of contours (one between each contour)
+  while True:
+    try:
+      contours_a.remove([])
+      contours_m.remove([])
+    except:
+      break
 
 uncertainty = 0.01 * float(UNCERTAINTY)
 
@@ -354,12 +396,10 @@ for planet in range(nb_planets):
 ylims = list(pl.ylim())
 xlims = list(pl.xlim())
 
-# We display the convergence zone
-if (vars().has_key('CZ')):
-  if (type(CZ) == list):
-    pl.plot(CZ[1], CZ[0], '-.', color="#000000")
-  elif (type(CZ) in [float, int]):
-    pl.plot([CZ, CZ], ylims, '-.', color="#000000")
+if isDisk:
+  pl.plot(contours_a[0], contours_m[0], color="#ff0000", label="Zero torque zone")
+  for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
+    pl.plot(c_a, c_m, color="#ff0000")
 
 for planet in range(0, nb_planets-1):
   x_position = (a[planet] + a[planet+1]) / 2.
@@ -372,7 +412,7 @@ for planet in range(0, nb_planets-1):
     if (longitude_res[planet]):
       res += "*"
     
-    pl.plot([a[planet], a[planet+1]], [mass[planet], mass[planet+1]], 'k-')
+    pl.plot([a[planet], a[planet+1]], [mass[planet], mass[planet+1]], 'k:')
     pl.plot([x_position, x_position], [y_position, ylims[1]], 'k:')
     pl.text(x_position, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=8)
   
@@ -386,6 +426,7 @@ for planet in range(0, nb_planets-1):
 #~ pl.ylim(-1, 1)
 pl.xlabel("a [AU]")
 pl.ylabel("mass [Earths]")
+pl.legend()
 pl.savefig(NOM_FICHIER_PLOT+'.'+OUTPUT_EXTENSION, format=OUTPUT_EXTENSION)
 
 pl.show()
