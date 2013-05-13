@@ -230,8 +230,8 @@ for simu in liste_simu:
       #~ print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
     #~ if (ai>2.5) and (mi > 10.):
       #~ print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
-    #~ if (a_system[-1]> 20.):
-      #~ print("in "+simu+" "+datas[0]+" has a="+datas[1])
+    #~ if (ai > 1.3):
+      #~ print("in %s %s has a=%f and m=%f mt" % (simu, datas[0], ai, mi))
   
   # We add all the elements of the system into the list of values corresponding to all the simulations
   a.extend(a_system)

@@ -156,9 +156,7 @@ program torque_diagram
     
     open(11, file="total_torque.gnuplot")
 
-    write(11,*) "set terminal pngcairo crop enhanced size 1200, 1000 font ',20'"
-    
-    write(11,*) "set output 'total_torque.png'"
+    write(11,*) "set terminal wxt enhanced"
 
     write(11,*) 'set xlabel "semi major axis (AU)"'
     write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
@@ -175,7 +173,7 @@ program torque_diagram
     
     write(11,*) "splot 'total_torque.dat' with pm3d notitle, \"
     write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
-    
+    write(11,*) "pause -1"
     
     
     close(11)
