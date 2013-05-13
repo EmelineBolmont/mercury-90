@@ -369,8 +369,9 @@ pl.xlabel(unicode("a (in AU)",'utf-8'))
 pl.ylabel("mass (in m_earth)")
 pl.grid()
 pl.semilogx(a, m, 'o', markersize=5)
-for (c_a, c_m) in zip(contours_a, contours_m):
-  pl.semilogx(c_a, c_m, color="#000000")
+if isDisk:
+  for (c_a, c_m) in zip(contours_a, contours_m):
+    pl.semilogx(c_a, c_m, color="#000000")
 
 
 nom_fichier_plot3 = "histogrammes_res"
