@@ -242,7 +242,7 @@ e_parameters = (1e-3, 1e-5, "uniform") # the eccentricity
 
 I_parameters = (-1, 1, "uniform") # The inclination (in degrees)
 
-radius_star = 0.05 # The radius of the central star in AU
+radius_star = 0.005 # The radius of the central star in AU
 
 ##----------------------------------
 ## Parameters for the disk
