@@ -10,7 +10,8 @@
 # _ sélectionner les planètes qui sont plus proche qu'une certaine valeur de leur étoile.
 
 from math import *
-import pylab as pl
+#~ import pylab as pl
+import matplotlib.pyplot  as pl
 import os, pdb, autiwa
 from simu_constantes import *
 import random
@@ -74,6 +75,7 @@ isLog = False # We set the false option before. Because if not, we will erase th
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
+" * nodisk to avoid torque diagram display" + "\n" + \
 " * help (display a little help message on HOW to use various options" + "\n" + \
 " * ext=pdf (The extension for the output files)"
 
@@ -85,6 +87,8 @@ for arg in sys.argv[1:]:
     key = arg
   if (key == 'ext'):
     OUTPUT_EXTENSION = value
+  elif (key == 'nodisk'):
+    isDisk = False
   elif (key == 'help'):
     isProblem = True
   else:
@@ -99,7 +103,7 @@ if isProblem:
 # We go in each sub folder of the current working directory
 
 # On récupère la liste des sous-dossiers
-liste_simu = [dir for dir in os.listdir(".") if (os.path.isdir(dir) and dir.startswith(PREFIX))]
+liste_simu = [dir for dir in os.listdir(".") if os.path.isdir(dir)]
 autiwa.suppr_dossier(liste_simu,dossier_suppr)
 liste_simu.sort()
 
@@ -325,7 +329,9 @@ for simu in liste_simu:
   ##########
 print("less massive in the list of most massive : %f" % min(most_massive))
 print("most massive planet formed in all simulations : %f" % max(most_massive))
-
+a = np.array(a)
+orbital_period = 365.25 * a**1.5 # in days
+#~ pdb.set_trace()
 #######################
 #   Tracé des plots   #
 #######################
@@ -336,37 +342,47 @@ nb_bins = 50
 nom_fichier_plot = [] # list of names for each plot
 
 nom_fichier_plot1 = "miscellaneous"
-pl.figure(1)
-pl.subplot(231)
-pl.xlabel(unicode("masse (en mj)",'utf-8'))
-pl.ylabel("density of probability")
+multiplot = pl.figure(1)
+multiplot.add_subplot(2,3,1)
+pl.xlabel("mass [Earths]")
+pl.ylabel("Distribution")
 pl.hist(m_clo, bins=range(25), normed=True, histtype='step')
 
-pl.subplot(232)
-pl.xlabel("mass (in earth mass)")
+multiplot.add_subplot(232)
+pl.xlabel("mass [Earths]")
 pl.ylabel("eccentricity")
 pl.plot(m, e, 'o', markersize=5)
 
-pl.subplot(233)
+multiplot.add_subplot(233)
 pl.xlabel("distance (in AU)")
 pl.ylabel("eccentricity")
 pl.plot(a, e, 'o', markersize=5)
 
-pl.subplot(234)
-pl.xlabel(unicode("I (in degrees)",'utf-8'))
-pl.ylabel("density of probability")
+multiplot.add_subplot(234)
+pl.xlabel("I (in degrees)")
+pl.ylabel("Distribution")
 pl.hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step')
 
-pl.subplot(235)
-pl.xlabel(unicode("nb_final",'utf-8'))
-pl.ylabel("density of probability")
+multiplot.add_subplot(235)
+pl.xlabel("nb_final")
+pl.ylabel("Distribution")
 pl.hist(final_nb_planets, bins=range(25), histtype='step')
+
+plot_OP = multiplot.add_subplot(236)
+plot_OP.set_xlabel("Orbital Distance [AU]")
+plot_OP.set_ylabel("Distribution")
+a_max = a.max()
+a_min = a.min()
+plot_OP.set_xscale("log")
+plot_OP.hist(a, bins=np.logspace(log10(a_min), log10(a_max), 100))
+#~ pdb.set_trace()
+
 
 nom_fichier_plot2 = "m_fct_a"
 #~ m2 = [mi + random.uniform(-0.5,0.5) for mi in m]
 pl.figure(2)
 pl.xlabel(unicode("a (in AU)",'utf-8'))
-pl.ylabel("mass (in m_earth)")
+pl.ylabel("mass [Earths]")
 pl.grid()
 pl.semilogx(a, m, 'o', markersize=5)
 if isDisk:
@@ -378,7 +394,7 @@ nom_fichier_plot3 = "histogrammes_res"
 pl.figure(3)
 #~ pl.clf()
 pl.xlabel("Period ratio relative to the most massive planet")
-pl.ylabel("density of probability")
+pl.ylabel("Distribution")
 
 pl.hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step')
 
@@ -388,8 +404,8 @@ nom_fichier_plot4 = "most_massives"
 
 pl.figure(4)
 #~ pl.clf()
-pl.xlabel("most massive (m_earth)")
-pl.ylabel("second most massive (m_earth)")
+pl.xlabel("most massive [Earths]")
+pl.ylabel("second most massive [Earths]")
 pl.plot(most_massive, second_massive, 'o', markersize=5)
 
 

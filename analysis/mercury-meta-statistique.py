@@ -5,7 +5,7 @@
 # The name of the meta-simulation will be assumed to be the name of the folder.
 
 from math import *
-import pylab as pl
+import matplotlib.pyplot as pl
 import os, pdb, autiwa
 import sys # To handle options of the script, for instance
 from simu_constantes import *
@@ -29,6 +29,66 @@ resonances = ["3:2", "4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 
 # Extensions voulues pour les fichiers de sortie
 OUTPUT_EXTENSION = 'png' # default value in bitmap, because vectoriel can take time and space if there is a lot of data
+
+nom_fichier_plot = [] # list of names for each plot
+figures = [] # list of figures
+plots = [] # list of plots (the axes of the fig objects, assuming there is no subplots in there)
+
+nom_fichier_plot.append("histogrammes_m")
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_xlabel("mass [Earths]")
+fig.set_ylabel("density of probability")
+
+nom_fichier_plot.append("e_fct_m")
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_xlabel("mass [Earths]")
+fig.set_ylabel("eccentricity")
+
+nom_fichier_plot.append("e_fct_a")
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_xlabel("distance [AU]")
+fig.set_ylabel("eccentricity")
+
+nom_fichier_plot.append('histogrammes_I')
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_xlabel("I (in degrees)")
+fig.set_ylabel("density of probability")
+
+nom_fichier_plot.append('histogrammes_nb_pl')
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_xlabel("Final Number of planets")
+fig.set_ylabel("density of probability")
+
+nom_fichier_plot.append("m_fct_a")
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_xlabel("a [AU]")
+fig.set_ylabel("mass [Earths]")
+
+nom_fichier_plot.append("histogrammes_res")
+figures.append(pl.figure())
+hist_res = figures[-1].add_subplot(1, 1, 1)
+plots.append(hist_res)
+hist_res.set_xlabel("Period ratio relative to the most massive planet")
+hist_res.set_ylabel("density of probability")
+
+nom_fichier_plot.append("most_massives")
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_xlabel("most massive [Earths]")
+fig.set_ylabel("second most massive [Earths]")
 
 #######################
 # We prepare the various folders we we will read the simulations
@@ -99,7 +159,6 @@ if isProblem:
   print(problem_message)
   exit()
 
-
 # We go in each sub folder of the current working directory
 for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   print("Traitement de %s"%meta_simu)
@@ -145,8 +204,16 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   
   final_nb_planets = [] # the final number of planets in the system
   
-  print("\t Reading datas")
+  #~ dataFile = open("element.out", 'w')
+  #~ dataFile.write("""
+  #~ Time (years):   10000000.0001293
+#~ 
+              #~ a        e       i      mass    Rot/day  Obl
+#~ 
+  #~ """)
+  #~ dataFile.close()
   
+  print("\t Reading datas")
   for simu in liste_simu:
     os.chdir(os.path.join(rep_exec, meta_simu, simu))
     dataFile = open("element.out", 'r')
@@ -179,6 +246,10 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
     e.extend(e_system)
     I.extend(I_system)
     m.extend(m_system)
+    
+    #~ dataFile = open("../element.out", 'a')
+    #~ dataFile.write("".join(lines))
+    #~ dataFile.close()
    
     if (nb_planets > 0):
       m_max = max(m_system)
@@ -275,106 +346,39 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   print("\t Computing Plots")
   os.chdir(rep_exec)
   nb_bins = 50
-  
-  nom_fichier_plot = [] # list of names for each plot
 
-  nom_fichier_plot1 = "histogrammes_m"
-  pl.figure(1)
-  pl.xlabel("mass [Earths]")
-  pl.ylabel("density of probability")
-  pl.hist(m_clo, bins=range(25), normed=True, histtype='step', label=meta_prefix)
+  plots[0].hist(m_clo, bins=range(25), normed=True, histtype='step', label=meta_prefix)
 
-  nom_fichier_plot2 = "e_fct_m"
-  pl.figure(2)
-  pl.xlabel("mass [Earths]")
-  pl.ylabel("eccentricity")
-  pl.plot(m, e, 'o', markersize=5, label=meta_prefix)
+  plots[1].plot(m, e, 'o', markersize=5, label=meta_prefix)
   
-  nom_fichier_plot3 = "e_fct_a"
-  pl.figure(3)
-  pl.xlabel("distance [AU]")
-  pl.ylabel("eccentricity")
-  pl.plot(a, e, 'o', markersize=5, label=meta_prefix)
+  plots[2].plot(a, e, 'o', markersize=5, label=meta_prefix)
 
-  nom_fichier_plot4 = 'histogrammes_I'
-  pl.figure(4)
-  pl.xlabel("I (in degrees)")
-  pl.ylabel("density of probability")
-  pl.hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step', label=meta_prefix)
+  plots[3].hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step', label=meta_prefix)
   
-  nom_fichier_plot5 = 'histogrammes_nb_pl'
-  pl.figure(5)
-  pl.xlabel("Final Number of planets")
-  pl.ylabel("density of probability")
-  pl.hist(final_nb_planets, bins=range(25), histtype='step', label=meta_prefix)
+  plots[4].hist(final_nb_planets, bins=range(25), histtype='step', label=meta_prefix)
   
+  plots[5].semilogx(a, m, 'o', markersize=5, color=colors[meta_index], label=meta_prefix)
   
-  nom_fichier_plot6 = "m_fct_a"
-  pl.figure(6)
-  pl.xlabel("a [AU]")
-  pl.ylabel("mass [Earths]")
-  pl.semilogx(a, m, 'o', markersize=5, color=colors[meta_index], label=meta_prefix)
-  pl.legend()
+  plots[6].hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step', label=meta_prefix)
   
-  
-  nom_fichier_plot7 = "histogrammes_res"
-  pl.figure(7)
-  pl.xlabel("Period ratio relative to the most massive planet")
-  pl.ylabel("density of probability")
-  
-  pl.hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step', label=meta_prefix)
-  
-  nom_fichier_plot8 = "most_massives"
-  most_massive = [mi + random.uniform(-0.5, 0.5) for mi in most_massive]
-  second_massive = [mi + random.uniform(-0.5, 0.5) for mi in second_massive]
-  
-  pl.figure(8)
-  pl.xlabel("most massive [Earths]")
-  pl.ylabel("second most massive [Earths]")
-  pl.plot(most_massive, second_massive, 'o', markersize=5, label=meta_prefix)
+  plots[7].plot(most_massive, second_massive, 'o', markersize=5, label=meta_prefix)
   
 
-print("Storing plots")
-pl.figure(1)
-pl.legend()
-pl.savefig("%s.%s" % (nom_fichier_plot1,OUTPUT_EXTENSION))
-
-pl.figure(2)
-pl.legend()
-pl.savefig("%s.%s" % (nom_fichier_plot2,OUTPUT_EXTENSION))
-
-pl.figure(3)
-pl.legend()
-pl.savefig("%s.%s" % (nom_fichier_plot3,OUTPUT_EXTENSION))
-
-pl.figure(4)
-pl.legend()
-pl.savefig("%s.%s" % (nom_fichier_plot4,OUTPUT_EXTENSION))
-
-pl.figure(5)
-pl.legend()
-pl.savefig("%s.%s" % (nom_fichier_plot5,OUTPUT_EXTENSION))
-
-pl.figure(6)
-pl.legend()
-pl.savefig("%s.%s" % (nom_fichier_plot6,OUTPUT_EXTENSION))
-
-pl.figure(7)
-ylims = list(pl.ylim())
-xlims = list(pl.xlim([0.6, 1.4]))
+# We add the resonances
+ylims = list(hist_res.get_ylim())
+xlims = list(hist_res.set_xlim([0.6, 1.4]))
 for res in resonances:
   nb_period = map(float, res.split(":")) # We get the two integers value of the resonance.
   ratio = nb_period[0] / nb_period[1]
-  pl.plot([ratio, ratio], ylims, 'k--')
-  pl.plot([1./ratio, 1./ratio], ylims, 'k--')
-  pl.text(ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
-  pl.text(1./ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
-pl.legend()
-pl.savefig("%s.%s" % (nom_fichier_plot7,OUTPUT_EXTENSION))
+  hist_res.plot([ratio, ratio], ylims, 'k--')
+  hist_res.plot([1./ratio, 1./ratio], ylims, 'k--')
+  hist_res.text(ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
+  hist_res.text(1./ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
 
-pl.figure(8)
-pl.legend()
-pl.savefig("%s.%s" % (nom_fichier_plot8,OUTPUT_EXTENSION))
+print("Storing plots")
+for (name, fig, plot) in zip(nom_fichier_plot, figures, plots):
+  plot.legend()
+  fig.savefig("%s.%s" % (name,OUTPUT_EXTENSION))
   
 
 
