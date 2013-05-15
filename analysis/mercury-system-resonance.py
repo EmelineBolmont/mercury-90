@@ -33,7 +33,7 @@ NB_LAST_POINTS = 50 # Number of points we want to test the libration of angles.
 
 # the threshold of the standard deviation of a resonant angle, 
 # below which we consider there is libration and thus, a resonance.
-STD_THRESHOLD = 40 
+STD_THRESHOLD = 50 
 
 # Extreme angles for angle folding. We will apply a mod 2pi to all angles, 
 # but theses values determines between wich values we will constrains the angles.
@@ -397,9 +397,10 @@ ylims = list(pl.ylim())
 xlims = list(pl.xlim())
 
 if isDisk:
-  pl.plot(contours_a[0], contours_m[0], color="#ff0000", label="Zero torque zone")
+  pl.fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
   for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
-    pl.plot(c_a, c_m, color="#ff0000")
+    #~ pl.plot(c_a, c_m, color="#ff0000")
+    pl.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
 
 for planet in range(0, nb_planets-1):
   x_position = (a[planet] + a[planet+1]) / 2.
