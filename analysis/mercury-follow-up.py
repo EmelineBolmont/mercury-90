@@ -137,12 +137,14 @@ def getJobInfos(jobID):
   remaining_time = "???"
 
   # cpu time
-  index = process_stdout.index("cpu=")
-  length = process_stdout[index:].index(',')
-  cpu_info = process_stdout[index+4:index+length]
-  
-  ellapsed_time = Temps(*map(float,cpu_info.split(":")))
-  
+  try:
+    index = process_stdout.index("cpu=")
+    length = process_stdout[index:].index(',')
+    cpu_info = process_stdout[index+4:index+length]
+    
+    ellapsed_time = Temps(*map(float,cpu_info.split(":")))
+  except:
+    ellapsed_time = Temps(0)
   
   index = process_stdout.index("cwd:")
   length = process_stdout[index:].index('\n')
@@ -238,6 +240,7 @@ else:
 ####################
 
 infoAll = [] # The array where to store display infos as strings (in tuple to allow sorting)
+waiting_list = []
 for jobID in jobIDs:
   (ellapsed_time, cwd) = getJobInfos(jobID)
   
@@ -246,9 +249,8 @@ for jobID in jobIDs:
   # In case it exists several old jobs for the same simulation :
   (process_stdout, process_stderr, return_code) = lancer_commande("ls *.o[0-9]*")
   if (return_code != 0):
-    print("the command return an error "+str(return_code))
-    print(process_stderr)
-    exit()
+    waiting_list.append("%d" % jobID)
+    continue
     
   list_jobs = process_stdout.split("\n")
   list_jobs.remove('') # we remove an extra element that doesn't mean anything
@@ -323,4 +325,6 @@ infoAll.sort(reverse=True)
 
 for (ti, info) in infoAll:
   print(info)
-  
+
+nb_wait = len(waiting_list)
+print("%d jobs on waiting list : %s" % (nb_wait, " ".join(waiting_list)))
