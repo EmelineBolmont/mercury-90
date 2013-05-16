@@ -40,19 +40,95 @@ rep_exec = os.getcwd()
 resonances = ["2:1", "3:2", "4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 
 #######################
-# On prépare les plots
+# We prepare the plots
 #######################
 
-OUTPUT_EXTENSION = "png" # default extension for outputs
+# Extensions voulues pour les fichiers de sortie
+OUTPUT_EXTENSION = 'png' # default value in bitmap, because vectoriel can take time and space if there is a lot of data
 
-dossier_plot = "output"
+nom_fichier_plot = [] # list of names for each plot
+figures = [] # list of figures
+plots = [] # list of plots (the axes of the fig objects, assuming there is no subplots in there)
+
+nom_fichier_plot.append("miscellaneous")
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(2, 3, 1)
+plots.append([]) # Because it is a subplots figure
+plots[-1].append(fig)
+fig.set_xlabel("mass [Earths]")
+fig.set_ylabel("Distribution")
+
+fig = figures[-1].add_subplot(2, 3, 2)
+plots[-1].append(fig)
+fig.set_xlabel("mass [Earths]")
+fig.set_ylabel("eccentricity")
+
+fig = figures[-1].add_subplot(2, 3, 3)
+plots[-1].append(fig)
+fig.set_xlabel("distance (in AU)")
+fig.set_ylabel("eccentricity")
+
+fig = figures[-1].add_subplot(2, 3, 4)
+plots[-1].append(fig)
+fig.set_xlabel("I (in degrees)")
+fig.set_ylabel("Distribution")
+
+fig = figures[-1].add_subplot(2, 3, 5)
+plots[-1].append(fig)
+fig.set_xlabel("nb_final")
+fig.set_ylabel("Distribution")
+
+fig = figures[-1].add_subplot(2, 3, 6)
+plots[-1].append(fig)
+fig.set_xlabel("Orbital Distance [AU]")
+fig.set_ylabel("Distribution")
+fig.set_xscale("log")
+
+nom_fichier_plot.append("m_fct_a")
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_xlabel("a (in AU)")
+fig.set_ylabel("mass [Earths]")
+fig.grid()
+
+nom_fichier_plot.append("histogrammes_res")
+figures.append(pl.figure())
+hist_res = figures[-1].add_subplot(1, 1, 1)
+plots.append(hist_res)
+hist_res.set_xlabel("Period ratio relative to the most massive planet")
+hist_res.set_ylabel("Distribution")
+
+
+nom_fichier_plot.append("")
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_xlabel("most massive [Earths]")
+fig.set_ylabel("second most massive [Earths]")
+
+
+nom_fichier_plot.append("coorbital_pl_mass")
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_title("Mass of the coorbital planets")
+fig.set_xlabel("mass of the first planet (m_earth)")
+fig.set_ylabel("mass of the second planet (m_earth)")
+
+nom_fichier_plot.append("most_massive_position")
+figures.append(pl.figure())
+fig = figures[-1].add_subplot(1, 1, 1)
+plots.append(fig)
+fig.set_xlabel("Position [AU]")
+fig.set_ylabel("Mass of most massive [Earths]")
+fig.grid()
 
 #######################
 # On définit et prépare les différents dossiers 
 # où on doit lire les résultats des simulations
 #######################
-# On définit une liste de nom de dossier que, quoi qu'il arrive
-# on ne souhaite pas traiter et donc qu'on vire de la liste.
+# We define a list of forbidden names that will not be considered as simulations
 dossier_suppr = ["output", "test", "reference_simu"]
 
 #    .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-. 
@@ -102,7 +178,7 @@ if isProblem:
 
 # We go in each sub folder of the current working directory
 
-# On récupère la liste des sous-dossiers
+# We get the list of simulations
 liste_simu = [dir for dir in os.listdir(".") if os.path.isdir(dir)]
 autiwa.suppr_dossier(liste_simu,dossier_suppr)
 liste_simu.sort()
@@ -169,6 +245,7 @@ m_clo = [] # mass in earth mass
 period_ratio = []
 
 most_massive = [] # the most massive planet of the system
+most_massive_a = [] # the position (AU) of the most massive planet of the system
 second_massive = [] # the second most massive planet of the system
 
 # Lists for masses of the first and second planets of resonances
@@ -209,7 +286,6 @@ for simu in liste_simu:
   if (t_max0 != t_max):
     print("folder "+simu+" output time is "+tmp+" instead of "+str(t_max))
     continue
-  #~ final_time.append(t_max0)
   
   for i in range(3):
     dataFile.readline()
@@ -270,7 +346,6 @@ for simu in liste_simu:
       idx_after += 1
       
     #~ idx_before:idx_after is the range of the coorbitals of the reference planet
-    
     if (idx_before > 0):
       idx_before -= 1
     
@@ -283,10 +358,11 @@ for simu in liste_simu:
     period_ratio.extend((a_system[idx_clo+1:idx_after+1]/a_ref)**(1.5))# We need to add 1 the the outer index because the last index is excluded
     
     # We search for the two most massives planets of a system
-    tmp = list(m_system)
+    tmp = [(mi, ai) for (ai, mi) in zip(a_system, m_system)]
     tmp.sort()
-    most_massive.append(tmp[-1])
-    second_massive.append(tmp[-2])
+    most_massive.append(tmp[-1][0])
+    most_massive_a.append(tmp[-1][1])
+    second_massive.append(tmp[-2][0])
 
     if (tmp[-1] > 6. and tmp[-1] < 9.):
       print("most massive = %.1f in %s:" % (tmp[-1],simu))
@@ -329,9 +405,7 @@ for simu in liste_simu:
   ##########
 print("less massive in the list of most massive : %f" % min(most_massive))
 print("most massive planet formed in all simulations : %f" % max(most_massive))
-a = np.array(a)
-orbital_period = 365.25 * a**1.5 # in days
-#~ pdb.set_trace()
+
 #######################
 #   Tracé des plots   #
 #######################
@@ -339,123 +413,59 @@ print("\t Computing Plots")
 os.chdir(rep_exec)
 nb_bins = 50
 
-nom_fichier_plot = [] # list of names for each plot
+plots[0][0].hist(m_clo, bins=range(25), normed=True, histtype='step')
 
-nom_fichier_plot1 = "miscellaneous"
-multiplot = pl.figure(1)
-multiplot.add_subplot(2,3,1)
-pl.xlabel("mass [Earths]")
-pl.ylabel("Distribution")
-pl.hist(m_clo, bins=range(25), normed=True, histtype='step')
+plots[0][1].plot(m, e, 'o', markersize=5)
 
-multiplot.add_subplot(232)
-pl.xlabel("mass [Earths]")
-pl.ylabel("eccentricity")
-pl.plot(m, e, 'o', markersize=5)
+plots[0][2].plot(a, e, 'o', markersize=5)
 
-multiplot.add_subplot(233)
-pl.xlabel("distance (in AU)")
-pl.ylabel("eccentricity")
-pl.plot(a, e, 'o', markersize=5)
+plots[0][3].hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step')
 
-multiplot.add_subplot(234)
-pl.xlabel("I (in degrees)")
-pl.ylabel("Distribution")
-pl.hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step')
+plots[0][4].hist(final_nb_planets, bins=range(25), histtype='step')
 
-multiplot.add_subplot(235)
-pl.xlabel("nb_final")
-pl.ylabel("Distribution")
-pl.hist(final_nb_planets, bins=range(25), histtype='step')
-
-plot_OP = multiplot.add_subplot(236)
-plot_OP.set_xlabel("Orbital Distance [AU]")
-plot_OP.set_ylabel("Distribution")
-a_max = a.max()
-a_min = a.min()
-plot_OP.set_xscale("log")
-plot_OP.hist(a, bins=np.logspace(log10(a_min), log10(a_max), 100))
-#~ pdb.set_trace()
+a_max = max(a)
+a_min = min(a)
+plots[0][5].hist(a, bins=np.logspace(log10(a_min), log10(a_max), 100))
 
 
-nom_fichier_plot2 = "m_fct_a"
-#~ m2 = [mi + random.uniform(-0.5,0.5) for mi in m]
-pl.figure(2)
-pl.xlabel(unicode("a (in AU)",'utf-8'))
-pl.ylabel("mass [Earths]")
-pl.grid()
-pl.semilogx(a, m, 'o', markersize=5)
-if isDisk:
-  for (c_a, c_m) in zip(contours_a, contours_m):
-    pl.semilogx(c_a, c_m, color="#000000")
+plots[1].semilogx(a, m, 'o', markersize=5)
+if (isDisk and (len(contours_a) > 0)):
+  plots[1].fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
+  for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
+    plots[1].fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
 
 
-nom_fichier_plot3 = "histogrammes_res"
-pl.figure(3)
-#~ pl.clf()
-pl.xlabel("Period ratio relative to the most massive planet")
-pl.ylabel("Distribution")
+plots[2].hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step')
 
-pl.hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step')
-
-nom_fichier_plot4 = "most_massives"
-#~ most_massive = [mi + random.uniform(-0.5, 0.5) for mi in most_massive]
-#~ second_massive = [mi + random.uniform(-0.5, 0.5) for mi in second_massive]
-
-pl.figure(4)
-#~ pl.clf()
-pl.xlabel("most massive [Earths]")
-pl.ylabel("second most massive [Earths]")
-pl.plot(most_massive, second_massive, 'o', markersize=5)
+plots[3].plot(most_massive, second_massive, 'o', markersize=5)
 
 
-pl.figure(5)
-#~ m_first = [mi + random.uniform(-0.25,0.25) for mi in m_first]
-#~ m_second = [mi + random.uniform(-0.25,0.25) for mi in m_second]
-#~ m_clo_first = [mi + random.uniform(-0.25,0.25) for mi in m_clo_first]
-#~ m_clo_second = [mi + random.uniform(-0.25,0.25) for mi in m_clo_second]
-nom_fichier_plot5 = "coorbital_pl_mass"
-pl.title("Mass of the coorbital planets")
-pl.xlabel("mass of the first planet (m_earth)")
-pl.ylabel("mass of the second planet (m_earth)")
-
-pl.plot(m_clo_first, m_clo_second, 'ro', markersize=5, label="closest from biggest")
-pl.plot(m_first, m_second, 'bo', markersize=5, label="all others")
-ylims = list(pl.ylim())
-xlims = list(pl.xlim())
+plots[4].plot(m_clo_first, m_clo_second, 'ro', markersize=5, label="closest from biggest")
+plots[4].plot(m_first, m_second, 'bo', markersize=5, label="all others")
+ylims = list(plots[4].get_ylim())
+xlims = list(plots[4].get_xlim())
 limits = [max(xlims[0], ylims[0]), min(xlims[1], ylims[1])]
-pl.plot(limits, limits, 'k--', label="equal mass")
+plots[4].plot(limits, limits, 'k--', label="equal mass")
 
+plots[5].semilogx(most_massive_a, most_massive, 'bo', markersize=5)
+if (isDisk and (len(contours_a) > 0)):
+  plots[5].fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
+  for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
+    plots[5].fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
 
-
-print("Storing plots")
-pl.figure(1)
-pl.savefig(nom_fichier_plot1+"."+OUTPUT_EXTENSION)
-
-pl.figure(2)
-pl.savefig(nom_fichier_plot2+"."+OUTPUT_EXTENSION)
-
-pl.figure(3)
-#~ pl.axis('tight')
-ylims = list(pl.ylim())
-xlims = list(pl.xlim([0.6, 1.4]))
+# We add the resonances
+ylims = list(hist_res.get_ylim())
+xlims = list(hist_res.set_xlim([0.6, 1.4]))
 for res in resonances:
-  #~ pdb.set_trace()
   nb_period = map(float, res.split(":")) # We get the two integers value of the resonance.
   ratio = nb_period[0] / nb_period[1]
-  pl.plot([ratio, ratio], ylims, 'k--')
-  pl.plot([1./ratio, 1./ratio], ylims, 'k--')
-  pl.text(ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
-  pl.text(1./ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
-pl.savefig(nom_fichier_plot3+"."+OUTPUT_EXTENSION)
+  hist_res.plot([ratio, ratio], ylims, 'k--')
+  hist_res.plot([1./ratio, 1./ratio], ylims, 'k--')
+  hist_res.text(ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
+  hist_res.text(1./ratio, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=7)
 
-pl.figure(4)
-pl.savefig(nom_fichier_plot4+"."+OUTPUT_EXTENSION)
+print("Storing plots")
+for (name, fig) in zip(nom_fichier_plot, figures):
+  fig.savefig("%s.%s" % (name,OUTPUT_EXTENSION))
 
-pl.figure(5)
-pl.legend()
-pl.savefig(nom_fichier_plot5+"."+OUTPUT_EXTENSION)
-  
 pl.show()
-
-# TODO tracer la zone de convergence et les résonnances sur les plots
