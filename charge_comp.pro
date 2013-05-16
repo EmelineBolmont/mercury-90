@@ -1,4 +1,5 @@
-Msun      =  1.98892d30               ;kg
+@functions
+@constants
 
 ;! Mass star:
 Ms = 0.08*Msun
@@ -6,6 +7,8 @@ Ms = 0.08*Msun
 nbp = 2
 ;! Number of planets tidally evolving
 n_tid = 2
+
+k2pDeltap = [2.465278d-3,2.465278d-3] ;day
 
 ;! If comparison with IDL simulations 1, if not 0
 idl = 0
@@ -166,7 +169,8 @@ if n_tid ge 1 then begin
       Rpi        =  dblarr(nbp_idl,nline)
       Rsi        =  dblarr(nbp_idl,nline)
       rg2si      =  dblarr(nbp_idl,nline)
-      
+      tidefluxi  =  dblarr(nbp_idl,nline)
+            
       for i = 0,nbp_idl-1 do begin
          headeri = strarr(1)
          nline = file_lines(filename_idl(i))-1
@@ -187,14 +191,16 @@ if n_tid ge 1 then begin
          Rsi[i,0:nline-1] = read_array(8,*)
          rg2si[i,0:nline-1] = read_array(9,*)
       endfor
+      
+      for i = 0,nbp_idl-1 do begin
+         for j = 0,nline-1 do begin
+            tidefluxi(i,j) = enerdot(ai(i,j)*AU,ei(i,j),rotpi(i,j),oblpi(i,j)*!Pi/180.d0,G $
+				,mb(i,0)*Msun,Ms,Rpi(i,j)*Rearth,k2deltat_plan(i)*day)/(4.d0*!Pi*(Rpi(i,j)*Rearth)^2)
+         endfor
+      endfor 
     
    endif
-   
-   Rsun      =  6.96d8                   ;m
-   AU        =  1.49598d11               ;m
-   day       =  24*3600.                 ;s
-   Rearth    =  6371.0d3                 ;m
-   
+  
    if n_tid ge 1 then begin
       ;! Obliquities calculations
       tmp     = dblarr(n_elements(horb1x))
@@ -241,6 +247,9 @@ if n_tid ge 1 then begin
    momspitot = dblarr(n_elements(horb1x))
    momstar = dblarr(n_elements(horb1x))
    
+   ; Tidal flux
+   tidalflux = dblarr(n_tid,n_elements(horb1x))
+   
    for j=0,nbp-1 do begin
       for i=0,n_elements(horb1x)-1 do begin
          horbx(j,i)=(yb(j,i)*wb(j,i)-zb(j,i)*vb(j,i))
@@ -261,6 +270,11 @@ if n_tid ge 1 then begin
    for j=0,n_tid-1 do begin
       for i=0,n_elements(horb1x)-1 do begin
          momspin(j,i) = rg2p(j,i)*mb(j,i)*Msun*(Rp(j,i)*rsun)^2*spinp(j,i)
+         
+         ; Calculation of energydot and tidal flux
+         tidalflux(j,i) = enerdot(ab(j,i)*AU,eb(j,i),spinp(j,i),oblpm(j,i)*!Pi/180.d0,G,mb(j,i)*Msun $
+               ,Ms,Rp(j,i)*rsun,k2pDeltap(j)*day)/(4*!Pi*(Rp(j,i)*rsun)^2)
+         
       endfor
    endfor
    for i=0,n_elements(horb1x)-1 do begin
