@@ -396,7 +396,7 @@ for planet in range(nb_planets):
 ylims = list(pl.ylim())
 xlims = list(pl.xlim())
 
-if isDisk:
+if (isDisk and (len(contours_a) > 0)):
   pl.fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
   for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
     #~ pl.plot(c_a, c_m, color="#ff0000")
