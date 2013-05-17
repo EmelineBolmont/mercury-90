@@ -204,7 +204,8 @@ plot,tb(0,*),ab(0,*) $
      ,xrange=[Tinf,Tsup],yrange=[Trotmin,Trotmax] $
      ,charsize=1.8,charthick=3 $
      ;; ,title='Rotation Period' $
-     ,xtitle='Age of BD - t!d0!n (years)' $
+     ;,xtitle='Age of BD - t!d0!n (years)' $
+     ,xtitle='Time (years)' $
      ,ytitle='P (hr)' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ;; ,ytickname=['20','30','40','50','70','100' $
