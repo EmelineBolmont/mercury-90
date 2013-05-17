@@ -97,7 +97,7 @@ plot,tb(0,*),eb(0,*) $
      ,charsize=1.8,charthick=3 $
      ;; ,title='Eccentricity' $
      ;;,xtitle='Age of BD - t!d0!n (years)' $
-     ,xtitle='Time (years)' $
+     ;;,xtitle='Time (years)' $
      ,ytitle='e' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ,xstyle=1,ystyle=1 $
@@ -119,8 +119,8 @@ plot,tb(0,*),tidalflux(0,*) $
      ,xrange=[Tinf,Tsup],yrange=[flxmin,flxmax] $
      ,charsize=1.8,charthick=3 $
      ;; ,title='Tidal flux (W/m!u2!n)' $
-     ,xtitle='Age of BD - t!d0!n (years)' $
-     ;,xtitle='Time (years)' $
+     ;,xtitle='Age of BD - t!d0!n (years)' $
+     ,xtitle='Time (years)' $
      ,ytitle='Tidal flux (W/m!u2!n)' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ,xstyle=1,ystyle=1 $
