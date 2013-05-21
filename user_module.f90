@@ -842,54 +842,6 @@ contains
     return
   end subroutine mfo_user
 
-  function get_initial_timestep()
-    ! function that return the initial timestep of the simulation
-
-    use utilities, only : mio_spl
-
-    implicit none
-
-    !Input
-    !None actually
-
-    ! Outpout
-    real(double_precision), dimension(2) :: get_initial_timestep ! the timestep of the simulation as writed in param.in
-
-    !Locals
-    integer :: j, lineno, nsub, lim(2,10), error
-    real(double_precision) :: h0,tstop
-    character(len=80) :: c80
-    character(len=150) :: string
-
-
-    open(13, file='param.in', status='old', iostat=error)
-    if (error /= 0) then
-       write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim('param.in')
-       stop
-    end if
-    ! Read integration parameters
-    lineno = 0
-    do j = 1, 26
-       ! We want the next non commented line
-       do
-          lineno = lineno + 1
-          read (13,'(a150)') string
-          if (string(1:1).ne.')') exit
-       end do
-
-       call mio_spl (150,string,nsub,lim)
-       c80(1:3) = '   '
-       c80 = string(lim(1,nsub):lim(2,nsub))
-
-       if (j.eq.3) read (c80,*) tstop
-       if (j.eq.5) read (c80,*) h0
-    end do
-    get_initial_timestep = (/tstop,abs(h0)/)
-
-    close (13)
-    return
-  end function get_initial_timestep
-
   subroutine conversion_dh2h (nbod,nbig,m,x,v,xh,vh)
 
 

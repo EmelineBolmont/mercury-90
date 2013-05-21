@@ -104,5 +104,119 @@ module tides_constant_GR
   ! Speed of light
   real(double_precision), parameter :: C2 = 1.731444830225d2
 
+contains 
+
+  function get_initial_timestep()
+    ! function that return the initial timestep of the simulation
+
+    use utilities, only : mio_spl
+
+    implicit none
+
+    !Input
+    !None actually
+
+    ! Outpout
+    real(double_precision), dimension(2) :: get_initial_timestep ! the timestep of the simulation as writed in param.in
+
+    !Locals
+    integer :: j, lineno, nsub, lim(2,10), error
+    real(double_precision) :: h0,tstop
+    character(len=80) :: c80
+    character(len=150) :: string
+
+
+    open(13, file='param.in', status='old', iostat=error)
+    if (error /= 0) then
+       write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim('param.in')
+       stop
+    end if
+    ! Read integration parameters
+    lineno = 0
+    do j = 1, 26
+       ! We want the next non commented line
+       do
+          lineno = lineno + 1
+          read (13,'(a150)') string
+          if (string(1:1).ne.')') exit
+       end do
+
+       call mio_spl (150,string,nsub,lim)
+       c80(1:3) = '   '
+       c80 = string(lim(1,nsub):lim(2,nsub))
+
+       if (j.eq.3) read (c80,*) tstop
+       if (j.eq.5) read (c80,*) h0
+    end do
+    get_initial_timestep = (/tstop,abs(h0)/)
+
+    close (13)
+    return
+  end function get_initial_timestep
+
+subroutine write_disk_properties()
+! subroutine that write the parameters of the user_module into the file 'disk.out'
+
+! Global Parameters
+! B_OVER_H : the smoothing length for the planet's potential
+! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
+! MEAN_MOLECULAR_WEIGHT : the mean molecular weight in mass of a proton
+! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
+! INITIAL_SIGMA_INDEX : the negative slope of the surface density power law (alpha in the paper)
+! INITIAL_SIGMA_0_NUM : the surface density at (R=1AU) [Msun/AU^2]
+! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! viscosity : the viscosity of the disk in [cm^2/s]
+! DISSIPATION_TYPE : integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
+! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+
+  use git_infos
+
+  implicit none
+  
+  real(double_precision), dimension(2) :: timestep
+  real(double_precision) :: distance_accuracy
+  
+  real(double_precision), parameter :: TWOTHIRD = 2.d0 / 3.d0
+  
+  
+  timestep = get_initial_timestep()
+  ! below this limit, with this timestep, an orbit will only contain 10 timestep or less, whiis not accurate.
+  distance_accuracy = (10. * timestep(2) / 365.25)**TWOTHIRD 
+  
+  open(10, file='tidesGR.out')
+
+  write(10,'(a)') '------------------------------------'
+  write(10,'(a)') '|         Timestep stuff           |'
+  write(10,'(a)') '------------------------------------'
+  write(10,'(a,f3.1,a)') 'timestep = ',timestep, ' days'
+  write(10,'(a,f5.2,a)') '  with this timestep, the simulation will not be accurate below', distance_accuracy, ' AU'
+  write(10,'(a)') '------------------------------------'
+  write(10,'(a)') '|       Mercury Properties         |'
+  write(10,'(a)') '------------------------------------'
+  write(10,'(a,a)') 'branch = ', branch
+  write(10,'(a,a)') 'commit = ', commit
+  write(10,'(a,a)') 'tags = ', tags
+  write(10,'(a)') modifs
+  write(10,'(a,f3.1,a,f5.2,a)') 'With h=', timestep, ' days, the simulation will be accurate for r > ', distance_accuracy, ' AU'
+  write(10,'(a)') '------------------------------------'
+  write(10,'(a)') '|       Special Effects            |'
+  write(10,'(a)') '------------------------------------'
+  if (tides.eq.1) write(10,'(a)') 'Tides are on'
+  if (GenRel.eq.1) write(10,'(a)') 'General Relativity effects taken into account'
+  if (brown_dwarf.eq.1) write(10,'(a)') 'The central body is an evolving Brown-dwarf'
+  if (M_dwarf.eq.1) write(10,'(a)') 'The central body is an evolving M-dwarf'
+  if (Sun_like_star.eq.1) write(10,'(a)') 'The central body is an evolving Sun-like star'
+  if (Rscst.eq.1) write(10,'(a)') 'The central body is an non-evolving object'
+  
+  if (tides.eq.1) then
+     write(10,'(a,f3.1)') 'Number of planets tidally evolving =',ntid
+  endif
+  write(10,*) ''
+  close(10)
+  
+end subroutine write_disk_properties
 
 end module tides_constant_GR
