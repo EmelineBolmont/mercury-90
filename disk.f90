@@ -1917,11 +1917,8 @@ end subroutine initial_density_profile
   
   character(len=*), intent(in) :: filename
   
-<<<<<<< HEAD
-=======
   real(double_precision) :: num_to_phys_chi = DAY / AU**2
   
->>>>>>> 23fe6ca47fa58bb69a5690c236c7089f5e2a8e3c
   integer :: j ! for loops
   
   ! We open the file where we want to write the outputs
@@ -1930,11 +1927,7 @@ end subroutine initial_density_profile
               &; chi (thermal diffusivity) ;    tau (optical depth)'
 
   do j=1,NB_SAMPLE_PROFILES
-<<<<<<< HEAD
-    write(10,*) distance_sample(j), temperature_profile(j), temp_profile_index(j), chi_profile(j), tau_profile(j)!, distance_sample(j), temperature_profile(j)
-=======
     write(10,*) distance_sample(j), temperature_profile(j), temp_profile_index(j), chi_profile(j) * num_to_phys_chi, tau_profile(j)!, distance_sample(j), temperature_profile(j)
->>>>>>> 23fe6ca47fa58bb69a5690c236c7089f5e2a8e3c
   end do
   
   close(10)
@@ -2110,8 +2103,8 @@ if (no_sign_change) then
   write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_min : f(',a,') = ', fa
   write(error_unit,'(a,es8.2e2,a,es8.1e2)') '  For T_max : f(',b,') = ', fb
   write(error_unit,'(a)')            '------------------------------------------------'
-  write(error_unit,'(a,f7.3,a)') 'Previous Orbital Distance = ', distance_old, ' [AU]'
-  write(error_unit,'(a,f7.3,a)') 'Previous Scaleheight = ', scaleheight_old, ' [AU]'
+  write(error_unit,'(a,f11.3,a)') 'Previous Orbital Distance = ', distance_old, ' [AU]'
+  write(error_unit,'(a,f11.3,a)') 'Previous Scaleheight = ', scaleheight_old, ' [AU]'
   write(error_unit,'(a)')            '------------------------------------------------'
   write(error_unit,'(a,f6.1,a)')     '| Orbital Distance : ', p_prop%radius, ' [AU]'
   write(error_unit,'(a,es10.2e2,a)') '| Angular Speed : ', p_prop%omega , ' [day-1]'

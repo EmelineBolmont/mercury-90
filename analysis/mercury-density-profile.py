@@ -18,7 +18,7 @@ OUTPUT_EXTENSION = 'pdf'
 # index : surface density index
 
 # We retrieve the datas
-(a, sigma, index) = np.loadtxt("surface_density_profile.dat", skiprows=1, dtype=float, unpack=True)
+(a, sigma, index) = np.loadtxt("density_profile.dat", skiprows=1, dtype=float, unpack=True)
 
 # on trace les plots
 
