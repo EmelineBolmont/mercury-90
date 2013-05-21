@@ -147,13 +147,15 @@ dossier_suppr = ["output", "test", "reference_simu"]
 
 isLog = False # We set the false option before. Because if not, we will erase the 'true' with other option that are not log, and 
 # thus will lead to be in the else and put log to false.
+isStat = False # Will create a global element.out file that contains all the surviving planets
 
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * nodisk to avoid torque diagram display" + "\n" + \
-" * help (display a little help message on HOW to use various options" + "\n" + \
-" * ext=pdf (The extension for the output files)"
+" * nodisk : to avoid torque diagram display" + "\n" + \
+" * stat :  to create a global 'element.out' file that contain all the surviving planets" + "\n" + \
+" * help : display a little help message on HOW to use various options" + "\n" + \
+" * ext=pdf : The extension for the output files"
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -165,6 +167,8 @@ for arg in sys.argv[1:]:
     OUTPUT_EXTENSION = value
   elif (key == 'nodisk'):
     isDisk = False
+  elif (key == 'stat'):
+    isStat = True
   elif (key == 'help'):
     isProblem = True
   else:
@@ -259,6 +263,9 @@ final_time = [] # Final time of the integration. Used to check if there was prob
 
 print("\t Reading datas")
 
+if (isStat):
+  globalElementOut = open("element.out", 'w')
+
 for simu in liste_simu:
   os.chdir(os.path.join(rep_exec, simu))
   try:
@@ -273,25 +280,30 @@ for simu in liste_simu:
   I_system = [] # inclination in degre
   m_system = [] # mass in earth mass
   
+  header = []
+  
   # We get rid of the header
-  dataFile.readline()
-  tmp = dataFile.readline()
+  for i in range(5):
+    header.append(dataFile.readline())
+  tmp = header[1]
   tmp = tmp.split(":")[1]
   t_max0 = float(tmp)
   
   if (t_max == None):
     # we set the t_max with the first simulation
     t_max = t_max0
+    if isStat:
+      globalElementOut.write("".join(header))
   
   if (t_max0 != t_max):
     print("folder "+simu+" output time is "+tmp+" instead of "+str(t_max))
     continue
   
-  for i in range(3):
-    dataFile.readline()
-  
   lines = dataFile.readlines()
   dataFile.close()
+  
+  if (isStat):
+    globalElementOut.write("".join(lines))
   
   nb_planets = len(lines)
   final_nb_planets.append(nb_planets)
@@ -403,6 +415,10 @@ for simu in liste_simu:
         break
       
   ##########
+
+if isStat:
+  globalElementOut.close()
+
 print("less massive in the list of most massive : %f" % min(most_massive))
 print("most massive planet formed in all simulations : %f" % max(most_massive))
 
