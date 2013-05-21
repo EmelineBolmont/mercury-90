@@ -63,7 +63,7 @@ contains
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: nbug,timestep!=3.6525d5!3.65d5 !4.56d6 !
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
-    real(double_precision) :: timebf,dt,tstop,tmp,tmp1,tmp2,k2s,sigmast
+    real(double_precision) :: timebf,dt,tstop,tmp,tmp1,tmp2,sigmast
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
     real(double_precision), dimension(3,nbig+1) :: a1,a2,xh,vh
@@ -78,8 +78,10 @@ contains
     real(double_precision), dimension(4161) :: timeBD,radiusBD,lumiBD,HZinGJ,HZoutGJ,HZinb,HZoutb
     real(double_precision), dimension(1065) :: timestar,radiusstar,d2radiusstar
     real(double_precision), dimension(1065) :: timedM,radiusdM
+    real(double_precision), dimension(15) :: timeJup,radiusJup,k2Jup,rg2Jup,spinJup
     real(double_precision), dimension(37) :: rg2st,trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
-    real(double_precision) :: Rst,Rst5,Rst10,Rstb,Rst0,Rstb0,rg2s,rg2s0,temp,spin0,spinp0
+    real(double_precision) :: Rst,Rst5,Rst10,Rstb,Rst0,Rstb0,temp,spin0,spinp0,spinb0
+    real(double_precision) :: rg2s,rg2s0,k2s,k2s0
     real(double_precision), dimension(nbig+1) :: Ftr,Ftso,Ftpo
     real(double_precision), dimension(nbig+1) :: FGRo,FGRr
     real(double_precision), parameter, dimension(12) :: Ps0 = (/8.d0,13.d0,19.d0,24.d0,30.d0,36.d0,41.d0, &
@@ -91,6 +93,7 @@ contains
     save timestar,radiusstar,d2radiusstar
     save timeBD,radiusBD
     save timedM,radiusdM
+    save timeJup,radiusJup,k2Jup,rg2Jup,spinJup
     
     save spin0
     save Rst0,Rst,Rst5,Rst10,rg2s0,k2s,rg2st,sigmast,rg2s
@@ -441,6 +444,51 @@ contains
              
              ! Give good value of sigmast
              sigmast = sigma_Sun
+             
+             flagrg2 = 1
+          endif
+       endif
+    
+       if (Jupiter_host.eq.1) then 
+          ! Charge radius of Mdwarf 
+          if (flagrg2.eq.0) then
+             open(1,file='Jupiter.dat')
+             nptmss = 0
+             do nptmss = 1,15
+                read(1,*,iostat=error) timeJup(nptmss),radiusJup(nptmss) &
+                     ,k2Jup(nptmss),rg2Jup(nptmss),spinJup(nptmss)
+             end do
+             
+!~              Pst = Period_st
+!~              rg2s = rg2_dM
+!~              k2s   = k2st_dM
+             
+            ! Initialization M-dwarf spin 
+            ! (radiusJup in m, spinJup is s-1)
+             if (crash.eq.0) then
+                call spline_b_val(nptmss,timeJup*365.25-t_init,radiusJup,time,Rstb0)
+                Rst0    =  minau * Rstb0
+                call spline_b_val(nptmss,timeJup*365.25-t_init,k2Jup,time,k2s0)
+                call spline_b_val(nptmss,timeJup*365.25-t_init,rg2Jup,time,rg2s0)
+                call spline_b_val(nptmss,timeJup*365.25-t_init,spinJup,time,spinb0)
+                ! Initialization of stellar spin (day-1)
+                spin0 = spinb0*86400.d0
+                spin(1,1) = 0.d0
+		        spin(2,1) = 0.d0
+		        spin(3,1) = spin0
+             end if
+             if (crash.eq.1) then
+                spin(1,1) = rot_crash(1) !day-1
+			    spin(2,1) = rot_crash(2) !day-1
+                spin(3,1) = rot_crash(3) !day-1
+                call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,0.0d0,Rstb0)
+                Rst0    = minau * Rstb0
+                call spline_b_val(nptmss,timeJup*365.25-t_init-t_crash,k2Jup,0.0d0,k2s0)
+                call spline_b_val(nptmss,timeJup*365.25-t_init-t_crash,rg2Jup,0.0d0,rg2s0)
+             end if
+             
+             ! Give good value of sigmast
+             sigmast = sigma_dM
              
              flagrg2 = 1
           endif

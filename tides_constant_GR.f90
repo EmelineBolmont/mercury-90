@@ -16,6 +16,7 @@ module tides_constant_GR
   integer, parameter :: brown_dwarf=1
   integer, parameter :: M_dwarf=0
   integer, parameter :: Sun_like_star=0  
+  integer, parameter :: Jupiter_host=0  
   ! For an utilization of the code with no changing host body
   integer, parameter :: Rscst=0 !=1 : Rs = cst, rg2s = cst
   real(double_precision), parameter :: Rjup = 10.9d0 !rearth	
