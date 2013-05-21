@@ -154,23 +154,8 @@ contains
     return
   end function get_initial_timestep
 
-subroutine write_disk_properties()
-! subroutine that write the parameters of the user_module into the file 'disk.out'
-
-! Global Parameters
-! B_OVER_H : the smoothing length for the planet's potential
-! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
-! MEAN_MOLECULAR_WEIGHT : the mean molecular weight in mass of a proton
-! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
-! INITIAL_SIGMA_INDEX : the negative slope of the surface density power law (alpha in the paper)
-! INITIAL_SIGMA_0_NUM : the surface density at (R=1AU) [Msun/AU^2]
-! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
-! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
-! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
-! viscosity : the viscosity of the disk in [cm^2/s]
-! DISSIPATION_TYPE : integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
-! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+subroutine write_simus_properties()
+! subroutine that write the parameters of the user_module into the file 'tidesGR.out'
 
   use git_infos
 
@@ -217,6 +202,6 @@ subroutine write_disk_properties()
   write(10,*) ''
   close(10)
   
-end subroutine write_disk_properties
+end subroutine write_simus_properties
 
 end module tides_constant_GR

@@ -60,7 +60,7 @@ contains
     integer :: ispin=0
     integer :: nintegral=0
     real(double_precision) :: flagbug=0.d0
-    real(double_precision) :: nbug!=3.6525d5!3.65d5 !4.56d6 !
+    real(double_precision) :: nbug,timestep!=3.6525d5!3.65d5 !4.56d6 !
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
     real(double_precision) :: timebf,dt,tstop,tmp,tmp1,tmp2,k2s,sigmast
     real(double_precision), dimension(2) :: bobo
@@ -95,7 +95,7 @@ contains
     save Rst0,Rst,Rst5,Rst10,rg2s0,k2s,rg2st,sigmast,rg2s
     save trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
     save flagrg2,flagtime,ispin,flagbug
-    save nbug
+    save nbug,timestep
     save spin
     save Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
     save timebf,nptmss
@@ -128,6 +128,7 @@ contains
           ia(j) = 0.d0
           na(j) = 0.d0
           la(j) = 0.d0
+          timestep = time
        endif
     end do
 
@@ -774,7 +775,8 @@ contains
              if (flagbug.eq.0.0d0) then 
                 write(*,*) "time(yr)    spin x,y,z(day-1)     R(Rsun)   rg2 "
              endif         
-             if ((mod(flagbug,nbug).eq.0).and.(flagbug.ge.0)) then
+!~              if ((mod(flagbug,nbug).eq.0).and.(flagbug.ge.0)) then
+             if ((time.ge.timestep).or.(time.eq.0.0)) then
                 write(*,*) "s",time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s
                 write(*,*) "p1",time/365.25d0,spin(1,2),spin(2,2),spin(3,2),Rp(2)/rsun,rg2p(1)
                 write(*,*) "h1",time/365.25d0,horb(1,2)/horbn(2),horb(2,2)/horbn(2) &
@@ -804,6 +806,7 @@ contains
                    write(*,*) "h6",time/365.25d0,horb(1,7)/horbn(7),horb(2,7)/horbn(7) &
                      ,horb(3,7)/horbn(7),horbn(7)
                 endif
+                timestep = time + 100.*365.25
              endif
           endif
 
