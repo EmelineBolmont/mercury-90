@@ -445,35 +445,17 @@ isClose = True
 gdb = False
 profiling = False
 force = False # To force the compilation of every module
-ignoreOpkdWarnings = True
 
 isProblem = False
-problem_message = """AIM: Compilation of mercury programs. 
-By default, all of them, but one can specify one specific code to compile
-and avoid the others (mercury, element, close). The compilation of dependances is automatic. 
-The compilation options are packed into 3 meta-options : test, debug and gdb.
-The modules that haven't changed since last compilation are not compiled again. 
-If you want to force compilation of all modules, use the "force" option.
-
-The script can take various arguments:
-(no spaces between the key and the values, only separated by '=')
- * help : display a little help message on HOW to use various options
- * force : To force the compilation of every module even those not modified
- * name=source.f90 : To compile a specific code
- * mercury : To compile mercury only
- * element : To compile binary for outputs (element) only
- * close : To compile binary for close encounters (close) only
- * test : [%s] activate test options. Theses options are to be used when we want
-  to compare the original and actual version of the code, by 
-  launching tests_mercury.py
- * debug : [%s] activate debug options
- * gdb : [%s] activate options for gdb
- * profiling : [%s] activate options for profiling
- 
- Example : 
- Makefile.py gdb""" % (isTest, debug, gdb, profiling)
-
-value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
+problem_message = "The script can take various arguments :" + "\n" + \
+"(no spaces between the key and the values, only separated by '=')" + "\n" + \
+" * help : display a little help message on HOW to use various options" + "\n" + \
+" * force : To force the compilation of every module even those not modified" + "\n" + \
+" * debug : [%s] activate debug options" % debug + "\n" + \
+" * gdb : [%s] activate options for gdb" % gdb + "\n" + \
+" * profiling : [%s] activate options for profiling" % profiling + "\n" + \
+" Example : " + "\n" + \
+" Makefile.py gdb"
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -494,30 +476,6 @@ for arg in sys.argv[1:]:
     source_name = value
   elif (key == 'force'):
     force = True
-    if (value != None):
-      print(value_message % (key, key, value))
-  elif (key == 'test'):
-    isTest = True
-    if (value != None):
-      print(value_message % (key, key, value))
-  elif (key == 'mercury'):
-    isMercury = True
-    isElement = False
-    isClose = False
-    if (value != None):
-      print(value_message % (key, key, value))
-  elif (key == 'element'):
-    isMercury = False
-    isElement = True
-    isClose = False
-    if (value != None):
-      print(value_message % (key, key, value))
-  elif (key == 'close'):
-    isMercury = False
-    isElement = False
-    isClose = True
-    if (value != None):
-      print(value_message % (key, key, value))
   elif (key == 'gdb'):
     gdb = True
     if (value != None):
@@ -538,7 +496,9 @@ if isProblem:
   print(problem_message)
   exit()
 
-isModifs = is_non_committed_modifs()
+git_infos.write_infos_in_f90_file(main_branch='tides')
+
+isModifs = git_infos.is_non_committed_modifs()
 
 # We clean undesirable files. Indeed, we will compile everything everytime.
 if force:
@@ -588,10 +548,4 @@ if (isClose):
   compile_source(filename="close.f90")
 
 if (isModifs):
-  print("Warning: There is non committed modifs!")
-
-LogPostProcessing()
-
-if os.path.isfile(LOG_NAME):
-  if 'Warning' in open(LOG_NAME).read():
-    print("Warnings: see '%s'" % LOG_NAME)
+	print("Warning: There is non committed modifs!")
