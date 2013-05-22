@@ -129,6 +129,7 @@ contains
           na(j) = 0.d0
           la(j) = 0.d0
           timestep = time
+          call write_simus_properties()
        endif
     end do
 
