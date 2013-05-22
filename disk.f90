@@ -724,7 +724,7 @@ function get_corotation_damping(e, x_s)
 
 end function get_corotation_damping
 
-subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0, ecc_corot)
+subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0, ecc_corot)
 ! function that return the total torque exerted by the disk on the planet 
 !
 ! Global parameters
@@ -821,7 +821,7 @@ subroutine get_corotation_torque(stellar_mass, mass, p_prop, corotation_torque, 
   
 
   return
-end subroutine get_corotation_torque
+end subroutine get_corotation_torque_real
 
 subroutine get_cresswell_migration_time(p_prop, time_wave, e_h, i_h, time_mig)
 ! function that return the migration time, taken from (Cresswell, 2008), equation (13)
@@ -900,7 +900,7 @@ subroutine init_globals(stellar_mass, time)
     
     select case(TORQUE_TYPE)
       case('real') ! The normal torque profile, calculated form properties of the disk
-        get_torques => get_corotation_torque
+        get_torques => get_corotation_torque_real
       
       ! for retrocompatibility, 'mass_independant' has been added and refer to the old way of defining a mass-indep convergence zone
       case('linear_indep', 'mass_independant') ! a defined torque profile to get a mass independant convergence zone

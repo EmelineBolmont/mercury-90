@@ -91,7 +91,7 @@ program test_disk
     call study_optical_depth_profile()
     call study_thermal_diffusivity_profile()
     call study_scaleheight_profile()
-!~     call study_dissipation_at_one_location()
+    call study_dissipation_at_one_location()
     
     ! Test dissipation
     ! EVERYTHING ABOVE MUST BE COMMENTED BEFORE DECOMMENTING 'ONE' AND ONE ALONE OF THESES ONES
@@ -2035,6 +2035,12 @@ program test_disk
     FIRST_CALL = .true.
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
     
+    if (DISSIPATION_TYPE.eq.0) then
+      write (error_unit,*) 'There is currently no dissipation (dissipation_type=0) which is a problem to test it.'
+      write (error_unit,*) 'Please set a dissipation_type in "disk.in" before testing it'
+      call exit(3)
+    end if
+    
     inquire(file='dissipation', exist=isDefined)
     
     ! We create the folder 'dissipation' if he doesn't exists.
@@ -2144,7 +2150,7 @@ program test_disk
           call get_planet_properties(stellar_mass=stellar_mass, & ! Input
            mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! Input
            p_prop=p_prop) ! Output
-          call get_corotation_torque(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref, ecc_corot)
+          call get_torques(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref, ecc_corot)
           
           total_torque(i,j) = lindblad_torque + corotation_torque        
           
