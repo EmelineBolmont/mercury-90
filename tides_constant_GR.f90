@@ -195,10 +195,26 @@ subroutine write_simus_properties()
   if (M_dwarf.eq.1) write(10,'(a)') 'The central body is an evolving M-dwarf'
   if (Sun_like_star.eq.1) write(10,'(a)') 'The central body is an evolving Sun-like star'
   if (Rscst.eq.1) write(10,'(a)') 'The central body is an non-evolving object'
-  
+  write(10,*) ''
   if (tides.eq.1) then
-     write(10,'(a,f3.1)') 'Number of planets tidally evolving =',ntid
+     write(10,'(a,i1)') 'Number of planets tidally evolving =',ntid
   endif
+  do j = 1, ntid
+     write(10,'(a,i1)') 'PLANET',j
+     if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.1)) then
+        write(10,'(a,f5.2,a,f5.2)') 'k2p =',k2p_terr,', rg2p =',rg2p_terr
+        write(10,'(a,f5.2,a,f5.2)') 'k2pdeltap =',k2pdeltap_terr,' day, dissplan =',dissplan(j)     
+     endif
+     if (jupiter(j-1).eq.2) then
+        write(10,'(a,f5.2,a,f5.2)') 'k2p =',k2p_gg,', rg2p =',rg2p_gg
+        write(10,'(a,f5.2,a,f5.2)') 'k2pdeltap =',k2pdeltap_gg,' day, dissplan =',dissplan(j)   
+     endif
+     if (jupiter(j-1).eq.3) then
+        write(10,'(a,f5.2,a,f5.2)') 'k2p =',k2p_what,', rg2p =',rg2p_what
+        write(10,'(a,f5.2,a,f5.2)') 'k2pdeltap =',k2pdeltap_what,' day, dissplan =',dissplan(j)
+     endif
+     
+  enddo
   write(10,*) ''
   close(10)
   
