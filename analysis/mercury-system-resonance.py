@@ -387,11 +387,11 @@ for planet in range(0, nb_planets-1):
 tmp = autiwa.colorList(nb_planets)
 colors = [ '#'+li for li in autiwa.colorList(nb_planets)]
 
-
-markersize_prefactor = 6 / (min(mass)**0.33)
+min_mass = 0.2 # earth mass
+markersize_prefactor = 4 / (min_mass**0.33)
 for planet in range(nb_planets):
   # We display a circle for the planet
-  pl.plot(a[planet], mass[planet], 'o', color=colors[planet], markersize=int(markersize_prefactor * (mass[planet])**0.33))
+  pl.plot(a[planet], mass[planet], 'o', color=colors[planet], markersize=max(int(markersize_prefactor * (mass[planet])**0.33),markersize_prefactor))
 
 ylims = list(pl.ylim())
 xlims = list(pl.xlim())
