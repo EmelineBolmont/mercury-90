@@ -58,6 +58,7 @@ contains
     integer :: flagrg2=0
     integer :: flagtime=0
     integer :: ispin=0
+    integer :: iwrite=0
     integer :: nintegral=0
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: nbug,timestep!=3.6525d5!3.65d5 !4.56d6 !
@@ -129,10 +130,13 @@ contains
           na(j) = 0.d0
           la(j) = 0.d0
           timestep = time
-          call write_simus_properties()
        endif
     end do
-
+	if (iwrite.eq.0) then 
+	   call write_simus_properties()
+	   iwrite = 1
+	endif
+	
     ! Timestep calculation
     if (flagtime.le.3) then 
        bobo = get_initial_timestep()
