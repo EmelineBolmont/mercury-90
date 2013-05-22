@@ -6,7 +6,7 @@ module tides_constant_GR
   ! Author: Emeline Bolmont
   ! Date: 04/04/13
   !
-    ! If you want Tides or not
+  ! If you want Tides or not
   integer, parameter :: tides=1
   ! If you want General Relativity or not
   integer, parameter :: GenRel=1
@@ -163,7 +163,7 @@ subroutine write_simus_properties()
   
   real(double_precision), dimension(2) :: timestep
   real(double_precision) :: distance_accuracy
-  
+  integer :: j
   real(double_precision), parameter :: TWOTHIRD = 2.d0 / 3.d0
   
   
