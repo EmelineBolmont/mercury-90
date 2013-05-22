@@ -239,8 +239,8 @@ for planet in lost_in_collisions:
   plot(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
 
 
-plot_a.set_xlabel("time [years]")
-plot_a.set_ylabel("a [UA]")
+plot_a.set_xlabel("Time [years]")
+plot_a.set_ylabel("a [AU]")
 plot_a.grid(True)
 
 if (isEcc == True):
@@ -252,7 +252,7 @@ if (isEcc == True):
 
   for planet in range(nb_planete):
     plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-  plot_e.set_xlabel("time [years]")
+  plot_e.set_xlabel("Time [years]")
   plot_e.set_ylabel("eccentricity")
   plot_e.grid(True)
 
@@ -268,7 +268,7 @@ else:
 
 for planet in range(nb_planete):
   plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-plot_mass.set_xlabel("time [years]")
+plot_mass.set_xlabel("Time [years]")
 plot_mass.set_ylabel("mass [Earths]")
 plot_mass.grid(True)
 
