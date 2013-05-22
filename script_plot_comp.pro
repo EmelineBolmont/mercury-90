@@ -131,7 +131,7 @@ for j = 0,nbp-1 do begin
 endfor
 if idl eq 1 then begin
    for i = 0,nbp_idl-1 do begin
-      oplot,ti(i,*),tidalfluxi(i,*) $
+      oplot,ti(i,*),tidefluxi(i,*) $
          ,color=idlicol+i*idlcol,thick=5,linestyle=2
    endfor
 endif
