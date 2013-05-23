@@ -93,11 +93,11 @@ def set_prefered_disk():
   surface_density = (density_constant, density_index) # (g/cm^2, power law index)
   density_file = 'surface_density_profile.dat'
   adiabatic_index = 1.4 # the adiabatic index of the disk
-  viscosity_type = 'alpha_dz' # constant, alpha
-  viscosity = None # cm^2/s
-  alpha = 5e-3
-  alpha_dz = (5e-3, 1e-4, 5e-3)
-  radius_dz = (1., 10.)
+  viscosity_type = 'constant' # constant, alpha
+  viscosity = 1e15 # cm^2/s
+  alpha = None
+  alpha_dz = None
+  radius_dz = None
   #~ opacity_type = 'bell' # 'bell' or 'zhu' or 'hure' opacity table
   opacity_type = 'hure' # 'bell' or 'zhu' or 'hure' opacity table
   #~ b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
@@ -302,9 +302,10 @@ recap_file = open("parameter_study/%s/readme.txt" % folder_name, 'w')
 
 index = 0
 for density_index in densities_idx:
-  for density_constant in densities_0:
+  for density_constant in reversed(densities_0):
     index += 1
-    recap_file.write("%d : %06.1f %4.2f\n" % (index, density_constant, density_index))
+    recap_file.write("%d : \Sigma(R) = %06.1f * R^{-%4.2f} (g/cm^2)\n" % (index, density_constant, density_index))
+    print("%d : \Sigma(R) = %06.1f * R^{-%4.2f} (g/cm^2)\n" % (index, density_constant, density_index))
     
     surface_density = (density_constant, density_index)
     

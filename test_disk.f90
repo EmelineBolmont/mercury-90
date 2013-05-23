@@ -91,7 +91,7 @@ program test_disk
     call study_optical_depth_profile()
     call study_thermal_diffusivity_profile()
     call study_scaleheight_profile()
-    call study_dissipation_at_one_location()
+!    call study_dissipation_at_one_location()
     
     ! Test dissipation
     ! EVERYTHING ABOVE MUST BE COMMENTED BEFORE DECOMMENTING 'ONE' AND ONE ALONE OF THESES ONES
@@ -548,6 +548,12 @@ program test_disk
     write(*,*) '  Force Initialisation again'
     FIRST_CALL = .true.
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
+    
+    if (DISSIPATION_TYPE.eq.0) then
+      write (error_unit,*) 'Error: There is currently no dissipation (dissipation_type=0) which is a problem to test it.'
+      write (error_unit,*) 'Please set a dissipation_type in "disk.in" before testing it'
+      call exit(3)
+    end if
     
     inquire(file='unitary_tests/dissipation', exist=isDefined)
     
@@ -1659,7 +1665,7 @@ program test_disk
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     real(double_precision), dimension(nb_mass) :: mass
     
-    integer, parameter :: nb_points = 100
+    integer, parameter :: nb_points = 150
     real(double_precision) :: a_min
     real(double_precision) :: a_max
     ! step for log sampling
@@ -1812,6 +1818,7 @@ program test_disk
       write(j,*) 'set grid xtics ytics linetype 0'
       write(j,*) 'set xrange [', a_min, ':', a_max, ']'
       write(j,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+      write(j,*) 'set cbrange [-5.: 5.]'
     end do
 
     write(10,*) "splot 'corotation_torque.dat' with pm3d notitle"
@@ -1872,6 +1879,11 @@ program test_disk
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of surface density at one location through dissipation'
     
+    if (DISSIPATION_TYPE.eq.0) then
+      write (error_unit,*) 'Error: There is currently no dissipation (dissipation_type=0) which is a problem to test it.'
+      write (error_unit,*) 'Please set a dissipation_type in "disk.in" before testing it'
+      call exit(3)
+    end if
     
     if ((density_position .gt. INNER_BOUNDARY_RADIUS) .and. (density_position .lt. distance_sample(NB_SAMPLE_PROFILES-1))) then
       
@@ -2036,7 +2048,7 @@ program test_disk
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
     
     if (DISSIPATION_TYPE.eq.0) then
-      write (error_unit,*) 'There is currently no dissipation (dissipation_type=0) which is a problem to test it.'
+      write (error_unit,*) 'Error: There is currently no dissipation (dissipation_type=0) which is a problem to test it.'
       write (error_unit,*) 'Please set a dissipation_type in "disk.in" before testing it'
       call exit(3)
     end if

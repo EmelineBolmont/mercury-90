@@ -160,20 +160,42 @@ program torque_diagram
 
     write(11,*) 'set xlabel "semi major axis (AU)"'
     write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
-    
     write(11,*) 'set title "Evolution of the total torque {/Symbol G}_{tot}/{/Symbol G}_0 "'
-    
     write(11,*) 'set pm3d map'
     write(11,*) 'set pm3d explicit'
     write(11,*) 'set palette rgbformulae 22,13,-31'
     write(11,*) 'set grid xtics ytics linetype 0'
     write(11,*) 'set xrange [', a_min, ':', a_max, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
-
-    
+    write(11,*) 'set cbrange [-5.: 5.]'
     write(11,*) "splot 'total_torque.dat' with pm3d notitle, \"
     write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
     write(11,*) "pause -1"
+    
+    ! Only the image
+    write(11,*) "set terminal pngcairo crop enhanced size 1200, 1000 font ',20'"
+    write(11,*) "set output 'total_torque_diagram.png'"
+    write(11,*) "set pm3d map"
+    write(11,*) "set pm3d explicit"
+    write(11,*) "set palette rgbformulae 22,13,-31"
+    write(11,*) "unset xtics"
+    write(11,*) "unset ytics"
+    write(11,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+    write(11,*) 'set cbrange [-5.: 5.]'
+    write(11,*) "splot 'total_torque.dat' with pm3d notitle"
+
+    
+    ! Only the vectoriel informations (to recompose the image later using Inkscape)
+    write(11,*) "set terminal svg enhanced"
+    write(11,*) "set output 'total_torque.svg'"
+    write(11,*) "set grid xtics ytics linetype 0"
+    write(11,*) "set xtics"
+    write(11,*) "set ytics"
+    write(11,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+    write(11,*) 'set cbrange [-5.: 5.]'
+    write(11,*) "splot 'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
     
     
     close(11)
