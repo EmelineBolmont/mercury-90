@@ -78,7 +78,7 @@ contains
     real(double_precision), dimension(4161) :: timeBD,radiusBD,lumiBD,HZinGJ,HZoutGJ,HZinb,HZoutb
     real(double_precision), dimension(1065) :: timestar,radiusstar,d2radiusstar
     real(double_precision), dimension(1065) :: timedM,radiusdM
-    real(double_precision), dimension(15) :: timeJup,radiusJup,k2Jup,rg2Jup,spinJup
+    real(double_precision), dimension(4755) :: timeJup,radiusJup,k2Jup,rg2Jup,spinJup
     real(double_precision), dimension(37) :: rg2st,trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
     real(double_precision) :: Rst,Rst5,Rst10,Rstb,Rst0,Rstb0,temp,spin0,spinp0,spinb0
     real(double_precision) :: rg2s,rg2s0,k2s,k2s0
