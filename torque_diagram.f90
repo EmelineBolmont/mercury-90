@@ -328,7 +328,7 @@ end subroutine write_torquein
     
     open(11, file="total_torque.gnuplot")
 
-    write(11,*) "set terminal wxt enhanced"
+    write(11,*) "set terminal wxt enhanced font ',20'"
 
     write(11,*) 'set xlabel "semi major axis (AU)"'
     write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
@@ -352,6 +352,9 @@ end subroutine write_torquein
     write(11,*) "set palette rgbformulae 22,13,-31"
     write(11,*) "unset xtics"
     write(11,*) "unset ytics"
+    write(11,*) 'unset xlabel'
+    write(11,*) 'unset ylabel'
+    write(11,*) 'unset title'
     write(11,*) 'set xrange [', a_min, ':', a_max, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     write(11,*) 'set cbrange [-5.: 5.]'
@@ -359,11 +362,14 @@ end subroutine write_torquein
 
     
     ! Only the vectoriel informations (to recompose the image later using Inkscape)
-    write(11,*) "set terminal svg enhanced"
+    write(11,*) "set terminal svg enhanced font ' ,20'"
     write(11,*) "set output 'total_torque.svg'"
     write(11,*) "set grid xtics ytics linetype 0"
     write(11,*) "set xtics"
     write(11,*) "set ytics"
+    write(11,*) 'set xlabel "semi major axis (AU)"'
+    write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
+    write(11,*) 'set title "Evolution of the total torque {/Symbol G}_{tot}/{/Symbol G}_0 "'
     write(11,*) 'set xrange [', a_min, ':', a_max, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     write(11,*) 'set cbrange [-5.: 5.]'
