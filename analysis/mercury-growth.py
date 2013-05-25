@@ -10,12 +10,16 @@ import numpy as np
 import sys # to be able to retrieve arguments of the script
 import mercury
 
-BINARY_FOLDER = '$HOME/bin/mercury'
+# We get the path toward the binaries
+scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
+binaryPath = os.path.join(scriptFolder, os.path.pardir)
+
+OUTPUT_FOLDER = "movie"
+NOM_FICHIER_PLOT = "frame_growth"
 OUTPUT_EXTENSION = "png"
 
 NB_POINTS = 50 # Number of points for the display or circles
 NB_FRAMES = 2
-CZ = None # POSITION OF THE CONVERGENCE ZONE IN AU
 
 ###############################################
 ## Beginning of the program
@@ -23,6 +27,7 @@ CZ = None # POSITION OF THE CONVERGENCE ZONE IN AU
 
 
 # We get arguments from the script
+isDisk = True
 
 #~ pdb.set_trace()
 isProblem = False
@@ -31,9 +36,8 @@ problem_message = "AIM : Display in a m = f(a) diagram, all the planets of the c
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * t_max (the end of the output, in years)" + "\n" + \
 " * t_min (the beginning of the output (in years)" + "\n" + \
+" * nodisk to avoid torque diagram display" + "\n" + \
 " * frames=1 (the number of frames you want)" + "\n" + \
-" * cz=1 (The position of a convergence zone in AU)" + "\n" + \
-"   cz=[[1,60],[4,30]] (the list of mass (earth mass) and zero torque position (in AU) successively)" + "\n" + \
 " * ext=png (The extension for the output files)" + "\n" + \
 " * help : display this current message"
 
@@ -46,12 +50,12 @@ for arg in sys.argv[1:]:
     t_min = float(value)
   elif (key == 't_max'):
     t_max = float(value)
+  elif (key == 'nodisk'):
+    isDisk = False
   elif (key == 'frames'):
     NB_FRAMES = int(value)
   elif (key == 'ext'):
     OUTPUT_EXTENSION = value
-  elif (key == 'cz'):
-    CZ = eval(value)
   elif (key == 'help'):
     print(problem_message)
     exit()
@@ -61,6 +65,46 @@ for arg in sys.argv[1:]:
 
 if isProblem:
   print(problem_message)
+
+if not(os.path.exists(OUTPUT_FOLDER)):
+    os.mkdir(OUTPUT_FOLDER)
+
+if isDisk:
+  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "torque_diagram"))
+  if (returncode != 0):
+    print(process_stdout)
+    print(process_stderr)
+    print("Process terminated with error %d" % returncode)
+    pdb.set_trace()
+    
+  
+  # We read the contour of the zero torque zones
+  contour_filename = "contour_total_torque.dat"
+  
+  contours_a = [[]]
+  contours_m = [[]]
+  contours_aapp = contours_a[-1].append
+  contours_mapp = contours_m[-1].append
+
+  contour_file = open(contour_filename, 'r')
+  for line in contour_file:
+    if (line == ' \n'):
+      contours_a.append([])
+      contours_m.append([])
+      contours_aapp = contours_a[-1].append
+      contours_mapp = contours_m[-1].append
+    else:
+      (a, m, dummy) = line.split()
+      contours_aapp(float(a))
+      contours_mapp(float(m))
+  
+  # We delete all the empty arrays created in the list of contours (one between each contour)
+  while True:
+    try:
+      contours_a.remove([])
+      contours_m.remove([])
+    except:
+      break
 
 ####################
 # On recupere la liste des fichiers planetes.aei
@@ -203,16 +247,19 @@ for frame_i in range(NB_FRAMES):
   #~ pl.plot(0, 0, '*', color='yellow', markersize=20) 
   pl.fill([0, 0.004, 0.004, 0, 0], [0, 0, m_max, m_max, 0], color='yellow')
 
-  # We display the convergence zone
-  if (type(CZ) == list):
-    pl.plot(CZ[1], CZ[0], '-.', color="#000000")
-  elif (type(CZ) in [float, int]):
-    pl.plot([CZ, CZ], [0, m_max], '-.', color="#000000")
+  if (isDisk and (len(contours_a) > 0)):
+    pl.fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
+    for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
+      #~ pl.plot(c_a, c_m, color="#ff0000")
+      pl.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
   
   # We draw circles for each orbit. This part might be used if a delta_t is more than one orbit of a planet.
+  min_mass = 0.2 # earth mass
+  markersize_prefactor = 4 / (min_mass**0.33)
   for planet in range(nb_planete):
     try:
-      pl.plot(a[planet][id_time], m[planet][id_time], 'o', color=colors[planet], markersize=int(5* (m[planet][id_time])**0.33))
+      
+      pl.plot(a[planet][id_time], m[planet][id_time], 'o', color=colors[planet], markersize=max(int(markersize_prefactor * (m[planet][id_time])**0.33),markersize_prefactor))
     except:
       #~ if (frame_i == 9):
         #~ pdb.set_trace()
@@ -229,9 +276,9 @@ for frame_i in range(NB_FRAMES):
   #~ pl.legend()
   pl.grid(True)
   #~ pdb.set_trace()
-  nom_fichier_plot = "frame_growth_"+autiwa.number_fill(frame_i,len(str(NB_FRAMES)))
+  nom_fichier_plot = "%s_%05d.%s" % (NOM_FICHIER_PLOT, frame_i, OUTPUT_EXTENSION)
   
-  pl.savefig(nom_fichier_plot+'.'+OUTPUT_EXTENSION, format=OUTPUT_EXTENSION)
+  pl.savefig(os.path.join(OUTPUT_FOLDER, nom_fichier_plot), format=OUTPUT_EXTENSION)
 
 #~ dossier_output = "output"
 #~ system("mkdir dossier_output")
