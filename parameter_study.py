@@ -87,15 +87,15 @@ def set_prefered_disk():
   #----------------------------------
   # Parameters for the disk
   # None parameters will not be displayed in the parameter file and thus, default values of the code will be used.
-  density_constant = 1700.
+  density_constant = 850.
   #~ density_index = 0.5
   density_index = 1.0
   surface_density = (density_constant, density_index) # (g/cm^2, power law index)
   density_file = 'surface_density_profile.dat'
   adiabatic_index = 1.4 # the adiabatic index of the disk
-  viscosity_type = 'constant' # constant, alpha
-  viscosity = 1e15 # cm^2/s
-  alpha = None
+  viscosity_type = 'alpha' # constant, alpha
+  viscosity = None # cm^2/s
+  alpha = 5e-3
   alpha_dz = None
   radius_dz = None
   #~ opacity_type = 'bell' # 'bell' or 'zhu' or 'hure' opacity table
@@ -295,20 +295,17 @@ else:
   os.mkdir(folder_name)
 os.chdir("..")
 
-densities_0 = [300., 800., 1500.]
-densities_idx = [0.5, 1.0, 1.5]
+#~ densities_0 = [300., 800., 1500.]
+#~ densities_idx = [0.5, 1.0, 1.5]
+opacities = ['bell', 'zhu', 'hure']
 
 recap_file = open("parameter_study/%s/readme.txt" % folder_name, 'w')
 
 index = 0
-for density_index in densities_idx:
-  for density_constant in reversed(densities_0):
+for opacity in opacities:
     index += 1
-    recap_file.write("%d : \Sigma(R) = %06.1f * R^{-%4.2f} (g/cm^2)\n" % (index, density_constant, density_index))
-    print("%d : \Sigma(R) = %06.1f * R^{-%4.2f} (g/cm^2)\n" % (index, density_constant, density_index))
-    
-    surface_density = (density_constant, density_index)
-    
+    recap_file.write("%d : opacity_type = %s\n" % (index, opacity))
+    opacity_type = opacity
     generation_simulation_parameters()
     
     (process_stdout, process_stderr, returncode) = systemCommand("./test_disk")
