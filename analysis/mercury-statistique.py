@@ -148,11 +148,13 @@ dossier_suppr = ["output", "test", "reference_simu"]
 isLog = False # We set the false option before. Because if not, we will erase the 'true' with other option that are not log, and 
 # thus will lead to be in the else and put log to false.
 isStat = False # Will create a global element.out file that contains all the surviving planets
+noPlot = False # to stop the program before plotting (usefull when using with remote distant SSH, the plots might slow down the connexion)
 
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * nodisk : to avoid torque diagram display" + "\n" + \
+" * noplot : to skip plotting statistics, then the script will only serve to check some properties and do 'prints'" + "\n" + \
 " * stat :  to create a global 'element.out' file that contain all the surviving planets" + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
 " * ext=pdf : The extension for the output files"
@@ -167,6 +169,8 @@ for arg in sys.argv[1:]:
     OUTPUT_EXTENSION = value
   elif (key == 'nodisk'):
     isDisk = False
+  elif (key == 'noplot'):
+    noPlot = True
   elif (key == 'stat'):
     isStat = True
   elif (key == 'help'):
@@ -425,6 +429,8 @@ print("most massive planet formed in all simulations : %f" % max(most_massive))
 #######################
 #   Tracé des plots   #
 #######################
+if noPlot:
+  exit()
 print("\t Computing Plots")
 os.chdir(rep_exec)
 nb_bins = 50
