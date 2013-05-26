@@ -202,10 +202,10 @@ program test_disk
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/function_zero_temperature.dat')
     
-    ! We generate cartesian coordinate for the given semi major axis
+    ! We generate cartesian coordinate for the given Semi-major axis
     position(1) = orbital_position
     
-    ! We generate cartesian coordinate for the given mass and semi major axis
+    ! We generate cartesian coordinate for the given mass and Semi-major axis
     velocity(2) = sqrt((stellar_mass + mass) / position(1))
     
     ! we store in global parameters various properties of the planet
@@ -214,7 +214,7 @@ program test_disk
     
     
     write(10,*) '# properties of the disk at the location of the planet that influence the value of the temperature'
-    write(10,*) '# radial position of the planet (in AU) :', p_prop%radius
+    write(10,*) '# radial position of the planet (AU) :', p_prop%radius
     write(10,*) '# viscosity :', p_prop%nu
     write(10,*) '# surface density :', p_prop%sigma
     write(10,*) '# angular velocity :', P_prop%omega
@@ -263,7 +263,7 @@ program test_disk
     open(10, file='unitary_tests/temperature_interpolation.dat')
     do j=1,nb_a
       a = (a_min + a_step * (j - 1.d0))
-      ! We generate cartesian coordinate for the given semi major axis
+      ! We generate cartesian coordinate for the given Semi-major axis
       
       call get_temperature(radius=a, & ! Input
                            temperature=temperature, temperature_index=temperature_index, chi=chi, nu=nu) ! Output
@@ -281,7 +281,7 @@ program test_disk
     write(10,*) '!rm "temperature_interpolation.pdf"'
     write(10,*) "set output 'temperature_interpolation.pdf'"
     
-    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set xlabel "Semi-major axis a (AU)"'
     write(10,*) 'set ylabel "temperature [K]"'
       
     write(10,*) 'set grid'
@@ -312,7 +312,7 @@ program test_disk
     open(10, file='unitary_tests/density_interpolation.dat')
     do j=1,nb_a
       a = (a_min + a_step * (j - 1.d0))
-      ! We generate cartesian coordinate for the given semi major axis
+      ! We generate cartesian coordinate for the given Semi-major axis
       
       call get_surface_density(radius=a, sigma=sigma, sigma_index=sigma_index)
       
@@ -329,7 +329,7 @@ program test_disk
     write(10,*) '!rm "density_interpolation.pdf"'
     write(10,*) "set output 'density_interpolation.pdf'"
     
-    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set xlabel "Semi-major axis a (AU)"'
 
     
     write(10,*) 'set ylabel "density [g/cm^2]"'
@@ -389,7 +389,7 @@ program test_disk
     write(10,*) '!rm "torque_interpolation.pdf"'
     write(10,*) "set output 'torque_interpolation.pdf'"
     
-    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set xlabel "Semi-major axis a (AU)"'
 
     
     write(10,*) 'set ylabel "torque [?]"'
@@ -410,7 +410,7 @@ program test_disk
   
   ! Return:
   !  a data file 'retrieval_aeI.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of Semi-major axis.
   
     use contour
     
@@ -447,10 +447,10 @@ program test_disk
     do i=1, nb_points ! loop on the position
       a(i) = a_min + a_step * (i-1)
       
-      ! We generate cartesian coordinate for the given semi major axis
+      ! We generate cartesian coordinate for the given Semi-major axis
       position(1) = a(i)
       
-      ! We generate cartesian coordinate for the given mass and semi major axis
+      ! We generate cartesian coordinate for the given mass and Semi-major axis
       velocity(2) = sqrt((stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
@@ -696,7 +696,7 @@ program test_disk
   
   position(1) = a
 
-  ! We generate cartesian coordinate for the given mass and semi major axis
+  ! We generate cartesian coordinate for the given mass and Semi-major axis
   velocity(2) = sqrt((stellar_mass + mass) / position(1))
   
   ! we store in global parameters various properties of the planet
@@ -798,7 +798,7 @@ program test_disk
   
   ! Return:
   !  a data file 'torques_fixed_m.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of Semi-major axis.
     implicit none
     
     
@@ -836,7 +836,7 @@ program test_disk
     write(10,*) "set terminal pdfcairo enhanced"
     write(10,*) "set output 'alpha_dz.pdf'"
     
-    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set xlabel "Semi-major axis a (AU)"'
     write(10,*) 'set ylabel "alpha (adim)"'
     write(10,*) 'set grid'
     write(10,*) 'set xrange [', a_min, ':', a_max, ']'
@@ -870,7 +870,7 @@ program test_disk
     write(11,*) "set output 'temperature_index.pdf'"
 
     do j=10,11
-      write(j,*) 'set xlabel "semi major axis a (in AU)"'
+      write(j,*) 'set xlabel "Semi-major axis a (AU)"'
       write(j,*) 'set nokey'
     end do
     
@@ -914,7 +914,7 @@ program test_disk
   write(11,*) "set output 'aspect_ratio_profile.pdf'"
   
   do j=10,11
-    write(j,*) 'set xlabel "semi major axis a (in AU)"'
+    write(j,*) 'set xlabel "Semi-major axis a (AU)"'
     write(j,*) 'set nokey'
   end do
   
@@ -952,7 +952,7 @@ program test_disk
     write(10,*) '!rm "optical_depth_profile.pdf"'
     write(10,*) "set output 'optical_depth_profile.pdf'"
     
-    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set xlabel "Semi-major axis a (AU)"'
     write(10,*) 'set nokey'
 
     
@@ -983,7 +983,7 @@ program test_disk
     
     write(10,*) '!rm "thermal_diffusivity_profile.pdf"'
     write(10,*) "set output 'thermal_diffusivity_profile.pdf'"
-    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set xlabel "Semi-major axis a (AU)"'
     write(10,*) 'set nokey'
     write(10,*) 'set ylabel "Thermal diffusivity {/Symbol c} [AU^2/day]"'
         
@@ -1089,7 +1089,7 @@ program test_disk
   
   ! Return:
   !  a data file '.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of Semi-major axis.
     implicit none
     
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
@@ -1126,14 +1126,14 @@ program test_disk
                  &, total torque (M_s.AU^2.day^{-2})'
     write(13,*) '# mass in earth mass ; specific torque (a_jup^2.Omega_jup^2)'             
 
-    ! We generate cartesian coordinate for the given semi major axis
+    ! We generate cartesian coordinate for the given Semi-major axis
     position(1) = a
     
     
     do j=1,nb_mass
       mass = (mass_min + mass_step * (j - 1.d0)) * EARTH_MASS  * K2
       
-      ! We generate cartesian coordinate for the given mass and semi major axis
+      ! We generate cartesian coordinate for the given mass and Semi-major axis
       velocity(2) = sqrt((stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
@@ -1180,7 +1180,7 @@ program test_disk
     
     do j=10,13
       write(j,*) 'set xlabel "Planet mass (m_{earth})"'
-      write(j,'(a,f5.1,a)') 'set title "for a semi major axis a= ',a,' AU"'
+      write(j,'(a,f5.1,a)') 'set title "for a Semi-major axis a= ',a,' AU"'
     end do
     
     write(10,*) 'set ylabel "torque [{/Symbol G}_0]"'
@@ -1224,7 +1224,7 @@ program test_disk
   
   ! Return:
   !  a data file 'torques_fixed_m.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of Semi-major axis.
     implicit none
     
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
@@ -1259,16 +1259,16 @@ program test_disk
     write(12,*) '# a in AU ; corotation torque (M_s.AU^2.day^{-2}), lindblad torque (M_s.AU^2.day^{-2})&
                  &, total torque (M_s.AU^2.day^{-2})'
 
-    ! We generate cartesian coordinate for the given semi major axis
+    ! We generate cartesian coordinate for the given Semi-major axis
     position(1) = a
     
     
     do j=1,nb_a
       a = (a_min + a_step * (j - 1.d0))
-      ! We generate cartesian coordinate for the given semi major axis
+      ! We generate cartesian coordinate for the given Semi-major axis
       position(1) = a
       
-      ! We generate cartesian coordinate for the given mass and semi major axis
+      ! We generate cartesian coordinate for the given mass and Semi-major axis
       velocity(2) = sqrt((stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
@@ -1310,7 +1310,7 @@ program test_disk
     write(12,*) "set output 'torques_fixed_m_units.pdf'"
     
     do j=10,12
-      write(j,*) 'set xlabel "semi major axis a (in AU)"'
+      write(j,*) 'set xlabel "Semi-major axis a (AU)"'
       write(j,'(a,f4.1,a)') 'set title "for planet mass = ',mass / (EARTH_MASS * K2),' m_{earth}"'
     end do
     
@@ -1348,7 +1348,7 @@ program test_disk
   
   ! Return:
   !  a data file 'torques_fixed_m.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of Semi-major axis.
     implicit none
     
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
@@ -1383,10 +1383,10 @@ program test_disk
     
     do i=1,nb_a
       a = (a_min + a_step * (i - 1.d0))
-      ! We generate cartesian coordinate for the given semi major axis
+      ! We generate cartesian coordinate for the given Semi-major axis
       position(1) = a
       
-      ! We generate cartesian coordinate for the given mass and semi major axis
+      ! We generate cartesian coordinate for the given mass and Semi-major axis
       velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
@@ -1408,7 +1408,7 @@ program test_disk
     write(10,*) "set terminal pdfcairo enhanced"
     write(10,*) "set output 'viscosity.pdf'"
     
-    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set xlabel "Semi-major axis a (AU)"'
     write(10,*) 'set ylabel "viscosity [cm^2/s]"'
     
     write(10,*) 'set grid'
@@ -1428,7 +1428,7 @@ program test_disk
   
   ! Return:
   !  a data file 'torques_fixed_m.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of Semi-major axis.
     implicit none
     
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
@@ -1477,16 +1477,16 @@ program test_disk
                         ') ; G_c(e/x_s=',eccentricities(5),') ; G_t(e/x_s=',eccentricities(5),')'
 
 
-    ! We generate cartesian coordinate for the given semi major axis
+    ! We generate cartesian coordinate for the given Semi-major axis
     position(1) = a
     
     
     do j=1,nb_a
       a = (a_min + a_step * (j - 1.d0))
-      ! We generate cartesian coordinate for the given semi major axis
+      ! We generate cartesian coordinate for the given Semi-major axis
       position(1) = a
       
-      ! We generate cartesian coordinate for the given mass and semi major axis
+      ! We generate cartesian coordinate for the given mass and Semi-major axis
       velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
@@ -1518,7 +1518,7 @@ program test_disk
 
     
 
-    write(10,*) 'set xlabel "semi major axis a (in AU)"'
+    write(10,*) 'set xlabel "Semi-major axis (AU)"'
     write(10,'(a,f4.1,a)') 'set title "for planet mass = ',mass / (EARTH_MASS * K2),' m_{earth}"'
 
     
@@ -1550,7 +1550,7 @@ program test_disk
   
   ! Return:
   !  a data file 'torques_fixed_m.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of Semi-major axis.
   
     use orbital_elements, only : mco_el2x
     
@@ -1650,7 +1650,7 @@ program test_disk
   
   ! Return:
   !  a data file 'total_torque.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of Semi-major axis.
   
     use contour
     
@@ -1709,26 +1709,26 @@ program test_disk
     open(14, file='unitary_tests/ref_torque.dat')
     open(15, file='unitary_tests/vector_total_torque.dat')
     
-    write(10,*) '# semi major axis (AU) ; mass in earth mass ; corotation torque (no dim)'
-    write(11,*) '# semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
-    write(12,*) '# semi major axis (AU) ; mass in earth mass ; total torque in M_s.AU^2.day^{-2}'
-    write(13,*) '# semi major axis (AU) ; mass in earth mass ; lindblad torque (no dim)'
-    write(14,*) '# semi major axis (AU) ; mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
-    write(15,*) '# semi major axis (AU) ; mass in earth mass ; Delta x ; Delta y'
+    write(10,*) '# Semi-major axis (AU) ; mass in earth mass ; corotation torque (no dim)'
+    write(11,*) '# Semi-major axis (AU) ; mass in earth mass ; total torque (no dim)'
+    write(12,*) '# Semi-major axis (AU) ; mass in earth mass ; total torque in M_s.AU^2.day^{-2}'
+    write(13,*) '# Semi-major axis (AU) ; mass in earth mass ; lindblad torque (no dim)'
+    write(14,*) '# Semi-major axis (AU) ; mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
+    write(15,*) '# Semi-major axis (AU) ; mass in earth mass ; Delta x ; Delta y'
     
     
     do i=1, nb_points ! loop on the position
       a(i) = a_min + a_step * (i-1)
 !~       a(i) = a_min * a_step**(i - 1)
       
-      ! We generate cartesian coordinate for the given semi major axis
+      ! We generate cartesian coordinate for the given Semi-major axis
       position(1) = a(i)
       
       
       do j=1,nb_mass
         mass(j) = (mass_min + mass_step * (j - 1.d0)) * K2 ! mass in [Msun * K2]
         
-        ! We generate cartesian coordinate for the given mass and semi major axis
+        ! We generate cartesian coordinate for the given mass and Semi-major axis
         velocity(2) = sqrt((stellar_mass + mass(j)) / position(1))
         
         ! we store in global parameters various properties of the planet
@@ -1739,7 +1739,7 @@ program test_disk
 !~         write(*,*) a(i),p_prop%semi_major_axis 
 !~         call print_planet_properties(p_prop) 
 !~         stop
-        ! If the semi major axis is not well determined, we display a warning and give the values
+        ! If the Semi-major axis is not well determined, we display a warning and give the values
         if (abs(a(i)-p_prop%semi_major_axis)/a(i).gt.1d-2) then
           write(*,*) 'Warning: for manual a=',a(i), 'we get :'
           call print_planet_properties(p_prop) 
@@ -1801,7 +1801,7 @@ program test_disk
     write(14,*) "set output 'ref_torque.png'"
 
     do j=10,14
-      write(j,*) 'set xlabel "semi major axis (AU)"'
+      write(j,*) 'set xlabel "Semi-major axis (AU)"'
       write(j,*) 'set ylabel "Planet mass (m_{earth})" center'
     end do
     
@@ -2145,17 +2145,17 @@ program test_disk
       call store_temperature_profile(filename=filename_temperature)
       call store_density_profile(filename=filename_density)
       
-      write(11,*) '# semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
+      write(11,*) '# Semi-major axis (AU) ; mass in earth mass ; total torque (no dim)'
       
       do i=1, nb_points ! loop on the position
         
-        ! We generate cartesian coordinate for the given semi major axis
+        ! We generate cartesian coordinate for the given Semi-major axis
         position(1) = a(i)
         
         do j=1,nb_mass
           mass(j) = (mass_min + mass_step * (j - 1.d0)) * K2
           
-          ! We generate cartesian coordinate for the given mass and semi major axis
+          ! We generate cartesian coordinate for the given mass and Semi-major axis
           velocity(2) = sqrt((stellar_mass + mass(j)) / position(1))
           
           ! we store in global parameters various properties of the planet
@@ -2191,7 +2191,7 @@ program test_disk
     ! Gnuplot script to output the frames of the total torque
     open(11, file="dissipation/total_torque.gnuplot")
     write(11,*) "set terminal pngcairo enhanced size 1024, 768 font ',20'"
-    write(11,*) 'set xlabel "semi major axis (AU)"'
+    write(11,*) 'set xlabel "Semi-major axis (AU)"'
     write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
     write(11,*) 'set pm3d map'
     write(11,*) 'set pm3d explicit'
@@ -2222,7 +2222,7 @@ program test_disk
     write(filename_temperature_ref, '(a,i0.5,a)') 'temperature',0,'.dat'
     open(12, file="dissipation/temperature.gnuplot")
     write(12,*) "set terminal pngcairo enhanced size 1024, 768 font ',20'"
-    write(12,*) 'set xlabel "semi major axis (AU)"'
+    write(12,*) 'set xlabel "Semi-major axis (AU)"'
     write(12,*) 'set ylabel "Temperature (K)"'
     write(12,*) 'set mxtics 10'
     write(12,*) 'set mytics 10'
@@ -2250,7 +2250,7 @@ program test_disk
     ! Gnuplot script to output the frames of the density
     open(13, file="dissipation/density.gnuplot")
     write(13,*) "set terminal pngcairo enhanced size 1024, 768 font ',20'"
-    write(13,*) 'set xlabel "semi major axis (AU)"'
+    write(13,*) 'set xlabel "Semi-major axis (AU)"'
     write(13,*) 'set ylabel "Surface density (g/cm^2)"'
     write(13,*) 'set grid'
     write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'

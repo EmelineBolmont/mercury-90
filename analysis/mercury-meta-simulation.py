@@ -64,7 +64,7 @@ EJECTION_DISTANCE = 100
 #~ TOTAL_MASS = 50 # earth mass (only used if FIXED_TOTAL_MASS = True)
 #~ NB_PLANETS = 10 # only used if FIXED_TOTAL_MASS = False
 #~ mass_parameters = (1, 3, "uniform") # the mass (in earth mass)
-#~ a_parameters = (1, 20, "uniform") # the semi major axis (in AU)
+#~ a_parameters = (1, 20, "uniform") # the Semi-major axis (in AU)
 #~ e_parameters = (0.001, 0.5, "uniform") # the eccentricity
 #~ I_parameters = (0.01, 3, "uniform") # The inclination (in degrees)
 radius_star = 0.005 # The radius of the central star in AU
@@ -236,7 +236,7 @@ mass_parameters = (0.1, 1, "uniform") # the mass (in earth mass)
 ## which means that from the original dtg (for the innermost region)
 ## , at this point you have to apply the given factor
 #a_parameters = (0.01, (4., 2.), "from-dust")
-a_parameters = ((1, 1.5), (4., 6.), "rh") # the semi major axis (in AU)
+a_parameters = ((1, 1.5), (4., 6.), "rh") # the Semi-major axis (in AU)
 
 e_parameters = (1e-3, 1e-5, "uniform") # the eccentricity
 

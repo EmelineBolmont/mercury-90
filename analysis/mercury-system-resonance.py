@@ -158,7 +158,7 @@ uncertainty = 0.01 * float(UNCERTAINTY)
 
 # To each planet named "planet01" exist a "planet01.aei" file that contains its coordinates with time.
 name = [] # the name of the planets in the current simulation. 
-a = [] # semi major axis (in AU)
+a = [] # Semi-major axis (in AU)
 e = [] # eccentricity
 mass = [] # mass in earth mass
 

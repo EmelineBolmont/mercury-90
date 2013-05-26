@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # v1.1
-# Script that will display the evolution of the semi major axis, mass, 
+# Script that will display the evolution of the Semi-major axis, mass, 
 # eccentricity and inclination for all the planets of the current simulation 
 # (You launch the script in the folder of the mercury simulation)
 
@@ -82,7 +82,7 @@ nb_planete = len(liste_aei)
 # On lit, pour chaque planete, le contenu du fichier et on stocke les variables qui nous intÃ©ressent.
 ####################
 t = [] # time in years
-a = [] # semi major axis in AU
+a = [] # Semi-major axis in AU
 e = [] # eccentricity
 q = [] # perihelion
 Q = [] # aphelion
@@ -102,7 +102,7 @@ while (len(positions) == 0):
 for planete in range(nb_planete):
   
   ti = [] # time in years
-  ai = [] # semi major axis in AU
+  ai = [] # Semi-major axis in AU
   ei = [] # eccentricity
   Ii = [] # inclinaison (degrees)
   mi = [] # planet mass in earth mass

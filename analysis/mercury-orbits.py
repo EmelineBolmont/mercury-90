@@ -115,7 +115,7 @@ for planete in range(nb_planete):
   tableau = open(fichier_source, 'r')
   
   t.append([]) # time in year
-  a.append([]) # the semi major axis in AU
+  a.append([]) # the Semi-major axis in AU
   m.append([]) # mass in earth mass
   x.append([]) # demi-grand axe en ua
   y.append([]) #
@@ -160,7 +160,7 @@ for planete in range(nb_planete):
     
   tableau.close()
 
-#~ a_max = max([ai[0] for ai in a]) # We get the biggest semi major axis of the simulation initially
+#~ a_max = max([ai[0] for ai in a]) # We get the biggest Semi-major axis of the simulation initially
 #~ a_max = 1.5 * CZ_LOCATION
 # The separation between outputs is not always the same because the real output interval in mercury and element might be slightly different.
 delta_t = (t[0][-1] - t[0][0]) / float(len(t[0]))

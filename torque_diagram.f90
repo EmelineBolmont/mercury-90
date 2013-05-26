@@ -187,7 +187,7 @@ end subroutine write_torquein
   
   ! Return:
   !  a data file 'total_torque.dat' 
-  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of semi major axis.
+  ! and an associated gnuplot file 'total_torque.gnuplot' that display values for get_corotation_torque for a range of Semi-major axis.
   
     use contour
     
@@ -280,18 +280,18 @@ end subroutine write_torquein
     ! We open the file where we want to write the outputs
     open(11, file='total_torque.dat')
     
-    write(11,*) '# semi major axis (AU) ; mass in earth mass ; total torque (no dim)'
+    write(11,*) '# Semi-major axis (AU) ; mass in earth mass ; total torque (no dim)'
     
     do i=1, nb_distance ! loop on the position
 !~       a(i) = a_min + a_step * (i-1)
 !~       a(i) = a_min * a_step**(i - 1)
       
-      ! We generate cartesian coordinate for the given semi major axis
+      ! We generate cartesian coordinate for the given Semi-major axis
       position(1) = a(i)
       
       
       do j=1,nb_mass
-        ! We generate cartesian coordinate for the given mass and semi major axis
+        ! We generate cartesian coordinate for the given mass and Semi-major axis
         velocity(2) = sqrt((stellar_mass + mass(j)) / position(1))
         
         ! we store in global parameters various properties of the planet
@@ -299,7 +299,7 @@ end subroutine write_torquein
          mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! Input
          p_prop=p_prop) ! Output
          
-        ! If the semi major axis is not well determined, we display a warning and give the values
+        ! If the Semi-major axis is not well determined, we display a warning and give the values
         if (abs(a(i)-p_prop%semi_major_axis)/a(i).gt.1d-2) then
           write(*,*) 'Warning: for manual a=',a(i), 'we get :'
           call print_planet_properties(p_prop) 
@@ -330,7 +330,7 @@ end subroutine write_torquein
 
     write(11,*) "set terminal wxt enhanced font ',20'"
 
-    write(11,*) 'set xlabel "semi major axis (AU)"'
+    write(11,*) 'set xlabel "Semi-major axis (AU)"'
     write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
     write(11,*) 'set title "Evolution of the total torque {/Symbol G}_{tot}/{/Symbol G}_0 "'
     write(11,*) 'set pm3d map'
@@ -367,7 +367,7 @@ end subroutine write_torquein
     write(11,*) "set grid xtics ytics linetype 0"
     write(11,*) "set xtics"
     write(11,*) "set ytics"
-    write(11,*) 'set xlabel "semi major axis (AU)"'
+    write(11,*) 'set xlabel "Semi-major axis (AU)"'
     write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
     write(11,*) 'set title "Evolution of the total torque {/Symbol G}_{tot}/{/Symbol G}_0 "'
     write(11,*) 'set xrange [', a_min, ':', a_max, ']'

@@ -36,7 +36,7 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " * massive : (%d) the number of most massive planets to be tracked" % MAX_COLORED + "\n" + \
 " * ecc : (%s) If we want to display eccentricity" % isEcc + "\n" + \
 " * log : (%s) time (x-axis) will be displayed in log" % isLog + "\n" + \
-" * alog : (%s) semi major axis (y-axis) will be displayed in log" % isaLog + "\n" + \
+" * alog : (%s) Semi-major axis (y-axis) will be displayed in log" % isaLog + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
 " * ext=pdf : (%s) The extension for the output files" % OUTPUT_EXTENSION
 
@@ -88,7 +88,7 @@ nb_planete = len(liste_aei)
 # On lit, pour chaque planete, le contenu du fichier et on stocke les variables qui nous intÃ©ressent.
 ####################
 t = [] # time in years
-a = [] # semi major axis in AU
+a = [] # Semi-major axis in AU
 e = [] # eccentricity
 q = [] # perihelion
 Q = [] # aphelion

@@ -117,7 +117,7 @@ for (planete, planet_datafile) in enumerate(liste_aei):
   sys.stdout.flush()
   
   ti = [] # time in years
-  ai = [] # semi major axis in AU
+  ai = [] # Semi-major axis in AU
   ei = [] # eccentricity
   
   fichier_source = liste_aei[planete]

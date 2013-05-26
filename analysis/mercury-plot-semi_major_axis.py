@@ -188,7 +188,7 @@ if ('a_min' in locals()):
   
 pl.ylim(ylims)
 pl.xlabel("time [years]")
-pl.ylabel("a [AU]")
+pl.ylabel("Semi-major axis [AU]")
 #~ pl.legend()
 pl.grid(True)
 
@@ -208,7 +208,6 @@ plot_a.xaxis.set_major_formatter(myxfmt)
 
 pl.figure(1)
 nom_fichier_plot = "semi_major_axis"
-#~ pl.savefig(nom_fichier_plot+'.svg', format='svg')
 pl.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()

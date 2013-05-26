@@ -135,7 +135,7 @@ for planete in range(nb_planete):
   tableau = open(fichier_source, 'r')
   
   t.append([]) # time in year
-  a.append([]) # the semi major axis in AU
+  a.append([]) # the Semi-major axis in AU
   m.append([]) # mass in earth mass
 
   # On passe les 3 premieres lignes d'entete.
@@ -174,7 +174,7 @@ for planete in range(nb_planete):
 a1 = [ai[0] for ai in a]
 a2 = [ai[-1] for ai in a]
 a1.extend(a2)
-a_max = max(a1) # We get the biggest semi major axis of the simulation (either at the beginning or the end of the simulation)
+a_max = max(a1) # We get the biggest Semi-major axis of the simulation (either at the beginning or the end of the simulation)
 m_max = max([mi[-1] for mi in m]) # We get the biggest mass of the simulation
 #~ a_max = 1.5 * CZ_LOCATION
 delta_t = t[0][1] - t[0][0]
