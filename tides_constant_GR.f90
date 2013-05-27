@@ -93,7 +93,7 @@ module tides_constant_GR
   real(double_precision), parameter :: sigma_dM = 2.006*3.845764d4 !-60+64
   ! Sun-like-star: sigmast = 4.992d-66 cgs, conversion to Msun-1.AU-2.day-1 = 3.845764022293d64
   real(double_precision), parameter :: sigma_Sun = 4.992*3.845764d-2 !-66+64
-  ! If planet not terrestrial, dissipation factor Gas Giant
+  ! If planet not terrestrial, dissipation factor Hot Gas Giant
   real(double_precision), parameter :: sigma_gg = 2.006*3.845764d4
   
   ! Some stuff, constants mainly

@@ -481,7 +481,7 @@ contains
                 spin(1,1) = rot_crash(1) !day-1
 			    spin(2,1) = rot_crash(2) !day-1
                 spin(3,1) = rot_crash(3) !day-1
-                call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,0.0d0,Rstb0)
+                call spline_b_val(nptmss,timeJup*365.25-t_init-t_crash,radiusJup,0.0d0,Rstb0)
                 Rst0    = minau * Rstb0
                 call spline_b_val(nptmss,timeJup*365.25-t_init-t_crash,k2Jup,0.0d0,k2s0)
                 call spline_b_val(nptmss,timeJup*365.25-t_init-t_crash,rg2Jup,0.0d0,rg2s0)
