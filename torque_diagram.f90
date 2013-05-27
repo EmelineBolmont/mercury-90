@@ -14,8 +14,8 @@ program torque_diagram
   real(double_precision) :: a_max
   real(double_precision), dimension(2) :: a_transition = (/0.5d0, 10.d0/)
   integer :: nb_mass = 100
-  real(double_precision) :: m_min_em = 0.1 ! in earth mass
-  real(double_precision) :: m_max_em = 60. ! in earth mass
+  real(double_precision) :: m_min_em = 0.1d0 ! in earth mass
+  real(double_precision) :: m_max_em = 60.d0 ! in earth mass
   real(double_precision) :: mass_min ! in solar mass
   real(double_precision) :: mass_max ! in solar mass
   !--------------------------------
@@ -231,7 +231,7 @@ end subroutine write_torquein
     ! first regime
     nb_tmp = nb_distance / 10
     if (a_min.lt.a_transition(1)) then
-      a_step = (a_transition(1) / a_min)**(1 / (float(nb_tmp)))
+      a_step = (a_transition(1) / a_min)**(1.d0 / (dfloat(nb_tmp)))
       
       do i=1,nb_tmp
         a(i) = a_min * a_step**(i - 1)
@@ -245,13 +245,11 @@ end subroutine write_torquein
       nb_tmp = nb_distance - idx
       a_stop = a_max
     else
-      nb_tmp = int((nb_distance - idx) * &
-               (log(a_transition(2))-log(a_start)) / &
-               (log(a_max)-log(a_start)))
+      nb_tmp = int(dfloat((nb_distance - idx)) * (log(a_transition(2))-log(a_start)) / (log(a_max)-log(a_start)))
       a_stop = a_transition(2)
     end if
     
-    a_step = (a_stop - a_start) / (float(nb_tmp))
+    a_step = (a_stop - a_start) / (dfloat(nb_tmp))
     
     do i=idx, idx + nb_tmp
       a(i) = a_start + a_step * (i-idx)
@@ -260,7 +258,7 @@ end subroutine write_torquein
     
     ! third regime
     a_start = a(idx-1) + a_step
-    a_step = (a_max / a_start)**(1 / (float(nb_distance - idx)))
+    a_step = (a_max / a_start)**(1.d0 / (dfloat(nb_distance - idx)))
     
     do i=idx, nb_distance
       a(i) = a_start * a_step**(i - idx)
