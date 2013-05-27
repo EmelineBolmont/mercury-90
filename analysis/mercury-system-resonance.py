@@ -425,7 +425,7 @@ for planet in range(0, nb_planets-1):
     pl.text(x_position, (ylims[1]+y_position)/2., extra_res, horizontalalignment='left', verticalalignment='center', rotation='vertical', size=7)
     
 #~ pl.ylim(-1, 1)
-pl.xlabel("a [AU]")
+pl.xlabel("Semi-major axis [AU]")
 pl.ylabel("mass [Earths]")
 pl.legend()
 pl.savefig(NOM_FICHIER_PLOT+'.'+OUTPUT_EXTENSION, format=OUTPUT_EXTENSION)

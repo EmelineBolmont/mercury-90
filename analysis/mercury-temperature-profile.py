@@ -40,16 +40,21 @@ plot_T.add_patch(snowline)
 plot_T.text(outer_edge, snowline_T_mid, "Snow line", horizontalalignment='right', verticalalignment='bottom', size=10)
 plot_T.plot([inner_edge, outer_edge], [snowline_T_mid, snowline_T_mid], color='#000000')
 
-plot_T.set_xlabel("a [UA]")
+plot_T.set_xlabel("Semi-major axis [AU]")
 plot_T.set_ylabel("Temperature [K]")
-plot_T.grid(True)
+plot_T.xaxis.grid(True, which='major', color='#222222', linestyle='-')
+plot_T.yaxis.grid(True, which='major', color='#222222', linestyle='-')
+plot_T.xaxis.grid(True, which='minor', color='#888888', linestyle='-')
+plot_T.yaxis.grid(True, which='minor', color='#888888', linestyle='-')
 
 plot_idx = fig.add_subplot(212, sharex=plot_T)
 plot_idx.semilogx(a, index)
 
-plot_idx.set_xlabel("a [UA]")
+plot_idx.set_xlabel("Semi-major axis [AU]")
 plot_idx.set_ylabel("Temperature power law")
-plot_idx.grid(True)
+plot_idx.xaxis.grid(True, which='major', color='#222222', linestyle='-')
+plot_idx.yaxis.grid(True, which='major', color='#222222', linestyle='-')
+plot_idx.xaxis.grid(True, which='minor', color='#888888', linestyle='-')
 
 # We generate the output file
 nom_fichier_plot = "temperature_profile"
