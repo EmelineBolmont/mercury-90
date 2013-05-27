@@ -299,19 +299,28 @@ os.chdir("..")
 #~ densities_idx = [0.5, 1.0, 1.5]
 opacities = ['bell', 'zhu', 'hure']
 
+
 recap_file = open("parameter_study/%s/readme.txt" % folder_name, 'w')
 
+density_constant = 300.
+density_index = 0.5
+
 index = 0
-for opacity in opacities:
-    index += 1
-    recap_file.write("%d : opacity_type = %s\n" % (index, opacity))
-    opacity_type = opacity
-    generation_simulation_parameters()
-    
-    (process_stdout, process_stderr, returncode) = systemCommand("./test_disk")
-    (process_stdout, process_stderr, returncode) = systemCommand("(cd unitary_tests && gnuplot total_torque.gnuplot)")
-    shutil.copy2("unitary_tests/total_torque.png", "parameter_study/%s/total_torque%05d.png" % (folder_name, index))
-    shutil.copy2("temperature_profile.dat", "parameter_study/%s/temperature_profile%05d.dat" % (folder_name, index))
+for opacity_type in opacities:
+  index += 1
+  #~ recap_file.write("%d : \Sigma(R) = %06.1f * R^{-%4.2f} (g/cm^2)\n" % (index, density_constant, density_index))
+  #~ print("%d : \Sigma(R) = %06.1f * R^{-%4.2f} (g/cm^2)\n" % (index, density_constant, density_index))
+  recap_file.write("%d : opacity = %s\n" % (index, opacity_type))
+  print("%d : opacity = %s\n" % (index, opacity_type))
+  
+  surface_density = (density_constant, density_index)
+  
+  generation_simulation_parameters()
+  
+  (process_stdout, process_stderr, returncode) = systemCommand("./test_disk")
+  (process_stdout, process_stderr, returncode) = systemCommand("(cd unitary_tests && gnuplot total_torque.gnuplot)")
+  shutil.copy2("unitary_tests/total_torque.png", "parameter_study/%s/total_torque%05d.png" % (folder_name, index))
+  shutil.copy2("temperature_profile.dat", "parameter_study/%s/temperature_profile%05d.dat" % (folder_name, index))
 shutil.copy2("disk.out", "parameter_study/%s/disk.out" % (folder_name))
 shutil.copy2("disk.in", "parameter_study/%s/disk.in" % (folder_name))
 
