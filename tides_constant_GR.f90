@@ -87,7 +87,7 @@ module tides_constant_GR
   real(double_precision), parameter :: k2p_gg = 0.38d0
   real(double_precision), parameter :: k2pdeltap_gg = 8.101852d-9
  
-  ! Sigma for BD, dM, Suns
+  ! Sigma for BD, dM, Suns, Jupiter
   ! BD, Mdwarf: sigmast = 2.006d-60 cgs, conversion to Msun-1.AU-2.day-1 = 3.845764022293d64
   real(double_precision), parameter :: sigma_BD = 2.006*3.845764d4 !-60+64
   real(double_precision), parameter :: sigma_dM = 2.006*3.845764d4 !-60+64
@@ -95,6 +95,8 @@ module tides_constant_GR
   real(double_precision), parameter :: sigma_Sun = 4.992*3.845764d-2 !-66+64
   ! If planet not terrestrial, dissipation factor Hot Gas Giant
   real(double_precision), parameter :: sigma_gg = 2.006*3.845764d4
+  ! k2delta_t for Jupiter: 2-3d-2 s, here in day
+  real(double_precision), parameter :: k2delta_jup = 2.893519d-7
   
   ! Some stuff, constants mainly
   real(double_precision), parameter :: rsun = 4.67920694d-3

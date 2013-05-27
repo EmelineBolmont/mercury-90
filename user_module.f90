@@ -454,7 +454,7 @@ contains
           if (flagrg2.eq.0) then
              open(1,file='Jupiter.dat')
              nptmss = 0
-             do nptmss = 1,15
+             do nptmss = 1,4755
                 read(1,*,iostat=error) timeJup(nptmss),radiusJup(nptmss) &
                      ,k2Jup(nptmss),rg2Jup(nptmss),spinJup(nptmss)
              end do
@@ -468,7 +468,7 @@ contains
              if (crash.eq.0) then
                 call spline_b_val(nptmss,timeJup*365.25-t_init,radiusJup,time,Rstb0)
                 Rst0    =  minau * Rstb0
-                call spline_b_val(nptmss,timeJup*365.25-t_init,k2Jup,time,k2s0)
+                call spline_b_val(nptmss,timeJup*365.25-t_init,k2Jup,time,k2s)
                 call spline_b_val(nptmss,timeJup*365.25-t_init,rg2Jup,time,rg2s0)
                 call spline_b_val(nptmss,timeJup*365.25-t_init,spinJup,time,spinb0)
                 ! Initialization of stellar spin (day-1)
@@ -483,13 +483,12 @@ contains
                 spin(3,1) = rot_crash(3) !day-1
                 call spline_b_val(nptmss,timeJup*365.25-t_init-t_crash,radiusJup,0.0d0,Rstb0)
                 Rst0    = minau * Rstb0
-                call spline_b_val(nptmss,timeJup*365.25-t_init-t_crash,k2Jup,0.0d0,k2s0)
+                call spline_b_val(nptmss,timeJup*365.25-t_init-t_crash,k2Jup,0.0d0,k2s)
                 call spline_b_val(nptmss,timeJup*365.25-t_init-t_crash,rg2Jup,0.0d0,rg2s0)
              end if
              
              ! Give good value of sigmast
-             sigmast = sigma_dM
-             
+             sigmast = dissstar*2.d0*K2*k2delta_jup/(3.d0*Rst0*Rst0*Rst0*Rst0*Rst0)
              flagrg2 = 1
           endif
        endif
@@ -721,6 +720,30 @@ contains
                    Rst10 = Rst5*Rst5
                 endif
              endif
+             if (Jupiter_host.eq.1) then
+                if (crash.eq.0) then
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb0)
+                   Rst0= minau * Rstb0
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time+dt,Rstb)
+                   Rst = minau * Rstb
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s0)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dt,rg2s)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time+dt,k2s)
+                   Rst5  = Rst*Rst*Rst*Rst*Rst
+                   Rst10 = Rst5*Rst5
+                endif
+                if (crash.eq.1) then
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb0)
+                   Rst0= minau * Rstb0
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash+dt,Rstb)
+                   Rst = minau * Rstb
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s0)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dt,rg2s)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash+dt,k2s)
+                   Rst5  = Rst*Rst*Rst*Rst*Rst
+                   Rst10 = Rst5*Rst5
+                endif
+             endif
           endif
 
           ! **************************************************************
@@ -826,11 +849,11 @@ contains
              ! Write stuff
              
              if (flagbug.eq.0.0d0) then 
-                write(*,*) "time(yr)    spin x,y,z(day-1)     R(Rsun)   rg2 "
+                write(*,*) "time(yr)    spin x,y,z(day-1)     R(Rsun)   rg2  k2s sigmast"
              endif         
 !~              if ((mod(flagbug,nbug).eq.0).and.(flagbug.ge.0)) then
              if ((time.ge.timestep).or.(time.eq.0.0)) then
-                write(*,*) "s",time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s
+                write(*,*) "s",time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
                 write(*,*) "p1",time/365.25d0,spin(1,2),spin(2,2),spin(3,2),Rp(2)/rsun,rg2p(1)
                 write(*,*) "h1",time/365.25d0,horb(1,2)/horbn(2),horb(2,2)/horbn(2) &
                      ,horb(3,2)/horbn(2),horbn(2)
