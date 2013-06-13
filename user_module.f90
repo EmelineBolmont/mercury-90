@@ -897,4 +897,48 @@ contains
     return
   end subroutine conversion_dh2h
 
+  subroutine rk (h)
+
+    implicit none
+
+    ! Input/Output
+    real(double_precision),intent(in) :: h
+
+    real(double_precision), intent(out) :: xh(3,nbod),vh(3,nbod)
+
+    ! Local
+    integer :: n
+    real(double_precision) :: mvsum(3),temp
+
+    !------------------------------------------------------------------------------
+
+    mvsum(1) = 0.d0
+    mvsum(2) = 0.d0
+    mvsum(3) = 0.d0
+
+    do j = 2, nbod
+       xh(1,j) = x(1,j)
+       xh(2,j) = x(2,j)
+       xh(3,j) = x(3,j)
+       mvsum(1) = mvsum(1)  +  m(j) * v(1,j)
+       mvsum(2) = mvsum(2)  +  m(j) * v(2,j)
+       mvsum(3) = mvsum(3)  +  m(j) * v(3,j)
+    end do
+
+    temp = 1.d0 / m(1)
+    mvsum(1) = temp * mvsum(1)
+    mvsum(2) = temp * mvsum(2)
+    mvsum(3) = temp * mvsum(3)
+!~ 
+    do j = 2, nbod
+       vh(1,j) = v(1,j) + mvsum(1)
+       vh(2,j) = v(2,j) + mvsum(2)
+       vh(3,j) = v(3,j) + mvsum(3)
+    end do
+
+    !------------------------------------------------------------------------------
+
+    return
+  end subroutine conversion_dh2h
+
 end module user_module
