@@ -1140,6 +1140,14 @@ subroutine initial_density_profile()
   real(double_precision) :: smoothing
   integer :: i_smooth ! the maximum index where the smoothing is computed.
   
+  ! for the bump in density with alpha_dz option
+  real(double_precision) :: sigma_bump ! the current perturbation to apply to the surface density profile, this is a temp value for each 'i'
+  real(double_precision) :: sigma_perturb ! the maximum height of the bump (on either side, differentiated from the unperturbed value
+  real(double_precision) :: bump_width ! the FWHM of the bump (roughly)
+  real(double_precision) :: sigma_DZE, dummy
+  logical :: test_bump
+  integer :: i_bump
+  
   !------------------------------------------------------------------------------
   
   
@@ -1248,6 +1256,55 @@ subroutine initial_density_profile()
                                    / (log(distance_sample(i+1)) - log(distance_sample(i)))
     end do
   end if
+  
+  ! in the 'alpha_dz' case, we modify the density profile to take into account a bump in density at the inner edge of the dead zone
+  ! variation of about 15%. The width of each bump (on each side of the edge is approximately H. The total width of the perturbation being 2H
+  if (VISCOSITY_TYPE.eq.'alpha_dz') then
+    ! the width of the bump is equal to the scaleheight of the disk at the position of the dead zone, roughly
+    bump_width = 0.05d0 * radius_dz(1) 
+  
+    ! max of the perturbation
+    call get_surface_density(radius_dz(1), sigma_DZE, dummy)
+    sigma_perturb = 0.15d0 * sigma_DZE
+    
+    i = 1
+    test_bump = .true. ! we force the first value to be sure to go into the loop at least once
+    do while (test_bump.and.(i.lt.NB_SAMPLE_PROFILES))
+      ! We will apply a negative bump before the inner edge of the dead zone, and a positive bump after it.
+      if (distance_sample(i).lt.radius_dz(1)) then
+        sigma_bump = - sigma_perturb * exp(- (distance_sample(i) - (radius_dz(1) - 0.5d0 * bump_width))**2 / (bump_width**2))
+      else
+        sigma_bump = sigma_perturb * exp(- (distance_sample(i) - (radius_dz(1) + 0.5d0 * bump_width))**2 / (bump_width**2))
+      end if
+      
+      if (distance_sample(i).lt.((1.d0 + bump_width)*radius_dz(1))) then
+        test_bump = .true.
+        ! before the maxima of the positive bump, we don't care of very little perturbation, we must continue to apply corrections
+        ! because we will still have at least the positive bump to take care of.
+      else
+        ! this test must stop when the variation is very low, else we will have a non continuous surface density 
+        ! index because of the jump in density from one index to the other.
+        if (sigma_bump.gt.0.001d0*sigma_perturb) then
+          test_bump = .true.
+        else
+          test_bump = .false.
+        end if
+      end if
+      
+      surface_density_profile(i) = surface_density_profile(i) + sigma_bump
+      i = i + 1
+    end do
+  
+  
+  
+    i_bump = i
+    ! For the modified values, we calculate again the surface density index
+    do i=1, i_bump
+      surface_density_index(i) = - (log(surface_density_profile(i+1)) - log(surface_density_profile(i))) &
+                                   / (log(distance_sample(i+1)) - log(distance_sample(i)))
+    end do
+  end if
+  
   
 !~   write(*,*) 'Warning: the initial profil is linear for tests of viscous dissipation!'
 !~   do i=1,NB_SAMPLE_PROFILES
