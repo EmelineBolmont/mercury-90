@@ -897,48 +897,39 @@ contains
     return
   end subroutine conversion_dh2h
 
-  subroutine rk (h)
+  subroutine rk (du,h,u)
 
     implicit none
 
     ! Input/Output
-    real(double_precision),intent(in) :: h
+    real(double_precision),intent(in) :: h,du
 
-    real(double_precision), intent(out) :: xh(3,nbod),vh(3,nbod)
+    real(double_precision), intent(out) :: u
 
     ! Local
-    integer :: n
-    real(double_precision) :: mvsum(3),temp
+    integer :: n=7
+    real(double_precision) :: a(4),b(4)
+    real(double_precision) :: u0(n),ut(n),u,du
 
     !------------------------------------------------------------------------------
 
-    mvsum(1) = 0.d0
-    mvsum(2) = 0.d0
-    mvsum(3) = 0.d0
+    a(1) = h/2.d0
+    a(2) = a(1)
+    a(3) = h
+    a(4) = 0.d0
+    b(1) = h/6.d0
+    b(2) = h/3.d0
+    b(3) = b(2)
+    b(4) = b(1)
 
-    do j = 2, nbod
-       xh(1,j) = x(1,j)
-       xh(2,j) = x(2,j)
-       xh(3,j) = x(3,j)
-       mvsum(1) = mvsum(1)  +  m(j) * v(1,j)
-       mvsum(2) = mvsum(2)  +  m(j) * v(2,j)
-       mvsum(3) = mvsum(3)  +  m(j) * v(3,j)
-    end do
-
-    temp = 1.d0 / m(1)
-    mvsum(1) = temp * mvsum(1)
-    mvsum(2) = temp * mvsum(2)
-    mvsum(3) = temp * mvsum(3)
-!~ 
-    do j = 2, nbod
-       vh(1,j) = v(1,j) + mvsum(1)
-       vh(2,j) = v(2,j) + mvsum(2)
-       vh(3,j) = v(3,j) + mvsum(3)
-    end do
+    do j = 1,4
+       do i=1,n
+          u(i) = u0(i)+a(j)*du(i)
+          
 
     !------------------------------------------------------------------------------
 
     return
-  end subroutine conversion_dh2h
+  end subroutine rk
 
 end module user_module
