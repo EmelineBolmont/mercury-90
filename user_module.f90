@@ -897,19 +897,19 @@ contains
     return
   end subroutine conversion_dh2h
 
-  subroutine rk (du,h,u)
+  subroutine rk (du,h,ui,u)
 
     implicit none
 
     ! Input/Output
-    real(double_precision),intent(in) :: h,du
+    real(double_precision),intent(in) :: h,du,ui
 
     real(double_precision), intent(out) :: u
 
     ! Local
     integer :: n=7
     real(double_precision) :: a(4),b(4)
-    real(double_precision) :: u0(n),ut(n),u,du
+    real(double_precision) :: u0(n),ut(n),ui(n),u(n),du(n)
 
     !------------------------------------------------------------------------------
 
@@ -921,11 +921,22 @@ contains
     b(2) = h/3.d0
     b(3) = b(2)
     b(4) = b(1)
-
+	
+	do i=1,n
+       u0(i) = ui(i) 
+       ut(i) = 0.0d0
+    enddo
+	
     do j = 1,4
        do i=1,n
-          u(i) = u0(i)+a(j)*du(i)
-          
+          u(i)  = u0(i)+a(j)*du(i)
+          ut(i) = ut(i)+b(j)*du(i)
+       enddo
+    enddo
+    
+    do i = 1,n
+       u(i) = u0(i)+ut(i)
+    enddo
 
     !------------------------------------------------------------------------------
 
