@@ -176,8 +176,8 @@ subroutine write_simus_properties()
   write(10,'(a)') '------------------------------------'
   write(10,'(a)') '|         Timestep stuff           |'
   write(10,'(a)') '------------------------------------'
-  write(10,'(a,f3.1,a)') 'timestep = ',timestep(2), ' days'
-  write(10,'(a,f5.2,a)') '  with this timestep, the simulation will not be accurate below', distance_accuracy, ' AU'
+  write(10,'(a,f8.4,a)') 'timestep = ',timestep(2), ' days'
+  write(10,'(a,f8.4,a)') '  with this timestep, the simulation will not be accurate below', distance_accuracy, ' AU'
   write(10,'(a)') '------------------------------------'
   write(10,'(a)') '|       Mercury Properties         |'
   write(10,'(a)') '------------------------------------'
@@ -185,7 +185,7 @@ subroutine write_simus_properties()
   write(10,'(a,a)') 'commit = ', commit
   write(10,'(a,a)') 'tags = ', tags
   write(10,'(a)') modifs
-  write(10,'(a,f3.1,a,f5.2,a)') 'With h=', timestep(2), ' days, the simulation will be accurate for r > ', distance_accuracy, ' AU'
+  write(10,'(a,f8.4,a,f8.4,a)') 'With h=', timestep(2), ' days, the simulation will be accurate for r > ', distance_accuracy, ' AU'
   write(10,'(a)') '------------------------------------'
   write(10,'(a)') '|       Special Effects            |'
   write(10,'(a)') '------------------------------------'
