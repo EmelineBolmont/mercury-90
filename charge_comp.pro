@@ -170,6 +170,7 @@ if n_tid ge 1 then begin
       Rsi        =  dblarr(nbp_idl,nline)
       rg2si      =  dblarr(nbp_idl,nline)
       tidefluxi  =  dblarr(nbp_idl,nline)
+      Ip         =  dblarr(nbp_idl)  
             
       for i = 0,nbp_idl-1 do begin
          headeri = strarr(1)
@@ -198,7 +199,7 @@ if n_tid ge 1 then begin
 				,mb(i,0)*Msun,Ms,Rpi(i,j)*Rearth,k2pDeltap(i)*day)/(4.d0*!Pi*(Rpi(i,j)*Rearth)^2)
          endfor
       endfor 
-    
+      Ip(i) = rg2p(i,0)*mb(i,0)*Msun*(Rp(i,0)*rsun)^2
    endif
   
    if n_tid ge 1 then begin
