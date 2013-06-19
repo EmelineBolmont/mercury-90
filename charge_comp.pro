@@ -195,7 +195,7 @@ if n_tid ge 1 then begin
       for i = 0,nbp_idl-1 do begin
          for j = 0,nline-1 do begin
             tidefluxi(i,j) = enerdot(ai(i,j)*AU,ei(i,j),rotpi(i,j),oblpi(i,j)*!Pi/180.d0,G $
-				,mb(i,0)*Msun,Ms,Rpi(i,j)*Rearth,k2deltat_plan(i)*day)/(4.d0*!Pi*(Rpi(i,j)*Rearth)^2)
+				,mb(i,0)*Msun,Ms,Rpi(i,j)*Rearth,k2pDeltap(i)*day)/(4.d0*!Pi*(Rpi(i,j)*Rearth)^2)
          endfor
       endfor 
     
