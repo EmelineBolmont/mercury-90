@@ -40,48 +40,6 @@ STD_THRESHOLD = 50
 ANGLE_MIN = - 180.
 ANGLE_MAX = 180.
 
-def plot_res():
-  # We chose the number of plot in x and y axis for the p.multi
-  # environment in order to plot ALL the resonant angles and have x and
-  # y numbers as close on from another as possible. There are q+1
-  # resonant angles, the period ratio and w1 - w2, i.e q+3 plots
-  nb_plots_x = 1
-  nb_plots_y = 1
-  while (nb_plots_x * nb_plots_y < q+2):
-    if (nb_plots_x == nb_plots_y):
-      nb_plots_y += 1
-    else:
-      nb_plots_x += 1
-  
-  # on trace les plots
-
-  pl.figure(1) 
-  pl.clf() # On cree des sous plots. Pour subplot(311), Ca signifie qu'on a 2 lignes, 3 colonnes, et que le subplot 
-  # courant est le 1e. (on a donc 2*3=6 plots en tout)
-
-  # We create a variable to store the index of the subplot
-  subplot_index = nb_plots_x * 100 + nb_plots_y * 10
-  pl.suptitle("resonance "+str(res.numerator)+":"+str(res.denominator)+" between "+name[planet]+" and "+name[planet+1])
-
-  subplot_index += 1
-  pl.subplot(subplot_index)
-  pl.plot(t_inner, delta_longitude)
-  pl.xlabel(unicode("time [years]",'utf-8'))
-  pl.ylabel(unicode("w2 - w1",'utf-8'))
-  #~ pl.legend()
-  pl.grid(True)
-
-  for i in range(q+1):
-    subplot_index += 1
-    pl.subplot(subplot_index)
-    pl.plot(t_inner, phi[i])
-    pl.xlabel(unicode("time [years]",'utf-8'))
-    pl.ylabel(unicode("φ"+str(i),'utf-8'))
-    #~ pl.legend()
-    pl.grid(True)
-  
-  pl.show()
-
 ###############################################
 ## Beginning of the program
 ###############################################
@@ -91,10 +49,12 @@ def plot_res():
 #~ pdb.set_trace()
 isProblem = False
 isDisk = True
+isLogX = False
 problem_message = "AIM : Display in a m = f(a) diagram, all the planets of the current mercury simulation" + "\n" + \
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * nodisk to avoid torque diagram display" + "\n" + \
+" * nodisk : avoid torque diagram display" + "\n" + \
+" * log : display distances in log" + "\n" + \
 " * ext=png (The extension for the output files)" + "\n" + \
 " * help : display this current message"
 
@@ -107,6 +67,8 @@ for arg in sys.argv[1:]:
     OUTPUT_EXTENSION = value
   elif (key == 'nodisk'):
     isDisk = False
+  elif (key == 'log'):
+    isLogX = True
   elif (key == 'help'):
     print(problem_message)
     exit()
@@ -153,6 +115,15 @@ if isDisk:
       contours_m.remove([])
     except:
       break
+
+# We prepare the plots
+fig = pl.figure(1)
+# On crée des sous plots. Pour subplot(231), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
+plot_AM = fig.add_subplot(111)
+plot_AM.set_xlabel("Semi-major axis [AU]")
+plot_AM.set_ylabel("mass [Earths]")
+plot_AM.xaxis.grid(True, which='major', color='#cccccc', linestyle='-')
+plot_AM.yaxis.grid(True, which='major', color='#cccccc', linestyle='-')
 
 uncertainty = 0.01 * float(UNCERTAINTY)
 
@@ -389,18 +360,26 @@ colors = [ '#'+li for li in autiwa.colorList(nb_planets)]
 
 min_mass = 0.2 # earth mass
 markersize_prefactor = 4 / (min_mass**0.33)
+
+if isLogX:
+  plot = plot_AM.semilogx
+  
+  plot_AM.xaxis.grid(True, which='minor', color='#cccccc', linestyle='--')
+
+else:
+  plot = plot_AM.plot
+
 for planet in range(nb_planets):
   # We display a circle for the planet
-  pl.plot(a[planet], mass[planet], 'o', color=colors[planet], markersize=max(int(markersize_prefactor * (mass[planet])**0.33),markersize_prefactor))
+  plot(a[planet], mass[planet], 'o', color=colors[planet], markersize=max(int(markersize_prefactor * (mass[planet])**0.33),markersize_prefactor))
 
-ylims = list(pl.ylim())
-xlims = list(pl.xlim())
+ylims = list(plot_AM.get_ylim())
+xlims = list(plot_AM.get_xlim())
 
 if (isDisk and (len(contours_a) > 0)):
-  pl.fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
+  plot_AM.fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
   for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
-    #~ pl.plot(c_a, c_m, color="#ff0000")
-    pl.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
+    plot_AM.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
 
 for planet in range(0, nb_planets-1):
   x_position = (a[planet] + a[planet+1]) / 2.
@@ -413,22 +392,24 @@ for planet in range(0, nb_planets-1):
     if (longitude_res[planet]):
       res += "*"
     
-    pl.plot([a[planet], a[planet+1]], [mass[planet], mass[planet+1]], 'k:')
-    pl.plot([x_position, x_position], [y_position, ylims[1]], 'k:')
-    pl.text(x_position, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=8)
+    plot_AM.plot([a[planet], a[planet+1]], [mass[planet], mass[planet+1]], 'k:')
+    plot_AM.plot([x_position, x_position], [y_position, ylims[1]], 'k:')
+    plot_AM.text(x_position, ylims[1], " "+res, horizontalalignment='center', verticalalignment='bottom', rotation='vertical', size=8)
   
   # We display, along the vertical line between the resonance and the text toward the main resonance value, the extra resonances if needed.
   if (len(extra_mean_motion_res[planet]) != 0):
     extra_res = str(extra_mean_motion_res[planet][0].numerator)+":"+str(extra_mean_motion_res[planet][0].denominator)
     for res in extra_mean_motion_res[planet][1:]:
       extra_res += " ; "+str(res.numerator)+":"+str(res.denominator)
-    pl.text(x_position, (ylims[1]+y_position)/2., extra_res, horizontalalignment='left', verticalalignment='center', rotation='vertical', size=7)
+    plot_AM.text(x_position, (ylims[1]+y_position)/2., extra_res, horizontalalignment='left', verticalalignment='center', rotation='vertical', size=7)
     
 #~ pl.ylim(-1, 1)
-pl.xlabel("Semi-major axis [AU]")
-pl.ylabel("mass [Earths]")
-pl.legend()
-pl.savefig(NOM_FICHIER_PLOT+'.'+OUTPUT_EXTENSION, format=OUTPUT_EXTENSION)
+
+plot_AM.set_xlim(xlims)
+plot_AM.set_ylim(ylims)
+
+plot_AM.legend()
+fig.savefig("%s.%s" % (NOM_FICHIER_PLOT, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()
 
