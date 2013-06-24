@@ -668,20 +668,30 @@ contains
                    Rst0= Rsun * Rstb0
                    call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time+dt,Rstb)
                    Rst = Rsun * Rstb
+                   call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time+dt/2.d0,Rstbh)
+                   Rsth= Rsun * Rstbh
                    call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
                    call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dt,rg2s)
+                   call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dt/2.d0,rg2sh)
                    Rst5  = Rst*Rst*Rst*Rst*Rst
                    Rst10 = Rst5*Rst5
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
                 if (crash.eq.1) then
                    call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb0)
                    Rst0= Rsun * Rstb0
                    call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash+dt,Rstb)
                    Rst = Rsun * Rstb
+                   call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash+dt/2.d0,Rstbh)
+                   Rsth= Rsun * Rstbh
                    call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s0)
                    call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dt,rg2s)
+                   call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dt/2.d0,rg2sh)
                    Rst5  = Rst*Rst*Rst*Rst*Rst
                    Rst10 = Rst5*Rst5
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
              endif
              if (M_dwarf.eq.1) then
@@ -690,16 +700,24 @@ contains
                    Rst0= Rsun * Rstb0
                    call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time+dt,Rstb)
                    Rst = Rsun * Rstb
+                   call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time+dt/2.d0,Rstbh)
+                   Rsth= Rsun * Rstbh
                    Rst5  = Rst*Rst*Rst*Rst*Rst
                    Rst10 = Rst5*Rst5
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
                 if (crash.eq.1) then
                    call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash,Rstb0)
                    Rst0= Rsun * Rstb0
                    call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash+dt,Rstb)
                    Rst = Rsun * Rstb
+                   call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash+dt/2.d0,Rstbh)
+                   Rsth= Rsun * Rstbh
                    Rst5  = Rst*Rst*Rst*Rst*Rst
                    Rst10 = Rst5*Rst5
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
              endif
              if (Sun_like_star.eq.1) then
@@ -708,16 +726,24 @@ contains
                    Rst0= minau * Rstb0
                    call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time+dt,Rstb)
                    Rst = minau * Rstb
+                   call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time+dt/2.d0,Rstbh)
+                   Rsth= minau * Rstbh
                    Rst5  = Rst*Rst*Rst*Rst*Rst
                    Rst10 = Rst5*Rst5
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
                 if (crash.eq.1) then
                    call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash,Rstb0)
                    Rst0= minau * Rstb0
                    call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash+dt,Rstb)
                    Rst = minau * Rstb
+                   call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash+dt/2.d0,Rstbh)
+                   Rsth= minau * Rstbh
                    Rst5  = Rst*Rst*Rst*Rst*Rst
                    Rst10 = Rst5*Rst5
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
              endif
              if (Jupiter_host.eq.1) then
@@ -766,7 +792,10 @@ contains
                      *(tmp2*Rst10*dissstar*sigmast &
                      +tmp1*Rp10(j)*sigmap(j))           
                 Ftso(j) = 4.5d0*tmp2*Rst10*dissstar*sigmast/(tmp*r7(j))
-                Ftpo(j) = 4.5d0*tmp1*Rp10(j)*sigmap(j)/(tmp*r7(j))
+                Ftpo(j) = 4.5d0*tmp1*Rp10(j)*sigmap(j)/(tmp*r7(j))          
+                Ftsoh(j) = 4.5d0*tmp2*Rsth10*dissstar*sigmast/(tmp*r7(j))
+                Ftpoh(j) = 4.5d0*tmp1*Rph10(j)*sigmap(j)/(tmp*r7(j))
+                
              endif
 
              !****************** GR forces ****************************
@@ -782,27 +811,27 @@ contains
           enddo   
           
           if (tides.eq.1) then 
-             ! Calculation of tidal torque !AU,Msun,day
+             ! Calculation of tidal torque in Msun.AU^2.day-2
              do j=2,ntid+1  
                 ! star
-                Nts(1,j)  =  Ftso(j)*1.d0/r(j) &
+                Nts(1,j)  =  Ftsoh(j)*1.d0/r(j) &
                      *(xh(2,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
                      - xh(3,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)))
-                Nts(2,j)  =  Ftso(j)*1.d0/r(j) &
+                Nts(2,j)  =  Ftsoh(j)*1.d0/r(j) &
                      *(xh(3,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)) &
                      - xh(1,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)))     
-                Nts(3,j)  =  Ftso(j)*1.d0/r(j) &
+                Nts(3,j)  =  Ftsoh(j)*1.d0/r(j) &
                      *(xh(1,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)) &
                      - xh(2,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)))  
              
                 ! planet
-                Ntp(1,j)  =  Ftpo(j)*1.d0/r(j) &
+                Ntp(1,j)  =  Ftpoh(j)*1.d0/r(j) &
                      *(xh(2,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)) &
                      - xh(3,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)))
-                Ntp(2,j)  =  Ftpo(j)*1.d0/r(j) &
+                Ntp(2,j)  =  Ftpoh(j)*1.d0/r(j) &
                      *(xh(3,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)) &
                      - xh(1,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)))     
-                Ntp(3,j)  =  Ftpo(j)*1.d0/r(j) &
+                Ntp(3,j)  =  Ftpoh(j)*1.d0/r(j) &
                      *(xh(1,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)) &
                      - xh(2,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)))          
              end do
@@ -813,7 +842,8 @@ contains
              ! Spin evolution
              
              ! STAR
-             ! Sum of the different contribution from the different planets        
+             ! Sum of the different contribution from the different planets   
+             ! totftides in AU^2.day-2   
              totftides(1) = 0.d0
              totftides(2) = 0.d0
              totftides(3) = 0.d0
@@ -826,10 +856,10 @@ contains
              ! d/dt(I.Omega) = - (r x F)
              if (Rscst.eq.0) then 
                 tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
-                tmp1 = - dt/(rg2s*Rst*Rst)
-                spin(1,1) = tmp*spin(1,1) + tmp1*totftides(1)
-                spin(2,1) = tmp*spin(2,1) + tmp1*totftides(2)
-                spin(3,1) = tmp*spin(3,1) + tmp1*totftides(3)
+                tmp1 = - dt/(rg2sh*Rsth*Rsth)
+                spin(1,1) = tmp*spin(1,1) * exp(tmp1*totftides(1)/spin(1,1))
+                spin(2,1) = tmp*spin(2,1) * exp(tmp1*totftides(2)/spin(2,1))
+                spin(3,1) = tmp*spin(3,1) * exp(tmp1*totftides(3)/spin(3,1))
              endif
              if (Rscst.eq.1) then 
                 tmp = - dt/(rg2s*Rst*Rst)
