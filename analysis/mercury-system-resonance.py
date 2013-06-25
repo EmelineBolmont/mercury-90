@@ -377,9 +377,9 @@ ylims = list(plot_AM.get_ylim())
 xlims = list(plot_AM.get_xlim())
 
 if (isDisk and (len(contours_a) > 0)):
-  plot_AM.fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
+  plot_AM.fill(contours_a[0], contours_m[0], facecolor="#ffb2b2", edgecolor='#000000', label="Outward migration")
   for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
-    plot_AM.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
+    plot_AM.fill(c_a, c_m, facecolor="#ffb2b2", edgecolor='#000000')
 
 for planet in range(0, nb_planets-1):
   x_position = (a[planet] + a[planet+1]) / 2.
