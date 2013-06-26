@@ -724,7 +724,7 @@ contains
                      +tmp1*Rp10(j)*sigmap(j))           
                 Ftso(j) = 4.5d0*tmp2*Rst10*dissstar*sigmast/(tmp*r7(j))
                 Ftpo(j) = 4.5d0*tmp1*Rp10(j)*sigmap(j)/(tmp*r7(j))          
-                Ftsoh(j) = 4.5d0*tmp2*Rsth10*dissstar*sigmast/(tmp*r7(j))
+                Ftsoh(j)= 4.5d0*tmp2*Rsth10*dissstar*sigmast/(tmp*r7(j))
                 
              endif
 
@@ -788,13 +788,13 @@ contains
              ! d/dt(I.Omega) = - (r x F)
              if (Rscst.eq.0) then 
                 tmp  = rg2s0/rg2sh*Rst0*Rst0/(Rsth*Rsth)
-                tmp1 = - dt/(2.0d0*rg2sh*Rsth*Rsth)
+                tmp1 = - dt/(rg2sh*Rsth*Rsth)
                 spin(1,1) = tmp*spin(1,1) * exp(tmp1*totftides(1)/spin(1,1))
                 spin(2,1) = tmp*spin(2,1) * exp(tmp1*totftides(2)/spin(2,1))
                 spin(3,1) = tmp*spin(3,1) * exp(tmp1*totftides(3)/spin(3,1))
              endif
              if (Rscst.eq.1) then 
-                tmp = - dt/(2.0d0*rg2s*Rst*Rst)
+                tmp = - dt/(rg2s*Rst*Rst)
                 spin(1,1) = spin(1,1) + tmp*totftides(1)
                 spin(2,1) = spin(2,1) + tmp*totftides(2)
                 spin(3,1) = spin(3,1) + tmp*totftides(3)
@@ -802,7 +802,7 @@ contains
              
 		     !PLANETS
 		     do j=2,ntid+1 
-		        tmp = - dt*K2*m(1)/(2.0d0*m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
+		        tmp = - dt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
 		        spin(1,j) = spin(1,j) + tmp*Ntp(1,j)
 		        spin(2,j) = spin(2,j) + tmp*Ntp(2,j)
 		        spin(3,j) = spin(3,j) + tmp*Ntp(3,j)
