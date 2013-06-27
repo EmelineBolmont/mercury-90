@@ -730,6 +730,7 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
 ! Global parameters
 ! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
 ! X_S_PREFACTOR : prefactor for the half width of the corotation region
+! B_OVER_H : the smoothing length for the planet's potential
 
   implicit none
   real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
@@ -746,7 +747,7 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   !Local
   
   ! Meaningless parameters (intermediate constant and so on that doesn't mean anything physically)
-  real(double_precision) :: Q_p ! parameter for gamma_eff (equation (45) of Paardekooper, Baruteau, 2010 II. Effects of diffusion)
+  real(double_precision) :: Q_p ! parameter for gamma_eff (equation (45) of Paardekooper, Baruteau, 2011 II. Effects of diffusion)
   real(double_precision) :: k_p ! parameter for p_nu and p_chi for example  !!! This is not 'k' from equation (15)!
   real(double_precision) :: lindblad_prefactor ! prefactor for the lindblad torque
   
@@ -762,6 +763,8 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   real(double_precision) :: torque_c_lin_ent ! entropy related part of the linear corotation torque
   real(double_precision) :: torque_hs_baro ! barotropic part of the horseshoe drag
   real(double_precision) :: torque_c_lin_baro ! barotropic part of the linear corotation torque
+  
+  real(double_precision) :: b_h_factor, b_h1, b_h2 ! Parameters for b_over_h effect on the torques
   
   ! Temporaries
   real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
@@ -803,15 +806,24 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   
   p_chi = sqrt(k_p / p_prop%chi)
   
+  b_h_factor = 0.4d0 / B_OVER_H ! Correcting factor to take into account smoothing length effect. 
+  
+  b_h1 = b_h_factor**0.71d0
+  b_h2 = b_h_factor**1.26d0
+  
+  ! Lindblad torque given by eq. (14) of (Paardekooper et al., 2010 ; I unsaturated) (this version take in to account the effect of smoothing length
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
-  lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010
+  lindblad_torque = lindblad_prefactor / gamma_eff * b_h1 ! lindblad torque formulae from pardekooper, 2010
   
-  torque_hs_ent = 7.9d0 * zeta_eff / gamma_eff ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
-  torque_c_lin_ent = (2.2d0 - 1.4d0 / gamma_eff) * zeta_eff ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
+  ! Linear torque from eq. (17) of (Paardekooper et al., 2010 ; I unsaturated) The two parts are extrated looking 
+  ! for similarities with (4) and (5) of (Paardekooper et al., 2011 ; II Diffusion)
+  torque_c_lin_baro = 0.7d0 * (1.5d0 - p_prop%sigma_index) * b_h2 ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
+  torque_c_lin_ent = (2.2d0 * b_h1 - 1.4d0 * b_h2 / gamma_eff) * zeta_eff ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
   
-  ! Since the sigma_index is dependant on the location of the planet and the time (thanks to the dissipation), we need to calculate these values at each timestep
-  torque_hs_baro = 1.1d0 * (1.5d0 - p_prop%sigma_index) ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
-  torque_c_lin_baro = 0.7d0 * (1.5d0 - p_prop%sigma_index) ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
+  ! Corotation horseshoe drag torque from eq. (45) of (Paardekooper et al., 2010 ; I unsaturated) The two parts are extrated looking 
+  ! for similarities with (6) and (7) of (Paardekooper et al., 2011 ; II Diffusion)
+  torque_hs_baro = 1.1d0 * (1.5d0 - p_prop%sigma_index) * b_h_factor ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
+  torque_hs_ent = zeta_eff / gamma_eff * (10.1d0 * sqrt(b_h_factor) - 2.2d0) * b_h_factor ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
   
   !------------------------------------------------------------------------------
 
