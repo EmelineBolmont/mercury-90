@@ -61,7 +61,7 @@ contains
     integer :: iwrite=0
     integer :: nintegral=0
     real(double_precision) :: flagbug=0.d0
-    real(double_precision) :: nbug,timestep!=3.6525d5!3.65d5 !4.56d6 !
+    real(double_precision) :: timestep
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
     real(double_precision) :: timebf,dt,tstop,tmp,tmp1,tmp2,k2s,sigmast
     real(double_precision), dimension(2) :: bobo
@@ -98,7 +98,7 @@ contains
     save rg2s0,k2s,rg2st,sigmast,rg2s,rg2sh
     save trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
     save flagrg2,flagtime,ispin,flagbug
-    save nbug,timestep
+    save timestep
     save spin
     save Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
     save timebf,nptmss
@@ -140,12 +140,12 @@ contains
 	endif
 	
     ! Timestep calculation
-    if (flagtime.le.3) then 
+    if (flagtime.eq.0) then 
        bobo = get_initial_timestep()
        tstop = bobo(1)
        dt = bobo(2)
        flagtime = flagtime+1
-       nbug = floor(100*365.25d0/(dt*1.0))
+!~        nbug = floor(100*365.25d0/(dt*1.0))
 !~ 	   write(*,*) "nbug = ",nbug
     else
        dt = time - timebf
