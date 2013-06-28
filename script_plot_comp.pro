@@ -1,16 +1,3 @@
-device,decomposed=0
-loadct,13
-
-; Now, we plot everything !!
-
-;; ops,file='XXX_ae.eps',form=1;,/landscape
-;; ops,file='XXX_ois.eps',form=1;,/landscape
-;; ops,file='XXX_H.eps',form=1,/landscape
-
-!P.Font=1
-!p.thick = 6
-!x.thick = 6
-!y.thick = 6
 
 Tinf    = 1.d2  &  Tsup    = 1.d7
 amin    = 1d-3
@@ -29,9 +16,25 @@ Trotmax = 10000
 indcolor = 200   &  incolor  = 50
 idlcol   = 200   &  idlicol  = 50
 
+ops_plot=0
 ae = 1
 ; If you want to check conservation of tot angular momentum
 conservation = 0
+if ops_plot eq 1 then begin
+   if (ae eq 1) and (conservation eq 0) then ops,file='XXX_ae.eps',form=1;,/landscape
+   if (ae eq 0) and (conservation eq 0) then ops,file='XXX_ois.eps',form=1;,/landscape
+   if conservation eq 1 then                 ops,file='XXX_H.eps',form=1,/landscape
+endif
+
+device,decomposed=0
+loadct,13
+
+; Now, we plot everything !!
+
+!P.Font=1
+!p.thick = 6
+!x.thick = 6
+!y.thick = 6
 
 if conservation eq 0 then begin
 if ae eq 1 then begin
