@@ -1229,11 +1229,6 @@ program test_disk
     
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
-    integer, parameter :: nb_a = 400
-    real(double_precision), parameter :: a_min = 1d0 ! in AU
-    real(double_precision), parameter :: a_max = 9d0 ! in AU
-    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
-    
     real(double_precision), parameter :: mass = 10. * EARTH_MASS * K2
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
@@ -1263,8 +1258,8 @@ program test_disk
     position(1) = a
     
     
-    do j=1,nb_a
-      a = (a_min + a_step * (j - 1.d0))
+    do j=1,NB_SAMPLE_PROFILES
+      a = distance_sample(j)
       ! We generate cartesian coordinate for the given Semi-major axis
       position(1) = a
       
@@ -1323,7 +1318,7 @@ program test_disk
     
     do j=10,12
       write(j,*) 'set grid'
-      write(j,*) 'set xrange [', a_min, ':', a_max, ']'
+      write(j,*) 'set xrange [', distance_sample(1), ':', distance_sample(NB_SAMPLE_PROFILES), ']'
     end do
 
     write(10,*) "plot 'torques_fixed_m.dat' using 1:2 with lines title '{/Symbol G}_c',\"
