@@ -239,9 +239,9 @@ if n_tid ge 1 then begin
    
    ; Angular momentum calculation
    horb_vec = dblarr(nbp,n_elements(horb1x))
-   horbx= dblarr(nbp,n_elements(horb1x))
-   horby= dblarr(nbp,n_elements(horb1x))
-   horbz= dblarr(nbp,n_elements(horb1x))
+   ;horbx= dblarr(nbp,n_elements(horb1x))
+   ;horby= dblarr(nbp,n_elements(horb1x))
+   ;horbz= dblarr(nbp,n_elements(horb1x))
    horb = dblarr(n_elements(horb1x))
    spinst = dblarr(n_elements(horb1x))
    momspin = dblarr(n_tid,n_elements(horb1x))
@@ -253,9 +253,9 @@ if n_tid ge 1 then begin
    
    for j=0,nbp-1 do begin
       for i=0,n_elements(horb1x)-1 do begin
-         horbx(j,i)=(yb(j,i)*wb(j,i)-zb(j,i)*vb(j,i))
-         horby(j,i)=(zb(j,i)*ub(j,i)-xb(j,i)*wb(j,i))
-         horbz(j,i)=(xb(j,i)*vb(j,i)-yb(j,i)*ub(j,i))
+         ;horbx(j,i)=(yb(j,i)*wb(j,i)-zb(j,i)*vb(j,i))
+         ;horby(j,i)=(zb(j,i)*ub(j,i)-xb(j,i)*wb(j,i))
+         ;horbz(j,i)=(xb(j,i)*vb(j,i)-yb(j,i)*ub(j,i))
          
          ; With x,y,z,u,v,w
          horb_vec(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
