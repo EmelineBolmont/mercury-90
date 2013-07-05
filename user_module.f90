@@ -118,6 +118,12 @@ contains
        a2(1,j) = 0.d0
        a2(2,j) = 0.d0
        a2(3,j) = 0.d0
+       xh(1,j) = x(1,j)
+       xh(2,j) = x(2,j)
+       xh(3,j) = x(3,j)
+       vh(1,j) = v(1,j)
+       vh(2,j) = v(2,j)
+       vh(3,j) = v(3,j)
        if (ispin.eq.0) then
           qq = 0.d0
           ee = 0.d0
@@ -151,9 +157,7 @@ contains
        dt = time - timebf
     endif 
     
-    ! Following calculaltions in heliocentric coordinates   
-    call conversion_dh2h(nbod,nbig,m,x,v,xh,vh)    
-
+    
     if (tides.eq.1) then 
        ! Charge host body data 
        ! + initial condition on host body spin, radius
