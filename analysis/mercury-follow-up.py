@@ -219,8 +219,8 @@ if isAll:
 else:
   (process_stdout, process_stderr, return_code) = lancer_commande("ls *.o[0-9]*")
   if (return_code != 0):
-    print("the command return an error "+str(return_code))
-    print(process_stderr)
+    print("/!\ Error\nUnable to find running simulation information. \nIf you are in a meta folder, don't forget the 'all' option\n\n")
+    print(problem_message)
     exit()
     
   list_jobs = process_stdout.split("\n")
@@ -241,6 +241,7 @@ else:
 
 infoAll = [] # The array where to store display infos as strings (in tuple to allow sorting)
 waiting_list = []
+running_list = []
 for jobID in jobIDs:
   (ellapsed_time, cwd) = getJobInfos(jobID)
   
@@ -251,6 +252,8 @@ for jobID in jobIDs:
   if (return_code != 0):
     waiting_list.append("%d" % jobID)
     continue
+  else:
+    running_list.append("%d" % jobID)
     
   list_jobs = process_stdout.split("\n")
   list_jobs.remove('') # we remove an extra element that doesn't mean anything
@@ -312,9 +315,9 @@ for jobID in jobIDs:
   infos += "    %s\n" % cwd
 
   if isVerbose:
-    infos += "    Integration time : %g / %g years (%.1f%%)\n" % (current_time, integration_time, percentage)
     infos += "    Number of bodies : Initial=%d ; Current=%d\n" % (init_nb_bodies, current_nb_bodies)
-    infos += "    Remaining time < %s\n" % remaining_time
+    infos += "    Integration time : %g / %g years (%.1f%%)\n" % (current_time, integration_time, percentage)
+    infos += "    Ellapsed time = %s / Remaining time < %s\n" % (ellapsed_time, remaining_time)
   else:
     infos += "    [end] %s (%.1f%%)\n" % (remaining_time, percentage)
   
@@ -328,3 +331,4 @@ for (ti, info) in infoAll:
 
 nb_wait = len(waiting_list)
 print("%d jobs on waiting list : %s" % (nb_wait, " ".join(waiting_list)))
+print("%d jobs running" % len(running_list))
