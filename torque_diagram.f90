@@ -214,6 +214,9 @@ end subroutine write_torquein
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
     
+    ! Small number, to be just after the last point and ensure to have a good rendering of the map (else, the last point in often missing)
+    real(double_precision), parameter :: range_shift = 1.d-7
+    
     integer :: i,j ! for loops
     integer :: idx, nb_tmp ! to fill the radius array step by step
     
@@ -335,7 +338,7 @@ end subroutine write_torquein
     write(11,*) 'set pm3d explicit'
     write(11,*) 'set palette rgbformulae 22,13,-31'
     write(11,*) 'set grid xtics ytics linetype 0'
-    write(11,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(11,*) 'set xrange [', a_min, ':', a_max + range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     write(11,*) 'set cbrange [-5.: 5.]'
     write(11,*) "splot 'total_torque.dat' with pm3d notitle, \"
@@ -353,7 +356,7 @@ end subroutine write_torquein
     write(11,*) 'unset xlabel'
     write(11,*) 'unset ylabel'
     write(11,*) 'unset title'
-    write(11,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     write(11,*) 'set cbrange [-5.: 5.]'
     write(11,*) "splot 'total_torque.dat' with pm3d notitle"
@@ -368,7 +371,7 @@ end subroutine write_torquein
     write(11,*) 'set xlabel "Semi-major axis (AU)"'
     write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
     write(11,*) 'set title "Evolution of the total torque {/Symbol G}_{tot}/{/Symbol G}_0 "'
-    write(11,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     write(11,*) 'set cbrange [-5.: 5.]'
     write(11,*) "splot 'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
