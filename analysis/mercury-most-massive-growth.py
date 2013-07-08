@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # v1.1
-# Pour lire des fichiers de simulations, récupérer les caractéristiques
-# des planètes qu'il reste en fin de simulation et les écrire dans un 
-# seul fichier que le script "analyse_simu" va lire
+# This script colors the planets so that you can trace back all the bodies included in one final planet. You can trace a given number
+# of final planets, starting from the most massive. 
+# The option "t_max" allow you to trace the final planets of a given time inside the simulation, convenient to get infos on planets 
+# that finally do not exists
 
 from math import *
 import pylab as pl
