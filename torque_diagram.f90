@@ -18,6 +18,8 @@ program torque_diagram
   real(double_precision) :: m_max_em = 60.d0 ! in earth mass
   real(double_precision) :: mass_min ! in solar mass
   real(double_precision) :: mass_max ! in solar mass
+  real(double_precision) :: torque_min = -5.d0 ! Torque boundaries for the gnuplot display
+  real(double_precision) :: torque_max =  5.d0 ! Torque boundaries for the gnuplot display
   !--------------------------------
   
   call init_and_test()
@@ -65,8 +67,9 @@ program torque_diagram
     else
       a_min = INNER_BOUNDARY_RADIUS
       a_max = OUTER_BOUNDARY_RADIUS
-      call write_torquein()
     end if
+    ! We write the torque.in file even if it existed before, to make sure that new paremeters will appear with their default values in there
+    call write_torquein()
     
     mass_min = m_min_em * EARTH_MASS
     mass_max = m_max_em * EARTH_MASS
@@ -132,6 +135,12 @@ program torque_diagram
         case('nb_mass')
           read(value, *) nb_mass
         
+        case('torque_min')
+          read(value, *) torque_min
+        
+        case('torque_max')
+          read(value, *) torque_max
+        
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
           write(*,*) "identificator='", trim(identificator), "' ; value(s)='", trim(value),"'"
@@ -162,18 +171,33 @@ subroutine write_torquein()
 ! m_min
 ! m_max
 ! nb_mass
+! torque_min
+! torque_max
 
   implicit none
   
   open(10, file='torque.in')
-  write(10,'(a)') '! Parameters to build the torque diagram'
+  write(10,'(a)') '! Parameters to build the migration map'
+  write(10,'(a)') '! SAMPLE TUNNING'
+  write(10,'(a)') '! 1) Between a_min and 1st transition radius, we will have 10% of the total '
+  write(10,'(a)') '!    number of points, log-spaced'
+  write(10,'(a)') '! 2) Between 1st and 2nd transition radii, we will have the expected number '
+  write(10,'(a)') '!    of points in this range if everything was log-spaced, except this will '
+  write(10,'(a)') '!    be linearly spaced.'
+  write(10,'(a)') '! 3) Between 2nd transition radius and a_max, remaining points are log-spaced'
+  write(10,'(a,2(f5.1),a)') 'a_transition = ', a_transition, " ! (2 transition radii) in AU"
+  write(10,'(a)') '! DISTANCE RANGE'
   write(10,'(a,f5.1,a)') 'a_min = ', a_min, " ! in AU"
   write(10,'(a,f5.1,a)') 'a_max = ', a_max, " ! in AU"
-  write(10,'(a,2(f5.1),a)') 'a_transition = ', a_transition, " ! in AU"
   write(10,'(a,i4)') 'nb_distance = ', nb_distance
+  write(10,'(a)') '! MASS RANGE'
   write(10,'(a,f5.1,a)') 'm_min = ', m_min_em, " ! in earth mass"
   write(10,'(a,f5.1,a)') 'm_max = ', m_max_em, " ! in earth mass"
   write(10,'(a,i4)') 'nb_mass = ', nb_mass
+  write(10,'(a)') '! TORQUE RANGE'
+  write(10,'(a,f5.1,a)') 'torque_min = ', torque_min, " ! in units of Gamma_0"
+  write(10,'(a,f5.1,a)') 'torque_max = ', torque_max, " ! in units of Gamma_0"
+
 
 
 
@@ -248,6 +272,8 @@ end subroutine write_torquein
       nb_tmp = nb_distance - idx
       a_stop = a_max
     else
+      ! We calculate the number of log-spaced points we would have in the second regime if all the remaining space was in log, 
+      ! and we will space them linearly in the second regime.
       nb_tmp = int(dfloat((nb_distance - idx)) * (log(a_transition(2))-log(a_start)) / (log(a_max)-log(a_start)))
       a_stop = a_transition(2)
     end if
@@ -340,7 +366,7 @@ end subroutine write_torquein
     write(11,*) 'set grid xtics ytics linetype 0'
     write(11,*) 'set xrange [', a_min, ':', a_max + range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
-    write(11,*) 'set cbrange [-5.: 5.]'
+    write(11,'(a,f5.1,a,f5.1,a)') ' set cbrange [',torque_min,':', torque_max,']'
     write(11,*) "splot 'total_torque.dat' with pm3d notitle, \"
     write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
     write(11,*) "pause -1"
@@ -358,7 +384,7 @@ end subroutine write_torquein
     write(11,*) 'unset title'
     write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
-    write(11,*) 'set cbrange [-5.: 5.]'
+    write(11,'(a,f5.1,a,f5.1,a)') ' set cbrange [',torque_min,':', torque_max,']'
     write(11,*) "splot 'total_torque.dat' with pm3d notitle"
 
     
@@ -373,7 +399,7 @@ end subroutine write_torquein
     write(11,*) 'set title "Evolution of the total torque {/Symbol G}_{tot}/{/Symbol G}_0 "'
     write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
-    write(11,*) 'set cbrange [-5.: 5.]'
+    write(11,'(a,f5.1,a,f5.1,a)') ' set cbrange [',torque_min,':', torque_max,']'
     write(11,*) "splot 'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
     
     
