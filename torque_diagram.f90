@@ -370,9 +370,10 @@ end subroutine write_torquein
     write(11,*) "splot 'total_torque.dat' with pm3d notitle, \"
     write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
     write(11,*) "pause -1"
+    write(11,*) ""
     
     ! Only the image
-    write(11,*) "set terminal pngcairo crop enhanced size 1200, 1000 font ',20'"
+    write(11,*) "set terminal png crop enhanced size 1200, 1000"
     write(11,*) "set output 'total_torque_diagram.png'"
     write(11,*) "set pm3d map"
     write(11,*) "set pm3d explicit"
@@ -382,25 +383,52 @@ end subroutine write_torquein
     write(11,*) 'unset xlabel'
     write(11,*) 'unset ylabel'
     write(11,*) 'unset title'
+    write(11,*) 'unset border'
+    write(11,*) 'unset colorbox'
     write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     write(11,'(a,f5.1,a,f5.1,a)') ' set cbrange [',torque_min,':', torque_max,']'
     write(11,*) "splot 'total_torque.dat' with pm3d notitle"
+    write(11,*) ""
 
     
-    ! Only the vectoriel informations (to recompose the image later using Inkscape)
-    write(11,*) "set terminal svg enhanced font ' ,20'"
-    write(11,*) "set output 'total_torque.svg'"
+    ! The final .pdf file
+    write(11,*) "set terminal pdfcairo enhanced font ' ,8'"
+    write(11,*) "set output 'total_torque.pdf'"
+    write(11,*) "set multiplot"
+    write(11,*) "# To display the colorbox (without displaying any map)"
+    write(11,*) "unset tics"
+    write(11,*) "set cbtics"
+    write(11,*) "set colorbox"
+    write(11,*) "unset border"
+    write(11,*) "set pm3d map"
+    write(11,*) "set pm3d explicit"
+    write(11,*) "set palette rgbformulae 22,13,-31"
+    write(11,'(a,f5.1,a,f5.1,a)') ' set cbrange [',torque_min,':', torque_max,']'
+    write(11,*) "set lmargin at screen 0.15"
+    write(11,*) "set rmargin at screen 0.85"
+    write(11,*) "set bmargin at screen 0.175"
+    write(11,*) "set tmargin at screen 0.85"
+    write(11,*) "unset surface"
+    write(11,*) "splot 0 with pm3d notitle"
+    write(11,*) ""
+    write(11,*) "# We display the bitmap, that we include in the .pdf file"
+    write(11,*) "set xrange [0:*]"
+    write(11,*) "set yrange [0:*]"
+    write(11,*) "set cbrange[*:*] # To have correct display of bitmap colors"
+    write(11,*) "plot 'total_torque_diagram.png' binary filetype=png with rgbimage notitle"
+    write(11,*) " "
     write(11,*) "set grid xtics ytics linetype 0"
-    write(11,*) "set xtics"
-    write(11,*) "set ytics"
+    write(11,*) "set border"
+    write(11,*) "set tics"
     write(11,*) 'set xlabel "Semi-major axis (AU)"'
-    write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
+    write(11,*) 'set ylabel "Planet mass (m_{earth})"'
     write(11,*) 'set title "Evolution of the total torque {/Symbol G}_{tot}/{/Symbol G}_0 "'
     write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
-    write(11,'(a,f5.1,a,f5.1,a)') ' set cbrange [',torque_min,':', torque_max,']'
-    write(11,*) "splot 'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
+    write(11,*) "set border"
+    write(11,*) "plot 'contour_total_torque.dat' using 1:2 with line linetype -1 linewidth 1 notitle"
+    write(11,*) "unset multiplot"
     
     
     close(11)
