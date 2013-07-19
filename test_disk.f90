@@ -1813,7 +1813,6 @@ program test_disk
       write(j,*) 'set grid xtics ytics linetype 0'
       write(j,*) 'set xrange [', a_min, ':', a_max, ']'
       write(j,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
-      write(j,*) 'set cbrange [-5.: 5.]'
     end do
 
     write(10,*) "splot 'corotation_torque.dat' with pm3d notitle"
