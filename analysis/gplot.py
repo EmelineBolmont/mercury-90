@@ -86,19 +86,20 @@ def getOutput(scriptname):
   lines = f.readlines()
   f.close()
   
-  for line in lines:
-    words = line.split()
-    if (words[0] == "set") and (words[1] == "output"):
-      output = words[2][1:-1]
-      
-      # in case of output file printed not in the directory of the .dat file
-      temp = output.split("/")
-      output = temp[-1]
-      
-      return output
+  output = None
   
-  return None
-
+  for line in reversed(lines):
+    words = line.split()
+    if (len(words) > 1):
+      if (words[0] == "set") and (words[1] == "output"):
+        output = words[2][1:-1]
+        break
+        
+  # in case of output file printed not in the directory of the .dat file
+  temp = output.split("/")
+  output = temp[-1]
+  
+  return output
 
 ###############################################
 ## Beginning of the program
