@@ -375,9 +375,6 @@ end subroutine write_torquein
     ! Only the image
     write(11,*) "set terminal png crop enhanced size 1200, 1000"
     write(11,*) "set output 'total_torque_diagram.png'"
-    write(11,*) "set pm3d map"
-    write(11,*) "set pm3d explicit"
-    write(11,*) "set palette rgbformulae 22,13,-31"
     write(11,*) "unset xtics"
     write(11,*) "unset ytics"
     write(11,*) 'unset xlabel'
@@ -397,13 +394,9 @@ end subroutine write_torquein
     write(11,*) "set output 'total_torque.pdf'"
     write(11,*) "set multiplot"
     write(11,*) "# To display the colorbox (without displaying any map)"
-    write(11,*) "unset tics"
     write(11,*) "set cbtics"
     write(11,*) "set colorbox"
     write(11,*) "unset border"
-    write(11,*) "set pm3d map"
-    write(11,*) "set pm3d explicit"
-    write(11,*) "set palette rgbformulae 22,13,-31"
     write(11,'(a,f5.1,a,f5.1,a)') ' set cbrange [',torque_min,':', torque_max,']'
     write(11,*) "set lmargin at screen 0.15"
     write(11,*) "set rmargin at screen 0.85"
@@ -426,7 +419,6 @@ end subroutine write_torquein
     write(11,*) 'set title "Evolution of the total torque {/Symbol G}_{tot}/{/Symbol G}_0 "'
     write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
-    write(11,*) "set border"
     write(11,*) "plot 'contour_total_torque.dat' using 1:2 with line linetype -1 linewidth 1 notitle"
     write(11,*) "unset multiplot"
     

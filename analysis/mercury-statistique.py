@@ -381,7 +381,7 @@ for simu in liste_simu:
     second_massive.append(tmp[-2][0])
 
     if (tmp[-1][0] > 6. and tmp[-1][0] < 9.):
-      print("most massive = %.1f in %s:" % (tmp[-1],simu))
+      print("most massive = %.1f in %s:" % (tmp[-1][0],simu))
     for (ai, mi) in zip(a_system, m_system):
       if (mi > 5. and ai > 10.):
         print("In %s, %.1f mt planet at %.1f AU" % (simu, mi, ai))
