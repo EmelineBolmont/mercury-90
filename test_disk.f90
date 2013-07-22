@@ -802,11 +802,6 @@ program test_disk
     implicit none
     
     
-    integer, parameter :: nb_a = 100
-    real(double_precision), parameter :: a_min = 0.1d0 ! in AU
-    real(double_precision), parameter :: a_max = 20d0 ! in AU
-    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
-    
     
     real(double_precision) :: a, alpha
     
@@ -820,8 +815,8 @@ program test_disk
     write(10,'(a)') '# a in AU ; alpha'
 
     
-    do i=1,nb_a
-      a = (a_min + a_step * (i - 1.d0))
+    do i=1,NB_SAMPLE_PROFILES
+      a = distance_sample(i)
       
       alpha = get_alpha_dz(radius=a)
       
@@ -838,8 +833,12 @@ program test_disk
     
     write(10,*) 'set xlabel "Semi-major axis a (AU)"'
     write(10,*) 'set ylabel "alpha (adim)"'
-    write(10,*) 'set grid'
-    write(10,*) 'set xrange [', a_min, ':', a_max, ']'
+    
+    write(10,*) 'set logscale x'
+    write(10,*) 'set logscale y'
+    write(10,*) 'set mxtics 10' 
+    write(10,*) 'set mytics 10' 
+    write(10,*) 'set grid xtics ytics mxtics mytics linetype -1, 0'
     
     write(10,'(a,i2,a, f4.2,a)') ' plot "alpha_dz.dat" using 1:2 with lines notitle'
     close(10)
@@ -1348,11 +1347,6 @@ program test_disk
     
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
-    integer, parameter :: nb_a = 100
-    real(double_precision), parameter :: a_min = 0.1d0 ! in AU
-    real(double_precision), parameter :: a_max = 15d0 ! in AU
-    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
-    
     real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2
     real(double_precision), parameter :: num2phys = AU**2 / DAY ! convert numerical viscosity to CGS viscosity
     
@@ -1376,8 +1370,8 @@ program test_disk
     write(10,'(a)') '# a in AU ; viscosity'
 
     
-    do i=1,nb_a
-      a = (a_min + a_step * (i - 1.d0))
+    do i=1,NB_SAMPLE_PROFILES
+      a = distance_sample(i)
       ! We generate cartesian coordinate for the given Semi-major axis
       position(1) = a
       
@@ -1406,8 +1400,11 @@ program test_disk
     write(10,*) 'set xlabel "Semi-major axis a (AU)"'
     write(10,*) 'set ylabel "viscosity [cm^2/s]"'
     
-    write(10,*) 'set grid'
-    write(10,*) 'set xrange [', a_min, ':', a_max, ']'
+    write(10,*) 'set logscale x'
+    write(10,*) 'set logscale y'
+    write(10,*) 'set mxtics 10' 
+    write(10,*) 'set mytics 10' 
+    write(10,*) 'set grid xtics ytics mxtics mytics linetype -1, 0'
     
     write(10,'(a,i2,a, f4.2,a)') ' plot "viscosity.dat" using 1:2 with lines notitle'
     
