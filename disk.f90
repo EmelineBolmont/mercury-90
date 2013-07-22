@@ -2108,7 +2108,7 @@ real(double_precision) :: nu_a, nu_b
 
 integer, parameter :: nb_boundaries = 12
 real(double_precision), dimension(nb_boundaries), parameter :: boundaries_list = (/1.d0, 1000.d0, 1500.d0, 2000.d0, 2500.d0, &
-                                                         3000.d0, 3500.d0, 4000.d0, 5000.d0, 10000.d0, 50000.d0, 100000.d0/)
+                                                         3000.d0, 3500.d0, 4000.d0, 5000.d0, 10000.d0, 50000.d0, 200000.d0/)
 
 integer :: i ! For loops
 logical :: no_sign_change
