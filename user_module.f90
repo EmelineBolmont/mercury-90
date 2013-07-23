@@ -369,8 +369,7 @@ contains
              
              flagrg2=1
           endif
-       endif
-       
+       endif   
        if (M_dwarf.eq.1) then 
           ! Charge radius of Mdwarf 
           if (flagrg2.eq.0) then
@@ -408,8 +407,7 @@ contains
              
              flagrg2 = 1
           endif
-       endif
-       
+       endif    
        if (Sun_like_star.eq.1) then 
           ! Charge radius of Mdwarf 
           if (flagrg2.eq.0) then
@@ -450,8 +448,7 @@ contains
              
              flagrg2 = 1
           endif
-       endif
-       
+       endif   
        if (Rscst.eq.1) then 
           if (flagrg2.eq.0) then
 	         Pst = Period_st
@@ -477,7 +474,7 @@ contains
           endif
        endif
        
-     endif
+    endif
        
 !~       ! Calculation of r(j), powers of r(j), 
 !~       ! velocity vv(j), radial velocity vrad(j) and orbital angular momentum
