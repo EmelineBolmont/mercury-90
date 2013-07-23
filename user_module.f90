@@ -54,12 +54,11 @@ contains
     !real(double_precision),intent(inout) entrée sortie pour spin
 
     ! Local
-    integer :: j, error, nptmss, iPs0
+    integer :: j, error, nptmss, iPs0,ihyb
     integer :: flagrg2=0
     integer :: flagtime=0
     integer :: ispin=0
     integer :: iwrite=0
-    integer :: ihyb
     integer :: nintegral=0
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: nbug,timestep!=3.6525d5!3.65d5 !4.56d6 !
@@ -147,12 +146,10 @@ contains
        bobo = get_initial_timestep()
        tstop = bobo(1)
        dt = bobo(2)
+       dtby2 = dt/2.0d0
        flagtime = flagtime+1
-!~        nbug = floor(100*365.25d0/(dt*1.0))
-!~ 	   write(*,*) "nbug = ",nbug
     endif 
-    dtby2 = dt/2.0d0
-    
+
     ! Following calculations in heliocentric coordinates   
     call conversion_dh2h(nbod,nbig,m,x,v,xh,vh)    
 
@@ -670,7 +667,6 @@ contains
                       Rsth = Rsun * Rstbh
                       call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
                       call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dtby2,rg2s)
-                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dtby2/2.d0,rg2sh)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
                    endif
@@ -683,7 +679,6 @@ contains
                       Rsth = Rsun * Rstbh
                       call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dtby2,rg2s0)
                       call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dt,rg2s)
-                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dt*0.75d0,rg2sh)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
                    endif
@@ -698,7 +693,6 @@ contains
                       Rsth = Rsun * Rstbh
                       call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s0)
                       call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dtby2,rg2s)
-                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dtby2/2.d0,rg2sh)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
                    endif
@@ -711,7 +705,6 @@ contains
                       Rsth = Rsun * Rstbh
                       call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dtby2,rg2s0)
                       call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dt,rg2s)
-                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dt*0.75d0,rg2sh)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
                    endif
