@@ -443,6 +443,7 @@ contains
        if (Rscst.eq.1) then 
           rg2s = rg2_what
           Rsth   = radius_star*rsun
+          Rst    = Rsth
           Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
           Rsth10 = Rsth5*Rsth5
           if (flagrg2.eq.0) then
@@ -892,20 +893,50 @@ contains
                 totftides(3) = totftides(3) + tmp*Nts(3,j)
              end do
              ! d/dt(I.Omega) = - (r x F)
-             if (Rscst.eq.0) then 
-                tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
-                tmp1 = - dtby2/(rg2s*Rst*Rst)
-                spin(1,1) = tmp*spin(1,1) + tmp1*totftides(1)
-                spin(2,1) = tmp*spin(2,1) + tmp1*totftides(2)
-                spin(3,1) = tmp*spin(3,1) + tmp1*totftides(3)
-             endif
+!~              if (Rscst.eq.0) then 
+!~                 tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
+!~                 tmp1 = - dtby2/(rg2s*Rst*Rst)
+!~                 spin(1,1) = tmp*spin(1,1) + tmp1*totftides(1)
+!~                 spin(2,1) = tmp*spin(2,1) + tmp1*totftides(2)
+!~                 spin(3,1) = tmp*spin(3,1) + tmp1*totftides(3)
+!~              endif
              if (Rscst.eq.1) then 
                 tmp = - dtby2/(rg2s*Rst*Rst)
                 spin(1,1) = spin(1,1) + tmp*totftides(1)
                 spin(2,1) = spin(2,1) + tmp*totftides(2)
                 spin(3,1) = spin(3,1) + tmp*totftides(3)
              endif
-             
+             if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
+                tmp  = Rst0*Rst0/(Rst*Rst)
+                tmp1 = - dtby2/(rg2s*Rsth*Rsth)
+                if (spin(1,1).eq.0.0d0) then
+                   spin(1,1) = spin(1,1)+tmp1*totftides(1)
+                else
+                   spin(1,1) = tmp*spin(1,1)*exp(tmp1*totftides(1)/spin(1,1))
+                endif
+                if (spin(2,1).eq.0.0d0) then
+                   spin(2,1) = spin(2,1)+tmp1*totftides(2)
+                else
+                   spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
+                endif
+                spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
+             endif
+             if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
+                tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
+                tmp1 = - dtby2/(rg2sh*Rsth*Rsth)
+                if (spin(1,1).eq.0.0d0) then
+                   spin(1,1) = spin(1,1)+tmp1*totftides(1)
+                else
+                   spin(1,1) = tmp*spin(1,1)*exp(tmp1*totftides(1)/spin(1,1))
+                endif
+                if (spin(2,1).eq.0.0d0) then
+                   spin(2,1) = spin(2,1)+tmp1*totftides(2)
+                else
+                   spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
+                endif
+                spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
+             endif
+                
 		     !PLANETS
 		     do j=2,ntid+1 
 		        tmp = - dtby2*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
@@ -1035,51 +1066,5 @@ contains
 
     return
   end subroutine conversion_dh2h
-
-!~   subroutine rk (du,h,ui,u)
-!~ 
-!~     implicit none
-!~ 
-!~     ! Input/Output
-!~     real(double_precision),intent(in) :: h,du,ui
-!~ 
-!~     real(double_precision), intent(out) :: u
-!~ 
-!~     ! Local
-!~     integer :: n=7
-!~     real(double_precision) :: a(4),b(4)
-!~     real(double_precision) :: u0(n),ut(n),ui(n),u(n),du(n)
-!~ 
-!~     !------------------------------------------------------------------------------
-!~ 
-!~     a(1) = h/2.d0
-!~     a(2) = a(1)
-!~     a(3) = h
-!~     a(4) = 0.d0
-!~     b(1) = h/6.d0
-!~     b(2) = h/3.d0
-!~     b(3) = b(2)
-!~     b(4) = b(1)
-!~ 	
-!~ 	do i=1,n
-!~        u0(i) = ui(i) 
-!~        ut(i) = 0.0d0
-!~     enddo
-!~ 	
-!~     do j = 1,4
-!~        do i=1,n
-!~           u(i)  = u0(i)+a(j)*du(i)
-!~           ut(i) = ut(i)+b(j)*du(i)
-!~        enddo
-!~     enddo
-!~     
-!~     do i = 1,n
-!~        u(i) = u0(i)+ut(i)
-!~     enddo
-!~ 
-!~     !------------------------------------------------------------------------------
-!~ 
-!~     return
-!~   end subroutine rk
 
 end module user_module
