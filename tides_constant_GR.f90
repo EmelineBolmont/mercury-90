@@ -6,6 +6,8 @@ module tides_constant_GR
   ! Author: Emeline Bolmont
   ! Date: 04/04/13
   !
+  ! Output of spin every 'output' years
+  integer, parameter :: output=100
   ! If you want Tides or not
   integer, parameter :: tides=1
   ! If you want General Relativity or not

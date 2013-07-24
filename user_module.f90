@@ -441,7 +441,7 @@ contains
           endif
        endif      
        if (Rscst.eq.1) then 
-          rg2s = rg2_what
+          rg2s   = rg2_what
           Rsth   = radius_star*rsun
           Rst    = Rsth
           Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
@@ -892,14 +892,6 @@ contains
                 totftides(2) = totftides(2) + tmp*Nts(2,j)
                 totftides(3) = totftides(3) + tmp*Nts(3,j)
              end do
-             ! d/dt(I.Omega) = - (r x F)
-!~              if (Rscst.eq.0) then 
-!~                 tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
-!~                 tmp1 = - dtby2/(rg2s*Rst*Rst)
-!~                 spin(1,1) = tmp*spin(1,1) + tmp1*totftides(1)
-!~                 spin(2,1) = tmp*spin(2,1) + tmp1*totftides(2)
-!~                 spin(3,1) = tmp*spin(3,1) + tmp1*totftides(3)
-!~              endif
              if (Rscst.eq.1) then 
                 tmp = - dtby2/(rg2s*Rst*Rst)
                 spin(1,1) = spin(1,1) + tmp*totftides(1)
@@ -980,7 +972,7 @@ contains
                    write(*,*) "h6",time/365.25d0,horb(1,7)/horbn(7),horb(2,7)/horbn(7) &
                      ,horb(3,7)/horbn(7),horbn(7)
                 endif
-                timestep = time + 100.*365.25
+                timestep = time + output*365.25d0
              endif
           endif
 
