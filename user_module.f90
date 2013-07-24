@@ -894,13 +894,16 @@ contains
              end do
              if (Rscst.eq.1) then 
                 tmp = - dtby2/(rg2s*Rst*Rst)
+                if (ihyb.eq.1) write(*,*) "spins_bef",spin(1,1),spin(2,1),spin(3,1)
                 spin(1,1) = spin(1,1) + tmp*totftides(1)
                 spin(2,1) = spin(2,1) + tmp*totftides(2)
                 spin(3,1) = spin(3,1) + tmp*totftides(3)
+                if (ihyb.eq.1) write(*,*) "spins_aft",spin(1,1),spin(2,1),spin(3,1)
              endif
              if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
                 tmp  = Rst0*Rst0/(Rst*Rst)
                 tmp1 = - dtby2/(rg2s*Rsth*Rsth)
+                if (ihyb.eq.1) write(*,*) "spins_bef",spin(1,1),spin(2,1),spin(3,1)
                 if (spin(1,1).eq.0.0d0) then
                    spin(1,1) = spin(1,1)+tmp1*totftides(1)
                 else
@@ -912,10 +915,12 @@ contains
                    spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
                 endif
                 spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
+                if (ihyb.eq.1) write(*,*) "spins_aft",spin(1,1),spin(2,1),spin(3,1)
              endif
              if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
                 tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
                 tmp1 = - dtby2/(rg2sh*Rsth*Rsth)
+                if (ihyb.eq.1) write(*,*) "spins_bef",spin(1,1),spin(2,1),spin(3,1)
                 if (spin(1,1).eq.0.0d0) then
                    spin(1,1) = spin(1,1)+tmp1*totftides(1)
                 else
@@ -927,6 +932,7 @@ contains
                    spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
                 endif
                 spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
+                if (ihyb.eq.1) write(*,*) "spins_aft",spin(1,1),spin(2,1),spin(3,1)
              endif
                 
 		     !PLANETS
@@ -991,6 +997,7 @@ contains
                 a1(3,j) = K2/m(j)*(Ftr(j)*xh(3,j)/r(j) &
                      +Ftso(j)/r(j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
                      +Ftpo(j)/r(j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)))
+                write(*,*) "a_tid",a1(1,j),a1(2,j),a1(3,j)
              endif
 		     if (GenRel.eq.1) then 
                 a2(1,j) = (FGRr(j)*xh(1,j)/r(j)+FGRo(j)*vh(1,j)/vv(j))
