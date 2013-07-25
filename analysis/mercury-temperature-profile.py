@@ -8,6 +8,8 @@
 import pylab as pl
 import numpy as np
 from matplotlib.patches import Rectangle
+from matplotlib.ticker import FormatStrFormatter
+
 
 OUTPUT_EXTENSION = 'pdf'
 
@@ -55,6 +57,10 @@ plot_idx.set_ylabel("Temperature power law")
 plot_idx.xaxis.grid(True, which='major', color='#222222', linestyle='-')
 plot_idx.yaxis.grid(True, which='major', color='#222222', linestyle='-')
 plot_idx.xaxis.grid(True, which='minor', color='#888888', linestyle='-')
+
+
+myxfmt = FormatStrFormatter("%.3g")
+plot_T.xaxis.set_major_formatter(myxfmt)
 
 # We generate the output file
 nom_fichier_plot = "temperature_profile"
