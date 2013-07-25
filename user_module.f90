@@ -63,12 +63,12 @@ contains
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: timestep!=3.6525d5!3.65d5 !4.56d6 !
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
-    real(double_precision) :: timebf,dt,dtby2,tstop,tmp,tmp1,tmp2,sigmast
+    real(double_precision) :: dt,dtby2,tstop,tmp,tmp1,tmp2,sigmast
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
     real(double_precision), dimension(3,nbig+1) :: a1,a2,xh,vh
-    real(double_precision), dimension(3,nbig+1) :: horb,trueanom!,vperp
-    real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la,azi
+    real(double_precision), dimension(3,nbig+1) :: horb,trueanom
+    real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la
     real(double_precision), dimension(3,nbig+1) :: Nts,Ntp
     real(double_precision), dimension(3,8) :: spin
     real(double_precision), dimension(8) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
@@ -80,8 +80,8 @@ contains
     real(double_precision), dimension(1065) :: timedM,radiusdM
     real(double_precision), dimension(4755) :: timeJup,radiusJup,k2Jup,rg2Jup,spinJup
     real(double_precision), dimension(37) :: rg2st,trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
-    real(double_precision) :: Rst,Rst5,Rst10,Rstb,Rsth,Rsth5,Rsth10,Rstbh,Rst0,Rstj0,Rstb0,temp,spin0,spinp0,spinb0
-    real(double_precision) :: rg2s,rg2sh,rg2s0,k2s,k2s0
+    real(double_precision) :: Rst,Rst5,Rst10,Rstb,Rsth,Rsth5,Rsth10,Rstbh,Rst0,Rstj0,Rstb0,spin0,spinp0,spinb0
+    real(double_precision) :: rg2s,rg2sh,rg2s0,k2s
     real(double_precision), dimension(nbig+1) :: Ftr,Ftso,Ftpo
     real(double_precision), dimension(nbig+1) :: FGRo,FGRr
     real(double_precision), parameter, dimension(12) :: Ps0 = (/8.d0,13.d0,19.d0,24.d0,30.d0,36.d0,41.d0, &
@@ -98,13 +98,37 @@ contains
     
     save sigmast,k2s
     save flagrg2,flagtime,ispin,flagbug,ihyb
-    save timestep
+    save timestep,nptmss
     save spin,dt,dtby2
     save Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
-    save timebf,nptmss
+    
     !------------------------------------------------------------------------------
     ! superzoyotte
-
+    
+    ! Error message
+    if (ispin.eq.0) then
+       if ((brown_dwarf.eq.1).and.((M_dwarf.eq.1).or.(Sun_like_star.eq.1).or.(Jupiter_host.eq.1).or.(Rscst.eq.1))) then 
+          write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
+          stop
+       endif
+       if ((M_dwarf.eq.1).and.((Sun_like_star.eq.1).or.(Jupiter_host.eq.1).or.(Rscst.eq.1).or.(brown_dwarf.eq.1))) then
+          write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
+          stop
+       endif    
+       if ((Sun_like_star.eq.1).and.((Jupiter_host.eq.1).or.(Rscst.eq.1).or.(brown_dwarf.eq.1).or.(M_dwarf.eq.1))) then 
+          write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
+          stop
+       endif
+       if ((Jupiter_host.eq.1).and.((Rscst.eq.1).or.(brown_dwarf.eq.1).or.(M_dwarf.eq.1).or.(Sun_like_star.eq.1))) then 
+          write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
+          stop
+       endif
+       if ((Rscst.eq.1).and.((brown_dwarf.eq.1).or.(M_dwarf.eq.1).or.(Sun_like_star.eq.1).or.(Jupiter_host.eq.1))) then 
+          write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
+          stop
+       endif
+    endif
+    
     ! Acceleration initialization
     do j = 1, nbod
        a(1,j) = 0.d0
@@ -619,6 +643,7 @@ contains
                       Rsth = Rsun * Rstbh
                       call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
                       call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dtby2,rg2s)
+                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dtby2/2.d0,rg2sh)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
                    endif
@@ -631,6 +656,7 @@ contains
                       Rsth = Rsun * Rstbh
                       call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dtby2,rg2s0)
                       call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dt,rg2s)
+                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dt*0.75d0,rg2sh)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
                    endif
@@ -645,6 +671,7 @@ contains
                       Rsth = Rsun * Rstbh
                       call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s0)
                       call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dtby2,rg2s)
+                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dtby2/2.d0,rg2sh)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
                    endif
@@ -657,6 +684,7 @@ contains
                       Rsth = Rsun * Rstbh
                       call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dtby2,rg2s0)
                       call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dt,rg2s)
+                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dt*0.75d0,rg2sh)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
                    endif
@@ -779,6 +807,7 @@ contains
                       Rsth = minau * Rstbh
                       call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dtby2,rg2s0)
                       call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dt,rg2s)
+                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dt*0.75d0,rg2sh)
                       call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time+dt*0.75d0,k2s)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
@@ -794,6 +823,7 @@ contains
                       Rsth = minau * Rstbh
                       call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s0)
                       call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dtby2,rg2s)
+                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dtby2/2.d0,rg2sh)
                       call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash+dtby2/2.d0,k2s)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
@@ -807,6 +837,7 @@ contains
                       Rsth = minau * Rstbh
                       call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dtby2,rg2s0)
                       call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dt,rg2s)
+                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dt*0.75d0,rg2sh)
                       call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash+dt*0.75d0,k2s)
                       Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
                       Rsth10 = Rsth5*Rsth5
@@ -873,7 +904,7 @@ contains
                      - xh(1,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)))     
                 Ntp(3,j)  =  Ftpo(j)*1.d0/r(j) &
                      *(xh(1,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)) &
-                     - xh(2,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)))          
+                     - xh(2,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)))        
              end do
 			   
 		     ! **************************************************************
@@ -892,18 +923,16 @@ contains
                 totftides(2) = totftides(2) + tmp*Nts(2,j)
                 totftides(3) = totftides(3) + tmp*Nts(3,j)
              end do
+             ! d/dt(I.Omega) = - (r x F)
              if (Rscst.eq.1) then 
                 tmp = - dtby2/(rg2s*Rst*Rst)
-                if (ihyb.eq.1) write(*,*) "spins_bef",spin(1,1),spin(2,1),spin(3,1)
                 spin(1,1) = spin(1,1) + tmp*totftides(1)
                 spin(2,1) = spin(2,1) + tmp*totftides(2)
                 spin(3,1) = spin(3,1) + tmp*totftides(3)
-                if (ihyb.eq.1) write(*,*) "spins_aft",spin(1,1),spin(2,1),spin(3,1)
              endif
              if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
                 tmp  = Rst0*Rst0/(Rst*Rst)
                 tmp1 = - dtby2/(rg2s*Rsth*Rsth)
-                if (ihyb.eq.1) write(*,*) "spins_bef",spin(1,1),spin(2,1),spin(3,1)
                 if (spin(1,1).eq.0.0d0) then
                    spin(1,1) = spin(1,1)+tmp1*totftides(1)
                 else
@@ -915,12 +944,10 @@ contains
                    spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
                 endif
                 spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
-                if (ihyb.eq.1) write(*,*) "spins_aft",spin(1,1),spin(2,1),spin(3,1)
              endif
              if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
                 tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
                 tmp1 = - dtby2/(rg2sh*Rsth*Rsth)
-                if (ihyb.eq.1) write(*,*) "spins_bef",spin(1,1),spin(2,1),spin(3,1)
                 if (spin(1,1).eq.0.0d0) then
                    spin(1,1) = spin(1,1)+tmp1*totftides(1)
                 else
@@ -932,7 +959,6 @@ contains
                    spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
                 endif
                 spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
-                if (ihyb.eq.1) write(*,*) "spins_aft",spin(1,1),spin(2,1),spin(3,1)
              endif
                 
 		     !PLANETS
@@ -948,7 +974,7 @@ contains
              if (flagbug.eq.0.0d0) then 
                 write(*,*) "time(yr)    spin x,y,z(day-1)     R(Rsun)   rg2  k2s sigmast"
              endif         
-             if ((time.ge.timestep).or.(time.eq.0.0)) then
+             if (time.ge.timestep) then
                 write(*,*) "s",time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
                 write(*,*) "p1",time/365.25d0,spin(1,2),spin(2,2),spin(3,2),Rp(2)/rsun,rg2p(1)
                 write(*,*) "h1",time/365.25d0,horb(1,2)/horbn(2),horb(2,2)/horbn(2) &
@@ -997,7 +1023,6 @@ contains
                 a1(3,j) = K2/m(j)*(Ftr(j)*xh(3,j)/r(j) &
                      +Ftso(j)/r(j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
                      +Ftpo(j)/r(j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)))
-                write(*,*) "a_tid",a1(1,j),a1(2,j),a1(3,j)
              endif
 		     if (GenRel.eq.1) then 
                 a2(1,j) = (FGRr(j)*xh(1,j)/r(j)+FGRo(j)*vh(1,j)/vv(j))
@@ -1010,8 +1035,6 @@ contains
              a(3,j) = a1(3,j)+a2(3,j)
           end do
 
-          ! Store previous value of time in order to calculate timestep
-          timebf = time
           flagbug = flagbug+1
           ihyb=ihyb+1
           if (ihyb.eq.2) ihyb=0
