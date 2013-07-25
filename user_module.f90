@@ -169,7 +169,7 @@ contains
        dt = bobo(2)
        flagtime = flagtime+1
     endif 
-    write(*,*) "mfo_user, time",time
+
     ! Following calculations in heliocentric coordinates   
     call conversion_dh2h(nbod,nbig,m,x,v,xh,vh)    
 
@@ -927,7 +927,6 @@ contains
 
           flagbug = flagbug+1
           ispin=1
-          if (flagbug.eq.100) stop
 
     return
   end subroutine mfo_user

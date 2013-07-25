@@ -145,7 +145,6 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
     
   !------------------------------------------------------------------------------
   
-  write(*,*) "algo_hyb, time",time
   hby2 = h0 * .5d0
   nclo = 0
   colflag = 0
@@ -165,19 +164,14 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
      end do
      ! If required, apply non-gravitational and user-defined forces
      if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
-     write(*,*) "algo_hyb, mfo_user, first call"
      if ((ngflag.eq.1).or.(ngflag.eq.3)) call mfo_ngf (nbod,x,v,angf,ngf)
   end if
   
   ! Advance interaction Hamiltonian for H/2
   do j = 2, nbod
-     write(*,*) "algo_hyb, first half timestep, interaction H"
-     write(*,*) "ausr",ausr(1,j),ausr(2,j),ausr(3,j)
-     write(*,*) "vi",v(1,j),v(2,j),v(3,j)
      v(1,j) = v(1,j)  +  hby2 * (angf(1,j) + ausr(1,j) + a(1,j))
      v(2,j) = v(2,j)  +  hby2 * (angf(2,j) + ausr(2,j) + a(2,j))
      v(3,j) = v(3,j)  +  hby2 * (angf(3,j) + ausr(3,j) + a(3,j))
-     write(*,*) "vf",v(1,j),v(2,j),v(3,j)
   end do
   
   ! Advance solar Hamiltonian for H/2
@@ -195,13 +189,9 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   mvsum(2) = temp * mvsum(2)
   mvsum(3) = temp * mvsum(3)
   do j = 2, nbod
-     write(*,*) "algo_hyb, first half timestep, solar H"
-     write(*,*) "xi",x(1,j),x(2,j),x(3,j)
      x(1,j) = x(1,j)  +  mvsum(1)
      x(2,j) = x(2,j)  +  mvsum(2)
      x(3,j) = x(3,j)  +  mvsum(3)
-     write(*,*) "xf",x(1,j),x(2,j),x(3,j)
-     write(*,*) ""
   end do
   
   ! Save the current coordinates and velocities
@@ -212,13 +202,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   ! Advance H_K for H
   do j = 2, nbod
      iflag = 0
-     write(*,*) "algo_hyb, full timestep, Kepler"
-     write(*,*) "xi",x(1,j),x(2,j),x(3,j)
-     write(*,*) "vi",v(1,j),v(2,j),v(3,j)
      call drift_one (m(1),x(1,j),x(2,j),x(3,j),v(1,j),v(2,j),v(3,j),h0,iflag)
-     write(*,*) "xf",x(1,j),x(2,j),x(3,j)
-     write(*,*) "vf",v(1,j),v(2,j),v(3,j)
-     write(*,*) ""
   end do
   
   ! Check whether any object separations were < R_CRIT whilst advancing H_K
@@ -255,31 +239,20 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   mvsum(2) = temp * mvsum(2)
   mvsum(3) = temp * mvsum(3)
   do j = 2, nbod
-     write(*,*) "algo_hyb, second half timestep, solar H"
-     write(*,*) "xi",x(1,j),x(2,j),x(3,j)
      x(1,j) = x(1,j)  +  mvsum(1)
      x(2,j) = x(2,j)  +  mvsum(2)
      x(3,j) = x(3,j)  +  mvsum(3)
-     write(*,*) "xf",x(1,j),x(2,j),x(3,j)
-     write(*,*) ""
   end do
   
   ! Advance interaction Hamiltonian for H/2
   call mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
   if (opt(8).eq.1) call mfo_user (time,jcen,nbod,nbig,m,x,v,ausr)
-  write(*,*) "algo_hyb, mfo_user, second call"
   if ((ngflag.eq.1).or.(ngflag.eq.3)) call mfo_ngf (nbod,x,v,angf,ngf)
   
   do j = 2, nbod
-     write(*,*) "algo_hyb, second half timestep, interaction H"
-     write(*,*) "ausr",ausr(1,j),ausr(2,j),ausr(3,j) 
-     write(*,*) "vi",v(1,j),v(2,j),v(3,j)
      v(1,j) = v(1,j)  +  hby2 * (angf(1,j) + ausr(1,j) + a(1,j))
      v(2,j) = v(2,j)  +  hby2 * (angf(2,j) + ausr(2,j) + a(2,j))
      v(3,j) = v(3,j)  +  hby2 * (angf(3,j) + ausr(3,j) + a(3,j))
-     write(*,*) "vf",v(1,j),v(2,j),v(3,j)
-     write(*,*) ""
-     write(*,*) "END algo_hybrid"
   end do
   
   !------------------------------------------------------------------------------
