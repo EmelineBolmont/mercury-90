@@ -54,7 +54,7 @@ contains
     !real(double_precision),intent(inout) entrée sortie pour spin
 
     ! Local
-    integer :: j, error, nptmss, iPs0,ihyb
+    integer :: j, error, nptmss, iPs0
     integer :: flagrg2=0
     integer :: flagtime=0
     integer :: ispin=0
@@ -62,7 +62,7 @@ contains
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: timestep!=3.6525d5!3.65d5 !4.56d6 !
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
-    real(double_precision) :: dt,dtby2,tstop,tmp,tmp1,tmp2,sigmast
+    real(double_precision) :: dt,tstop,tmp,tmp1,tmp2,sigmast
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
     real(double_precision), dimension(3,nbig+1) :: a1,a2,xh,vh
@@ -96,9 +96,9 @@ contains
     save timeJup,radiusJup,k2Jup,rg2Jup,spinJup
     
     save sigmast,k2s
-    save flagrg2,flagtime,ispin,flagbug,ihyb
+    save flagrg2,flagtime,ispin,flagbug
     save timestep,nptmss
-    save spin,dt,dtby2
+    save spin,dt
     save Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
     
     !------------------------------------------------------------------------------
@@ -155,7 +155,6 @@ contains
           na(j) = 0.d0
           la(j) = 0.d0
           timestep = time
-          ihyb=0
        endif
     end do
 	if (iwrite.eq.0) then 
@@ -168,10 +167,9 @@ contains
        bobo = get_initial_timestep()
        tstop = bobo(1)
        dt = bobo(2)
-       dtby2 = dt/2.0d0
        flagtime = flagtime+1
     endif 
-
+    write(*,*) "mfo_user, time",time
     ! Following calculations in heliocentric coordinates   
     call conversion_dh2h(nbod,nbig,m,x,v,xh,vh)    
 
@@ -624,7 +622,7 @@ contains
                       spin(3,7) = rot_crashp6(3) !day-1
                    endif
                 endif
-                ispin = 1
+                
              endif
           endif
           
@@ -633,217 +631,108 @@ contains
              ! Here Rst in AU, Rsth5; Rsth10
              if (brown_dwarf.eq.1) then
                 if (crash.eq.0) then
-                   if (ihyb.eq.0) then
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb0)
-                      Rst0= Rsun * Rstb0
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time+dtby2,Rstb)
-                      Rst = Rsun * Rstb
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time+dtby2/2.d0,Rstbh)
-                      Rsth = Rsun * Rstbh
-                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
-                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dtby2,rg2s)
-                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dtby2/2.d0,rg2sh)
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
-                   if (ihyb.eq.1) then
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time+dtby2,Rstb0)
-                      Rst0= Rsun * Rstb0
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time+dt,Rstb)
-                      Rst = Rsun * Rstb
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time+dt*0.75d0,Rstbh)
-                      Rsth = Rsun * Rstbh
-                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dtby2,rg2s0)
-                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dt,rg2s)
-                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dt*0.75d0,rg2sh)
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
+                   call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb0)
+                   Rst0= Rsun * Rstb0
+                   call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time+dt,Rstb)
+                   Rst = Rsun * Rstb
+                   call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time+dt/2.d0,Rstbh)
+                   Rsth = Rsun * Rstbh
+                   call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
+                   call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dt,rg2s)
+                   call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time+dt/2.d0,rg2sh)
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
                 if (crash.eq.1) then
-                   if (ihyb.eq.0) then
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb0)
-                      Rst0= Rsun * Rstb0
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash+dtby2,Rstb)
-                      Rst = Rsun * Rstb
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash+dtby2/2.d0,Rstbh)
-                      Rsth = Rsun * Rstbh
-                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s0)
-                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dtby2,rg2s)
-                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dtby2/2.d0,rg2sh)
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
-                   if (ihyb.eq.1) then
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash+dtby2,Rstb0)
-                      Rst0= Rsun * Rstb0
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash+dt,Rstb)
-                      Rst = Rsun * Rstb
-                      call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash+dt*0.75d0,Rstbh)
-                      Rsth = Rsun * Rstbh
-                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dtby2,rg2s0)
-                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dt,rg2s)
-                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dt*0.75d0,rg2sh)
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
+                   call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb0)
+                   Rst0= Rsun * Rstb0
+                   call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash+dt,Rstb)
+                   Rst = Rsun * Rstb
+                   call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash+dt/2.d0,Rstbh)
+                   Rsth = Rsun * Rstbh
+                   call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s0)
+                   call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dt,rg2s)
+                   call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash+dt/2.d0,rg2sh)
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
              endif
              if (M_dwarf.eq.1) then
                 if (crash.eq.0) then
-                   if (ihyb.eq.0) then
-                      call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time,Rstb0)
-                      Rst0= Rsun * Rstb0
-                      call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time+dtby2,Rstb)
-                      Rst = Rsun * Rstb
-                      call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time+dtby2/2.d0,Rstbh)
-                      Rsth = Rsun * Rstbh
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
-                   if (ihyb.eq.1) then
-                      call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time+dtby2,Rstb0)
-                      Rst0= Rsun * Rstb0
-                      call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time+dt,Rstb)
-                      Rst = Rsun * Rstb
-                      call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time+dt*0.75d0,Rstbh)
-                      Rsth = Rsun * Rstbh
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
+                   call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time,Rstb0)
+                   Rst0= Rsun * Rstb0
+                   call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time+dt,Rstb)
+                   Rst = Rsun * Rstb
+                   call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time+dt/2.d0,Rstbh)
+                   Rsth = Rsun * Rstbh
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
                 if (crash.eq.1) then
-                   if (ihyb.eq.0) then
-                      call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash,Rstb0)
-                      Rst0= Rsun * Rstb0
-                      call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash+dtby2,Rstb)
-                      Rst = Rsun * Rstb
-                      call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash+dtby2/2.d0,Rstbh)
-                      Rsth = Rsun * Rstbh
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
-                   if (ihyb.eq.1) then
-                      call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash+dtby2,Rstb0)
-                      Rst0= Rsun * Rstb0
-                      call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash+dt,Rstb)
-                      Rst = Rsun * Rstb
-                      call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash+dt*0.75d0,Rstbh)
-                      Rsth = Rsun * Rstbh
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
+                   call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash,Rstb0)
+                   Rst0= Rsun * Rstb0
+                   call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash+dt,Rstb)
+                   Rst = Rsun * Rstb
+                   call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash+dt/2.d0,Rstbh)
+                   Rsth = Rsun * Rstbh
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
              endif
              if (Sun_like_star.eq.1) then
                 if (crash.eq.0) then
-                   if (ihyb.eq.0) then
-                      call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time,Rstb0)
-                      Rst0= minau * Rstb0
-                      call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time+dtby2,Rstb)
-                      Rst = minau * Rstb
-                      call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time+dtby2/2.d0,Rstbh)
-                      Rsth = minau * Rstbh
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
-                   if (ihyb.eq.1) then
-                      call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time+dtby2,Rstb0)
-                      Rst0= minau * Rstb0
-                      call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time+dt,Rstb)
-                      Rst = minau * Rstb
-                      call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time+dt*0.75d0,Rstbh)
-                      Rsth = minau * Rstbh
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
+                   call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time,Rstb0)
+                   Rst0= minau * Rstb0
+                   call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time+dt,Rstb)
+                   Rst = minau * Rstb
+                   call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time+dt/2.d0,Rstbh)
+                   Rsth = minau * Rstbh
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
                 if (crash.eq.1) then
-                   if (ihyb.eq.0) then
-                      call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash,Rstb0)
-                      Rst0= minau * Rstb0
-                      call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash+dtby2,Rstb)
-                      Rst = minau * Rstb
-                      call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash+dtby2/2.d0,Rstbh)
-                      Rsth = minau * Rstbh
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
-                   if (ihyb.eq.1) then
-                      call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash+dtby2,Rstb0)
-                      Rst0= minau * Rstb0
-                      call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash+dt,Rstb)
-                      Rst = minau * Rstb
-                      call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash+dt*0.75d0,Rstbh)
-                      Rsth = minau * Rstbh
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
+                   call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash,Rstb0)
+                   Rst0= minau * Rstb0
+                   call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash+dt,Rstb)
+                   Rst = minau * Rstb
+                   call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash+dt/2.d0,Rstbh)
+                   Rsth = minau * Rstbh
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
              endif
              if (Jupiter_host.eq.1) then
                 if (crash.eq.0) then
-                   if (ihyb.eq.0) then
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb0)
-                      Rst0= minau * Rstb0
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time+dtby2,Rstb)
-                      Rst = minau * Rstb
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time+dtby2/2.d0,Rstbh)
-                      Rsth = minau * Rstbh
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s0)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dtby2,rg2s)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dtby2/2.d0,rg2sh)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time+dtby2/2.d0,k2s)
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
-                   if (ihyb.eq.1) then
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time+dtby2,Rstb0)
-                      Rst0= minau * Rstb0
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time+dt,Rstb)
-                      Rst = minau * Rstb
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time+dt*0.75d0,Rstbh)
-                      Rsth = minau * Rstbh
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dtby2,rg2s0)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dt,rg2s)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dt*0.75d0,rg2sh)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time+dt*0.75d0,k2s)
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb0)
+                   Rst0= minau * Rstb0
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time+dt,Rstb)
+                   Rst = minau * Rstb
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time+dt/2.d0,Rstbh)
+                   Rsth = minau * Rstbh
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s0)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dt,rg2s)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time+dt/2.d0,rg2sh)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time+dt/2.d0,k2s)
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
                 if (crash.eq.1) then
-                   if (ihyb.eq.0) then
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb0)
-                      Rst0= minau * Rstb0
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash+dtby2,Rstb)
-                      Rst = minau * Rstb
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash+dtby2/2.d0,Rstbh)
-                      Rsth = minau * Rstbh
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s0)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dtby2,rg2s)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dtby2/2.d0,rg2sh)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash+dtby2/2.d0,k2s)
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
-                   if (ihyb.eq.1) then
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash+dtby2,Rstb0)
-                      Rst0= minau * Rstb0
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash+dt,Rstb)
-                      Rst = minau * Rstb
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash+dt*0.75d0,Rstbh)
-                      Rsth = minau * Rstbh
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dtby2,rg2s0)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dt,rg2s)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dt*0.75d0,rg2sh)
-                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash+dt*0.75d0,k2s)
-                      Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-                      Rsth10 = Rsth5*Rsth5
-                   endif
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb0)
+                   Rst0= minau * Rstb0
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash+dt,Rstb)
+                   Rst = minau * Rstb
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash+dt/2.d0,Rstbh)
+                   Rsth = minau * Rstbh
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s0)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dt,rg2s)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash+dt/2.d0,rg2sh)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash+dt/2.d0,k2s)
+                   Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                   Rsth10 = Rsth5*Rsth5
                 endif
              endif
           endif
+
 
           ! **************************************************************
           ! **************************************************************
@@ -880,96 +769,98 @@ contains
              endif
           enddo   
           
-          if (tides.eq.1) then 
-             ! Calculation of tidal torque !AU,Msun,day
-             do j=2,ntid+1  
-                ! star
-                Nts(1,j)  =  Ftso(j)*1.d0/r(j) &
-                     *(xh(2,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
-                     - xh(3,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)))
-                Nts(2,j)  =  Ftso(j)*1.d0/r(j) &
-                     *(xh(3,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)) &
-                     - xh(1,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)))     
-                Nts(3,j)  =  Ftso(j)*1.d0/r(j) &
-                     *(xh(1,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)) &
-                     - xh(2,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)))  
-             
-                ! planet
-                Ntp(1,j)  =  Ftpo(j)*1.d0/r(j) &
-                     *(xh(2,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)) &
-                     - xh(3,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)))
-                Ntp(2,j)  =  Ftpo(j)*1.d0/r(j) &
-                     *(xh(3,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)) &
-                     - xh(1,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)))     
-                Ntp(3,j)  =  Ftpo(j)*1.d0/r(j) &
-                     *(xh(1,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)) &
-                     - xh(2,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)))        
-             end do
-			   
-		     ! **************************************************************
-             ! **************************************************************
-
-             ! Spin evolution
-             
-             ! STAR
-             ! Sum of the different contribution from the different planets        
-             totftides(1) = 0.d0
-             totftides(2) = 0.d0
-             totftides(3) = 0.d0
-             do j=2,ntid+1 
-                tmp = K2/(m(1)+m(j))
-                totftides(1) = totftides(1) + tmp*Nts(1,j)
-                totftides(2) = totftides(2) + tmp*Nts(2,j)
-                totftides(3) = totftides(3) + tmp*Nts(3,j)
-             end do
-             ! d/dt(I.Omega) = - (r x F)
-             if (Rscst.eq.1) then 
-                tmp = - dtby2/(rg2s*Rst*Rst)
-                spin(1,1) = spin(1,1) + tmp*totftides(1)
-                spin(2,1) = spin(2,1) + tmp*totftides(2)
-                spin(3,1) = spin(3,1) + tmp*totftides(3)
-             endif
-             if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
-                tmp  = Rst0*Rst0/(Rst*Rst)
-                tmp1 = - dtby2/(rg2s*Rsth*Rsth)
-                if (spin(1,1).eq.0.0d0) then
-                   spin(1,1) = spin(1,1)+tmp1*totftides(1)
-                else
-                   spin(1,1) = tmp*spin(1,1)*exp(tmp1*totftides(1)/spin(1,1))
-                endif
-                if (spin(2,1).eq.0.0d0) then
-                   spin(2,1) = spin(2,1)+tmp1*totftides(2)
-                else
-                   spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
-                endif
-                spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
-             endif
-             if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
-                tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
-                tmp1 = - dtby2/(rg2sh*Rsth*Rsth)
-                if (spin(1,1).eq.0.0d0) then
-                   spin(1,1) = spin(1,1)+tmp1*totftides(1)
-                else
-                   spin(1,1) = tmp*spin(1,1)*exp(tmp1*totftides(1)/spin(1,1))
-                endif
-                if (spin(2,1).eq.0.0d0) then
-                   spin(2,1) = spin(2,1)+tmp1*totftides(2)
-                else
-                   spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
-                endif
-                spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
-             endif
+          if (ispin.eq.1) then
+             if (tides.eq.1) then 
+                ! Calculation of tidal torque !AU,Msun,day
+                do j=2,ntid+1  
+                   ! star
+                   Nts(1,j)  =  Ftso(j)*1.d0/r(j) &
+                        *(xh(2,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
+                        - xh(3,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)))
+                   Nts(2,j)  =  Ftso(j)*1.d0/r(j) &
+                        *(xh(3,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)) &
+                        - xh(1,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)))     
+                   Nts(3,j)  =  Ftso(j)*1.d0/r(j) &
+                        *(xh(1,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)) &
+                        - xh(2,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)))  
                 
-		     !PLANETS
-		     do j=2,ntid+1 
-		        tmp = - dtby2*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
-		        spin(1,j) = spin(1,j) + tmp*Ntp(1,j)
-		        spin(2,j) = spin(2,j) + tmp*Ntp(2,j)
-		        spin(3,j) = spin(3,j) + tmp*Ntp(3,j)
-		     enddo
-             
+                   ! planet
+                   Ntp(1,j)  =  Ftpo(j)*1.d0/r(j) &
+                        *(xh(2,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)) &
+                        - xh(3,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)))
+                   Ntp(2,j)  =  Ftpo(j)*1.d0/r(j) &
+                        *(xh(3,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)) &
+                        - xh(1,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)))     
+                   Ntp(3,j)  =  Ftpo(j)*1.d0/r(j) &
+                        *(xh(1,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)) &
+                        - xh(2,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)))        
+                end do
+			        
+		        ! **************************************************************
+                ! **************************************************************
+                
+                ! Spin evolution
+                
+                ! STAR
+                ! Sum of the different contribution from the different planets        
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
+                   tmp = K2/(m(1)+m(j))
+                   totftides(1) = totftides(1) + tmp*Nts(1,j)
+                   totftides(2) = totftides(2) + tmp*Nts(2,j)
+                   totftides(3) = totftides(3) + tmp*Nts(3,j)
+                end do
+                ! d/dt(I.Omega) = - (r x F)
+                if (Rscst.eq.1) then 
+                   tmp = - dt/(rg2s*Rst*Rst)
+                   spin(1,1) = spin(1,1) + tmp*totftides(1)
+                   spin(2,1) = spin(2,1) + tmp*totftides(2)
+                   spin(3,1) = spin(3,1) + tmp*totftides(3)
+                endif
+                if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
+                   tmp  = Rst0*Rst0/(Rst*Rst)
+                   tmp1 = - dt/(rg2s*Rsth*Rsth)
+                   if (spin(1,1).eq.0.0d0) then
+                      spin(1,1) = spin(1,1)+tmp1*totftides(1)
+                   else
+                      spin(1,1) = tmp*spin(1,1)*exp(tmp1*totftides(1)/spin(1,1))
+                   endif
+                   if (spin(2,1).eq.0.0d0) then
+                      spin(2,1) = spin(2,1)+tmp1*totftides(2)
+                   else
+                      spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
+                   endif
+                   spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
+                endif
+                if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
+                   tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
+                   tmp1 = - dt/(rg2sh*Rsth*Rsth)
+                   if (spin(1,1).eq.0.0d0) then
+                      spin(1,1) = spin(1,1)+tmp1*totftides(1)
+                   else
+                      spin(1,1) = tmp*spin(1,1)*exp(tmp1*totftides(1)/spin(1,1))
+                   endif
+                   if (spin(2,1).eq.0.0d0) then
+                      spin(2,1) = spin(2,1)+tmp1*totftides(2)
+                   else
+                      spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
+                   endif
+                   spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
+                endif
+                   
+		        !PLANETS
+		        do j=2,ntid+1 
+		           tmp = - dt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
+		           spin(1,j) = spin(1,j) + tmp*Ntp(1,j)
+		           spin(2,j) = spin(2,j) + tmp*Ntp(2,j)
+		           spin(3,j) = spin(3,j) + tmp*Ntp(3,j)
+		        enddo
+             endif
+          endif   
              ! Write stuff
-             
+          if (tides.eq.1) then   
              if (flagbug.eq.0.0d0) then 
                 write(*,*) "time(yr)    spin x,y,z(day-1)     R(Rsun)   rg2  k2s sigmast"
              endif         
@@ -1035,8 +926,8 @@ contains
           end do
 
           flagbug = flagbug+1
-          ihyb=ihyb+1
-          if (ihyb.eq.2) ihyb=0
+          ispin=1
+          if (flagbug.eq.100) stop
 
     return
   end subroutine mfo_user
