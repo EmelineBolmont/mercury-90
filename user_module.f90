@@ -59,7 +59,6 @@ contains
     integer :: flagtime=0
     integer :: ispin=0
     integer :: iwrite=0
-    integer :: nintegral=0
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: timestep!=3.6525d5!3.65d5 !4.56d6 !
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
