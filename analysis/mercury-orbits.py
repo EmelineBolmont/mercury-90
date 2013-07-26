@@ -11,14 +11,15 @@ import sys # to be able to retrieve arguments of the script
 import mercury
 
 BINARY_FOLDER = '$HOME/bin/mercury'
+FRAME_PREFIX = "frame_"
 OUTPUT_EXTENSION = 'png'
 
 NB_POINTS = 50 # Number of points for the display of circles
 NB_FRAMES = 2
-#~ CZ_LOCATION = 6. # POSITION OF THE CONVERGENCE ZONE IN ai
+NB_P_ORBITS = 1 # The number of orbits to display in case of tail
 
 isTail = True # There is a part where this boolean is changed automatically if the timestep between two output is to huge.
-
+isReferenceFrame = False # If we display orbits in the reference frame of a given planet
 ###############################################
 ## Beginning of the program
 ###############################################
@@ -26,16 +27,16 @@ isTail = True # There is a part where this boolean is changed automatically if t
 
 # We get arguments from the script
 
-#~ pdb.set_trace()
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * t_max (the end of the output, in years)" + "\n" + \
-" * t_min (the beginning of the output (in years)" + "\n" + \
-" * forceCircle True or False, to display circle instead of real orbits if the output interval is huge" + "\n" + \
-" * zoom (the farthest location in the disk that will be displayed (in AU)" + "\n" + \
-" * frames=1 (the number of frames you want)" + "\n" + \
-" * ext=png (The extension for the output files)"
+" * t_max=1e3 : the end of the output (in years)" + "\n" + \
+" * t_min=1e4 : the beginning of the output (in years)" + "\n" + \
+" * ref=BIG_0001.aei : to display the orbits in the rotating frame of BIG_0001 planet" + "\n" + \
+" * forceCircle [%s] : to display circle instead of real orbits if the output interval is huge\n" % (not(isTail)) + \
+" * zoom=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
+" * frames=%d : the number of frames you want" % NB_FRAMES + "\n" + \
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION
 
 for arg in sys.argv[1:]:
   try:
@@ -54,6 +55,10 @@ for arg in sys.argv[1:]:
     OUTPUT_EXTENSION = value
   elif (key == 'zoom'):
     plot_range = float(value)
+  elif (key == 'ref'):
+    isReferenceFrame = True
+    referenceFrame = value
+    NB_P_ORBITS = 10
   elif (key == 'help'):
     print(problem_message)
     exit()
@@ -96,12 +101,16 @@ liste_aei = process_stdout.split("\n")
 liste_aei.remove('') # we remove an extra element that doesn't mean anything
 nb_planete = len(liste_aei)
 
+if isReferenceFrame:
+  for (ID_planet, planet) in enumerate(liste_aei):
+    if (planet == referenceFrame):
+      ID_reference = ID_planet
 
 ####################
 # On lit, pour chaque planete, le contenu du fichier et on stocke les variables qui nous interessent.
 ####################
 t = [] # temps en annee
-a = [] # the smei major axis in AU
+a = [] # the semi major axis in AU
 m = [] # mass in earth mass
 x = [] # x cartesian coordinate in AU
 y = [] # y cartesian coordinate in AU
@@ -114,30 +123,30 @@ for planete in range(nb_planete):
   fichier_source = liste_aei[planete]
   tableau = open(fichier_source, 'r')
   
-  t.append([]) # time in year
-  a.append([]) # the semi major axis in AU
-  m.append([]) # mass in earth mass
-  x.append([]) # demi-grand axe en ua
-  y.append([]) #
-  z.append([]) #
-
-  # On passe les 3 premieres lignes d'entete.
+  tp = [] # time in year
+  ap = [] # the Semi-major axis in AU
+  mp = [] # mass in earth mass
+  xp = [] # x en ua
+  yp = [] # y en ua
+  zp = [] # z en ua
+  
+  tappend = tp.append
+  aappend = ap.append
+  mappend = mp.append
+  xappend = xp.append
+  yappend = yp.append
+  zappend = zp.append
+  
+  # 3 lines of header
   for indice in range(3):
     tableau.readline()
 
   entete = tableau.readline()
   for ligne in tableau:
-    # Pour chaque ligne du tableau, on decoupe suivant les 
-    # espaces. (par defaut, s'il y a plusieurs espaces Ã  la 
-    # suite, il ne va pas creer 50 000 colonnes, ce qui ne 
-    # serait pas le cas avec un 'split(" ")')
     colonne = ligne.split()
     
-    # On essaye de rajouter les elements. Si un seul d'entre eux
-    # Ã  un soucis, on elimine toute la ligne (en gros, lors de 
-    # l'ejection d'une planete, certains parametres peuvent 
-    # devenir ****** au lieu d'un float, et ca genere une erreur
-    # lors de la conversion en float)
+
+    # In case of ejection, prevent the scrip to crash. "avoid problem of NaN and ******"
     try:
       ti = float(colonne[0])
       ai = float(colonne[1])
@@ -147,21 +156,23 @@ for planete in range(nb_planete):
       zi = float(colonne[10])
       
       # We must append inside the 'try' to avoid appending a value twice. The problem should occurs before anyway, when trying to convert into float
-      t[-1].append(ti)
-      a[-1].append(ai)
-      m[-1].append(mi)
-      x[-1].append(xi)
-      y[-1].append(yi)
-      z[-1].append(zi)
+      tappend(ti)
+      aappend(ai)
+      mappend(mi)
+      xappend(xi)
+      yappend(yi)
+      zappend(zi)
     except:
       pass
-    
-
-    
   tableau.close()
+  
+  t.append(np.array(tp))
+  a.append(np.array(ap))
+  m.append(np.array(mp))
+  x.append(np.array(xp))
+  y.append(np.array(yp))
+  z.append(np.array(zp))
 
-#~ a_max = max([ai[0] for ai in a]) # We get the biggest semi major axis of the simulation initially
-#~ a_max = 1.5 * CZ_LOCATION
 # The separation between outputs is not always the same because the real output interval in mercury and element might be slightly different.
 delta_t = (t[0][-1] - t[0][0]) / float(len(t[0]))
 
@@ -197,19 +208,24 @@ else:
   id_min = 0
   t_min = ref_time[0]
 
+if isReferenceFrame:
+  x_ref = x[ID_reference]
+  y_ref = y[ID_reference]
+  
+  omega = -2. * np.arctan(y_ref / (x_ref + np.sqrt(x_ref**2 + y_ref**2)))
+  
+  r = []
+  for planet in range(nb_planete):
+    ri = np.sqrt(x[planet]**2 + y[planet]**2)
+    r.append(ri)
+    theta = 2. * np.arctan(y[planet] / (x[planet] + ri))
+    x[planet] = ri * np.cos(theta + omega)
+    y[planet] = ri * np.sin(theta + omega)
 
 
-
-#~ idx_tail = []
-#~ for planet in range(nb_planete):
-  #~ tmp = a[planet][id_max]**1.5 # the period of the planet in years
-  #~ tmp = int(id_max - tmp / delta_t + 2)
-  #~ # Negative index is not possible. So if the planet did not have the time to do one orbit, the tail will be artitificially put to 0
-  #~ if (tmp < 0):
-    #~ tmp = 0
-  #~ idx_tail.append(tmp) 
 
 # on trace les plots
+autiwa.lancer_commande("rm %s*" % FRAME_PREFIX) # We delete the previous frames
 
 delta_t_min = (t_max - t_min) / (float(NB_FRAMES -1.))
 # Number of timestep between each frame
@@ -227,13 +243,19 @@ if (ts_per_frame < 1):
 tmp = autiwa.colorList(nb_planete)
 colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
-angles = [2 * pi / NB_POINTS * i for i in range(NB_POINTS)]
-angles.append(angles[0]) # we want to have a full circle, perfectly closed
-angles = np.array(angles)
+if not(isTail):
+  angles = [2 * pi / NB_POINTS * i for i in range(NB_POINTS)]
+  angles.append(angles[0]) # we want to have a full circle, perfectly closed
+  angles = np.array(angles)
 
 
+fig = pl.figure()
+plot_orbits = fig.add_subplot(1, 1, 1)
+plot = plot_orbits.plot
+MAX_LENGTH = len(str(NB_FRAMES)) # The maximum number of characters needed to display
 
-for frame_i in range(NB_FRAMES):
+
+for frame_i in range(1, NB_FRAMES+1):
   id_time = id_min + int(frame_i * ts_per_frame)
   t_frame = t_min + int(frame_i * ts_per_frame) * delta_t
   
@@ -241,31 +263,28 @@ for frame_i in range(NB_FRAMES):
     id_time = id_max
     t_frame = t_max
   
-  print("frame %d : T = %#.2e years" % (frame_i, t_frame))
+  print("frame %*d : T = %#.2e years" % (MAX_LENGTH, frame_i, t_frame))
   
-  pl.figure(1)
-  pl.clf()
-  # We put a yellow star to display the central body
-  pl.plot(0, 0, '*', color='yellow', markersize=20) 
 
-  # We display a circle for the convergence zone
-  #~ CZ_x = CZ_LOCATION * np.cos(angles)
-  #~ CZ_y = CZ_LOCATION * np.sin(angles)
-  #~ pl.plot(CZ_x, CZ_y, '-.', color="#000000")
-  
+  plot_orbits.clear()
+
+  # We put a yellow star to display the central body
+  plot(0, 0, '*', color='yellow', markersize=20) 
+
   if isTail:
     idx_tail = [None] * nb_planete
     for planet in range(nb_planete):
       # If the planet is still in the system at that time, we display it, else, the 'except' make us pass to the next planet.
       try:
+        
         tmp = a[planet][id_time]**1.5 # the period of the planet in years
-        tmp = int(id_time - tmp / delta_t + 2)
+        tmp = int(id_time - NB_P_ORBITS * tmp / delta_t + 2)
         # Negative index is not possible. So if the planet did not have the time to do one orbit, the tail will be artitificially put to 0
         if (tmp < 0):
           tmp = 0
         idx_tail[planet] = tmp
-        pl.plot(x[planet][idx_tail[planet]:id_time+1], y[planet][idx_tail[planet]:id_time+1], color=colors[planet], label='PLANETE'+str(planet))
-        pl.plot(x[planet][id_time], y[planet][id_time], 'o', color=colors[planet], markersize=int(5* (m[planet][id_time])**0.33))
+        plot(x[planet][idx_tail[planet]:id_time+1], y[planet][idx_tail[planet]:id_time+1], color=colors[planet], label='PLANETE'+str(planet))
+        plot(x[planet][id_time], y[planet][id_time], 'o', color=colors[planet], markersize=int(5* (m[planet][id_time])**0.33))
       except:
         pass
         # The planet has been ejected
@@ -276,29 +295,27 @@ for frame_i in range(NB_FRAMES):
         r = sqrt(x[planet][id_time]**2 + y[planet][id_time]**2)
         x_circ = r * np.cos(angles)
         y_circ = r * np.sin(angles)
-        pl.plot(x_circ, y_circ, color=colors[planet], label='PLANETE'+str(planet))
-        pl.plot(x[planet][id_time], y[planet][id_time], 'o', color=colors[planet], markersize=int(5* (m[planet][id_time])**0.33))
+        plot(x_circ, y_circ, color=colors[planet], label='PLANETE'+str(planet))
+        plot(x[planet][id_time], y[planet][id_time], 'o', color=colors[planet], markersize=int(5* (m[planet][id_time])**0.33))
       except:
         pass
         #~ # The planet has been ejected
-  pl.title("T = %#.2e years" % t_frame)
-  pl.xlabel("x (in AU)")
-  pl.ylabel("y (in AU)")
+  plot_orbits.set_title("T = %#.2e years" % t_frame)
+  plot_orbits.set_xlabel("x (in AU)")
+  plot_orbits.set_ylabel("y (in AU)")
   
   pl.axis('equal')
   if ('plot_range' in vars()):
-    pl.ylim(-plot_range, plot_range)
-    pl.xlim(-plot_range, plot_range)
-  #~ pl.legend()
-  pl.grid(True)
-  #~ pdb.set_trace()
-  nom_fichier_plot = "frame_"+autiwa.number_fill(frame_i,len(str(NB_FRAMES)))
+    # We draw transparent lines to force correct display. Else, he do not necessarily display all the planets...
+    plot([-plot_range, plot_range], [0, 0], alpha=0.)
+    plot([0, 0], [-plot_range, plot_range], alpha=0.)
+    
   
-  pl.savefig(nom_fichier_plot+'.'+OUTPUT_EXTENSION, format=OUTPUT_EXTENSION)
+  plot_orbits.grid(True)
+  nom_fichier_plot = "%s%0*d" % (FRAME_PREFIX, MAX_LENGTH, frame_i)
+  
+  fig.savefig("%s.%s" % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
-#~ dossier_output = "output"
-#~ system("mkdir dossier_output")
-#~ system("cd dossier_output")
-
-pl.show()
+if (NB_FRAMES<3):
+  pl.show()
 
