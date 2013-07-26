@@ -33,7 +33,7 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " * t_max=1e3 : the end of the output (in years)" + "\n" + \
 " * t_min=1e4 : the beginning of the output (in years)" + "\n" + \
 " * ref=BIG_0001.aei : to display the orbits in the rotating frame of BIG_0001 planet" + "\n" + \
-" * forceCircle [%s] : to display circle instead of real orbits if the output interval is huge\n" % (not(isTail)) + \
+" * forceCircle : to display circle instead of real orbits if the output interval is huge\n" + \
 " * zoom=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
 " * frames=%d : the number of frames you want" % NB_FRAMES + "\n" + \
 " * ext=%s : The extension for the output files" % OUTPUT_EXTENSION
@@ -58,7 +58,7 @@ for arg in sys.argv[1:]:
   elif (key == 'ref'):
     isReferenceFrame = True
     referenceFrame = value
-    NB_P_ORBITS = 10
+    NB_P_ORBITS = 20
   elif (key == 'help'):
     print(problem_message)
     exit()
