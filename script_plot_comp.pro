@@ -39,7 +39,8 @@ loadct,13
 if conservation eq 0 then begin
 if ae eq 1 then begin
 ;! semi-major axis with respect to t
-multiplot,[1,3],ygap=0.01
+if n_tid ge 1 then multiplot,[1,3],ygap=0.01
+if n_tid eq 0 then multiplot,[1,2],ygap=0.01
 plot,tb(0,*),ab(0,*) $
      ,/nodata $
      ,xrange=[Tinf,Tsup],yrange=[amin,amax] $
@@ -94,7 +95,18 @@ endif
 
 ;;! eccentricity with respect to t
 multiplot
-plot,tb(0,*),eb(0,*) $
+if n_tid eq 0 then plot,tb(0,*),eb(0,*) $
+     ,/nodata $
+     ,xrange=[Tinf,Tsup],yrange=[emin,emax] $
+     ,charsize=1.8,charthick=3 $
+     ;; ,title='Eccentricity' $
+     ;;,xtitle='Age of BD - t!d0!n (years)' $
+     ,xtitle='Time (years)' $
+     ,ytitle='e' $
+     ,xGRIDSTYLE=1,xTICKLEN=0.5 $
+     ,xstyle=1,ystyle=1 $
+     ,/xlog,/ylog
+if n_tid ge 1 then plot,tb(0,*),eb(0,*) $
      ,/nodata $
      ,xrange=[Tinf,Tsup],yrange=[emin,emax] $
      ,charsize=1.8,charthick=3 $
@@ -115,32 +127,34 @@ if idl eq 1 then begin
    endfor
 endif
 
-;;! Tidal flux with respect to t
-multiplot
-plot,tb(0,*),tidalflux(0,*) $
-     ,/nodata $
-     ,xrange=[Tinf,Tsup],yrange=[flxmin,flxmax] $
-     ,charsize=1.8,charthick=3 $
-     ;; ,title='Tidal flux (W/m!u2!n)' $
-     ;,xtitle='Age of BD - t!d0!n (years)' $
-     ,xtitle='Time (years)' $
-     ,ytitle='Tidal flux (W/m!u2!n)' $
-     ,xGRIDSTYLE=1,xTICKLEN=0.5 $
-     ,xstyle=1,ystyle=1 $
-     ,/xlog,/ylog
-for j = 0,nbp-1 do begin
-   i = nbp-1-j
-   oplot,tb(i,*),tidalflux(i,*),color=incolor+i*indcolor,thick=12,linestyle=0;,psym=2
-endfor
-if idl eq 1 then begin
-   for i = 0,nbp_idl-1 do begin
-      oplot,ti(i,*),tidefluxi(i,*) $
-         ,color=idlicol+i*idlcol,thick=5,linestyle=2
+if n_tid ge 1 then begin
+   ;;! Tidal flux with respect to t
+   multiplot
+   plot,tb(0,*),tidalflux(0,*) $
+        ,/nodata $
+        ,xrange=[Tinf,Tsup],yrange=[flxmin,flxmax] $
+        ,charsize=1.8,charthick=3 $
+        ;; ,title='Tidal flux (W/m!u2!n)' $
+        ;,xtitle='Age of BD - t!d0!n (years)' $
+        ,xtitle='Time (years)' $
+        ,ytitle='Tidal flux (W/m!u2!n)' $
+        ,xGRIDSTYLE=1,xTICKLEN=0.5 $
+        ,xstyle=1,ystyle=1 $
+        ,/xlog,/ylog
+   for j = 0,nbp-1 do begin
+      i = nbp-1-j
+      oplot,tb(i,*),tidalflux(i,*),color=incolor+i*indcolor,thick=12,linestyle=0;,psym=2
    endfor
+   if idl eq 1 then begin
+      for i = 0,nbp_idl-1 do begin
+         oplot,ti(i,*),tidefluxi(i,*) $
+            ,color=idlicol+i*idlcol,thick=5,linestyle=2
+      endfor
+   endif
+   ;; oplot,[Tinf,Tsup],[2.4,2.4],linestyle=2,thick=8,color=1
+   ;; oplot,[Tinf,Tsup],[4.8,4.8],linestyle=2,thick=8,color=1
+   ;; oplot,[Tinf,Tsup],[300,300],linestyle=3,thick=8,color=1
 endif
-;; oplot,[Tinf,Tsup],[2.4,2.4],linestyle=2,thick=8,color=1
-;; oplot,[Tinf,Tsup],[4.8,4.8],linestyle=2,thick=8,color=1
-;; oplot,[Tinf,Tsup],[300,300],linestyle=3,thick=8,color=1
 
 multiplot,/reset
 
