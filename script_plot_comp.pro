@@ -13,8 +13,8 @@ incmax  = 4.5d1
 Trotmin = 10
 Trotmax = 10000
 
-indcolor = 200   &  incolor  = 50
-idlcol   = 200   &  idlicol  = 50
+indcolor = 200   &  incolor  = 255
+idlcol   = 200   &  idlicol  = 255
 
 ops_plot=0
 ae = 1
@@ -57,17 +57,19 @@ plot,tb(0,*),ab(0,*) $
      ,/xlog,/ylog
 
 ;;! Mercury
-for i = 0,nbp-1 do begin
-   oplot,tb(i,*),ab(i,*),color=incolor+i*indcolor,thick=12
-   oplot,tb(i,*),ab(i,*)*(1-eb(i,*)),color=incolor+i*indcolor,thick=6,linestyle=2
-   oplot,tb(i,*),ab(i,*)*(1+eb(i,*)),color=incolor+i*indcolor,thick=6,linestyle=2
+for j = 0,nbp-1 do begin
+   ;i = nbp-1-j
+   i = j
+   oplot,tb(i,*),ab(i,*),color=incolor-i*indcolor,thick=9
+   oplot,tb(i,*),ab(i,*)*(1-eb(i,*)),color=incolor-i*indcolor,thick=5,linestyle=2
+   oplot,tb(i,*),ab(i,*)*(1+eb(i,*)),color=incolor-i*indcolor,thick=5,linestyle=2
 endfor
 
 ;; oplot,toto1(*),Rst(*)*Rsun/AU,thick=5,color=255
 if n_tid ge 1 then $
    oplot,toto1(*), $
          (G*(Ms+mb(0,*)*Msun))^(1/3.)*(sqrt(spinstz(*)^2+spinstx(*)^2+spinsty(*)^2)/86400.d0)^(-2./3.)/AU $
-               ,thick=10;,color=255
+               ,thick=7;,color=255
             
 print,'Porb =',2.d0*!Pi/sqrt(G*(Ms+mb(0,0)*msun))*(ab(0,0)*AU)^(3.d0/2.d0)*1.0d0/(86400.d0),' days'
 print,'min(e) =',min(eb(0,*));!,min(eb(1,*))
@@ -77,10 +79,10 @@ print,'max(e) =',max(eb(0,*));!,max(eb(1,*))
 if idl eq 1 then begin
    for i = 0,nbp_idl-1 do begin
       oplot,ti(i,*),ai(i,*) $
-         ,color=idlicol+i*idlcol,thick=5,linestyle=2
+         ,color=idlicol-i*idlcol,thick=4,linestyle=2
       oplot,ti(i,*),(G*(Ms+mb(i,*)*msun))^(1/3.) $
          *(rotsi(i,*))^(-2./3.)/AU $
-         ,thick=5,linestyle=2;,color=255
+         ,thick=4,linestyle=2;,color=255
    endfor
 endif
 ;;! oplot,ti(nbp-1,*),Rsi(nbp-1,*),thick=5,color=255,linestyle=2    ;,thick=5,linestyle=2
@@ -117,13 +119,15 @@ if n_tid ge 1 then plot,tb(0,*),eb(0,*) $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ,xstyle=1,ystyle=1 $
      ,/xlog,/ylog
-for i = 0,nbp-1 do begin
-   oplot,tb(i,*),eb(i,*),color=incolor+i*indcolor,thick=12,linestyle=0;,psym=2
+for j = 0,nbp-1 do begin
+   ;i = nbp-1-j
+   i = j
+   oplot,tb(i,*),eb(i,*),color=incolor-i*indcolor,thick=9,linestyle=0;,psym=2
 endfor
 if idl eq 1 then begin
    for i = 0,nbp_idl-1 do begin
       oplot,ti(i,*),ei(i,*) $
-         ,color=idlicol+i*idlcol,thick=5,linestyle=2
+         ,color=idlicol-i*idlcol,thick=4,linestyle=2
    endfor
 endif
 
@@ -142,13 +146,14 @@ if n_tid ge 1 then begin
         ,xstyle=1,ystyle=1 $
         ,/xlog,/ylog
    for j = 0,nbp-1 do begin
-      i = nbp-1-j
-      oplot,tb(i,*),tidalflux(i,*),color=incolor+i*indcolor,thick=12,linestyle=0;,psym=2
+      ;i = nbp-1-j
+      i = j
+      oplot,tb(i,*),tidalflux(i,*),color=incolor-i*indcolor,thick=9,linestyle=0;,psym=2
    endfor
    if idl eq 1 then begin
       for i = 0,nbp_idl-1 do begin
          oplot,ti(i,*),tidefluxi(i,*) $
-            ,color=idlicol+i*idlcol,thick=5,linestyle=2
+            ,color=idlicol-i*idlcol,thick=4,linestyle=2
       endfor
    endif
    ;; oplot,[Tinf,Tsup],[2.4,2.4],linestyle=2,thick=8,color=1
@@ -174,15 +179,17 @@ plot,tb(0,*),incb(0,*) $
 
 ;! Mercury
 
-for i=0,n_tid-1 do begin
-   oplot,toto1(*),oblpm(i,*),color=incolor+i*indcolor,thick=12
+for j=0,n_tid-1 do begin
+   ;i = n_tid-1-j
+   i = j
+   oplot,toto1(*),oblpm(i,*),color=incolor-i*indcolor,thick=9
 endfor
 
 ;! idl
 if idl eq 1 then begin
    for i=0,nbp_idl-1 do begin
     oplot,ti(i,*),oblpi(i,*) $
-          ,color=idlicol+i*idlcol,thick=5,linestyle=2
+          ,color=idlicol-i*idlcol,thick=4,linestyle=2
    endfor
 endif
 
@@ -199,15 +206,17 @@ plot,tb(0,*),incb(0,*) $
      ,/xlog,/ylog
 
 ;! Mercury
-for i=0,n_tid-1 do begin
-   oplot,toto1(*),oblsm(i,*),color=incolor+i*indcolor,thick=12
+for j=0,n_tid-1 do begin
+   ;i = n_tid-1-j
+   i = j
+   oplot,toto1(*),oblsm(i,*),color=incolor-i*indcolor,thick=9
 endfor
 
 ;! idl
 if idl eq 1 then begin
    for i=0,nbp_idl-1 do begin
     oplot,ti(i,*),oblsi(i,*) $
-          ,color=idlicol+i*idlcol,thick=5,linestyle=2
+          ,color=idlicol-i*idlcol,thick=4,linestyle=2
    endfor
 endif
 ;; for i = 0,nbp-1 do begin
@@ -234,27 +243,30 @@ plot,tb(0,*),ab(0,*) $
  
 ;! Mercury
 i=0
-for i=0,n_tid-1 do begin
+for j=0,n_tid-1 do begin
+   ;i = n_tid-1-j
+   i = j
    oplot,toto1(*),2*!Pi/(spinp(i,*)*hr) $
-      ,thick=12,linestyle=0,color=incolor+i*indcolor
+      ,thick=9,linestyle=0,color=incolor-i*indcolor
 endfor
 oplot,toto1(*),2*!Pi/(spinst(*)*hr) $
-      ,thick=10,linestyle=0;,color=incolor+1*indcolor
+      ,thick=7,linestyle=0;,color=incolor-1*indcolor
 
-for j = 0,n_tid-1 do begin
-   i = n_tid-1-j 
+for j=0,n_tid-1 do begin
+   ;i = n_tid-1-j
+   i = j
    oplot,tb(i,*),2.d0*!Pi $
       /(pseudorot(eb(i,*),G,mb(i,*)*msun,Ms)*(ab(i,*)*AU)^(-3./2.)*hr) $
-		,color=incolor+i*indcolor,thick=9,linestyle=5
+		,color=incolor-i*indcolor,thick=6,linestyle=5
 endfor
 
 ;! idl
 if idl eq 1 then begin
    for i = 0,nbp_idl-1 do begin
       oplot,ti(i,*),2*!Pi/(rotpi(i,*)*hr) $
-            ,color=idlicol+i*idlcol,thick=5,linestyle=2
+            ,color=idlicol-i*idlcol,thick=4,linestyle=2
       oplot,ti(i,*),2*!Pi/(rotsi(i,*)*hr) $
-            ,color=255,linestyle=2,thick=5
+            ,color=255,linestyle=2,thick=4
       ;; oplot,ti(i,*),2*!Pi/(pseudorot(ei(i,*),G,mb(i,*)*Msun,Ms)*(ai(i,*)*AU)^(-3./2.)*hr) $
       ;;       ,color=255,thick=3,linestyle=5     
       ;; oplot,tb(i,*),2*!Pi/(pseudorot(eb(i,*),G,mb(i,*)*Msun,Ms)*(ab(i,*)*AU)^(-3./2.)*hr) $
@@ -308,7 +320,7 @@ plot,tb(0,*),ab(0,*) $
      ,/xlog,/ylog
 
 oplot,toto1(*),abs((horb(*)+momspitot(*)+momstar(*)-(horb(0)+momspitot(0)+momstar(0))) $
-      /(horb(0)+momspitot(0)+momstar(0))),linestyle=0,thick=12,color=incolor+0*indcolor
+      /(horb(0)+momspitot(0)+momstar(0))),linestyle=0,thick=9,color=incolor-0*indcolor
 
 if idl eq 1 then begin
    for i = 0,nbp_idl-1 do begin
@@ -316,7 +328,7 @@ if idl eq 1 then begin
 	+Ip(i)*rotpi(i,*)+rg2si(i,*)*Ms*(Rsi(i,*)*AU)^2*rotsi(i,*)-(mb(i,0)*msun*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(mb(i,0)*msun+Ms)) $
 	+Ip(i)*rotpi(i,0)+rg2si(i,0)*Ms*(Rsi(i,0)*AU)^2*rotsi(i,0)))/(mb(i,0)*msun*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(mb(i,0)*msun+Ms)) $
 	+Ip(i)*rotpi(i,0)+rg2si(i,0)*Ms*(Rsi(i,0)*AU)^2*rotsi(i,0))) $
-            ,color=idlicol+i*idlcol,thick=5,linestyle=2
+            ,color=idlicol-i*idlcol,thick=4,linestyle=2
    endfor
 endif
    
