@@ -100,7 +100,7 @@ hist_res.set_xlabel("Period ratio relative to the most massive planet")
 hist_res.set_ylabel("Distribution")
 
 
-nom_fichier_plot.append("")
+nom_fichier_plot.append("2_most_massives")
 figures.append(pl.figure())
 fig = figures[-1].add_subplot(1, 1, 1)
 plots.append(fig)
