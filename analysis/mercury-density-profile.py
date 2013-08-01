@@ -7,6 +7,8 @@
 
 import pylab as pl
 import numpy as np
+from matplotlib.ticker import FormatStrFormatter
+
 
 OUTPUT_EXTENSION = 'pdf'
 
@@ -24,22 +26,30 @@ OUTPUT_EXTENSION = 'pdf'
 
 fig = pl.figure(1)
 plot_density = fig.add_subplot(211)
-plot_density.plot(a, sigma)
+plot_density.loglog(a, sigma)
 
-plot_density.set_xlabel("a [UA]")
-plot_density.set_ylabel("surface density [g/cm^2]")
-plot_density.axis('tight')
-plot_density.set_xlim(xmin=0)
-plot_density.set_ylim(ymin=0)
-plot_density.grid(True)
+plot_density.set_xlabel("Semi-major axis [AU]")
+plot_density.set_ylabel("Surface density [g/cm^2]")
+#~ plot_density.axis('tight')
+#~ plot_density.set_xlim(xmin=0)
+#~ plot_density.set_ylim(ymin=0)
+plot_density.xaxis.grid(True, which='major', color='#222222', linestyle='-')
+plot_density.yaxis.grid(True, which='major', color='#222222', linestyle='-')
+plot_density.xaxis.grid(True, which='minor', color='#888888', linestyle='-')
+plot_density.yaxis.grid(True, which='minor', color='#888888', linestyle='-')
 
 plot_idx = fig.add_subplot(212, sharex=plot_density)
-plot_idx.plot(a, index)
+plot_idx.semilogx(a, index)
 
-plot_idx.set_xlabel("a [UA]")
+plot_idx.set_xlabel("Semi-major axis [AU]")
 plot_idx.set_ylabel("density power law")
 plot_idx.set_ylim((-2,2))
-plot_idx.grid(True)
+plot_idx.xaxis.grid(True, which='major', color='#222222', linestyle='-')
+plot_idx.yaxis.grid(True, which='major', color='#222222', linestyle='-')
+plot_idx.xaxis.grid(True, which='minor', color='#888888', linestyle='-')
+
+myxfmt = FormatStrFormatter("%.3g")
+plot_density.xaxis.set_major_formatter(myxfmt)
 
 # We generate the output file
 nom_fichier_plot = "density_profile"
