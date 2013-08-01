@@ -822,31 +822,17 @@ contains
                 if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
                    tmp  = Rst0*Rst0/(Rst*Rst)
                    tmp1 = - dt/(rg2s*Rsth*Rsth)
-                   if (spin(1,1).eq.0.0d0) then
-                      spin(1,1) = spin(1,1)+tmp1*totftides(1)
-                   else
-                      spin(1,1) = tmp*spin(1,1)*exp(tmp1*totftides(1)/spin(1,1))
-                   endif
-                   if (spin(2,1).eq.0.0d0) then
-                      spin(2,1) = spin(2,1)+tmp1*totftides(2)
-                   else
-                      spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
-                   endif
+                   tmp2 = - dt/(rg2s*Rst*Rst)
+                   spin(1,1) = tmp*spin(1,1)+tmp2*totftides(1)
+                   spin(2,1) = tmp*spin(2,1)+tmp2*totftides(2)
                    spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
                 endif
                 if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
                    tmp  = rg2s0/rg2s*Rst0*Rst0/(Rst*Rst)
                    tmp1 = - dt/(rg2sh*Rsth*Rsth)
-                   if (spin(1,1).eq.0.0d0) then
-                      spin(1,1) = spin(1,1)+tmp1*totftides(1)
-                   else
-                      spin(1,1) = tmp*spin(1,1)*exp(tmp1*totftides(1)/spin(1,1))
-                   endif
-                   if (spin(2,1).eq.0.0d0) then
-                      spin(2,1) = spin(2,1)+tmp1*totftides(2)
-                   else
-                      spin(2,1) = tmp*spin(2,1)*exp(tmp1*totftides(2)/spin(2,1))
-                   endif
+                   tmp2 = - dt/(rg2s*Rst*Rst)
+                   spin(1,1) = tmp*spin(1,1)+tmp2*totftides(1)
+                   spin(2,1) = tmp*spin(2,1)+tmp2*totftides(2)
                    spin(3,1) = tmp*spin(3,1)*exp(tmp1*totftides(3)/spin(3,1))
                 endif
                    
