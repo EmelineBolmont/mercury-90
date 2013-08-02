@@ -12,6 +12,8 @@ import os, pdb, autiwa
 import numpy as np
 from constants import MT, MS
 import sys # to be able to retrieve arguments of the script
+from matplotlib.ticker import FormatStrFormatter
+
 
 # Maximum number of planets (the most massives) that will be colored
 MAX_COLORED = 3
@@ -34,6 +36,8 @@ problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * t_max : the end of the output, (in years)" + "\n" + \
 " * t_min : the beginning of the output (in years)" + "\n" + \
+" * amax : minimum distance for the plot [AU]" + "\n" + \
+" * amin : maximum distance for the plot [AU]" + "\n" + \
 " * massive : (%d) the number of most massive planets to be tracked" % MAX_COLORED + "\n" + \
 " * ecc : (%s) If we want to display eccentricity" % isEcc + "\n" + \
 " * log : (%s) time (x-axis) will be displayed in log" % isLog + "\n" + \
@@ -48,9 +52,13 @@ for arg in sys.argv[1:]:
   except:
     key = arg
   if (key == 't_min'):
-    t_min = float(value)
+    t_min = float(value) / 1e6
   elif (key == 't_max'):
-    t_max = float(value)
+    t_max = float(value) / 1e6
+  elif (key == 'amin'):
+    amin = float(value)
+  elif (key == 'amax'):
+    amax = float(value)
   elif (key == 'massive'):
     MAX_COLORED = int(value)
   elif (key == 'ecc'):
@@ -106,7 +114,7 @@ for planete in range(nb_planete):
   mi = (MS / MT) * mi
   
   if (type(ti) == np.ndarray):
-    t.append(ti)
+    t.append(ti/1e6)
     a.append(ai)
     e.append(ei)
     q.append(qi)
@@ -115,7 +123,7 @@ for planete in range(nb_planete):
     m.append(mi)
   else:
     # In case the is only one point, we force to have a list, to avoid plotting problems
-    t.append(np.array([ti]))
+    t.append(np.array([ti/1e6]))
     a.append(np.array([ai]))
     e.append(np.array([ei]))
     q.append(np.array([qi]))
@@ -197,7 +205,8 @@ lost_in_collisions = []
 for line in reversed(lines):
   if (line.count('was hit by') > 0):
     words = line.split()
-    if (float(words[-2]) > t_max):
+    collision_time = float(words[-2]) / 1e6
+    if ((collision_time > t_max) or (collision_time < t_min)):
       continue
     remaining_planet = words[0]
     lost_planet = words[4]
@@ -240,8 +249,8 @@ for planet in lost_in_collisions:
   plot(t[planet][-1], a[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
 
 
-plot_a.set_xlabel("Time [years]")
-plot_a.set_ylabel("a [AU]")
+plot_a.set_xlabel("Time [million years]")
+plot_a.set_ylabel("Semi-major axis [AU]")
 plot_a.grid(True)
 
 if (isEcc == True):
@@ -253,8 +262,8 @@ if (isEcc == True):
 
   for planet in range(nb_planete):
     plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-  plot_e.set_xlabel("Time [years]")
-  plot_e.set_ylabel("eccentricity")
+  plot_e.set_xlabel("Time [million years]")
+  plot_e.set_ylabel("Eccentricity")
   plot_e.grid(True)
 
 if (isEcc == True):
@@ -269,12 +278,22 @@ else:
 
 for planet in range(nb_planete):
   plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-plot_mass.set_xlabel("Time [years]")
-plot_mass.set_ylabel("mass [Earths]")
+plot_mass.set_xlabel("Time [million years]")
+plot_mass.set_ylabel("Mass [Earths]")
 plot_mass.grid(True)
 
+afmt = FormatStrFormatter("%.3g")
+plot_a.yaxis.set_major_formatter(afmt)
 
+myxfmt = FormatStrFormatter("%.3g")
+plot_a.xaxis.set_major_formatter(myxfmt)
 
+plot_a.autoscale(axis='x', tight=True)
+if ('amin' in locals()):
+  plot_a.set_ylim(ymin=amin)
+
+if ('amax' in locals()):
+  plot_a.set_ylim(ymax=amax)
 
 nom_fichier_plot = "plot_am"
 fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)

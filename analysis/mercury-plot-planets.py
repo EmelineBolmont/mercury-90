@@ -25,17 +25,22 @@ isLog = False # We set the false option before. Because if not, we will erase th
 # thus will lead to be in the else and put log to false.
 isXS = False # If true, will display the semiwitdh of the horseshoe region in the eccentricity plot
 OUTPUT_EXTENSION = 'png' # default value in bitmap, because vectoriel can take time and space if there is a lot of data
+isAM = False # If activated, only display semi major axis and masses
 
 isProblem = False
 problem_message = "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * t_max : the end of the output (in years)" + "\n" + \
 " * t_min : the beginning of the output (in years)" + "\n" + \
-" * log : [%s] time will be displayed in log" % isLog + "\n" + \
-" * alog : [%s] distance will be displayed in log" % isaLog + "\n" + \
-" * xs : [%s] will display the semiwitdh of the horseshoe region in the eccentricity plot" % isXS + "\n" + \
+" * log : time will be displayed in log" + "\n" + \
+" * alog : distance will be displayed in log" + "\n" + \
+" * xs : will display the semiwitdh of the horseshoe region in the eccentricity plot" + "\n" + \
+" * am : will only display semi-major axis and masses" + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
 " * ext=png : [%s] The extension for the output files" % OUTPUT_EXTENSION
+
+isValue = False # Set to True if someone define 'key=value' when key doesn't need a parameter
+value_message = "/!\ Warning: You defined a value ('key=value') to some parameters that to do need them ('key')"
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -43,20 +48,33 @@ for arg in sys.argv[1:]:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 't_min'):
-    t_min = float(value)
+    t_min = float(value) / 1e6
   elif (key == 't_max'):
-    t_max = float(value)
+    t_max = float(value) / 1e6
   elif (key == 'log'):
     isLog = True
+    if (value != None):
+      print("/!\ Warning: %s doesn't need any value.")
   elif (key == 'alog'):
     isaLog = True
+    if (value != None):
+      print("/!\ Warning: %s doesn't need any value.")
   elif (key == 'xs'):
     isXS = True
+    if (value != None):
+      print("/!\ Warning: %s doesn't need any value.")
+  elif (key == 'am'):
+    isAM = True
+    if (value != None):
+      print("/!\ Warning: %s doesn't need any value.")
   elif (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'help'):
     isProblem = True
+    if (value != None):
+      print("/!\ Warning: %s doesn't need any value.")
   else:
     print("the key '"+key+"' does not match")
     isProblem = True
@@ -64,6 +82,9 @@ for arg in sys.argv[1:]:
 if isProblem:
   print(problem_message)
   exit()
+
+if isValue:
+  print(value_message)
 
 ####################
 # On récupère la liste des fichiers planètes.aei
@@ -121,7 +142,7 @@ for planete in range(nb_planete):
 
   for line in object_file:
     # When using [a:b], the actual range will be from a to b-1 included.
-    tiapp(float(line[positions[0]:positions[1]]))
+    tiapp(float(line[positions[0]:positions[1]]) / 1e6)
     aiapp(float(line[positions[1]:positions[2]]))
     eiapp(float(line[positions[2]:positions[3]]))
     Iiapp(float(line[positions[3]:positions[4]]))
@@ -183,12 +204,17 @@ else:
 colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
 # We display plots
-fig = pl.figure(1)
+if isAM:
+  nb_rows = 1
+else:
+  nb_rows = 2
+
+fig = pl.figure()
 pl.clf()
 fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
 # We create subplots. add_subplot(2, 3, 1) means we have 2 lines, 3 columns, 
 # and that the active plot is the first, starting from top left (for 6 plots in total)
-plot_a = fig.add_subplot(2, 2, 1)
+plot_a = fig.add_subplot(2, nb_rows, 1)
 
 if (isaLog and isLog):
   plot = plot_a.loglog
@@ -204,31 +230,11 @@ for planet in range(nb_planete):
   plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
   plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
 
-plot_a.set_xlabel("time [years]")
-plot_a.set_ylabel("a [AU]")
+plot_a.set_xlabel("Time [million years]")
+plot_a.set_ylabel("Semi-major axis [AU]")
 plot_a.grid(True)
 
-plot_e = fig.add_subplot(2, 2, 2, sharex=plot_a)
-if isLog:
-  plot = plot_e.loglog
-else:
-  plot = plot_e.semilogy
-
-for planet in range(nb_planete):
-  plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-
-if isXS:
-  for planet in range(nb_planete):
-    print("At the end, %s has x_s=%f" % (liste_aei[planet], x_s[planet][id_max]))
-    plot(t[planet][id_min:id_max+1], x_s[planet][id_min:id_max+1], color=colors[planet])
-
-
-plot_e.set_xlabel("time [years]")
-plot_e.set_ylabel("eccentricity")
-plot_e.grid(True)
-
-
-plot_m = fig.add_subplot(2, 2, 3, sharex=plot_a)
+plot_m = fig.add_subplot(2, nb_rows, nb_rows + 1, sharex=plot_a)
 if isLog:
   plot = plot_m.semilogx
 else:
@@ -236,33 +242,59 @@ else:
   
 for planet in range(nb_planete):
   plot(t[planet][id_min:id_max+1], m[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-plot_m.set_xlabel("time [years]")
-plot_m.set_ylabel("mass [Earths]")
+plot_m.set_xlabel("Time [million years]")
+plot_m.set_ylabel("Mass [Earths]")
 plot_m.grid(True)
 
-plot_I = fig.add_subplot(2, 2, 4, sharex=plot_a)
-if isLog:
-  plot = plot_I.semilogx
-else:
-  plot = plot_I.plot
+if not(isAM):
+  plot_e = fig.add_subplot(2, 2, 2, sharex=plot_a)
+  if isLog:
+    plot = plot_e.loglog
+  else:
+    plot = plot_e.semilogy
 
-for planet in range(nb_planete):
-  plot(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
-plot_I.set_xlabel("time [years]")
-plot_I.set_ylabel("Inclination [degrees]")
-plot_I.grid(True)
+  for planet in range(nb_planete):
+    plot(t[planet][id_min:id_max+1], e[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
 
-myyfmt = ScalarFormatter(useOffset=False)
-myyfmt.set_scientific(True)
-myyfmt.set_powerlimits((-2, 3)) 
-myxfmt = ScalarFormatter(useOffset=True)
-myxfmt._set_offset(1e5)
-myxfmt.set_scientific(True)
-myxfmt.set_powerlimits((-3, 3)) 
+  if isXS:
+    for planet in range(nb_planete):
+      print("At the end, %s has x_s=%f" % (liste_aei[planet], x_s[planet][id_max]))
+      plot(t[planet][id_min:id_max+1], x_s[planet][id_min:id_max+1], color=colors[planet])
+
+
+  plot_e.set_xlabel("Time [million years]")
+  plot_e.set_ylabel("Eccentricity")
+  plot_e.grid(True)
+  
+  plot_I = fig.add_subplot(2, 2, 4, sharex=plot_a)
+  if isLog:
+    plot = plot_I.semilogx
+  else:
+    plot = plot_I.plot
+
+  for planet in range(nb_planete):
+    plot(t[planet][id_min:id_max+1], I[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
+  plot_I.set_xlabel("Time [million years]")
+  plot_I.set_ylabel("Inclination [degrees]")
+  plot_I.grid(True)
+
+  myyfmt = ScalarFormatter(useOffset=False)
+  myyfmt.set_scientific(True)
+  myyfmt.set_powerlimits((-2, 3)) 
+  plot_I.yaxis.set_major_formatter(myyfmt)
+
+#~ myxfmt = ScalarFormatter(useOffset=True)
+#~ myxfmt._set_offset(1e5)
+#~ myxfmt.set_scientific(True)
+#~ myxfmt.set_powerlimits((-3, 3)) 
+myxfmt = FormatStrFormatter("%.3g")
+
+afmt = FormatStrFormatter("%.3g")
 
 plot_a.xaxis.set_major_formatter(myxfmt)
-plot_I.yaxis.set_major_formatter(myyfmt)
+plot_a.yaxis.set_major_formatter(afmt)
 
+plot_a.autoscale(axis='x', tight=True)
 
 nom_fichier_plot = "evolution_planete"
 fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
