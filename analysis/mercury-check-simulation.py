@@ -39,6 +39,7 @@ isForcedStart = False # will erase output file if they exists and run all the si
 isForcedContinue = False # will continue the simulation no matter what
 isMeta = False # If we consider the current folder as a folder that list sub-meta-simulations where the simulations really are
 isContinue = False # Do we want to continue simulations that did not have time to finish?
+isVerbose = False # Force display of individual information when the 'meta' option is active
 showFinished = False # By default, We only show problems. 
 WALLTIME = None
 
@@ -53,6 +54,7 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " * force-continue : will erase output file if they exists and continue all the simulations" + "\n" + \
 " * walltime : (in hours) the estimated time for the job. Only used for avakas" + "\n" + \
 " * finished : Instead of show problems, will only show finished simulations" + "\n" + \
+" * verbose : Froce show of individual informations when the 'meta' option is active" + "\n" + \
 "" + "\n" + \
 "Example : \n" + \
 "> mercury-check-simulation.py meta restart continue\n" + \
@@ -81,6 +83,8 @@ for arg in sys.argv[1:]:
     isContinue = False
   elif (key == 'continue'):
     isContinue = True
+  elif (key == 'verbose'):
+    isVerbose = True
   elif (key == 'meta'):
     isMeta = True
   elif (key == 'walltime'):
@@ -110,6 +114,10 @@ if (isMeta):
 else:
   meta_list = ["."]
 
+logs = {}
+nb_simulations = {}
+nb_finished = {}
+meta_OK = {}
 
 for meta in meta_list:
   os.chdir(meta)
@@ -123,6 +131,10 @@ for meta in meta_list:
   simu_list = [dir for dir in os.listdir(".") if (os.path.isdir(dir))]
   #autiwa.suppr_dossier(liste_simu,dossier_suppr)
   simu_list.sort()
+  
+  logs[meta] = []
+  nb_simulations[meta] = len(simu_list)
+  finished = 0 # We initialize the number of simulations finished for this meta simulation
   
   # We check which folders contain NaN
   (stdout, stderr, returnCode) = autiwa.lancer_commande('grep -l "NaN" */big.dmp')
@@ -141,7 +153,7 @@ for meta in meta_list:
       print("%s/%s : doesn't look like a regular simulation folder" % (absolute_parent_path, simu))
       print("\t 'param.in' does not exist, folder skipped")
       os.chdir("..")
-      continue
+      break
     
     
 
@@ -165,16 +177,23 @@ for meta in meta_list:
       simulation_status = 2
       
       isOK = False
-        
+    
     if (simulation_status == 0 and showFinished):
-       print("%s/%s : The simulation is finished" % (absolute_parent_path, simu))
+      log_message = "%s/%s : The simulation is finished" % (absolute_parent_path, simu)
     
     elif (simulation_status == 1 and not(showFinished)):
-      print("%s/%s : The simulation is not finished" % (absolute_parent_path, simu))
+      log_message = "%s/%s : The simulation is not finished" % (absolute_parent_path, simu)
     
     elif (simulation_status == 2 and not(showFinished)):
-      print("%s/%s : NaN are present" % (absolute_parent_path, simu))
-    
+      log_message = "%s/%s : NaN are present" % (absolute_parent_path, simu)
+    else:
+		log_message = None
+		
+    if (log_message != None):
+      if not(isMeta):
+        print(log_message)
+      else:
+        logs[meta].append(log_message)
     
     if (((simulation_status != 0) and (isContinue or isRestart)) or (isForcedStart or isForcedContinue)):
       mercury_utilities.prepareSubmission(BinaryPath=binaryPath, walltime=WALLTIME)
@@ -190,13 +209,27 @@ for meta in meta_list:
       mercury_utilities.mercury_restart()
     
     
-  
+    
+    if (simulation_status == 0):
+      finished += 1
+    
     # We get back in the parent directory
     os.chdir("..")
   
+  nb_finished[meta] = finished
+  meta_OK[meta] = isOK
   os.chdir(rep_exec)
 
-if (isOK and not(isForcedStart)):
-  print("All the simulations finished correctly and without NaN")
+if isMeta:
+  if isVerbose:
+    for meta in meta_list:
+      for item in logs[meta]:
+        print(item)
+  
+  for meta in meta_list:
+    print("%s : %d/%d simulations are finished" % (meta, nb_finished[meta], nb_simulations[meta]))
+else:
+  if (isOK and not(isForcedStart)):
+    print("All the simulations finished correctly and without NaN")
   
 # TODO Check in a folder if a simulation is currently running (don't know how to test that)
