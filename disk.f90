@@ -1778,7 +1778,7 @@ end subroutine initial_density_profile
       ! regime 7 : bound-free and free-free
       get_opacity_zhu_2009 = 1.067416d19 * temperature**(-2.432000) * bulk_density**(0.928000)
     else
-      ! regime 8 : ?
+      ! regime 8 : Electron scattering
       get_opacity_zhu_2009 = 0.33113112d0
     endif
     
