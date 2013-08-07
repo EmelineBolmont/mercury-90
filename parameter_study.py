@@ -87,9 +87,9 @@ def set_prefered_disk():
   #----------------------------------
   # Parameters for the disk
   # None parameters will not be displayed in the parameter file and thus, default values of the code will be used.
-  density_constant = 850.
+  density_constant = 1700.
   #~ density_index = 0.5
-  density_index = 1.0
+  density_index = 1.5
   surface_density = (density_constant, density_index) # (g/cm^2, power law index)
   density_file = 'surface_density_profile.dat'
   adiabatic_index = 1.4 # the adiabatic index of the disk
@@ -101,7 +101,7 @@ def set_prefered_disk():
   #~ opacity_type = 'bell' # 'bell' or 'zhu' or 'hure' opacity table
   opacity_type = 'hure' # 'bell' or 'zhu' or 'hure' opacity table
   #~ b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
-  b_h = 0.6 # the smoothing length of the gravitationnal potential of the planet
+  b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
   mean_molecular_weight = 2.35
   sample = 800
   disk_edges = (0.1, 100.) # (the inner and outer edge of the disk in AU)
@@ -297,13 +297,13 @@ os.chdir("..")
 
 #~ densities_0 = [300., 800., 1500.]
 #~ densities_idx = [0.5, 1.0, 1.5]
-opacities = ['bell', 'zhu', 'hure']
+opacities = ['bell', 'chambers', 'zhu', 'hure']
 
 
 recap_file = open("parameter_study/%s/readme.txt" % folder_name, 'w')
 
-density_constant = 300.
-density_index = 0.5
+#~ density_constant = 1200.
+#~ density_index = 1
 
 index = 0
 for opacity_type in opacities:
