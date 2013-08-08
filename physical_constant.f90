@@ -30,6 +30,7 @@ real(double_precision), parameter :: SIGMA_STEFAN = 5.670400d-8 / (1.d-3 * MSUN)
 
 ! Various constants in (MSUN, AU, DAY) units
 real(double_precision), parameter :: EARTH_MASS = 3.00374072d-6 ! the mass of the earth in solar mass [MSUN]
+real(double_precision), parameter :: SOLAR_RADIUS = 4.6491d-3 ! Solar radius in AU
 
 ! Numerical Constants
 real(double_precision), parameter :: THIRD = .33333333333333333d0

@@ -27,7 +27,7 @@ module disk_properties
   
   !------------------------------------------------------------------------------
   ! Star parameters :
-  real(double_precision) :: R_STAR = 4.6491d-3 ! Solar radius in AU
+  real(double_precision) :: R_STAR = 4.6491d-3 ! Stellar radius in AU
   real(double_precision) :: T_STAR = 5700.d0 ! in K
   
   !------------------------------------------------------------------------------

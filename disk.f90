@@ -204,6 +204,7 @@ subroutine read_disk_properties()
         
         case('r_star')
           read(value, *) R_STAR
+          R_STAR = R_STAR * SOLAR_RADIUS ! The value in parameters is the stellar radius in solar radii
           
         case('t_star')
           read(value, *) T_STAR
@@ -524,7 +525,7 @@ subroutine write_disk_properties()
   if (IS_IRRADIATION) then
     write(10,'(a)') 'is irradiation = True'
     write(10,'(a,f8.1,a)') 'Stellar surface temperature = ',T_STAR, ' K'
-    write(10,'(a,es7.2e1,a)') 'Stellar radius = ',R_STAR, ' AU'
+    write(10,'(a,f7.2,a)') 'Stellar radius = ',R_STAR/SOLAR_RADIUS, ' Rs (solar radii)'
     write(10,'(a,f5.3)') 'Disk Albedo = ',DISK_ALBEDO
   else
      write(10,'(a)') 'is irradiation = False'
