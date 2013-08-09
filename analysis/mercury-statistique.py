@@ -18,6 +18,8 @@ import random
 import numpy as np
 import sys
 import shutil
+from matplotlib.ticker import FormatStrFormatter
+
 
 DELTA_RATIO = 0.005
 DELTA_M = 0.1
@@ -50,23 +52,26 @@ nom_fichier_plot = [] # list of names for each plot
 figures = [] # list of figures
 plots = [] # list of plots (the axes of the fig objects, assuming there is no subplots in there)
 
+distance_format = FormatStrFormatter("%.3g")
+
 nom_fichier_plot.append("miscellaneous")
 figures.append(pl.figure())
 fig = figures[-1].add_subplot(2, 3, 1)
 plots.append([]) # Because it is a subplots figure
 plots[-1].append(fig)
-fig.set_xlabel("mass [Earths]")
+fig.set_xlabel("Mass [Earths]")
 fig.set_ylabel("Distribution")
 
 fig = figures[-1].add_subplot(2, 3, 2)
 plots[-1].append(fig)
-fig.set_xlabel("mass [Earths]")
-fig.set_ylabel("eccentricity")
+fig.set_xlabel("Mass [Earths]")
+fig.set_ylabel("Eccentricity")
 
 fig = figures[-1].add_subplot(2, 3, 3)
 plots[-1].append(fig)
-fig.set_xlabel("distance (in AU)")
-fig.set_ylabel("eccentricity")
+fig.set_xlabel("Distance [AU]")
+fig.set_ylabel("Eccentricity")
+fig.xaxis.set_major_formatter(distance_format)
 
 fig = figures[-1].add_subplot(2, 3, 4)
 plots[-1].append(fig)
@@ -83,14 +88,17 @@ plots[-1].append(fig)
 fig.set_xlabel("Orbital Distance [AU]")
 fig.set_ylabel("Distribution")
 fig.set_xscale("log")
+fig.xaxis.set_major_formatter(distance_format)
 
 nom_fichier_plot.append("m_fct_a")
 figures.append(pl.figure())
 fig = figures[-1].add_subplot(1, 1, 1)
 plots.append(fig)
-fig.set_xlabel("a (in AU)")
-fig.set_ylabel("mass [Earths]")
+fig.set_xlabel("Distance [AU]")
+fig.set_ylabel("Mass [Earths]")
 fig.grid()
+fig.set_xscale("log")
+fig.xaxis.set_major_formatter(distance_format)
 
 nom_fichier_plot.append("histogrammes_res")
 figures.append(pl.figure())
@@ -120,9 +128,11 @@ nom_fichier_plot.append("most_massive_position")
 figures.append(pl.figure())
 fig = figures[-1].add_subplot(1, 1, 1)
 plots.append(fig)
-fig.set_xlabel("Position [AU]")
+fig.set_xlabel("Distance [AU]")
 fig.set_ylabel("Mass of most massive [Earths]")
 fig.grid()
+fig.set_xscale("log")
+fig.xaxis.set_major_formatter(distance_format)
 
 #######################
 # On définit et prépare les différents dossiers 
@@ -453,7 +463,7 @@ a_min = min(a)
 plots[0][5].hist(a, bins=np.logspace(log10(a_min), log10(a_max), 100))
 
 
-plots[1].semilogx(a, m, 'o', markersize=5)
+plots[1].plot(a, m, 'o', markersize=5)
 if (isDisk and (len(contours_a) > 0)):
   plots[1].fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
   for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
@@ -472,7 +482,7 @@ xlims = list(plots[4].get_xlim())
 limits = [max(xlims[0], ylims[0]), min(xlims[1], ylims[1])]
 plots[4].plot(limits, limits, 'k--', label="equal mass")
 
-plots[5].semilogx(most_massive_a, most_massive, 'bo', markersize=5)
+plots[5].plot(most_massive_a, most_massive, 'bo', markersize=5)
 if (isDisk and (len(contours_a) > 0)):
   plots[5].fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
   for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):

@@ -11,6 +11,7 @@ import sys # To handle options of the script, for instance
 from simu_constantes import *
 import random
 import numpy as np
+from matplotlib.ticker import FormatStrFormatter
 
 # Mass threshold
 MASS_THRESHOLD = 5 # Earth mass
@@ -34,32 +35,35 @@ nom_fichier_plot = [] # list of names for each plot
 figures = [] # list of figures
 plots = [] # list of plots (the axes of the fig objects, assuming there is no subplots in there)
 
+distance_format = FormatStrFormatter("%.3g")
+
 nom_fichier_plot.append("histogrammes_m")
 figures.append(pl.figure())
 fig = figures[-1].add_subplot(1, 1, 1)
 plots.append(fig)
-fig.set_xlabel("mass [Earths]")
+fig.set_xlabel("Mass [Earths]")
 fig.set_ylabel("Distribution")
 
 nom_fichier_plot.append("e_fct_m")
 figures.append(pl.figure())
 fig = figures[-1].add_subplot(1, 1, 1)
 plots.append(fig)
-fig.set_xlabel("mass [Earths]")
-fig.set_ylabel("eccentricity")
+fig.set_xlabel("Mass [Earths]")
+fig.set_ylabel("Eccentricity")
 
 nom_fichier_plot.append("e_fct_a")
 figures.append(pl.figure())
 fig = figures[-1].add_subplot(1, 1, 1)
 plots.append(fig)
-fig.set_xlabel("distance [AU]")
-fig.set_ylabel("eccentricity")
+fig.set_xlabel("Distance [AU]")
+fig.set_ylabel("Eccentricity")
+fig.xaxis.set_major_formatter(distance_format)
 
 nom_fichier_plot.append('histogrammes_I')
 figures.append(pl.figure())
 fig = figures[-1].add_subplot(1, 1, 1)
 plots.append(fig)
-fig.set_xlabel("I (in degrees)")
+fig.set_xlabel("Inclination (in degrees)")
 fig.set_ylabel("Distribution")
 
 nom_fichier_plot.append('histogrammes_nb_pl')
@@ -73,8 +77,10 @@ nom_fichier_plot.append("m_fct_a")
 figures.append(pl.figure())
 fig = figures[-1].add_subplot(1, 1, 1)
 plots.append(fig)
-fig.set_xlabel("a [AU]")
-fig.set_ylabel("mass [Earths]")
+fig.set_xlabel("Distance [AU]")
+fig.set_ylabel("Mass [Earths]")
+fig.set_xscale("log")
+fig.xaxis.set_major_formatter(distance_format)
 
 nom_fichier_plot.append("histogrammes_res")
 figures.append(pl.figure())
@@ -357,7 +363,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   
   plots[4].hist(final_nb_planets, bins=range(25), histtype='step', label=meta_prefix)
   
-  plots[5].semilogx(a, m, 'o', markersize=5, color=colors[meta_index], label=meta_prefix)
+  plots[5].plot(a, m, 'o', markersize=5, color=colors[meta_index], label=meta_prefix)
   
   plots[6].hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step', label=meta_prefix)
   
