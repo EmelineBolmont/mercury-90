@@ -56,49 +56,49 @@ distance_format = FormatStrFormatter("%.3g")
 
 nom_fichier_plot.append("miscellaneous")
 figures.append(pl.figure())
-fig = figures[-1].add_subplot(2, 3, 1)
+misc1 = figures[-1].add_subplot(2, 3, 1)
 plots.append([]) # Because it is a subplots figure
-plots[-1].append(fig)
-fig.set_xlabel("Mass [Earths]")
-fig.set_ylabel("Distribution")
+plots[-1].append(misc1)
+misc1.set_xlabel("Mass [Earths]")
+misc1.set_ylabel("Distribution")
 
-fig = figures[-1].add_subplot(2, 3, 2)
-plots[-1].append(fig)
-fig.set_xlabel("Mass [Earths]")
-fig.set_ylabel("Eccentricity")
+misc2 = figures[-1].add_subplot(2, 3, 2)
+plots[-1].append(misc2)
+misc2.set_xlabel("Mass [Earths]")
+misc2.set_ylabel("Eccentricity")
 
-fig = figures[-1].add_subplot(2, 3, 3)
-plots[-1].append(fig)
-fig.set_xlabel("Distance [AU]")
-fig.set_ylabel("Eccentricity")
-fig.xaxis.set_major_formatter(distance_format)
+misc3 = figures[-1].add_subplot(2, 3, 3)
+plots[-1].append(misc3)
+misc3.set_xlabel("Distance [AU]")
+misc3.set_ylabel("Eccentricity")
+misc3.xaxis.set_major_formatter(distance_format)
 
-fig = figures[-1].add_subplot(2, 3, 4)
-plots[-1].append(fig)
-fig.set_xlabel("I (in degrees)")
-fig.set_ylabel("Distribution")
+misc4 = figures[-1].add_subplot(2, 3, 4)
+plots[-1].append(misc4)
+misc4.set_xlabel("I (in degrees)")
+misc4.set_ylabel("Distribution")
 
-fig = figures[-1].add_subplot(2, 3, 5)
-plots[-1].append(fig)
-fig.set_xlabel("nb_final")
-fig.set_ylabel("Distribution")
+misc5 = figures[-1].add_subplot(2, 3, 5)
+plots[-1].append(misc5)
+misc5.set_xlabel("nb_final")
+misc5.set_ylabel("Distribution")
 
-fig = figures[-1].add_subplot(2, 3, 6)
-plots[-1].append(fig)
-fig.set_xlabel("Orbital Distance [AU]")
-fig.set_ylabel("Distribution")
-fig.set_xscale("log")
-fig.xaxis.set_major_formatter(distance_format)
+misc6 = figures[-1].add_subplot(2, 3, 6)
+plots[-1].append(misc6)
+misc6.set_xlabel("Orbital Distance [AU]")
+misc6.set_ylabel("Distribution")
+misc6.set_xscale("log")
+misc6.xaxis.set_major_formatter(distance_format)
 
 nom_fichier_plot.append("m_fct_a")
 figures.append(pl.figure())
-fig = figures[-1].add_subplot(1, 1, 1)
-plots.append(fig)
-fig.set_xlabel("Distance [AU]")
-fig.set_ylabel("Mass [Earths]")
-fig.grid()
-fig.set_xscale("log")
-fig.xaxis.set_major_formatter(distance_format)
+m_fct_a = figures[-1].add_subplot(1, 1, 1)
+plots.append(m_fct_a)
+m_fct_a.set_xlabel("Distance [AU]")
+m_fct_a.set_ylabel("Mass [Earths]")
+m_fct_a.grid()
+m_fct_a.set_xscale("log")
+m_fct_a.xaxis.set_major_formatter(distance_format)
 
 nom_fichier_plot.append("histogrammes_res")
 figures.append(pl.figure())
@@ -107,6 +107,12 @@ plots.append(hist_res)
 hist_res.set_xlabel("Period ratio relative to the most massive planet")
 hist_res.set_ylabel("Distribution")
 
+nom_fichier_plot.append("histogrammes_m")
+figures.append(pl.figure())
+hist_m = figures[-1].add_subplot(1, 1, 1)
+plots.append(hist_m)
+hist_m.set_xlabel("Mass [Earths]")
+hist_m.set_ylabel("Distribution")
 
 nom_fichier_plot.append("2_most_massives")
 figures.append(pl.figure())
@@ -126,13 +132,13 @@ fig.set_ylabel("mass of the second planet (m_earth)")
 
 nom_fichier_plot.append("most_massive_position")
 figures.append(pl.figure())
-fig = figures[-1].add_subplot(1, 1, 1)
-plots.append(fig)
-fig.set_xlabel("Distance [AU]")
-fig.set_ylabel("Mass of most massive [Earths]")
-fig.grid()
-fig.set_xscale("log")
-fig.xaxis.set_major_formatter(distance_format)
+most_am = figures[-1].add_subplot(1, 1, 1)
+plots.append(most_am)
+most_am.set_xlabel("Distance [AU]")
+most_am.set_ylabel("Mass of most massive [Earths]")
+most_am.grid()
+most_am.set_xscale("log")
+most_am.xaxis.set_major_formatter(distance_format)
 
 #######################
 # On définit et prépare les différents dossiers 
@@ -448,45 +454,26 @@ print("\t Computing Plots")
 os.chdir(rep_exec)
 nb_bins = 50
 
-plots[0][0].hist(m_clo, bins=range(25), normed=True, histtype='step')
-
-plots[0][1].plot(m, e, 'o', markersize=5)
-
-plots[0][2].plot(a, e, 'o', markersize=5)
-
-plots[0][3].hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step')
-
-plots[0][4].hist(final_nb_planets, bins=range(25), histtype='step')
+misc1.hist(m_clo, bins=range(25), normed=True, histtype='step')
+misc2.plot(m, e, 'o', markersize=5)
+misc3.plot(a, e, 'o', markersize=5)
+misc4.hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step')
+misc5.hist(final_nb_planets, bins=range(25), histtype='step')
 
 a_max = max(a)
 a_min = min(a)
-plots[0][5].hist(a, bins=np.logspace(log10(a_min), log10(a_max), 100))
+misc6.hist(a, bins=np.logspace(log10(a_min), log10(a_max), 100))
 
+hist_m.hist(m, bins=50, histtype='step', normed=True, label=labels[meta_prefix])
 
-plots[1].plot(a, m, 'o', markersize=5)
+m_fct_a.plot(a, m, 'o', markersize=5)
 if (isDisk and (len(contours_a) > 0)):
-  plots[1].fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
+  m_fct_a.fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
   for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
-    plots[1].fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
+    m_fct_a.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
 
 
-plots[2].hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step')
-
-plots[3].plot(most_massive, second_massive, 'o', markersize=5)
-
-
-plots[4].plot(m_clo_first, m_clo_second, 'ro', markersize=5, label="closest from biggest")
-plots[4].plot(m_first, m_second, 'bo', markersize=5, label="all others")
-ylims = list(plots[4].get_ylim())
-xlims = list(plots[4].get_xlim())
-limits = [max(xlims[0], ylims[0]), min(xlims[1], ylims[1])]
-plots[4].plot(limits, limits, 'k--', label="equal mass")
-
-plots[5].plot(most_massive_a, most_massive, 'bo', markersize=5)
-if (isDisk and (len(contours_a) > 0)):
-  plots[5].fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
-  for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
-    plots[5].fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
+hist_res.hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step')
 
 # We add the resonances
 ylims = list(hist_res.get_ylim())
