@@ -38,44 +38,27 @@ plots = [] # list of plots (the axes of the fig objects, assuming there is no su
 distance_format = FormatStrFormatter("%.3g")
 
 nom_fichier_plot.append("histogrammes_m")
-figures.append(pl.figure())
-hist_m = figures[-1].add_subplot(1, 1, 1)
+fig_tmp = pl.figure()
+figures.append(fig_tmp)
+hist_m = fig_tmp.add_subplot(1, 1, 1)
 plots.append(hist_m)
 hist_m.set_xlabel("Mass [Earths]")
 hist_m.set_ylabel("Distribution")
 
-nom_fichier_plot.append("e_fct_m")
-figures.append(pl.figure())
-e_fct_m = figures[-1].add_subplot(1, 1, 1)
-plots.append(e_fct_m)
-e_fct_m.set_xlabel("Mass [Earths]")
-e_fct_m.set_ylabel("Eccentricity")
-
-nom_fichier_plot.append("e_fct_a")
-figures.append(pl.figure())
-e_fct_a = figures[-1].add_subplot(1, 1, 1)
-plots.append(e_fct_a)
-e_fct_a.set_xlabel("Distance [AU]")
-e_fct_a.set_ylabel("Eccentricity")
-e_fct_a.xaxis.set_major_formatter(distance_format)
-
-nom_fichier_plot.append('histogrammes_I')
-figures.append(pl.figure())
-hist_I = figures[-1].add_subplot(1, 1, 1)
-plots.append(hist_I)
-hist_I.set_xlabel("Inclination (in degrees)")
-hist_I.set_ylabel("Distribution")
-
-nom_fichier_plot.append('histogrammes_nb_pl')
-figures.append(pl.figure())
-hist_nbpl = figures[-1].add_subplot(1, 1, 1)
-plots.append(hist_nbpl)
-hist_nbpl.set_xlabel("Final Number of planets")
-hist_nbpl.set_ylabel("Distribution")
+nom_fichier_plot.append("histogrammes_a")
+fig_tmp = pl.figure()
+figures.append(fig_tmp)
+hist_a = fig_tmp.add_subplot(1, 1, 1)
+plots.append(hist_a)
+hist_a.set_xlabel("Distance [AU]")
+hist_a.set_ylabel("Distribution")
+hist_a.set_xscale("log")
+hist_a.xaxis.set_major_formatter(distance_format)
 
 nom_fichier_plot.append("m_fct_a")
-figures.append(pl.figure())
-m_fct_a = figures[-1].add_subplot(1, 1, 1)
+fig_tmp = pl.figure()
+figures.append(fig_tmp)
+m_fct_a = fig_tmp.add_subplot(1, 1, 1)
 plots.append(m_fct_a)
 m_fct_a.set_xlabel("Distance [AU]")
 m_fct_a.set_ylabel("Mass [Earths]")
@@ -83,18 +66,12 @@ m_fct_a.set_xscale("log")
 m_fct_a.xaxis.set_major_formatter(distance_format)
 
 nom_fichier_plot.append("histogrammes_res")
-figures.append(pl.figure())
-hist_res = figures[-1].add_subplot(1, 1, 1)
+fig_tmp = pl.figure()
+figures.append(fig_tmp)
+hist_res = fig_tmp.add_subplot(1, 1, 1)
 plots.append(hist_res)
 hist_res.set_xlabel("Period ratio relative to the most massive planet")
 hist_res.set_ylabel("Distribution")
-
-nom_fichier_plot.append("most_massives")
-figures.append(pl.figure())
-most_m = figures[-1].add_subplot(1, 1, 1)
-plots.append(most_m)
-most_m.set_xlabel("most massive [Earths]")
-most_m.set_ylabel("second most massive [Earths]")
 
 #######################
 # We prepare the various folders we we will read the simulations
@@ -351,28 +328,20 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   #######################
   print("\t Computing Plots")
   os.chdir(rep_exec)
-  nb_bins = 50
+
+  hist_a.hist(a, bins=np.logspace(-2, 2, 100), histtype='step', normed=True, label=meta_prefix)
 
   hist_m.hist(m, bins=range(50), normed=True, histtype='step', label=meta_prefix)
-
-  e_fct_m.plot(m, e, 'o', markersize=5, label=meta_prefix)
-  
-  e_fct_a.plot(a, e, 'o', markersize=5, label=meta_prefix)
-
-  hist_I.hist(I, bins=[0.002*i for i in range(25)], normed=True, histtype='step', label=meta_prefix)
-  
-  hist_nbpl.hist(final_nb_planets, bins=range(25), histtype='step', label=meta_prefix)
   
   m_fct_a.plot(a, m, 'o', markersize=5, color=colors[meta_index], label=meta_prefix)
   
-  hist_res.hist(period_ratio, bins=[0.5+0.0025*i for i in range(400)], normed=True, histtype='step', label=meta_prefix)
+  hist_res.hist(period_ratio, bins=np.linspace(0.45, 2.1, 200), normed=True, histtype='step', label=meta_prefix)
   
-  most_m.plot(most_massive, second_massive, 'o', markersize=5, label=meta_prefix)
   
 
 # We add the resonances
 ylims = list(hist_res.get_ylim())
-xlims = list(hist_res.set_xlim([0.6, 1.4]))
+xlims = list(hist_res.set_xlim([0.45, 2.05]))
 for res in resonances:
   nb_period = map(float, res.split(":")) # We get the two integers value of the resonance.
   ratio = nb_period[0] / nb_period[1]
