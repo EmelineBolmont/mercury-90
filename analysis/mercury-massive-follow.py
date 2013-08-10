@@ -148,12 +148,15 @@ nb_planets = len(name)
 a = [] # Semi-major axis in AU
 m = [] # planet mass in earth mass
 
+aappend = a.append
+mappend = m.append
+
 for aei_file in name:
   (ai, mi) = np.loadtxt(aei_file, skiprows=4, usecols = (1,7), dtype=float, unpack=True)
   mi = (MS / MT) * mi
   
-  a.append(ai)
-  m.append(mi)
+  aappend(ai)
+  mappend(mi)
 
 
 # We generate a list of colors
