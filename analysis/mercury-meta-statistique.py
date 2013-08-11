@@ -22,7 +22,7 @@ DELTA_M = 0.1
 # Get current working directory
 rep_exec = os.getcwd()
 
-resonances = ["3:2", "4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
+resonances = ["1:1", "2:1", "3:2", "4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 
 #######################
 # We prepare the plots
@@ -52,8 +52,8 @@ hist_a = fig_tmp.add_subplot(1, 1, 1)
 plots.append(hist_a)
 hist_a.set_xlabel("Distance [AU]")
 hist_a.set_ylabel("Distribution")
-hist_a.set_xscale("log")
 hist_a.xaxis.set_major_formatter(distance_format)
+# Must not put in log space an histogram because the height of the bins will not be accurate if "normed=True"
 
 nom_fichier_plot.append("m_fct_a")
 fig_tmp = pl.figure()
@@ -86,6 +86,12 @@ dossier_suppr = ["output", "indiv_simu_01"]
 liste_meta_simu = [dir for dir in os.listdir(".") if os.path.isdir(dir)]
 autiwa.suppr_dossier(liste_meta_simu,dossier_suppr)
 liste_meta_simu.sort()
+
+#~ liste_meta_simu = ["150_05", "fiducials", "600_05"]
+#~ labels = {}
+#~ labels["150_05"] = "Low mass disk"
+#~ labels["fiducials"] = "Normal disk"
+#~ labels["600_05"] = "High mass disk"
 
 nb_meta_simu = len(liste_meta_simu)
 
@@ -329,7 +335,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   print("\t Computing Plots")
   os.chdir(rep_exec)
 
-  hist_a.hist(a, bins=np.logspace(-2, 2, 100), histtype='step', normed=True, label=meta_prefix)
+  hist_a.hist(np.log10(a), bins=np.linspace(-2, 2, 50), histtype='step', normed=True, label=meta_prefix)
 
   hist_m.hist(m, bins=range(50), normed=True, histtype='step', label=meta_prefix)
   
@@ -338,6 +344,12 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
   hist_res.hist(period_ratio, bins=np.linspace(0.45, 2.1, 200), normed=True, histtype='step', label=meta_prefix)
   
   
+
+#labels = hist_a.get_xmajorticklabels()
+##~ pdb.set_trace()
+#labels = ["%.3g" % 10**(float(item.get_text())) for item in labels]
+##~ "%.3g" % 10**(float(item.get_text()))
+#hist_a.set_xmajorticklabels(labels)
 
 # We add the resonances
 ylims = list(hist_res.get_ylim())
