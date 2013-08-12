@@ -100,17 +100,6 @@ plots.append(hist_m)
 hist_m.set_xlabel("Mass [Earths]")
 hist_m.set_ylabel("Distribution")
 
-#~ nom_fichier_plot.append("most_massive_position")
-#~ fig_tmp = pl.figure()
-#~ figures.append(fig_tmp)
-#~ most_am = fig_tmp.add_subplot(1, 1, 1)
-#~ plots.append(most_am)
-#~ most_am.set_xlabel("Distance [AU]")
-#~ most_am.set_ylabel("Mass of most massive [Earths]")
-#~ most_am.grid()
-#~ most_am.set_xscale("log")
-#~ most_am.xaxis.set_major_formatter(distance_format)
-
 nom_fichier_plot.append("pr_all")
 fig_tmp = pl.figure()
 figures.append(fig_tmp)
@@ -323,10 +312,6 @@ for simu in liste_simu:
     m_system.append(mi)
     #~ if (ai < 23 and ai > 19 and mi > 16 and mi < 20):
       #~ print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
-    #~ if (ai>2.5) and (mi > 10.):
-      #~ print("in %s a planet has a=%f AU and m=%f mt" % (simu, ai, mi))
-    #~ if (ai > 1.3):
-      #~ print("in %s %s has a=%f and m=%f mt" % (simu, datas[0], ai, mi))
   
   # We add all the elements of the system into the list of values corresponding to all the simulations
   a.extend(a_system)
@@ -390,16 +375,6 @@ for simu in liste_simu:
     most_massive.append(tmp[-1][0])
     most_massive_a.append(tmp[-1][1])
     second_massive.append(tmp[-2][0])
-
-    #~ if (tmp[-1][0] > 6. and tmp[-1][0] < 9.):
-      #~ print("most massive = %.1f in %s:" % (tmp[-1][0],simu))
-    #~ for (ai, mi) in zip(a_system, m_system):
-      #~ if (mi > 5. and ai > 10.):
-        #~ print("In %s, %.1f mt planet at %.1f AU" % (simu, mi, ai))
-    #~ if (final_nb_planets[-1] == 7):
-      #~ print("nb_planets :",final_nb_planets[-1],simu)
-    #~ if (max(e_system) > 0.8):
-      #~ print("max eccentricity :",max(e_system),simu)
   else:
     print("in %s there is only %i planet left" % (simu, final_nb_planets[-1]))
   
@@ -441,6 +416,19 @@ m_max = max(most_massive)
 print("less massive in the list of most massive : %f" % min(most_massive))
 print("most massive planet formed in all simulations : %f" % m_max)
 
+# We convert into numpy arrays to allow selective plots
+a = np.array(a)
+e = np.array(e)
+I = np.array(I)
+m = np.array(m)
+
+#~ # This selection does not apply on hill separation (delta) and period ratios. 
+#~ selection = (m>2.)
+#~ a = a[selection]
+#~ e = e[selection]
+#~ I = I[selection]
+#~ m = m[selection]
+
 #######################
 #   Tracé des plots   #
 #######################
@@ -454,7 +442,6 @@ a_max = max(a)
 a_min = min(a)
 hist_a.hist(a, bins=np.logspace(log10(a_min), log10(a_max), 100))
 
-#~ hist_delta.hist(delta, bins=np.linspace(0, 50, 100))
 hist_delta.hist(delta, bins=np.logspace(0, 2, 100))
 
 hist_m.hist(m, bins=np.linspace(0, m_max, 100))
@@ -465,12 +452,7 @@ if (isDisk and (len(contours_a) > 0)):
   for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
     m_fct_a.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
 
-#~ most_am.plot(most_massive_a, most_massive, 'o', markersize=5)
 m_fct_a.plot(most_massive_a, most_massive, 'ro', markersize=5, label="Most Massive")
-#~ if (isDisk and (len(contours_a) > 0)):
-  #~ most_am.fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
-  #~ for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
-    #~ most_am.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
 
 hist_res.hist(period_ratio, bins=np.linspace(0.45, 2.1, 200))
 
