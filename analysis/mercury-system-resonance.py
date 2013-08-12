@@ -15,6 +15,7 @@ import pylab as pl
 import autiwa
 import sys # to get access to arguments of the script
 import shutil, os
+from matplotlib.ticker import FormatStrFormatter
 
 ################
 ## Parameters ##
@@ -407,6 +408,9 @@ for planet in range(0, nb_planets-1):
 
 plot_AM.set_xlim(xlims)
 plot_AM.set_ylim(ylims)
+
+distance_format = FormatStrFormatter("%.3g")
+plot_AM.xaxis.set_major_formatter(distance_format)
 
 plot_AM.legend()
 fig.savefig("%s.%s" % (NOM_FICHIER_PLOT, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)

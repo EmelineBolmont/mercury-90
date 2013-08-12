@@ -14,6 +14,7 @@ import sys # to get access to arguments of the script
 import os
 from constants import MT, MS
 import mercury_utilities
+from matplotlib.ticker import FormatStrFormatter
 
 ################
 ## Parameters ##
@@ -27,6 +28,8 @@ OUTPUT_EXTENSION = "pdf"
 
 # Maximum number of planets (the most massives) that will be colored
 MAX_COLORED = 3
+COLOR_FINAL = '000000'
+COLOR_EJECTED = '909090'
 ###############################################
 ## Beginning of the program
 ###############################################
@@ -112,60 +115,136 @@ fig = pl.figure()
 plot_AM = fig.add_subplot(1, 1, 1)
 plot_AM.set_xlabel("Semi-major axis [AU]")
 plot_AM.set_ylabel("mass [Earths]")
-plot_AM.xaxis.grid(True, which='major', color='#cccccc', linestyle='-')
-plot_AM.yaxis.grid(True, which='major', color='#cccccc', linestyle='-')
+plot_AM.xaxis.grid(True, which='major', color='#222222', linestyle='-')
+plot_AM.yaxis.grid(True, which='major', color='#222222', linestyle='-')
 
 
-# To each planet named "planet01" exist a "planet01.aei" file that contains its coordinates with time.
-name = [] # the name of the planets in the current simulation. 
-mass = [] # mass in earth mass
+######################################
+####################
+# On rÃ©cupÃ¨re la liste des fichiers planÃ¨tes.aei
+####################
+(process_stdout, process_stderr, return_code) = autiwa.lancer_commande("ls *.aei")
+if (return_code != 0):
+  print("the command return an error "+str(return_code))
+  print(process_stderr)
+  exit()
+  
+liste_aei = process_stdout.split("\n")
+liste_aei.remove('') # we remove an extra element that doesn't mean anything
+nb_planets = len(liste_aei)
 
-table = open("element.out", 'r')
 
-# We get rid of the header
-for i in range(5):
-  table.readline()
-
-lines = table.readlines()
-table.close()
-
-nb_planets = len(lines)
-for line in lines:
-  datas = line.split()
-  name.append(datas[0])
-  mass.append(float(datas[4]))
-
-mass = np.array(mass)
-name = np.array(name)
-sorted_by_mass = np.argsort(mass)
-name = name[sorted_by_mass][::-1] # most massive first
-
-# We only keep the most massive ones
-name = ["%s.aei" % ni for ni in name[0:MAX_COLORED]]
-
-nb_planets = len(name)
-
+####################
+# On lit, pour chaque planete, le contenu du fichier et on stocke les variables qui nous intÃÂ©ressent.
+####################
+t = [] # time in years
 a = [] # Semi-major axis in AU
 m = [] # planet mass in earth mass
 
-aappend = a.append
-mappend = m.append
-
-for aei_file in name:
-  (ai, mi) = np.loadtxt(aei_file, skiprows=4, usecols = (1,7), dtype=float, unpack=True)
+# We retrieve the orbital data
+for planete in range(nb_planets):
+  
+  fichier_source = liste_aei[planete]
+  (ti, ai, mi) = np.loadtxt(fichier_source, skiprows=4, usecols = (0,1,7), dtype=float, unpack=True)
   mi = (MS / MT) * mi
   
-  aappend(ai)
-  mappend(mi)
+  if (type(ti) == np.ndarray):
+    t.append(ti/1e6)
+    a.append(ai)
+    m.append(mi)
+  else:
+    # In case the is only one point, we force to have a list, to avoid plotting problems
+    t.append(np.array([ti/1e6]))
+    a.append(np.array([ai]))
+    m.append(np.array([mi]))
 
+
+# We get the array of reference time, i.e, one of the longuest list of time available in the list of planets. 
+len_t = [len(ti) for ti in t]
+ref_len = max(len_t)
+ref_id = len_t.index(ref_len) # The ID of the longuest time array
+ref_time = t[ref_id] # The longuest time array
+
+delta_t = ref_time[1] - ref_time[0]
+
+# We get the index for the t_max value
+if ('t_max' in locals()):
+  id_max = int((t_max - ref_time[0]) / delta_t)
+  t_max = ref_time[id_max]
+else:
+  id_max = ref_len - 1
+  t_max = ref_time[-1]
+
+# We get the index for the t_min value
+if ('t_min' in locals()):
+  id_min = int((t_min - ref_time[0]) / delta_t)
+  t_min = ref_time[id_min]
+else:
+  id_min = 0
+  t_min = ref_time[0]
+
+# We get the list of masses at the 't_max' time. By default, it will be the final time of the simulation.
+final_name = []
+final_mass = []
+for (aei_file,mi) in zip(liste_aei,m):
+  if (len(mi) > id_max):
+    final_name.append(aei_file.rstrip(".aei"))
+    final_mass.append(mi[id_max])
+
+nb_final = len(final_name)
+decorated = [(final_mass[i], i, final_name[i]) for i in range(nb_final)]
+decorated.sort(reverse=True) # We get the final planets, the bigger the firsts
+
+for (i , (mass, dumb,  name)) in enumerate(decorated):
+  final_name[i] = name
+  final_mass[i] = mass
+
+
+# We get all the association of name/index of planets
+ind_of_planet = {}
+for (ind, filename) in enumerate(liste_aei):
+  basename = os.path.splitext(filename)[0]
+  ind_of_planet[basename] = ind
 
 # We generate a list of colors
-colors = [ '#'+li for li in autiwa.colorList(nb_planets)]
+tmp = autiwa.colorList(MAX_COLORED, exclude=['ffffff', COLOR_FINAL, COLOR_EJECTED])
+tmp.extend([COLOR_FINAL]*(nb_final-MAX_COLORED))
+
+# We initialize the total color list. 
+# By default, all the planets have the same colors, that will illustrate ejection and collisions with the sun
+colors = ['#'+COLOR_EJECTED] * nb_planets
+
+# For the planets that remains in the simulation at the end, we change the color (either a flashy one for the most massives, or a default one)
+for (name, color) in zip(final_name, tmp):
+  colors[ind_of_planet[name]] = '#'+color
+
+
+
+tableau = open('info.out', 'r')
+# We must read the file backward because at the beginning, we only have the color of a few planets.
+lines = tableau.readlines()
+tableau.close()
+
+# We retrieve the history of collision to give the same colors to all the bodies that collided with the remaining bodies
+# We start from the last collisions, because the color of the lost body will be the same as the color of the remaining one. 
+#  If only one body is left, we want to see each of the bodies that collides with him to get his color.
+lost_in_collisions = [] 
+for line in reversed(lines):
+  if (line.count('was hit by') > 0):
+    words = line.split()
+    collision_time = float(words[-2]) / 1e6
+    if ((collision_time > t_max) or (collision_time < t_min)):
+      continue
+    remaining_planet = words[0]
+    lost_planet = words[4]
+    colors[ind_of_planet[lost_planet]] = colors[ind_of_planet[remaining_planet]]
+    lost_in_collisions.append(ind_of_planet[lost_planet])
+#######################################
 
 if isLogX:
   plot = plot_AM.semilogx
   
-  plot_AM.xaxis.grid(True, which='minor', color='#cccccc', linestyle='--')
+  plot_AM.xaxis.grid(True, which='minor', color='#888888', linestyle='-')
 
 else:
   plot = plot_AM.plot
@@ -173,7 +252,15 @@ else:
 for planet in range(nb_planets):
   # We display a circle for the planet
   plot(a[planet], m[planet], color=colors[planet])
+
+
+# We display surviving planets
+for name in final_name:
+  planet = ind_of_planet[name]
   plot(a[planet][-1], m[planet][-1], 'o', color=colors[planet])
+
+for planet in lost_in_collisions:
+  plot(a[planet][-1], m[planet][-1], 'o', markerfacecolor='None', markeredgewidth=2, markeredgecolor=colors[planet])
 
 ylims = list(plot_AM.get_ylim())
 xlims = list(plot_AM.get_xlim())
@@ -185,6 +272,9 @@ if (isDisk and (len(contours_a) > 0)):
 
 #~ plot_AM.set_xlim(xlims)
 #~ plot_AM.set_ylim(ylims)
+
+distance_format = FormatStrFormatter("%.3g")
+plot_AM.xaxis.set_major_formatter(distance_format)
 
 plot_AM.legend()
 fig.savefig("%s.%s" % (NOM_FICHIER_PLOT, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
