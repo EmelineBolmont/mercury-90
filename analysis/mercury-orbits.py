@@ -19,6 +19,7 @@ NB_FRAMES = 2
 NB_P_ORBITS = 1 # The number of orbits to display in case of tail
 
 isTail = True # There is a part where this boolean is changed automatically if the timestep between two output is to huge.
+isManualTailSize = False
 isReferenceFrame = False # If we display orbits in the reference frame of a given planet
 ###############################################
 ## Beginning of the program
@@ -34,6 +35,7 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " * t_min=1e4 : the beginning of the output (in years)" + "\n" + \
 " * ref=BIG_0001.aei : to display the orbits in the rotating frame of BIG_0001 planet" + "\n" + \
 " * forceCircle : to display circle instead of real orbits if the output interval is huge\n" + \
+" * tail=%.1f : the size of the tail in number of orbits\n" % NB_P_ORBITS + \
 " * zoom=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
 " * frames=%d : the number of frames you want" % NB_FRAMES + "\n" + \
 " * ext=%s : The extension for the output files" % OUTPUT_EXTENSION
@@ -55,10 +57,14 @@ for arg in sys.argv[1:]:
     OUTPUT_EXTENSION = value
   elif (key == 'zoom'):
     plot_range = float(value)
+  elif (key == 'tail'):
+    isManualTailSize = True
+    NB_P_ORBITS = float(value)
   elif (key == 'ref'):
     isReferenceFrame = True
     referenceFrame = value
-    NB_P_ORBITS = 20
+    if not(isManualTailSize):
+      NB_P_ORBITS = 20
   elif (key == 'help'):
     print(problem_message)
     exit()
@@ -219,8 +225,9 @@ if isReferenceFrame:
     ri = np.sqrt(x[planet]**2 + y[planet]**2)
     r.append(ri)
     theta = 2. * np.arctan(y[planet] / (x[planet] + ri))
-    x[planet] = ri * np.cos(theta + omega)
-    y[planet] = ri * np.sin(theta + omega)
+    id_ejection = len(theta)
+    x[planet] = ri * np.cos(theta + omega[:id_ejection])
+    y[planet] = ri * np.sin(theta + omega[:id_ejection])
 
 
 

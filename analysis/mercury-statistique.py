@@ -429,6 +429,9 @@ m = np.array(m)
 #~ I = I[selection]
 #~ m = m[selection]
 
+print("Mean mass of all planets : %f" % np.mean(m))
+print("Total number of planets : %d" % len(m))
+
 #######################
 #   Tracé des plots   #
 #######################

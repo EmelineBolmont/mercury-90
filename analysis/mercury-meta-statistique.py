@@ -87,6 +87,7 @@ liste_meta_simu = [dir for dir in os.listdir(".") if os.path.isdir(dir)]
 autiwa.suppr_dossier(liste_meta_simu,dossier_suppr)
 liste_meta_simu.sort()
 
+#~ liste_meta_simu = ["low_mass", "fiducials", "high_mass"]
 #~ liste_meta_simu = ["150_05", "fiducials", "600_05"]
 #~ labels = {}
 #~ labels["150_05"] = "Low mass disk"
