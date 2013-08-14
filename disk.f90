@@ -127,10 +127,8 @@ subroutine read_disk_properties()
 ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
 ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
 ! viscosity : the viscosity of the disk in [cm^2/s]
-! DISSIPATION_TYPE : integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
-! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-! TURBULENT_FORCING : the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
+! DISSIPATION_TYPE : integer to tell if there is dissipation of the disk or not. 0 for no dissipation and 2 for exponential decay of the initial profile
+! TURBULENT_FORCING_MANUAL : the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
 ! IS_TURBULENCE : a boolean to tell if there is turbulence or not
 
 
@@ -235,27 +233,27 @@ subroutine read_disk_properties()
         
         case('disk_exponential_decay')
           read(value, *) TAU_DISSIPATION
-          DISSIPATION_TYPE = 2
-        
+          if (DISSIPATION_TYPE.ne.2) then
+            write(*,*) "Warning: We expect dissipation_type=2"
+          end if
         case('tau_viscous')
           read(value, *) TAU_VISCOUS
-          DISSIPATION_TYPE = 3
-          
+          if (DISSIPATION_TYPE.ne.3) then
+            write(*,*) "Warning: We expect dissipation_type=3"
+          end if
         case('tau_photoevap')
           read(value, *) TAU_PHOTOEVAP
-          DISSIPATION_TYPE = 3
+          if (DISSIPATION_TYPE.ne.3) then
+            write(*,*) "Warning: We expect dissipation_type=3"
+          end if
           
         case('dissipation_time_switch')
           read(value, *) DISSIPATION_TIME_SWITCH
-          
+          if (DISSIPATION_TYPE.ne.3) then
+            write(*,*) "Warning: We expect dissipation_type=3"
+          end if
         case('inner_smoothing_width')
           read(value, *) INNER_SMOOTHING_WIDTH
-        
-        case('inner_boundary_condition')
-          read(value, *) INNER_BOUNDARY_CONDITION
-        
-        case('outer_boundary_condition')
-          read(value, *) OUTER_BOUNDARY_CONDITION
           
         case('torque_type')
           read(value, *) TORQUE_TYPE
@@ -293,7 +291,7 @@ subroutine read_disk_properties()
             write(*,*) "         value(s)='", trim(value),"'"
           end if
         case('turbulent_forcing')
-          read(value,*) TURBULENT_FORCING
+          read(value,*) TURBULENT_FORCING_MANUAL
 
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
@@ -302,12 +300,6 @@ subroutine read_disk_properties()
       end if
     end do
     close(10)
-    
-    ! problem if exponential decay timescale is set, but the dissipation_type is not exponentiel decay
-    if ((TAU_DISSIPATION.gt.0.d0).and.(DISSIPATION_TYPE.ne.2)) then
-      write(error_unit,*) 'Error: Exponential decay of surface density must exist only if Dissipation method is "exponential decay"'
-      call exit(7)
-    end if
     
     ! problem is we want exponential decay of the surface density but we did not set the exponential decay timescale
     if ((TAU_DISSIPATION.lt.0.d0).and.(DISSIPATION_TYPE.eq.2)) then
@@ -405,6 +397,226 @@ subroutine read_paramin(timestep)
   
 end subroutine read_paramin
 
+subroutine write_diskin()
+! subroutine that write the parameters of the user_module into the file 'disk.out'
+
+! Global Parameters
+! B_OVER_H : the smoothing length for the planet's potential
+! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
+! MEAN_MOLECULAR_WEIGHT : the mean molecular weight in mass of a proton
+! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
+! INITIAL_SIGMA_INDEX : the negative slope of the surface density power law (alpha in the paper)
+! INITIAL_SIGMA_0_NUM : the surface density at (R=1AU) [Msun/AU^2]
+! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
+! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
+! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+! viscosity : the viscosity of the disk in [cm^2/s]
+! DISSIPATION_TYPE : integer to tell if there is dissipation of the disk or not. 0 for no dissipation and 2 for exponential decay of the initial profile
+
+
+  implicit none
+  
+  open(10, file='disk.in')
+  write(10,'(a)') "!# ------------------------------------------------"
+  write(10,'(a)') "!# Parameter file for various properties of the disk."
+  write(10,'(a)') "!# ------------------------------------------------"
+  write(10,'(a)') "!# blanck line or with spaces will be skipped."
+  write(10,'(a)') "!# In fact, the only lines that matter are non commented lines with a"
+  write(10,'(a)') "!# '=' character to distinguish the identificator and the value(s)"
+  write(10,'(a)') "!# (each value must be separated with at least one space."
+  write(10,'(a)') "!# Line must not be longer than 80 character, but comments can be far"
+  write(10,'(a)') "!# bigger than that, even on line with a parameter to read."
+  write(10,'(a)') ""
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!*      Disk Parameters      *"
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') ""
+  write(10,'(a)') "!# the smoothing length for the planet's potential"
+  write(10,'(a,f4.2)') 'b/h = ',B_OVER_H
+  write(10,'(a)') ""
+  write(10,'(a)') "!# the adiabatic index for the gas equation of state"
+  write(10,'(a,f4.2)') 'adiabatic_index = ', ADIABATIC_INDEX
+  write(10,'(a)') ""
+  write(10,'(a)') "!# the mean molecular weight in mass of a proton"
+  write(10,'(a,f4.2)') 'mean_molecular_weight = ', MEAN_MOLECULAR_WEIGHT
+  write(10,'(a)') ""
+  write(10,'(a)') "!# Boundaries of the disk in AU"
+  write(10,'(a,f6.1," ",f6.1)') 'disk_edges = ',INNER_BOUNDARY_RADIUS, OUTER_BOUNDARY_RADIUS
+  write(10,'(a)') ""
+  write(10,'(a)') "!# number of point to the 1D radial grid of the disk"
+  write(10,'(a,i4)') 'sample = ', NB_SAMPLE_PROFILES
+  write(10,'(a)') ""
+  write(10,'(a)') "!# Here we define the power law for surface density"
+  write(10,'(a)') "!#  sigma(R) = sigma_0 * R^(-sigma_index)"
+  write(10,'(a)') "!#  where sigma_0 is the surface density at (R=1AU) [g/cm^2] and sigma_index"
+  write(10,'(a)') "!#  is the negative slope of the surface density power law (alpha in the paper)"
+  write(10,'(a)') "!# If 'manual' is specified, then the surface density profile will instead be"
+  write(10,'(a)') "!#  read from 'surface_density_profile.dat', two columns, the first being"
+  write(10,'(a)') "!#  orbital distance and the second the surface density in g/cm^2"
+  if (IS_MANUAL_SURFACE_DENSITY) then
+    write(10,'(a)') 'surface_density = manual'
+  else
+    write(10,'(a,f7.1," ",f4.2 )') 'surface_density = ',INITIAL_SIGMA_0, INITIAL_SIGMA_INDEX
+  end if
+  write(10,'(a)') ""
+  write(10,'(a)') "!# The width (in unit of the inner boundary radius) of the region right after"
+  write(10,'(a)') "!# the inner edge where the surface density is damped so"
+  write(10,'(a)') "!# that the surface density at the inner edge will be 0"
+  write(10,'(a,f6.4)') "inner_smoothing_width = ", INNER_SMOOTHING_WIDTH
+  write(10,'(a)') ""
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!*         Viscosity         *"
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!# ['constant', 'alpha', 'alpha_dz'] define the viscosity"
+  write(10,'(a)') "!# constant : constant viscosity (being defined with the 'viscosity' parameter)"
+  write(10,'(a)') "!# alpha : alpha prescription, (alpha being defined with the 'alpha' parameter)"
+  write(10,'(a)') "!# alpha_dz : (alphas are 3 values stored in 'alpha_dz', and separation radius"
+  write(10,'(a)') "!#            are 2 values stored in radius_dz)"
+  write(10,'(a, a)') 'viscosity_type = ', trim(VISCOSITY_TYPE)
+  write(10,'(a)') ""
+  write(10,'(a)') "! When viscosity_type = constant"
+  write(10,'(a)') "!# Constant viscosity of the disk [cm^2/s]"
+  write(10,'(a,es10.1e2)') 'viscosity = ', viscosity
+  write(10,'(a)') ""
+  write(10,'(a)') "! When viscosity_type = alpha"
+  write(10,'(a)') "!# Alpha value used for alpha prescription of the viscosity (adimensioned)"
+  write(10,'(a,es10.1e2)') 'alpha = ', alpha
+  write(10,'(a)') ""
+  write(10,'(a)') "! When viscosity_type = alpha_dz"
+  write(10,'(a)') "!# the alpha value for the alpha-prescription in the 3 regions"
+  write(10,'(a,3(es10.1e2))') "alpha_dz = ", alpha_dz
+  write(10,'(a)') ""
+  write(10,'(a)') "!# the two radius that separate the 3 different alpha-regions"
+  write(10,'(a,2(f6.1))') "radius_dz = ", radius_dz
+  write(10,'(a)') ""
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!*          Opacity          *"
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!# ['bell', 'zhu', 'chambers', 'hure'] define the torque type."
+  write(10,'(a)') "!# bell : from bell & lin 1994"
+  write(10,'(a)') "!# chambers : from chambers 2009"
+  write(10,'(a)') "!# hure : opacity table from (hure, 2000)!# zhu : From zhu & hartmann 2009"
+  write(10,'(a, a)') 'opacity_type = ', trim(OPACITY_TYPE)
+  write(10,'(a)') ""
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!*        Turbulence         *"
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!# (0, False) if there is no turbulence, (1, True) if there is turbulence"
+  if (IS_TURBULENCE) then
+    write(10,'(a)') "is_turbulence = 1"
+  else
+    write(10,'(a)') "is_turbulence = 0"
+  end if
+  write(10,'(a)') ""
+  write(10,'(a)') "!# Adimensioned parameter that control the strength of the resonance."
+  write(10,'(a)') "!# If equal to 0.d0, an auto value, based on the value of the viscosity is used."
+  write(10,'(a,es10.2e2)') 'turbulent_forcing = ', TURBULENT_FORCING_MANUAL
+
+  write(10,'(a)') ""
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!*        Irradiation        *"
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!# (0, False) if there is no stellar irradiation to compute temperature profile"
+  write(10,'(a)') "!, (1, True) if there is stellar irradiation"
+  if (IS_IRRADIATION) then
+    write(10,'(a)') "is_irradiation = 1"
+  else
+    write(10,'(a)') "is_irradiation = 0"
+  end if
+  write(10,'(a)') ""
+  write(10,'(a)') "!# in K, the temperature of the star for irradiation"
+  write(10,'(a,f8.1)') 't_star = ',T_STAR
+  write(10,'(a)') ""
+  write(10,'(a)') "!# in solar radius, the radius of the star for irradiation"
+  write(10,'(a,f7.2)') 'r_star = ',R_STAR/SOLAR_RADIUS
+  write(10,'(a)') ""
+  write(10,'(a)') "!# [0..1] the disk albedo for irradiation"
+  write(10,'(a,f5.3)') 'disk_albedo = ',DISK_ALBEDO
+  write(10,'(a)') ""
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!*    Viscous Dissipation    *"
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!# integer to tell if there is dissipation of the disk or not."
+  write(10,'(a)') "!# 0 for no dissipation"
+  write(10,'(a)') "!# 2 for exponential decay of the initial profile"
+  write(10,'(a)') "!# 3 for mixed exponential decay (viscous then photoevap)"
+  write(10,'(a,i1)') 'dissipation_type = ',DISSIPATION_TYPE
+  write(10,'(a)') ""
+  write(10,'(a)') "! When dissipation = 2"
+  write(10,'(a)') "!# (in years) exponential decay timescale for the dissipation of the disk"
+  if (DISSIPATION_TYPE.ne.2) then
+    write(10,'(a)', advance='no') '!' ! We comment the next line
+  end if
+  write(10,'(a,es10.1e2)') 'disk_exponential_decay = ',TAU_DISSIPATION
+  write(10,'(a)') ""
+  write(10,'(a)') "! When dissipation = 3"
+  write(10,'(a)') "!# (in years) switch time from viscous dissipation to photoevaporation"
+  if (DISSIPATION_TYPE.ne.3) then
+    write(10,'(a)', advance='no') '!' ! We comment the next line
+  end if
+  write(10,'(a,es8.1e2)') 'dissipation_time_switch = ',DISSIPATION_TIME_SWITCH
+  write(10,'(a)') ""
+  write(10,'(a)') "!# (in years) exponential decay for the viscous phase"
+  if (DISSIPATION_TYPE.ne.3) then
+    write(10,'(a)', advance='no') '!' ! We comment the next line
+  end if
+  write(10,'(a,es8.1e2,a)') 'tau_viscous = ',TAU_VISCOUS
+
+  write(10,'(a)') ""
+  write(10,'(a)') "!# (in years) exponential decay for photoevaporation phase"
+  if (DISSIPATION_TYPE.ne.3) then
+    write(10,'(a)', advance='no') '!' ! We comment the next line
+  end if
+  write(10,'(a,es8.1e2,a)') 'tau_photoevap = ',TAU_PHOTOEVAP
+
+  write(10,'(a)') ""
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!*      Migration Torque     *"
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!# ['real', 'mass_dependant', 'linear_indep', 'tanh_indep', 'manual']"
+  write(10,'(a)') "!# real : The torque from (pardekooper et al., 2011)"
+  write(10,'(a)') "!# linear_indep : Mass independant convergence zone with a linear torque profile"
+  write(10,'(a)') "!# tanh_indep : Mass independant convergence zone with a"
+  write(10,'(a)') "!#              tanh torque profile that saturate at a given value"
+  write(10,'(a)') "!# mass_dependant : Mass dependant convergence zone where for a"
+  write(10,'(a)') "!#                  given mass the torque profile is linear with distance"
+  write(10,'(a)') "!# manual : the code will read the file 'torque_profile.dat' that must contain 2"
+  write(10,'(a)') "!# columns, the first being the semi major axis in AU, and the second the torque"
+  write(10,'(a, a)') 'torque_type = ', trim(TORQUE_TYPE)
+  write(10,'(a)') ""
+  write(10,'(a)') "! When torque_type = linear_indep, tanh_indep"
+  write(10,'(a)') "!# [in AU] The position of the convergence zone"
+  write(10,'(a,f6.1)') 'indep_cz = ', INDEP_CZ
+  write(10,'(a)') ""
+  write(10,'(a)') "! When torque_type = tanh_indep"
+  write(10,'(a)') "!# [in Gamma_O] the assymptot for the arctan mass indep convergence zone"
+  write(10,'(a,f6.1)') 'saturation_torque = ', SATURATION_TORQUE
+  write(10,'(a)') ""
+  write(10,'(a)') "! When torque_type = linear_indep, mass_dependant"
+  write(10,'(a)') "!# [in Gamma_O/10 AU] The linear growing factor of the torque with distance"
+  write(10,'(a,f6.1)') 'torque_profile_steepness = ', TORQUE_PROFILE_STEEPNESS
+  write(10,'(a)') ""
+  write(10,'(a)') "! When torque_type = mass_dependant"
+  write(10,'(a)') "!# [in AU] position of the convergence zone for the top mass"
+  write(10,'(a,f6.1)') 'mass_dep_cz_m_max = ', MASS_DEP_CZ_M_MAX
+
+  write(10,'(a)') ""
+  write(10,'(a)') "!# [in AU] position of the convergence zone for the lower mass"
+  write(10,'(a,f6.1)') 'mass_dep_cz_m_min = ', MASS_DEP_CZ_M_MIN
+
+  write(10,'(a)') ""
+  write(10,'(a)') "!# [in Earth mass] top mass for the 'mass_dependant' convergence zone"
+  write(10,'(a,f6.1)') 'mass_dep_m_max = ', MASS_DEP_M_MAX
+
+  write(10,'(a)') ""
+  write(10,'(a)') "!# [in Earth mass] lower mass for the 'mass_dependant' convergence zone"
+  write(10,'(a,f6.1)') 'mass_dep_m_min = ', MASS_DEP_M_MIN
+
+  write(10,*) ''
+  close(10)
+  
+end subroutine write_diskin
+
 subroutine write_disk_properties()
 ! subroutine that write the parameters of the user_module into the file 'disk.out'
 
@@ -419,9 +631,8 @@ subroutine write_disk_properties()
 ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
 ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
 ! viscosity : the viscosity of the disk in [cm^2/s]
-! DISSIPATION_TYPE : integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile
-! INNER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-! OUTER_BOUNDARY_CONDITION : 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
+! DISSIPATION_TYPE : integer to tell if there is dissipation of the disk or not. 0 for no dissipation and 2 for exponential decay of the initial profile
+
 
   use git_infos
 
@@ -532,17 +743,11 @@ subroutine write_disk_properties()
   end if
   write(10,*) ''
   write(10,'(a)') 'Possible values : &
-  &0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile'
+  &0 for no dissipation, 2 for exponential decay of the initial profile, and 3 for mixed dissipation'
   write(10,'(a,i1)', advance='no') 'dissipation of the disk = ',DISSIPATION_TYPE
   select case(DISSIPATION_TYPE)
     case(0) 
       write(10,'(a)') ' : no dissipation of the density profile.'
-    
-    case(1) 
-      write(10,'(a)') ' : viscous dissipation of the surface density profile'
-      write(10,'(a)') "    Possible values : 'open', 'closed'"
-      write(10,'(a, a)') '    inner boundary condition = ', trim(INNER_BOUNDARY_CONDITION)
-      write(10,'(a, a)') '    outer boundary condition = ', trim(OUTER_BOUNDARY_CONDITION)
     
     case(2) 
       write(10,'(a)') ' : Exponential decay of the surface density profile (no modification of the steepness though'
@@ -559,7 +764,7 @@ subroutine write_disk_properties()
       write(10,'(a)') ' /!\'
       write(10,'(a)') 'Warning: The dissipation type cannot be found.'
       write(10,'(a,a,a)') 'Given value : "', DISSIPATION_TYPE, '"'
-      write(10,'(a)') 'Values possible : 0 ; 1 ; 2 ; 3'
+      write(10,'(a)') 'Values possible : 0 ; 2 ; 3'
   end select
   
   write(10,*) ''
@@ -905,7 +1110,6 @@ subroutine init_globals(stellar_mass, time)
   
   if (FIRST_CALL) then
     FIRST_CALL = .False.
-    TAU_DISSIPATION = -1.d0
     
     call read_disk_properties()
     
@@ -1094,8 +1298,10 @@ subroutine init_globals(stellar_mass, time)
     ! We initialize the value even if there is no turbulence declared, because in the tests, 
     ! turbulence is not always declared, even if we test it.
     ! We only initialize the turbulence if there is no value (which would means that the value was defined in the parameter file 'disk.in'
-    if (TURBULENT_FORCING.eq.0.d0) then
+    if (TURBULENT_FORCING_MANUAL.eq.0.d0) then
       call init_turbulence_forcing() 
+    else
+      TURBULENT_FORCING = TURBULENT_FORCING_MANUAL
     end if
     
     if (IS_TURBULENCE) then
@@ -1104,6 +1310,10 @@ subroutine init_globals(stellar_mass, time)
     
     ! we write all the values used by user_module, those given by the user, and the default ones, in 'disk.out' file
     call write_disk_properties() 
+    
+    ! We also write the parameter file to order all the parameters correctly. Unfortunately, this will erase all the comments written
+    ! by the user, but the file will be clean
+    call write_diskin()
     
     ! Here we display various warning for specific modification of the code that must be kept in mind (because this is not the normal behaviour of the code)
 

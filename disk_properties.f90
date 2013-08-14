@@ -50,15 +50,12 @@ module disk_properties
   real(double_precision) :: DISK_ALBEDO = 0.5d0
   
   integer :: DISSIPATION_TYPE = 0 ! integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile. 3 for mixed dissipation, both viscously and with photoevaporation, with two timescales
-  real(double_precision) :: TAU_DISSIPATION = -1.d0 ! the characteristic time for the exponential decay of the surface density (in years) (dissipation_type=2)
+  real(double_precision) :: TAU_DISSIPATION = 1.d6 ! the characteristic time for the exponential decay of the surface density (in years) (dissipation_type=2)
   
   
   real(double_precision) :: DISSIPATION_TIME_SWITCH = 2d6 ! (years) the time at which we switch from viscous to photoevaporation exponential decrease (dissipatio_type=3)
   real(double_precision) :: TAU_VISCOUS = 1.d7 ! (years) the characteristic time for the viscous exponential decay
   real(double_precision) :: TAU_PHOTOEVAP = 3.d4 ! (years) the characteristic time for the photoevaporation exponential decay
-  
-  character(len=80) :: INNER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can fall on the star. If closed, nothing can escape the grid
-  character(len=80) :: OUTER_BOUNDARY_CONDITION = 'closed' ! 'open' or 'closed'. If open, gas can cross the outer edge. If closed, nothing can escape the grid
 
   ! values possible to change the properties of the torque. 'real', 'mass_independant', 'mass_dependant', 'manual'. 
   ! If 'manual' is chosen, the code will read the file 'torque_profile.dat' that must exist and the first column must be semi major axis in AU, and the second one is the torque (in units of \Gamma_0 for the moment)
@@ -73,9 +70,9 @@ module disk_properties
   real(double_precision), dimension(2) :: radius_dz = (/ 1.d0, 10.d0/)! [AU] in case of alpha_dz prescription, the two radius that separate the 3 different alpha regions.
   !------------------------------------------------------------------------------
   logical :: IS_TURBULENCE = .False. ! if there is turbulence or not inside the disk
-  real(double_precision) :: TURBULENT_FORCING = 0.d0 ! the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
+  real(double_precision) :: TURBULENT_FORCING_MANUAL = 0.d0 ! We can specify manually the value of the turbulent forcing in disk.in
+  real(double_precision) :: TURBULENT_FORCING ! the turbulent forcing parameter, which controls the amplitude of the stochastic density perturbations.
   ! the value of the turbulent forcing gamma is related to the alpha parameter of the viscosity prescription by : alpha = 120 (gamma / h)^2 where h is the aspect ratio
-  
   !------------------------------------------------------------------------------
   ! Values for manual torque profiles (mass dependant or independant for instance)
   real(double_precision) :: TORQUE_PROFILE_STEEPNESS = 1.d0 ! increase, in units of Gamma_0 of the torque per 10AU
