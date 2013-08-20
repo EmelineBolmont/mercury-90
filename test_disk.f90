@@ -75,7 +75,7 @@ program test_disk
     call test_alpha_dz()
     call test_density_interpolation()
     call test_retrieval_of_orbital_elements(stellar_mass=stellar_mass)
-!     call test_turbulence_torque(stellar_mass=stellar_mass)
+    call test_turbulence_torque(stellar_mass=stellar_mass)
     call test_turbulence_mode()
     call test_opacity_interpolation() ! subroutine inside the module opacity_hure.f90
 
@@ -95,7 +95,6 @@ program test_disk
     
     ! Test dissipation
     ! EVERYTHING ABOVE MUST BE COMMENTED BEFORE DECOMMENTING 'ONE' AND ONE ALONE OF THESES ONES
-!~     call test_viscous_dissipation(stellar_mass)
 !~     call test_disk_dissipation(stellar_mass)
 !~     call study_influence_of_dissipation_on_torque(stellar_mass)
 
@@ -712,11 +711,12 @@ program test_disk
     time = time + delta_t
     
     call get_turbulence_acceleration(time, p_prop, position, turbulence_acceleration)
-    turbulence_torque(i) = (-sin(theta_planet) * turbulence_acceleration(1) + cos(theta_planet) * turbulence_acceleration(2)) * a 
+    ! Since theta=0, this element is always equal to zero : -sin(theta_planet) * turbulence_acceleration(1) + 
+    turbulence_torque(i) = (cos(theta_planet) * turbulence_acceleration(2)) * a 
     
-    write(*,*) turbulence_acceleration(1:3)
-    write(*,*) theta_planet, radius_planet, position(1:3), velocity(1:3)
-    call print_planet_properties(p_prop)
+!~     write(*,*) turbulence_acceleration(1:3)
+!~     write(*,*) theta_planet, radius_planet, position(1:3), velocity(1:3)
+!~     call print_planet_properties(p_prop)
     
     write(10,*) time, turbulence_torque(i)
   end do

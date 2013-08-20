@@ -198,7 +198,7 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   end if
 
   ! if the mode is too faint, we neglect it, instead of calculating a very small number
-  if (turbulence_mode(k)%wavenumber.le.wavenumber_cutoff) then
+  if ((turbulence_mode(k)%wavenumber.le.wavenumber_cutoff).and.(relative_time.ne.0.d0)) then
     single_prefactor = turbulence_mode(k)%chi * sin(PI * relative_time / turbulence_mode(k)%lifetime) * &
              exp(-((r - turbulence_mode(k)%r) / turbulence_mode(k)%radial_extent)**2)
     argument = turbulence_mode(k)%wavenumber * phi - turbulence_mode(k)%phi - p_prop%omega * relative_time
@@ -222,6 +222,7 @@ subroutine get_turbulence_acceleration(time, p_prop, position, turbulence_accele
   ! To get the turbulence acceleration, we use (28), (29) and (30) of (ogihara, 2007). Some constant calculation is putted in a 
   ! prefactor, some other calculation that depend upon the planet are calculed in another prefactor
 
+  ! Problems might occurs if 'phi' is exactly zero because fortran get this with infinite series of exponentials
   turbulence_acceleration(1) = cos(phi) * force_radius - sin(phi) * force_theta
   turbulence_acceleration(2) = sin(phi) * force_radius + cos(phi) * force_theta
   turbulence_acceleration(3) = 0.d0
