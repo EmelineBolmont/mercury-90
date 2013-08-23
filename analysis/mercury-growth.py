@@ -9,14 +9,14 @@ import os, pdb, autiwa
 import numpy as np
 import sys # to be able to retrieve arguments of the script
 import mercury
+from matplotlib.lines import Line2D
 
-# We get the path toward the binaries
-scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
-binaryPath = os.path.join(scriptFolder, os.path.pardir)
 
+BINARY_FOLDER = '$HOME/bin/mercury'
+FRAME_PREFIX = "frame_growth_"
+OUTPUT_EXTENSION = 'png'
 OUTPUT_FOLDER = "movie"
-NOM_FICHIER_PLOT = "frame_growth"
-OUTPUT_EXTENSION = "png"
+
 
 NB_POINTS = 50 # Number of points for the display or circles
 NB_FRAMES = 2
@@ -70,7 +70,7 @@ if not(os.path.exists(OUTPUT_FOLDER)):
     os.mkdir(OUTPUT_FOLDER)
 
 if isDisk:
-  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "torque_diagram"))
+  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(BINARY_FOLDER, "torque_diagram"))
   if (returncode != 0):
     print(process_stdout)
     print(process_stderr)
@@ -176,6 +176,8 @@ a2 = [ai[-1] for ai in a]
 a1.extend(a2)
 a_max = max(a1) # We get the biggest Semi-major axis of the simulation (either at the beginning or the end of the simulation)
 m_max = max([mi[-1] for mi in m]) # We get the biggest mass of the simulation
+m_min = 0
+a_min = 0
 #~ a_max = 1.5 * CZ_LOCATION
 delta_t = t[0][1] - t[0][0]
 
@@ -213,6 +215,7 @@ else:
 
 
 # on trace les plots
+autiwa.lancer_commande("rm %s/%s*" % (OUTPUT_FOLDER, FRAME_PREFIX)) # We delete the previous frames
 
 delta_t_min = (t_max - t_min) / (float(NB_FRAMES -1.))
 # Number of timestep between each frame
@@ -224,62 +227,74 @@ if (ts_per_frame < 1):
   ts_per_frame = 1
   NB_FRAMES = id_max - id_min +1
 
-
+# We prepare the timeline
+# Might work only if a_min and m_min are equal to 0
+yTimeline = 1.05 * m_max # The y position of the timeline
+xTimeline_min = a_min
+xTimeline_max = 0.7 * a_max
+delta_timeline =  xTimeline_max - xTimeline_min
+timeline_start = Line2D([xTimeline_min, xTimeline_min], [1.03 * m_max, 1.07 * m_max], clip_on=False, color="#000000", linewidth=2)
+timeline_stop = Line2D([xTimeline_max, xTimeline_max], [1.03 * m_max, 1.07 * m_max], clip_on=False, color="#000000", linewidth=2)
 
 # We generate a list of colors
-tmp = autiwa.colorList(nb_planete)
 colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
-angles = [2 * pi / NB_POINTS * i for i in range(NB_POINTS)]
-angles.append(angles[0]) # we want to have a full circle, perfectly closed
-angles = np.array(angles)
-
+fig = pl.figure()
+plot_orbits = fig.add_subplot(1, 1, 1)
+plot = plot_orbits.plot
+MAX_LENGTH = len(str(NB_FRAMES)) # The maximum number of characters needed to display
 
 t_frame = -1.
 for frame_i in range(NB_FRAMES):
   id_time = id_min + int(frame_i * ts_per_frame)
   t_frame = t_min + int(frame_i * ts_per_frame) * delta_t
-  print(t_frame)
   
-  pl.figure(1)
-  pl.clf()
-  # We put a yellow star to display the central body
-  #~ pl.plot(0, 0, '*', color='yellow', markersize=20) 
-  pl.fill([0, 0.004, 0.004, 0, 0], [0, 0, m_max, m_max, 0], color='yellow')
+  percentage = 100. * (frame_i + 1.) / float(NB_FRAMES)
+  sys.stdout.write("%3.0f%% frame %*d : T = %#.2e years\r" % (percentage, MAX_LENGTH, frame_i, t_frame))
+  sys.stdout.flush()
+  
+  plot_orbits.clear()
+  
+  plot_orbits.fill([0, 0.004, 0.004, 0, 0], [0, 0, m_max, m_max, 0], color='yellow')
 
   if (isDisk and (len(contours_a) > 0)):
-    pl.fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
+    plot_orbits.fill(contours_a[0], contours_m[0], facecolor="#ff0000", alpha=0.3, edgecolor='none', label="Outward migration")
     for (c_a, c_m) in zip(contours_a[1:], contours_m[1:]):
-      #~ pl.plot(c_a, c_m, color="#ff0000")
-      pl.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
+      plot_orbits.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
   
-  # We draw circles for each orbit. This part might be used if a delta_t is more than one orbit of a planet.
   min_mass = 0.2 # earth mass
   markersize_prefactor = 4 / (min_mass**0.33)
   for planet in range(nb_planete):
     try:
       
-      pl.plot(a[planet][id_time], m[planet][id_time], 'o', color=colors[planet], markersize=max(int(markersize_prefactor * (m[planet][id_time])**0.33),markersize_prefactor))
+      plot(a[planet][id_time], m[planet][id_time], 'o', color=colors[planet], markersize=max(int(markersize_prefactor * (m[planet][id_time])**0.33),markersize_prefactor))
     except:
       #~ if (frame_i == 9):
         #~ pdb.set_trace()
       pass
-      #~ # The planet has been ejected
-  #~ pl.figtext(0.40, 0.95, "T = "+str(t_frame)+" years", horizontalalignment='left', verticalalignment="top")
-  pl.title("T = %#.2e years" % t_frame)
-  pl.xlabel("a [AU]")
-  pl.ylabel("mass [Earths]")
-  
-  pl.axis('tight')
-  pl.ylim(0, m_max)
-  pl.xlim(0, a_max)
-  #~ pl.legend()
-  pl.grid(True)
-  #~ pdb.set_trace()
-  nom_fichier_plot = "%s_%05d.%s" % (NOM_FICHIER_PLOT, frame_i, OUTPUT_EXTENSION)
-  
-  pl.savefig(os.path.join(OUTPUT_FOLDER, nom_fichier_plot), format=OUTPUT_EXTENSION)
+      #~ # The planet has been ejected  
 
+  plot_orbits.text(xTimeline_max, yTimeline, " %.0f Million years" % (t_max / 1e6), horizontalalignment='left', verticalalignment='center', size=15)
+  xtime_current = t_frame / (t_max - t_min) * delta_timeline
+
+  
+  plot_orbits.add_line(timeline_start)
+  plot_orbits.add_line(timeline_stop)
+  
+  plot_orbits.quiver(xTimeline_min, yTimeline, xtime_current, 0, angles='xy', scale_units="xy", scale=1, clip_on=False)
+  plot_orbits.set_xlabel("Distance [AU]")
+  plot_orbits.set_ylabel("Mass [Earths]")
+  
+  plot_orbits.axis('tight')
+  plot_orbits.set_ylim(m_min, m_max)
+  plot_orbits.set_xlim(a_min, a_max)
+  plot_orbits.grid(True)
+
+  nom_fichier_plot = "%s%0*d" % (FRAME_PREFIX, MAX_LENGTH, frame_i)  
+  fig.savefig(os.path.join(OUTPUT_FOLDER, "%s.%s" % (nom_fichier_plot, OUTPUT_EXTENSION)), format=OUTPUT_EXTENSION)
+
+sys.stdout.write("Movie Completed. Total number of frames : %d\n" % NB_FRAMES)
+sys.stdout.flush()
 #~ dossier_output = "output"
 #~ system("mkdir dossier_output")
 #~ system("cd dossier_output")

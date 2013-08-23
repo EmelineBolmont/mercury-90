@@ -308,8 +308,8 @@ for frame_i in range(1, NB_FRAMES+1):
         pass
         #~ # The planet has been ejected
   plot_orbits.set_title("T = %#.2e years" % t_frame)
-  plot_orbits.set_xlabel("x (in AU)")
-  plot_orbits.set_ylabel("y (in AU)")
+  plot_orbits.set_xlabel("x [AU]")
+  plot_orbits.set_ylabel("y [AU]")
   
   pl.axis('equal')
   if ('plot_range' in vars()):

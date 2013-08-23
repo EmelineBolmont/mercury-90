@@ -422,8 +422,8 @@ for planet in range(nb_planets):
 if (nb_planets<=10):
   plot_a.legend()
 
-plot_a.set_xlabel("time [years]")
-plot_a.set_ylabel("a [AU]")
+plot_a.set_xlabel("Time [years]")
+plot_a.set_ylabel("Semi-major axis [AU]")
 plot_a.grid(True)
 
 plot_res = fig.add_subplot(312, sharex=plot_a)
@@ -452,7 +452,7 @@ for planet in range(nb_planets):
     plot_res.semilogx(time_order[planet], dynamic_order[planet], color=colors[planet], label=planet_names[planet])
   else:
     plot_res.plot(time_order[planet], dynamic_order[planet], color=colors[planet], label=planet_names[planet])
-plot_res.set_xlabel("time [years]")
+plot_res.set_xlabel("Time [years]")
 plot_res.set_ylabel("planet order")
 plot_res.set_ylim((0, nb_planets+1))
 plot_res.yaxis.set_ticks(range(1, nb_planets+1))
@@ -467,8 +467,8 @@ for planet in range(nb_planets):
     plot_e.loglog(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
   else:
     plot_e.semilogy(t[planet], e[planet], color=colors[planet], label=planet_names[planet])
-plot_e.set_xlabel("time [years]")
-plot_e.set_ylabel("eccentricity")
+plot_e.set_xlabel("Time [years]")
+plot_e.set_ylabel("Eccentricity")
 plot_e.grid(True)
 
 myxfmt = ScalarFormatter(useOffset=True)
