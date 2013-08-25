@@ -9,10 +9,18 @@ import os, pdb, autiwa
 import numpy as np
 import sys # to be able to retrieve arguments of the script
 import mercury
+from matplotlib.lines import Line2D
+from matplotlib.patches import Arrow
 
-BINARY_FOLDER = '$HOME/bin/mercury'
-FRAME_PREFIX = "frame_"
+
+# We get the path toward the binaries
+scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
+BINARY_FOLDER = os.path.join(scriptFolder, os.path.pardir)
+
+FRAME_PREFIX = "frame_orbits_"
 OUTPUT_EXTENSION = 'png'
+OUTPUT_FOLDER = "movie"
+
 
 NB_POINTS = 50 # Number of points for the display of circles
 NB_FRAMES = 2
@@ -36,7 +44,7 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " * ref=BIG_0001.aei : to display the orbits in the rotating frame of BIG_0001 planet" + "\n" + \
 " * forceCircle : to display circle instead of real orbits if the output interval is huge\n" + \
 " * tail=%.1f : the size of the tail in number of orbits\n" % NB_P_ORBITS + \
-" * zoom=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
+" * range=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
 " * frames=%d : the number of frames you want" % NB_FRAMES + "\n" + \
 " * ext=%s : The extension for the output files" % OUTPUT_EXTENSION
 
@@ -55,7 +63,7 @@ for arg in sys.argv[1:]:
     NB_FRAMES = int(value)
   elif (key == 'ext'):
     OUTPUT_EXTENSION = value
-  elif (key == 'zoom'):
+  elif (key == 'range'):
     plot_range = float(value)
   elif (key == 'tail'):
     isManualTailSize = True
@@ -74,6 +82,9 @@ for arg in sys.argv[1:]:
 
 if isProblem:
   print(problem_message)
+ 
+if not(os.path.exists(OUTPUT_FOLDER)):
+    os.mkdir(OUTPUT_FOLDER)
 
 if (NB_FRAMES <= 1):
   print("The number of frames cannot be lower than 2")
@@ -121,6 +132,7 @@ m = [] # mass in earth mass
 x = [] # x cartesian coordinate in AU
 y = [] # y cartesian coordinate in AU
 z = [] # z cartesian coordinate in AU
+
 
 
 # On recupere les donnees orbitales
@@ -232,7 +244,7 @@ if isReferenceFrame:
 
 
 # on trace les plots
-autiwa.lancer_commande("rm %s*" % FRAME_PREFIX) # We delete the previous frames
+autiwa.lancer_commande("rm %s/%s*" % (OUTPUT_FOLDER, FRAME_PREFIX)) # We delete the previous frames
 
 delta_t_min = (t_max - t_min) / (float(NB_FRAMES -1.))
 # Number of timestep between each frame
@@ -245,9 +257,24 @@ if (ts_per_frame < 1):
   ts_per_frame = 1
   NB_FRAMES = id_max - id_min +1
 
+# We get boundaries if needed
+if not('plot_range' in vars()):
+	plot_range = 0.
+	
+	tmp_values = []
+	for planet in range(nb_planete):
+		tmp_values.append(-np.min(x[planet])) # minimum value should be negative
+		tmp_values.append(+np.max(x[planet]))
+		tmp_values.append(-np.min(y[planet])) # minimum value should be negative
+		tmp_values.append(+np.max(y[planet]))
+	plot_range = max(tmp_values)
+
+x_min = - plot_range
+x_max = + plot_range
+y_min = - plot_range
+y_max = + plot_range
 
 # We generate a list of colors
-tmp = autiwa.colorList(nb_planete)
 colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
 if not(isTail):
@@ -261,8 +288,16 @@ plot_orbits = fig.add_subplot(1, 1, 1)
 plot = plot_orbits.plot
 MAX_LENGTH = len(str(NB_FRAMES)) # The maximum number of characters needed to display
 
+# We prepare the timeline
+# Might work only if a_min and m_min are equal to 0
+timeline_width = 0.7 # total width of the plot is "1"
+timeline_height = 1.05 # total height of the plot is "1"
+timetick_length = 0.02 # The semi-length of the extremal ticks of the timeline, in units of the total height of the plot
 
-for frame_i in range(1, NB_FRAMES+1):
+timeline_start = Line2D([0., 0.], [timeline_height - timetick_length, timeline_height + timetick_length], clip_on=False, color="#000000", linewidth=2, transform=plot_orbits.transAxes)
+timeline_stop = Line2D([timeline_width, timeline_width], [timeline_height - timetick_length, timeline_height + timetick_length], clip_on=False, color="#000000", linewidth=2, transform=plot_orbits.transAxes)
+
+for frame_i in range(NB_FRAMES):
   id_time = id_min + int(frame_i * ts_per_frame)
   t_frame = t_min + int(frame_i * ts_per_frame) * delta_t
   
@@ -270,8 +305,9 @@ for frame_i in range(1, NB_FRAMES+1):
     id_time = id_max
     t_frame = t_max
   
-  print("frame %*d : T = %#.2e years" % (MAX_LENGTH, frame_i, t_frame))
-  
+  percentage = (frame_i + 1.) / float(NB_FRAMES)
+  sys.stdout.write("%3.0f%% frame %*d : T = %#.2e years\r" % (percentage*100. , MAX_LENGTH, frame_i, t_frame))
+  sys.stdout.flush()
 
   plot_orbits.clear()
 
@@ -290,7 +326,7 @@ for frame_i in range(1, NB_FRAMES+1):
         if (tmp < 0):
           tmp = 0
         idx_tail[planet] = tmp
-        plot(x[planet][idx_tail[planet]:id_time+1], y[planet][idx_tail[planet]:id_time+1], color=colors[planet], label='PLANETE'+str(planet))
+        plot(x[planet][idx_tail[planet]:id_time+1], y[planet][idx_tail[planet]:id_time+1], color=colors[planet])
         plot(x[planet][id_time], y[planet][id_time], 'o', color=colors[planet], markersize=int(5* (m[planet][id_time])**0.33))
       except:
         pass
@@ -302,26 +338,34 @@ for frame_i in range(1, NB_FRAMES+1):
         r = sqrt(x[planet][id_time]**2 + y[planet][id_time]**2)
         x_circ = r * np.cos(angles)
         y_circ = r * np.sin(angles)
-        plot(x_circ, y_circ, color=colors[planet], label='PLANETE'+str(planet))
+        plot(x_circ, y_circ, color=colors[planet])
         plot(x[planet][id_time], y[planet][id_time], 'o', color=colors[planet], markersize=int(5* (m[planet][id_time])**0.33))
       except:
         pass
         #~ # The planet has been ejected
-  plot_orbits.set_title("T = %#.2e years" % t_frame)
+
   plot_orbits.set_xlabel("x [AU]")
   plot_orbits.set_ylabel("y [AU]")
   
-  pl.axis('equal')
-  if ('plot_range' in vars()):
-    # We draw transparent lines to force correct display. Else, he do not necessarily display all the planets...
-    plot([-plot_range, plot_range], [0, 0], alpha=0.)
-    plot([0, 0], [-plot_range, plot_range], alpha=0.)
-    
+  plot_orbits.axis('tight')
+  plot_orbits.set_ylim(y_min, y_max)
+  plot_orbits.set_xlim(x_min, x_max)
+  
+  plot_orbits.text(timeline_width, timeline_height, " %.1f Million years" % (t_max / 1e6), horizontalalignment='left', verticalalignment='center', size=15, transform=plot_orbits.transAxes)
+
+  plot_orbits.add_line(timeline_start)
+  plot_orbits.add_line(timeline_stop)
+  
+  timeline = Line2D([0., percentage * (timeline_width-0.01)], [timeline_height, timeline_height], marker=">", markevery=(1,1), color="#000000", linewidth=3, markersize=10, clip_on=False, transform=plot_orbits.transAxes)
+  plot_orbits.add_line(timeline)
   
   plot_orbits.grid(True)
-  nom_fichier_plot = "%s%0*d" % (FRAME_PREFIX, MAX_LENGTH, frame_i)
   
-  fig.savefig("%s.%s" % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
+  nom_fichier_plot = "%s%0*d" % (FRAME_PREFIX, MAX_LENGTH, frame_i)  
+  fig.savefig(os.path.join(OUTPUT_FOLDER, "%s.%s" % (nom_fichier_plot, OUTPUT_EXTENSION)), format=OUTPUT_EXTENSION)
+  
+sys.stdout.write("Movie Completed. Total number of frames : %d\n" % NB_FRAMES)
+sys.stdout.flush()
 
 if (NB_FRAMES<3):
   pl.show()

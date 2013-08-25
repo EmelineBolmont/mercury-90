@@ -11,8 +11,10 @@ import sys # to be able to retrieve arguments of the script
 import mercury
 from matplotlib.lines import Line2D
 
+# We get the path toward the binaries
+scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
+BINARY_FOLDER = os.path.join(scriptFolder, os.path.pardir)
 
-BINARY_FOLDER = '$HOME/bin/mercury'
 FRAME_PREFIX = "frame_growth_"
 OUTPUT_EXTENSION = 'png'
 OUTPUT_FOLDER = "movie"
@@ -36,6 +38,7 @@ problem_message = "AIM : Display in a m = f(a) diagram, all the planets of the c
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * t_max (the end of the output, in years)" + "\n" + \
 " * t_min (the beginning of the output (in years)" + "\n" + \
+" * range=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
 " * nodisk to avoid torque diagram display" + "\n" + \
 " * frames=1 (the number of frames you want)" + "\n" + \
 " * ext=png (The extension for the output files)" + "\n" + \
@@ -54,6 +57,8 @@ for arg in sys.argv[1:]:
     isDisk = False
   elif (key == 'frames'):
     NB_FRAMES = int(value)
+  elif (key == 'range'):
+    plot_range = float(value)
   elif (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'help'):
@@ -227,15 +232,6 @@ if (ts_per_frame < 1):
   ts_per_frame = 1
   NB_FRAMES = id_max - id_min +1
 
-# We prepare the timeline
-# Might work only if a_min and m_min are equal to 0
-yTimeline = 1.05 * m_max # The y position of the timeline
-xTimeline_min = a_min
-xTimeline_max = 0.7 * a_max
-delta_timeline =  xTimeline_max - xTimeline_min
-timeline_start = Line2D([xTimeline_min, xTimeline_min], [1.03 * m_max, 1.07 * m_max], clip_on=False, color="#000000", linewidth=2)
-timeline_stop = Line2D([xTimeline_max, xTimeline_max], [1.03 * m_max, 1.07 * m_max], clip_on=False, color="#000000", linewidth=2)
-
 # We generate a list of colors
 colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
@@ -244,13 +240,23 @@ plot_orbits = fig.add_subplot(1, 1, 1)
 plot = plot_orbits.plot
 MAX_LENGTH = len(str(NB_FRAMES)) # The maximum number of characters needed to display
 
+# We prepare the timeline
+# Might work only if a_min and m_min are equal to 0
+timeline_width = 0.7 # total width of the plot is "1"
+timeline_height = 1.05 # total height of the plot is "1"
+timetick_length = 0.02 # The semi-length of the extremal ticks of the timeline, in units of the total height of the plot
+
+timeline_start = Line2D([0., 0.], [timeline_height - timetick_length, timeline_height + timetick_length], clip_on=False, color="#000000", linewidth=2, transform=plot_orbits.transAxes)
+timeline_stop = Line2D([timeline_width, timeline_width], [timeline_height - timetick_length, timeline_height + timetick_length], clip_on=False, color="#000000", linewidth=2, transform=plot_orbits.transAxes)
+
+
 t_frame = -1.
 for frame_i in range(NB_FRAMES):
   id_time = id_min + int(frame_i * ts_per_frame)
   t_frame = t_min + int(frame_i * ts_per_frame) * delta_t
   
-  percentage = 100. * (frame_i + 1.) / float(NB_FRAMES)
-  sys.stdout.write("%3.0f%% frame %*d : T = %#.2e years\r" % (percentage, MAX_LENGTH, frame_i, t_frame))
+  percentage = (frame_i + 1.) / float(NB_FRAMES)
+  sys.stdout.write("%3.0f%% frame %*d : T = %#.2e years\r" % (percentage * 100., MAX_LENGTH, frame_i, t_frame))
   sys.stdout.flush()
   
   plot_orbits.clear()
@@ -274,14 +280,14 @@ for frame_i in range(NB_FRAMES):
       pass
       #~ # The planet has been ejected  
 
-  plot_orbits.text(xTimeline_max, yTimeline, " %.0f Million years" % (t_max / 1e6), horizontalalignment='left', verticalalignment='center', size=15)
-  xtime_current = t_frame / (t_max - t_min) * delta_timeline
-
+  plot_orbits.text(timeline_width, timeline_height, " %.1f Million years" % (t_max / 1e6), horizontalalignment='left', verticalalignment='center', size=15, transform=plot_orbits.transAxes)
   
   plot_orbits.add_line(timeline_start)
   plot_orbits.add_line(timeline_stop)
   
-  plot_orbits.quiver(xTimeline_min, yTimeline, xtime_current, 0, angles='xy', scale_units="xy", scale=1, clip_on=False)
+  timeline = Line2D([0., percentage * (timeline_width-0.01)], [timeline_height, timeline_height], marker=">", markevery=(1,1), color="#000000", linewidth=3, markersize=10, clip_on=False, transform=plot_orbits.transAxes)
+  plot_orbits.add_line(timeline)
+  
   plot_orbits.set_xlabel("Distance [AU]")
   plot_orbits.set_ylabel("Mass [Earths]")
   
@@ -295,10 +301,7 @@ for frame_i in range(NB_FRAMES):
 
 sys.stdout.write("Movie Completed. Total number of frames : %d\n" % NB_FRAMES)
 sys.stdout.flush()
-#~ dossier_output = "output"
-#~ system("mkdir dossier_output")
-#~ system("cd dossier_output")
 
-
-pl.show()
+if (NB_FRAMES<3):
+  pl.show()
 
