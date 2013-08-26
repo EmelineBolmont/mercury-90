@@ -226,6 +226,16 @@ else:
   id_min = 0
   t_min = ref_time[0]
 
+if (t_max > 1e6):
+  unit_time = "Million years"
+  time_convertion = 1e6
+elif (t_max > 1e3):
+  unit_time = "Thousand years"
+  time_convertion = 1e3
+else:
+  unit_time = "years"
+  time_convertion = 1.
+
 if isReferenceFrame:
   x_ref = x[ID_reference]
   y_ref = y[ID_reference]
@@ -294,8 +304,10 @@ timeline_width = 0.7 # total width of the plot is "1"
 timeline_height = 1.05 # total height of the plot is "1"
 timetick_length = 0.02 # The semi-length of the extremal ticks of the timeline, in units of the total height of the plot
 
-timeline_start = Line2D([0., 0.], [timeline_height - timetick_length, timeline_height + timetick_length], clip_on=False, color="#000000", linewidth=2, transform=plot_orbits.transAxes)
-timeline_stop = Line2D([timeline_width, timeline_width], [timeline_height - timetick_length, timeline_height + timetick_length], clip_on=False, color="#000000", linewidth=2, transform=plot_orbits.transAxes)
+timeline_start = Line2D([0., 0.], [timeline_height - timetick_length, timeline_height + timetick_length], 
+                        clip_on=False, color="#000000", linewidth=3, transform=plot_orbits.transAxes)
+timeline_stop = Line2D([timeline_width, timeline_width], [timeline_height - timetick_length, timeline_height + timetick_length], 
+                        clip_on=False, color="#000000", linewidth=3, transform=plot_orbits.transAxes)
 
 for frame_i in range(NB_FRAMES):
   id_time = id_min + int(frame_i * ts_per_frame)
@@ -305,7 +317,7 @@ for frame_i in range(NB_FRAMES):
     id_time = id_max
     t_frame = t_max
   
-  percentage = (frame_i + 1.) / float(NB_FRAMES)
+  percentage = (frame_i) / float(NB_FRAMES - 1)
   sys.stdout.write("%3.0f%% frame %*d : T = %#.2e years\r" % (percentage*100. , MAX_LENGTH, frame_i, t_frame))
   sys.stdout.flush()
 
@@ -351,12 +363,16 @@ for frame_i in range(NB_FRAMES):
   plot_orbits.set_ylim(y_min, y_max)
   plot_orbits.set_xlim(x_min, x_max)
   
-  plot_orbits.text(timeline_width, timeline_height, " %.1f Million years" % (t_max / 1e6), horizontalalignment='left', verticalalignment='center', size=15, transform=plot_orbits.transAxes)
-
+  plot_orbits.text(timeline_width, timeline_height, " %.1f %s" % (t_frame / time_convertion, unit_time), 
+                   horizontalalignment='left', verticalalignment='center', 
+                   size=15, transform=plot_orbits.transAxes)
+  
   plot_orbits.add_line(timeline_start)
   plot_orbits.add_line(timeline_stop)
   
-  timeline = Line2D([0., percentage * (timeline_width-0.01)], [timeline_height, timeline_height], marker=">", markevery=(1,1), color="#000000", linewidth=3, markersize=10, clip_on=False, transform=plot_orbits.transAxes)
+  timeline = Line2D([0., percentage * (timeline_width-0.01)], [timeline_height, timeline_height], 
+                    marker=">", markevery=(1,1), color="#000000", linewidth=3, markersize=10, 
+                    clip_on=False, transform=plot_orbits.transAxes)
   plot_orbits.add_line(timeline)
   
   plot_orbits.grid(True)
