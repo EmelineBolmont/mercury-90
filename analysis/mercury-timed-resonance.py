@@ -63,27 +63,31 @@ ANGLE_CENTER_VALUE = 90.
 # We get arguments from the script
 isLog = False
 isProblem = False
-problem_message = "AIM : Display all the resonances of all the planet during the simulation" + "\n" + \
+problem_message = "AIM : Display all the resonances of all the planets during the simulation" + "\n" + \
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * t_max : the end of the output (in years)" + "\n" + \
-" * t_min : the beginning of the output (in years)" + "\n" + \
-" * instants : (%d) the number of points in time where to search for resonances between planets" % NB_MEASUREMENTS + "\n" + \
-" * sample : (%d) The number of successive points used to test a resonance" % NB_LAST_POINTS + "\n" + \
-" * log : (%s) time will be displayed in log" % isLog + "\n" + \
-" * ext=png : (%s) The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
-" * help : display this current message"
+" * tmax=1e6 : the end of the output [years]" + "\n" + \
+" * tmin=1e3 : the beginning of the output [years]" + "\n" + \
+" * instants=%d : the number of points in time where to search for resonances between planets" % NB_MEASUREMENTS + "\n" + \
+" * sample=%d : The number of successive points used to test a resonance" % NB_LAST_POINTS + "\n" + \
+" * log : time will be displayed in log" + "\n" + \
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : display a little help message on HOW to use various options"
+
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 for arg in sys.argv[1:]:
   try:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 'ext'):
     OUTPUT_EXTENSION = value
-  elif (key == 't_min'):
+  elif (key == 'tmin'):
     t_min = float(value)
-  elif (key == 't_max'):
+  elif (key == 'tmax'):
     t_max = float(value)
   elif (key == 'instants'):
     NB_MEASUREMENTS = int(value)
@@ -91,15 +95,19 @@ for arg in sys.argv[1:]:
     NB_LAST_POINTS = int(value)
   elif (key == 'log'):
     isLog = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'help'):
-    print(problem_message)
-    exit()
+    isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
   print(problem_message)
+  exit()
 
 ####################
 # we get the name of the files for all the planets in the system
@@ -393,11 +401,12 @@ sys.stdout.flush()
 # We generate a list of colors
 colors = [ '#'+li for li in autiwa.colorList(nb_planets)]
 
-fig = pl.figure(1)
+fig = pl.figure()
 pl.clf()
 fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
-# On crée des sous plots. Pour subplot(311), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
-plot_a = fig.add_subplot(311)
+# We create subplots. add_subplot(2, 3, 1) means we have 2 lines, 3 columns, 
+# and that the active plot is the first, starting from top left (for 6 plots in total)
+plot_a = fig.add_subplot(3, 1, 1)
 for planet in range(nb_planets):
   sys.stdout.write("Generating graphics  %5.1f %%                          \r" % ((planet+1) * 25. / float(nb_planets)))
   sys.stdout.flush()
@@ -426,7 +435,7 @@ plot_a.set_xlabel("Time [years]")
 plot_a.set_ylabel("Semi-major axis [AU]")
 plot_a.grid(True)
 
-plot_res = fig.add_subplot(312, sharex=plot_a)
+plot_res = fig.add_subplot(3, 1, 2, sharex=plot_a)
 for planet in range(nb_planets):
   sys.stdout.write("Generating graphics  %5.1f %%                          \r" % (40.+(planet+1) * 20. / float(nb_planets)))
   sys.stdout.flush()
@@ -459,7 +468,7 @@ plot_res.yaxis.set_ticks(range(1, nb_planets+1))
 plot_res.yaxis.set_ticklabels(range(1, nb_planets+1))
 plot_res.grid(True)
 
-plot_e = fig.add_subplot(313, sharex=plot_a)
+plot_e = fig.add_subplot(3, 1, 3, sharex=plot_a)
 for planet in range(nb_planets):
   sys.stdout.write("Generating graphics  %5.1f %%                          \r" % ((planet+1) * 25. / float(nb_planets)))
   sys.stdout.flush()

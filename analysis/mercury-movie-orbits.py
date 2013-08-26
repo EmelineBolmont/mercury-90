@@ -37,10 +37,11 @@ isReferenceFrame = False # If we display orbits in the reference frame of a give
 # We get arguments from the script
 
 isProblem = False
-problem_message = "The script can take various arguments :" + "\n" + \
+problem_message = "AIM : Movie in the (x,y) plane. Possibility to be in a rotating frame" + "\n" + \
+"The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * t_max=1e3 : the end of the output (in years)" + "\n" + \
-" * t_min=1e4 : the beginning of the output (in years)" + "\n" + \
+" * tmax=1e6 : the end of the output [years]" + "\n" + \
+" * tmin=1e3 : the beginning of the output [years]" + "\n" + \
 " * ref=BIG_0001.aei : to display the orbits in the rotating frame of BIG_0001 planet" + "\n" + \
 " * forceCircle : to display circle instead of real orbits if the output interval is huge\n" + \
 " * tail=%.1f : the size of the tail in number of orbits\n" % NB_P_ORBITS + \
@@ -48,17 +49,22 @@ problem_message = "The script can take various arguments :" + "\n" + \
 " * frames=%d : the number of frames you want" % NB_FRAMES + "\n" + \
 " * ext=%s : The extension for the output files" % OUTPUT_EXTENSION
 
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
+
 for arg in sys.argv[1:]:
   try:
     (key, value) = arg.split("=")
   except:
     key = arg
-  if (key == 't_min'):
+    value = None
+  if (key == 'tmin'):
     t_min = float(value)
-  elif (key == 't_max'):
+  elif (key == 'tmax'):
     t_max = float(value)
   elif (key == 'forceCircle'):
     isTail = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'frames'):
     NB_FRAMES = int(value)
   elif (key == 'ext'):
@@ -74,14 +80,16 @@ for arg in sys.argv[1:]:
     if not(isManualTailSize):
       NB_P_ORBITS = 20
   elif (key == 'help'):
-    print(problem_message)
-    exit()
+    isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
   print(problem_message)
+  exit()
  
 if not(os.path.exists(OUTPUT_FOLDER)):
     os.mkdir(OUTPUT_FOLDER)

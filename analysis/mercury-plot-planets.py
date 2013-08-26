@@ -28,19 +28,20 @@ OUTPUT_EXTENSION = 'png' # default value in bitmap, because vectoriel can take t
 isAM = False # If activated, only display semi major axis and masses
 
 isProblem = False
-problem_message = "The script can take various arguments :" + "\n" + \
+problem_message = "AIM : Display evolution of mass, semi-major axis, eccentricity and inclination with time" + "\n" + \
+"The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * t_max : the end of the output (in years)" + "\n" + \
-" * t_min : the beginning of the output (in years)" + "\n" + \
+" * tmax=1e6 : the end of the output [years]" + "\n" + \
+" * tmin=1e3 : the beginning of the output [years]" + "\n" + \
 " * log : time will be displayed in log" + "\n" + \
 " * alog : distance will be displayed in log" + "\n" + \
 " * xs : will display the semiwitdh of the horseshoe region in the eccentricity plot" + "\n" + \
 " * am : will only display semi-major axis and masses" + "\n" + \
-" * help : display a little help message on HOW to use various options" + "\n" + \
-" * ext=png : [%s] The extension for the output files" % OUTPUT_EXTENSION
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : display a little help message on HOW to use various options"
 
-isValue = False # Set to True if someone define 'key=value' when key doesn't need a parameter
-value_message = "/!\ Warning: You defined a value ('key=value') to some parameters that to do need them ('key')"
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -49,42 +50,39 @@ for arg in sys.argv[1:]:
   except:
     key = arg
     value = None
-  if (key == 't_min'):
+  if (key == 'tmin'):
     t_min = float(value) / 1e6
-  elif (key == 't_max'):
+  elif (key == 'tmax'):
     t_max = float(value) / 1e6
   elif (key == 'log'):
     isLog = True
     if (value != None):
-      print("/!\ Warning: %s doesn't need any value.")
+      print(value_message % (key, key, value))
   elif (key == 'alog'):
     isaLog = True
     if (value != None):
-      print("/!\ Warning: %s doesn't need any value.")
+      print(value_message % (key, key, value))
   elif (key == 'xs'):
     isXS = True
     if (value != None):
-      print("/!\ Warning: %s doesn't need any value.")
+      print(value_message % (key, key, value))
   elif (key == 'am'):
     isAM = True
     if (value != None):
-      print("/!\ Warning: %s doesn't need any value.")
+      print(value_message % (key, key, value))
   elif (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'help'):
     isProblem = True
     if (value != None):
-      print("/!\ Warning: %s doesn't need any value.")
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
   print(problem_message)
   exit()
-
-if isValue:
-  print(value_message)
 
 ####################
 # On récupère la liste des fichiers planètes.aei

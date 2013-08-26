@@ -33,28 +33,33 @@ isDisk = True
 
 #~ pdb.set_trace()
 isProblem = False
-problem_message = "AIM : Display in a m = f(a) diagram, all the planets of the current mercury simulation" + "\n" + \
+problem_message = "AIM : Movie in a m = f(a) diagram, to see how the planet grow" + "\n" + \
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * t_max (the end of the output, in years)" + "\n" + \
-" * t_min (the beginning of the output (in years)" + "\n" + \
+" * tmax=1e6 : the end of the output [years]" + "\n" + \
+" * tmin=1e3 : the beginning of the output [years]" + "\n" + \
 " * range=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
-" * nodisk to avoid torque diagram display" + "\n" + \
-" * frames=1 (the number of frames you want)" + "\n" + \
-" * ext=png (The extension for the output files)" + "\n" + \
-" * help : display this current message"
+" * nodisk : to avoid torque diagram display" + "\n" + \
+" * frames=1 : the number of frames you want" + "\n" + \
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : display a little help message on HOW to use various options"
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 for arg in sys.argv[1:]:
   try:
     (key, value) = arg.split("=")
   except:
     key = arg
-  if (key == 't_min'):
+    value = None
+  if (key == 'tmin'):
     t_min = float(value)
-  elif (key == 't_max'):
+  elif (key == 'tmax'):
     t_max = float(value)
   elif (key == 'nodisk'):
     isDisk = False
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'frames'):
     NB_FRAMES = int(value)
   elif (key == 'range'):
@@ -62,14 +67,16 @@ for arg in sys.argv[1:]:
   elif (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'help'):
-    print(problem_message)
-    exit()
+    isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
   print(problem_message)
+  exit()
 
 if not(os.path.exists(OUTPUT_FOLDER)):
     os.mkdir(OUTPUT_FOLDER)

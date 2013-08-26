@@ -170,7 +170,7 @@ isAll = False # to have info on all the running simulations
 isProblem = False
 isVerbose = True
 
-problem_message = " This script will show information about a running simulation" + "\n" + \
+problem_message = "AIM : This script will show information about a running simulation" + "\n" + \
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * all : to have info on all the running simulations"  + "\n" + \
@@ -181,21 +181,30 @@ problem_message = " This script will show information about a running simulation
 "> mercury-follow-up.py all"  + "\n" + \
 "> mercury-follow-up.py all verbose"
 
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
+
 # We get arguments from the script
 for arg in sys.argv[1:]:
   try:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 'help'):
     isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'all'):
     isAll = True
     isVerbose = False
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'verbose'):
     isVerbose = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:

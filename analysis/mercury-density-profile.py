@@ -8,9 +8,41 @@
 import pylab as pl
 import numpy as np
 from matplotlib.ticker import FormatStrFormatter
-
+import sys
 
 OUTPUT_EXTENSION = 'pdf'
+
+####################
+# We read OPTIONS
+####################
+isProblem = False
+problem_message = "AIM : Plot the density profile of the simulation." + "\n" + \
+"The script can take various arguments :" + "\n" + \
+"(no spaces between the key and the values, only separated by '=')" + "\n" + \
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : Display a little help message on HOW to use various options"
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
+
+for arg in sys.argv[1:]:
+  try:
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+    value = None
+  if (key == 'ext'):
+    OUTPUT_EXTENSION = value
+  elif (key == 'help'):
+    isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
+  else:
+    print("the key '%s' does not match" % key)
+    isProblem = True
+
+if isProblem:
+  print(problem_message)
+  exit()
 
 ####################
 # On lit, pour chaque planète, le contenu du fichier et on stocke les variables qui nous intéressent.
@@ -24,8 +56,8 @@ OUTPUT_EXTENSION = 'pdf'
 
 # on trace les plots
 
-fig = pl.figure(1)
-plot_density = fig.add_subplot(211)
+fig = pl.figure()
+plot_density = fig.add_subplot(2, 1, 1)
 plot_density.loglog(a, sigma)
 
 plot_density.set_xlabel("Semi-major axis [AU]")
@@ -38,7 +70,7 @@ plot_density.yaxis.grid(True, which='major', color='#222222', linestyle='-')
 plot_density.xaxis.grid(True, which='minor', color='#888888', linestyle='-')
 plot_density.yaxis.grid(True, which='minor', color='#888888', linestyle='-')
 
-plot_idx = fig.add_subplot(212, sharex=plot_density)
+plot_idx = fig.add_subplot(2, 1, 2, sharex=plot_density)
 plot_idx.semilogx(a, index)
 
 plot_idx.set_xlabel("Semi-major axis [AU]")

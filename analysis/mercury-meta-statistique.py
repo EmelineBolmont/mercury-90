@@ -87,6 +87,7 @@ liste_meta_simu = [dir for dir in os.listdir(".") if os.path.isdir(dir)]
 autiwa.suppr_dossier(liste_meta_simu,dossier_suppr)
 liste_meta_simu.sort()
 
+liste_meta_simu = ["fiducials", "no_damping"]
 #~ liste_meta_simu = ["low_mass", "fiducials", "high_mass"]
 #~ liste_meta_simu = ["150_05", "fiducials", "600_05"]
 #~ labels = {}
@@ -116,10 +117,13 @@ colors = [ '#'+li for li in autiwa.colorList(nb_meta_simu, exclude=['000000'])]
 # We read options, if any
 
 isProblem = False
-problem_message = "The script can take various arguments :" + "\n" + \
+problem_message = "AIM : Statistical comparison between several meta-simulations (each sub-folder of the CWD)" + "\n" + \
+"The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
-" * ext=png : [%s] The extension for the output files" % OUTPUT_EXTENSION
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -127,22 +131,15 @@ for arg in sys.argv[1:]:
     (key, value) = arg.split("=")
   except:
     key = arg
-  if (key == 't_min'):
-    t_min = float(value)
-  elif (key == 't_max'):
-    t_max = float(value)
-  elif (key == 'log'):
-    isLog = True
-  elif (key == 'alog'):
-    isaLog = True
-  elif (key == 'xs'):
-    isXS = True
-  elif (key == 'ext'):
+    value = None
+  if (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'help'):
     isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:

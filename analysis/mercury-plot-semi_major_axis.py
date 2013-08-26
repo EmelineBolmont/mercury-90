@@ -23,16 +23,20 @@ isLog = False # We set the false option before. Because if not, we will erase th
 OUTPUT_EXTENSION = 'pdf' # default value
 
 isProblem = False
-problem_message = "The script can take various arguments :" + "\n" + \
+problem_message = "AIM : Display evolution of semi-major axis with time" + "\n" + \
+"The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * t_max (the end of the output, in years)" + "\n" + \
-" * t_min (the beginning of the output (in years)" + "\n" + \
-" * a_max (the end of the y axis, in AU)" + "\n" + \
-" * a_min (the beginning of the y axis, in AU)" + "\n" + \
-" * alog : [%s] distance will be displayed in log" % isaLog + "\n" + \
-" * log : [%s] time will be displayed in log" % isLog + "\n" + \
-" * help (display a little help message on HOW to use various options" + "\n" + \
-" * ext=png : [%s] The extension for the output files" % OUTPUT_EXTENSION
+" * tmax=1e6 : the end of the output [years]" + "\n" + \
+" * tmin=1e3 : the beginning of the output [years]" + "\n" + \
+" * amax=5 : minimum distance for the plot [AU]" + "\n" + \
+" * amin=1 : maximum distance for the plot [AU]" + "\n" + \
+" * alog : distance will be displayed in log" + "\n" + \
+" * log : time will be displayed in log" + "\n" + \
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : display a little help message on HOW to use various options"
+
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -40,24 +44,31 @@ for arg in sys.argv[1:]:
     (key, value) = arg.split("=")
   except:
     key = arg
-  if (key == 't_min'):
+    value = None
+  if (key == 'tmin'):
     t_min = float(value)
-  elif (key == 't_max'):
+  elif (key == 'tmax'):
     t_max = float(value)
-  elif (key == 'a_min'):
+  elif (key == 'amin'):
     a_min = float(value)
-  elif (key == 'a_max'):
+  elif (key == 'amax'):
     a_max = float(value)
   elif (key == 'log'):
     isLog = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'alog'):
     isaLog = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'help'):
     isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
@@ -158,7 +169,7 @@ colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
 # on trace les plots
 
-fig = pl.figure(1)
+fig = pl.figure()
 pl.clf()
 plot_a = fig.add_subplot(111)
 
@@ -175,7 +186,7 @@ for planet in range(nb_planete):
   plot(t[planet][id_min:id_max+1], a[planet][id_min:id_max+1], color=colors[planet], label='PLANETE'+str(planet))
   plot(t[planet][id_min:id_max+1], q[planet][id_min:id_max+1], color=colors[planet])
   plot(t[planet][id_min:id_max+1], Q[planet][id_min:id_max+1], color=colors[planet])
-pl.xlim([t_min, t_max])
+plot_a.set_xlim([t_min, t_max])
 
 ylims = list(pl.ylim())
 # We get the index for the a_max value
@@ -186,11 +197,10 @@ if ('a_max' in locals()):
 if ('a_min' in locals()):
   ylims[0] = a_min
   
-pl.ylim(ylims)
-pl.xlabel("time [years]")
-pl.ylabel("Semi-major axis [AU]")
-#~ pl.legend()
-pl.grid(True)
+plot_a.set_ylim(ylims)
+plot_a.set_xlabel("Time [years]")
+plot_a.set_ylabel("Semi-major axis [AU]")
+plot_a.grid(True)
 
 myxfmt = ScalarFormatter(useOffset=True, useMathText=True)
 myxfmt._set_offset(1e5)
@@ -206,9 +216,8 @@ plot_a.xaxis.set_major_formatter(myxfmt)
 #~ system("mkdir dossier_output")
 #~ system("cd dossier_output")
 
-pl.figure(1)
 nom_fichier_plot = "semi_major_axis"
-pl.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
+fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()
 

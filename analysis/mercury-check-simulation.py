@@ -44,7 +44,8 @@ showFinished = False # By default, We only show problems.
 WALLTIME = None
 
 isProblem = False
-problem_message = "The script can take various arguments :" + "\n" + \
+problem_message = "AIM : Check if the status of the mercury simulations in the CWD (either sub or sub-sub folder --- meta option)" + "\n" + \
+"The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
 " * meta : option that will consider the current folder as a folder that list meta simulation instead of simple simulations" + "\n" + \
@@ -64,37 +65,56 @@ problem_message = "The script can take various arguments :" + "\n" + \
 ">mercury-check-simulation.py finished meta walltime=48\n" + \
 "will show the simulations that are finished. "
 
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
+
 # We get arguments from the script
 for arg in sys.argv[1:]:
   try:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 'restart'):
     isRestart = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'force-start'):
     isForcedStart = True
     isRestart = False
     isContinue = False
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'force-continue'):
     isForcedContinue = True
     isForcedStart = False
     isRestart = False
     isContinue = False
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'continue'):
     isContinue = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'verbose'):
     isVerbose = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'meta'):
     isMeta = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'walltime'):
     WALLTIME = int(value)
   elif (key == 'finished'):
     showFinished = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'help'):
     isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:

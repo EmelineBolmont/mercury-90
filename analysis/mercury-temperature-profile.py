@@ -15,31 +15,40 @@ OUTPUT_EXTENSION = 'pdf'
 
 isProblem = False
 isExtraPlots = False
-problem_message = "AIM : Display in a m = f(a) diagram, all the planets of the current mercury simulation" + "\n" + \
+problem_message = "AIM : Display the temperature profile of the disk" + "\n" + \
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * extra : display in addition thermal diffusivity and optical depth" + "\n" + \
-" * ext=%s (The extension for the output files)" % OUTPUT_EXTENSION + "\n" + \
-" * help : display this current message"
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : display a little help message on HOW to use various options"
+
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
+
 
 for arg in sys.argv[1:]:
   try:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'extra'):
     isExtraPlots = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'help'):
-    print(problem_message)
-    exit()
+    isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
   print(problem_message)
+  exit()
 
 
 
@@ -57,8 +66,9 @@ if isProblem:
 
 # on trace les plots
 fig = pl.figure()
-# On crée des sous plots. Pour subplot(231), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
-plot_T = fig.add_subplot(211)
+# We create subplots. add_subplot(2, 3, 1) means we have 2 lines, 3 columns, 
+# and that the active plot is the first, starting from top left (for 6 plots in total)
+plot_T = fig.add_subplot(2, 1, 1)
 plot_T.loglog(a, T, label="my profile")
 
 (inner_edge, outer_edge) = plot_T.get_xlim()
@@ -79,7 +89,7 @@ plot_T.yaxis.grid(True, which='major', color='#222222', linestyle='-')
 plot_T.xaxis.grid(True, which='minor', color='#888888', linestyle='-')
 plot_T.yaxis.grid(True, which='minor', color='#888888', linestyle='-')
 
-plot_idx = fig.add_subplot(212, sharex=plot_T)
+plot_idx = fig.add_subplot(2, 1, 2, sharex=plot_T)
 plot_idx.semilogx(a, index)
 
 plot_idx.set_xlabel("Semi-major axis [AU]")
@@ -94,7 +104,8 @@ plot_T.xaxis.set_major_formatter(myxfmt)
 
 if isExtraPlots:
   fig2 = pl.figure()
-  # On crÃ©e des sous plots. Pour subplot(231), Ã§a signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
+  # We create subplots. add_subplot(2, 3, 1) means we have 2 lines, 3 columns, 
+  # and that the active plot is the first, starting from top left (for 6 plots in total)
   plot_chi = fig2.add_subplot(211)
   plot_chi.loglog(a, chi, label="my profile")
 

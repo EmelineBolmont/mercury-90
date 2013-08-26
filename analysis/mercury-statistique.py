@@ -129,19 +129,24 @@ dossier_suppr = ["output", "test", "reference_simu"]
 #  `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .'
 #    `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'
 
+####################
+# We read OPTIONS
+####################
 isLog = False # We set the false option before. Because if not, we will erase the 'true' with other option that are not log, and 
 # thus will lead to be in the else and put log to false.
 isStat = False # Will create a global element.out file that contains all the surviving planets
 noPlot = False # to stop the program before plotting (usefull when using with remote distant SSH, the plots might slow down the connexion)
 
 isProblem = False
-problem_message = "The script can take various arguments :" + "\n" + \
+problem_message = "AIM : Display statistical properties of one meta-simulation (the CWD)" + "\n" + \
+"The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * nodisk : to avoid torque diagram display" + "\n" + \
 " * noplot : to skip plotting statistics, then the script will only serve to check some properties and do 'prints'" + "\n" + \
 " * stat :  to create a global 'element.out' file that contain all the surviving planets" + "\n" + \
-" * help : display a little help message on HOW to use various options" + "\n" + \
-" * ext=pdf : The extension for the output files"
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : display a little help message on HOW to use various options"
+
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -149,24 +154,32 @@ for arg in sys.argv[1:]:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'nodisk'):
     isDisk = False
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'noplot'):
     noPlot = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'stat'):
     isStat = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'help'):
     isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
   print(problem_message)
   exit()
-
 
 # We go in each sub folder of the current working directory
 

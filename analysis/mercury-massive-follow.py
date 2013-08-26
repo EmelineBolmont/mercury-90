@@ -45,32 +45,42 @@ problem_message = "AIM : Display in a m = f(a) diagram, the most massive planets
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * nodisk : avoid torque diagram display" + "\n" + \
 " * log : display distances in log" + "\n" + \
-" * massive : (%d) the number of most massive planets to be tracked" % MAX_COLORED + "\n" + \
-" * ext=png (The extension for the output files)" + "\n" + \
-" * help : display this current message"
+" * massive=%d : the number of most massive planets to be tracked" % MAX_COLORED + "\n" + \
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : display a little help message on HOW to use various options"
+
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 for arg in sys.argv[1:]:
   try:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'nodisk'):
     isDisk = False
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'log'):
     isLogX = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'massive'):
     MAX_COLORED = int(value)
   elif (key == 'help'):
-    print(problem_message)
-    exit()
+    isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
   print(problem_message)
+  exit()
 
 if isDisk:
   (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "torque_diagram"))
@@ -111,7 +121,8 @@ if isDisk:
 
 # We prepare the plots
 fig = pl.figure()
-# On crée des sous plots. Pour subplot(231), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
+# We create subplots. add_subplot(2, 3, 1) means we have 2 lines, 3 columns, 
+# and that the active plot is the first, starting from top left (for 6 plots in total)
 plot_AM = fig.add_subplot(1, 1, 1)
 plot_AM.set_xlabel("Semi-major axis [AU]")
 plot_AM.set_ylabel("mass [Earths]")

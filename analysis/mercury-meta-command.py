@@ -78,8 +78,8 @@ problem_message = "AIM : Provide a simple script that can execute " + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
 " * meta : option that will consider the current folder as a folder that list meta simulation instead of simple simulations" + "\n" + \
-" * nb_outputs=nb : [%i] To define the number of outputs we want for .aei files. Only used by the command 'change_nb_outputs'" % NB_OUTPUTS + "\n" + \
-" * extension=nb : [%f] The time of extension for the simulations (in years). Only used by the command 'extend'" % EXTENSION + "\n" + \
+" * nb_outputs=%i : To define the number of outputs we want for .aei files. Only used by the command 'change_nb_outputs'" % NB_OUTPUTS + "\n" + \
+" * extension=%.1g : The time of extension for the simulations (in years). Only used by the command 'extend'" % EXTENSION + "\n" + \
 " * command=commandName : option that will consider the current folder as a folder that list meta simulation instead of simple simulations" + "\n" + \
 "   list of commands :\n" + \
 COMMANDS_HELP + \
@@ -90,6 +90,7 @@ COMMANDS_HELP + \
 " .aei files. The option nb_outputs here will not we used, since only " + "\n" + \
 " the command '' use it to modify element.in "+ "\n"
 
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -97,18 +98,23 @@ for arg in sys.argv[1:]:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 'command'):
     commandKey = value
   elif (key == 'meta'):
     isMeta = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'nb_outputs'):
     NB_OUTPUTS = int(value)
   elif (key == 'extension'):
     EXTENSION = float(value)
   elif (key == 'help'):
     isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if (commandKey == None):

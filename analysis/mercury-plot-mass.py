@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # v0.1
-# Pour lire des fichiers de simulations, récupérer les caractéristiques
-# des planètes qu'il reste en fin de simulation et les écrire dans un 
-# seul fichier que le script "analyse_simu" va lire
 
 from math import *
 import pylab as pl
@@ -15,17 +12,44 @@ import sys # to be able to retrieve arguments of the script
 ###############################################
 ## Beginning of the program
 ###############################################
+OUTPUT_EXTENSION = "pdf"
 
-# We get arguments from the script
-try:
-  #~ pdb.set_trace()
-  if (len(sys.argv)-1) == 1:
-    t_max = float(sys.argv[1])
-  elif (len(sys.argv)-1) == 2:
-    t_min = float(sys.argv[1])
-    t_max = float(sys.argv[2])
-except:
-  print("If one argument, then this must be the max time for output. \nIf two arguments, the first is t_min and the second is t_max")
+####################
+# We read OPTIONS
+####################
+isProblem = False
+problem_message = "AIM : Plot the evolution of mass with time, of all planets in the simulation" + "\n" + \
+"The script can take various arguments :" + "\n" + \
+"(no spaces between the key and the values, only separated by '=')" + "\n" + \
+" * tmax=1e6 : the end of the output [years]" + "\n" + \
+" * tmin=1e3 : the beginning of the output [years]" + "\n" + \
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : Display a little help message on HOW to use various options"
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
+
+for arg in sys.argv[1:]:
+  try:
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+    value = None
+  if (key == 'ext'):
+    OUTPUT_EXTENSION = value
+  elif (key == 'tmin'):
+    t_min = float(value)
+  elif (key == 'tmax'):
+    t_max = float(value)
+  elif (key == 'help'):
+    isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
+  else:
+    print("the key '%s' does not match" % key)
+    isProblem = True
+
+if isProblem:
+  print(problem_message)
   exit()
 
 ####################
@@ -103,26 +127,18 @@ else:
   
 # on trace les plots
 
-pl.figure(1)
-pl.clf()
+fig = pl.figure()
+plot_m = fig.add_subplot(1, 1, 1)
 
 for planet in range(nb_planete):
-  pl.plot(t[planet][id_min:id_max], m[planet][id_min:id_max], label='PLANETE'+str(planet))
-pl.xlim([t_min, t_max])
-pl.xlabel(unicode("time [years]",'utf-8'))
-pl.ylabel(unicode("mass [mt]",'utf-8'))
-#~ pl.legend()
-pl.grid(True)
+  plot_m.plot(t[planet][id_min:id_max], m[planet][id_min:id_max])
+plot_m.set_xlim([t_min, t_max])
+plot_m.set_xlabel("Time [years]")
+plot_m.set_ylabel("Mass [Earths]")
+plot_m.grid(True)
 
-
-#~ dossier_output = "output"
-#~ system("mkdir dossier_output")
-#~ system("cd dossier_output")
-
-pl.figure(1)
 nom_fichier_plot = "mass"
-#~ pl.savefig(nom_fichier_plot+'.svg', format='svg')
-pl.savefig(nom_fichier_plot+'.pdf', format='pdf')
+fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()
 

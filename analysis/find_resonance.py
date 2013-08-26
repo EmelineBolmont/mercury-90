@@ -38,13 +38,16 @@ uncertainty = 0.01 * float(UNCERTAINTY)
 
 isProblem = False
 isElement = False
-problem_message = "The script can take various arguments :" + "\n" + \
+problem_message = "AIM : Search for possible resonance between planets. By default 2, but can search for resonances for a whole mercury system" + "\n" + \
+"The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * ratio (the period ratio we want to investigate)" + "\n" + \
-" * uncertainty (the tolerance over the period ratio in % ; the default is "+str(UNCERTAINTY)+"%)" + "\n" + \
-" * element (to get possible resonances for every planet in an element.out file" + "\n" + \
-" * help (to get this message)" + "\n" + \
+" * ratio=1.3 : the period ratio we want to investigate" + "\n" + \
+" * uncertainty=%.0f : (percentage) the tolerance over the period ratio in %" % UNCERTAINTY + "\n" + \
+" * element : to get possible resonances for every planet in an element.out file" + "\n" + \
+" * help : to get this message" + "\n" + \
 "\nExample: find_resonances.py ratio=1.2"
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -52,16 +55,21 @@ for arg in sys.argv[1:]:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 'ratio'):
     periodRatio = float(value)
   elif (key == 'uncertainty'):
     uncertainty = 0.01 * float(value)
   elif (key == 'element'):
     isElement = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'help'):
     isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if ('periodRatio' not in vars().keys()):

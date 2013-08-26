@@ -6,10 +6,45 @@
 
 import pylab as pl
 import numpy as np
+import sys
 
 AU = 1.4959787e13 # AU = astronomical unit in [cm]
 day = 86400 # s
 
+OUTPUT_EXTENSION = "pdf"
+
+####################
+# We read OPTIONS
+####################
+isProblem = False
+problem_message = "AIM : Plot the optical depth profile of the simulation." + "\n" + \
+"The script can take various arguments :" + "\n" + \
+"(no spaces between the key and the values, only separated by '=')" + "\n" + \
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : Display a little help message on HOW to use various options"
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
+
+for arg in sys.argv[1:]:
+  try:
+    (key, value) = arg.split("=")
+  except:
+    key = arg
+    value = None
+  if (key == 'ext'):
+    OUTPUT_EXTENSION = value
+  elif (key == 'help'):
+    isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
+  else:
+    print("the key '%s' does not match" % key)
+    isProblem = True
+
+if isProblem:
+  print(problem_message)
+  exit()
+  
 ####################
 # On lit, pour chaque planète, le contenu du fichier et on stocke les variables qui nous intéressent.
 ####################
@@ -66,23 +101,25 @@ tableau.close()
 
 # on trace les plots
 
-pl.figure(1)
+fig = pl.figure()
 pl.clf()
-# On crée des sous plots. Pour subplot(231), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
-pl.subplot(211)
-pl.semilogy(a, tau)
+# We create subplots. add_subplot(2, 3, 1) means we have 2 lines, 3 columns, 
+# and that the active plot is the first, starting from top left (for 6 plots in total)
+plot_tau = fig.add_subplot(2, 1, 1)
+plot_tau.semilogy(a, tau)
 
-pl.xlabel(unicode("a [UA]",'utf-8'))
-pl.ylabel(unicode("optical depth",'utf-8'))
+plot_tau.set_xlabel("Semi-major axis [AU]")
+plot_tau.set_ylabel("Optical depth")
 #~ pl.legend()
-pl.grid(True)
+plot_tau.grid(True)
 
-pl.subplot(212)
-pl.plot(a, chi)
+plot_chi = fig.add_subplot(2, 1, 2)
 
-pl.xlabel(unicode("a [UA]",'utf-8'))
-pl.ylabel(unicode("thermal diffusivity [cm^2/s]",'utf-8'))
-pl.grid(True)
+plot_chi.plot(a, chi)
+
+plot_chi.set_xlabel("Semi-major axis [AU]")
+plot_chi.set_ylabel("Thermal diffusivity [cm^2/s]")
+plot_chi.grid(True)
 
 
 
@@ -90,10 +127,8 @@ pl.grid(True)
 #~ system("mkdir dossier_output")
 #~ system("cd dossier_output")
 
-pl.figure(1)
 nom_fichier_plot = "optical_depth_profile"
-#~ pl.savefig(nom_fichier_plot+'.svg', format='svg')
-pl.savefig(nom_fichier_plot+'.pdf', format='pdf')
+fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()
 

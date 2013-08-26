@@ -32,18 +32,22 @@ isaLog = False # Put a semilog in 'a' if true
 OUTPUT_EXTENSION = "pdf" # default extension for outputs
 
 isProblem = False
-problem_message = "The script can take various arguments :" + "\n" + \
+problem_message = "AIM : Show how the most massive planet collide and grow in time" + "\n" + \
+"The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * t_max : the end of the output, (in years)" + "\n" + \
-" * t_min : the beginning of the output (in years)" + "\n" + \
-" * amax : minimum distance for the plot [AU]" + "\n" + \
-" * amin : maximum distance for the plot [AU]" + "\n" + \
-" * massive : (%d) the number of most massive planets to be tracked" % MAX_COLORED + "\n" + \
-" * ecc : (%s) If we want to display eccentricity" % isEcc + "\n" + \
-" * log : (%s) time (x-axis) will be displayed in log" % isLog + "\n" + \
-" * alog : (%s) Semi-major axis (y-axis) will be displayed in log" % isaLog + "\n" + \
-" * help : display a little help message on HOW to use various options" + "\n" + \
-" * ext=pdf : (%s) The extension for the output files" % OUTPUT_EXTENSION
+" * tmax=1e6 : the end of the output [years]" + "\n" + \
+" * tmin=1e3 : the beginning of the output [years]" + "\n" + \
+" * amax=5 : minimum distance for the plot [AU]" + "\n" + \
+" * amin=1 : maximum distance for the plot [AU]" + "\n" + \
+" * massive=%d : the number of most massive planets to be tracked" % MAX_COLORED + "\n" + \
+" * ecc : If we want to display eccentricity" + "\n" + \
+" * log : time (x-axis) will be displayed in log" + "\n" + \
+" * alog : Semi-major axis (y-axis) will be displayed in log" + "\n" + \
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : display a little help message on HOW to use various options"
+
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -51,9 +55,10 @@ for arg in sys.argv[1:]:
     (key, value) = arg.split("=")
   except:
     key = arg
-  if (key == 't_min'):
+    value = None
+  if (key == 'tmin'):
     t_min = float(value) / 1e6
-  elif (key == 't_max'):
+  elif (key == 'tmax'):
     t_max = float(value) / 1e6
   elif (key == 'amin'):
     amin = float(value)
@@ -63,16 +68,24 @@ for arg in sys.argv[1:]:
     MAX_COLORED = int(value)
   elif (key == 'ecc'):
     isEcc = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'log'):
     isLog = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'alog'):
     isaLog = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'help'):
     isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
@@ -219,11 +232,12 @@ for line in reversed(lines):
 
 # on trace les plots
 
-fig = pl.figure(1)
+fig = pl.figure()
 pl.clf()
 fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
 
-# On crée des sous plots. Pour subplot(321), ça signifie qu'on a 2 lignes, 3 colonnes, et que le subplot courant est le 1e. (on a donc 2*3=6 plots en tout)
+# We create subplots. add_subplot(2, 3, 1) means we have 2 lines, 3 columns, 
+# and that the active plot is the first, starting from top left (for 6 plots in total)
 if (isEcc == True):
   plot_a = fig.add_subplot(3, 1, 1)
 else:

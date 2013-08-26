@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # v1.0.1.1
-# Pour générer des histogrammes sur plusieurs simulations afin de 
-# regarder les caractéristiques statistiques des planètes qui restent.
+# To study the initial properties of the planets generated. Must be in a meta-simulation folder.
 
 
 # TODO
@@ -35,11 +34,9 @@ resonances = ["3:2", "4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 #######################
 # On prépare les plots
 #######################
+OUTPUT_EXTENSION = 'pdf' # default value
 
-# Extensions voulues pour les fichiers de sortie
-extensions = ['pdf', 'png', 'svg']
 
-dossier_plot = "output"
 
 #######################
 # On définit et prépare les différents dossiers 
@@ -232,22 +229,18 @@ print("\t Computing Plots")
 os.chdir(rep_exec)
 nb_bins = 50
 
-nom_fichier_plot = [] # list of names for each plot
-
-nom_fichier_plot1 = "histogram_initial_a"
-pl.figure(1)
-pl.xlabel(unicode("a [AU]",'utf-8'))
-pl.ylabel("density of probability")
-pl.hist(a, 50, histtype='step')
+fig = pl.figure()
+hist_a = fig.add_subplot(1, 1, 1)
+hist_a.set_xlabel("Semi-major axis [AU]")
+hist_a.set_ylabel("Distribution")
+hist_a.hist(a, 50, histtype='step')
 
 
 
 
 print("Storing plots")
-for ext in [".png", ".pdf"]:
-  pl.figure(1)
-  pl.savefig(nom_fichier_plot1+ext)
-  
+nom_fichier_plot = "histogram_initial_a"
+fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)  
   
 pl.show()
 

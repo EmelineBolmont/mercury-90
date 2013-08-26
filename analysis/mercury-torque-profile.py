@@ -16,10 +16,13 @@ isLog = False # We set the false option before. Because if not, we will erase th
 OUTPUT_EXTENSION = 'pdf' # default value
 
 isProblem = False
-problem_message = "The script can take various arguments :" + "\n" + \
+problem_message = "AIM : Display the manual torque profile if there is one" + "\n" + \
+"The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * help (display a little help message on HOW to use various options" + "\n" + \
-" * ext=png (The extension for the output files)"
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : display a little help message on HOW to use various options"
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
@@ -27,12 +30,15 @@ for arg in sys.argv[1:]:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'help'):
     isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
@@ -79,26 +85,18 @@ tableau.close()
 
 # on trace les plots
 
-pl.figure(1)
-pl.clf()
-pl.plot(distance, torque)
+fig = pl.figure()
+plot_torque = fig.add_subplot(1, 1, 1)
+plot_torque.plot(distance, torque)
 
-pl.xlabel("Distance [AU]")
-pl.ylabel("Torque [Gamma/Gamma_0]")
-pl.autoscale(axis='x', tight=True)
+plot_torque.set_xlabel("Distance [AU]")
+plot_torque.set_ylabel("Torque [Gamma/Gamma_0]")
+plot_torque.autoscale(axis='x', tight=True)
 #~ pl.legend()
-pl.grid(True)
+plot_torque.grid(True)
 
-
-
-#~ dossier_output = "output"
-#~ system("mkdir dossier_output")
-#~ system("cd dossier_output")
-
-pl.figure(1)
 nom_fichier_plot = "torque_profile"
-#~ pl.savefig(nom_fichier_plot+'.svg', format='svg')
-pl.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
+fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()
 

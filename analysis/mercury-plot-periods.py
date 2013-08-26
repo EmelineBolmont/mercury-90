@@ -46,37 +46,45 @@ OUTPUT_EXTENSION = "png"
 # We get arguments from the script
 isLog = False
 isProblem = False
-problem_message = "AIM : Display all the resonances of all the planet during the simulation" + "\n" + \
+problem_message = "AIM : Display perio ratio between consecutive planets during their evolution (emphasize resonances)" + "\n" + \
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * t_max : the end of the output (in years)" + "\n" + \
-" * t_min : the beginning of the output (in years)" + "\n" + \
-" * log : (%s) time will be displayed in log" % isLog + "\n" + \
-" * ext=png : (%s) The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
-" * help : display this current message"
+" * tmax=1e6 : the end of the output [years]" + "\n" + \
+" * tmin=1e3 : the beginning of the output [years]" + "\n" + \
+" * log : time will be displayed in log" + "\n" + \
+" * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
+" * help : display a little help message on HOW to use various options"
+
+
+value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
 
 for arg in sys.argv[1:]:
   try:
     (key, value) = arg.split("=")
   except:
     key = arg
+    value = None
   if (key == 'ext'):
     OUTPUT_EXTENSION = value
-  elif (key == 't_min'):
+  elif (key == 'tmin'):
     t_min = float(value)
-  elif (key == 't_max'):
+  elif (key == 'tmax'):
     t_max = float(value)
   elif (key == 'log'):
     isLog = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'help'):
-    print(problem_message)
-    exit()
+    isProblem = True
+    if (value != None):
+      print(value_message % (key, key, value))
   else:
-    print("the key '"+key+"' does not match")
+    print("the key '%s' does not match" % key)
     isProblem = True
 
 if isProblem:
   print(problem_message)
+  exit()
 
 ####################
 # we get the name of the files for all the planets in the system
@@ -232,10 +240,10 @@ for planet in range(nb_planets-1):
 # We generate a list of colors
 colors = [ '#'+li for li in autiwa.colorList(nb_planets)]
 
-fig = pl.figure(1)
+fig = pl.figure()
 pl.clf()
 
-plot_a = fig.add_subplot(311)
+plot_a = fig.add_subplot(3, 1, 1)
 q = [ai * (1 - ei) for (ai, ei) in zip(a, e)]
 Q = [ai * (1 + ei) for (ai, ei) in zip(a, e)]
 for planet in range(nb_planets):
@@ -243,29 +251,29 @@ for planet in range(nb_planets):
   plot_a.plot(t[planet], q[planet], color=colors[planet])
   plot_a.plot(t[planet], Q[planet], color=colors[planet])
 
-plot_a.set_xlabel("time [years]")
-plot_a.set_ylabel("a [AU]")
+plot_a.set_xlabel("Time [years]")
+plot_a.set_ylabel("Semi-major axis [AU]")
 plot_a.grid(True)
 plot_a.legend()
 
-plot_PR = fig.add_subplot(312, sharex=plot_a)
+plot_PR = fig.add_subplot(3, 1, 2, sharex=plot_a)
 for planet in range(nb_planets-1):
   plot_PR.plot(ref_time, period_ratio[planet], color=colors[planet], label="period ratio %i/%i" % (planet+2, planet+1))
 
-plot_PR.set_xlabel("time [years]")
-plot_PR.set_ylabel("period ratio")
+plot_PR.set_xlabel("Time [years]")
+plot_PR.set_ylabel("Period ratio")
 plot_PR.grid(True)
 plot_PR.legend()
 plot_PR.set_ylim(ymin=0.95)
 
-plot_order = fig.add_subplot(313, sharex=plot_a)
+plot_order = fig.add_subplot(3, 1, 3, sharex=plot_a)
 for planet in range(nb_planets):
   try:
     plot_order.plot(t[planet], planet_rank[planet][pl_min[planet]:pl_max[planet]], color=colors[planet])
   except:
     pdb.set_trace()
 
-plot_order.set_xlabel("time [years]")
+plot_order.set_xlabel("Time [years]")
 plot_order.set_ylabel("order")
 plot_order.grid(True)
 
