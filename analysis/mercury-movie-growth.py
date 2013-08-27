@@ -38,7 +38,8 @@ problem_message = "AIM : Movie in a m = f(a) diagram, to see how the planet grow
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * tmax=1e6 : the end of the output [years]" + "\n" + \
 " * tmin=1e3 : the beginning of the output [years]" + "\n" + \
-" * range=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
+" * amax=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
+" * mmax=1. : The maximum mass displayed (Earths)" + "\n" + \
 " * nodisk : to avoid torque diagram display" + "\n" + \
 " * frames=1 : the number of frames you want" + "\n" + \
 " * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
@@ -62,8 +63,10 @@ for arg in sys.argv[1:]:
       print(value_message % (key, key, value))
   elif (key == 'frames'):
     NB_FRAMES = int(value)
-  elif (key == 'range'):
-    plot_range = float(value)
+  elif (key == 'amax'):
+    a_max = float(value)
+  elif (key == 'mmax'):
+    m_max = float(value)
   elif (key == 'ext'):
     OUTPUT_EXTENSION = value
   elif (key == 'help'):
@@ -183,11 +186,15 @@ for planete in range(nb_planete):
     
   tableau.close()
 
-a1 = [ai[0] for ai in a]
-a2 = [ai[-1] for ai in a]
-a1.extend(a2)
-a_max = max(a1) # We get the biggest Semi-major axis of the simulation (either at the beginning or the end of the simulation)
-m_max = max([mi[-1] for mi in m]) # We get the biggest mass of the simulation
+if not('a_max' in locals()):
+  a1 = [ai[0] for ai in a]
+  a2 = [ai[-1] for ai in a]
+  a1.extend(a2)
+  a_max = max(a1) # We get the biggest Semi-major axis of the simulation (either at the beginning or the end of the simulation)
+
+if not('m_max' in locals()):
+  m_max = max([mi[-1] for mi in m]) # We get the biggest mass of the simulation
+
 m_min = 0
 a_min = 0
 #~ a_max = 1.5 * CZ_LOCATION
