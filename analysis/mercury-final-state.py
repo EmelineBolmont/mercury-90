@@ -90,6 +90,10 @@ if isProblem:
   print(problem_message)
   exit()
 
+# We force not to show disk if there is no disk implemented
+if not(os.path.isfile("disk.in")):
+  isDisk = False
+
 if isDisk:
   (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "torque_diagram"))
   if (returncode != 0):
@@ -367,7 +371,6 @@ for planet in range(0, nb_planets-1):
 # We display the resonances
 
 # We generate a list of colors
-tmp = autiwa.colorList(nb_planets)
 colors = [ '#'+li for li in autiwa.colorList(nb_planets)]
 
 min_mass = 0.2 # earth mass

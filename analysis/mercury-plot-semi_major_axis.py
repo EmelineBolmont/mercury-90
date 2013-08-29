@@ -164,7 +164,6 @@ else:
   t_min = ref_time[0]
 
 # We generate a list of colors
-tmp = autiwa.colorList(nb_planete)
 colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
 # on trace les plots
@@ -206,15 +205,7 @@ myxfmt = ScalarFormatter(useOffset=True, useMathText=True)
 myxfmt._set_offset(1e5)
 myxfmt.set_scientific(True)
 myxfmt.set_powerlimits((-3, 3)) 
-#~ myxfmt = FormatStrFormatter('%0.0e')
-#~ pdb.set_trace()
-#~ plot_a.xaxis.set_major_formatter(FormatStrFormatter('%0.0e'))
-#~ pdb.set_trace()
 plot_a.xaxis.set_major_formatter(myxfmt)
-
-#~ dossier_output = "output"
-#~ system("mkdir dossier_output")
-#~ system("cd dossier_output")
 
 nom_fichier_plot = "semi_major_axis"
 fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)

@@ -226,12 +226,7 @@ for line in reversed(lines):
     colors[ind_of_planet[lost_planet]] = colors[ind_of_planet[remaining_planet]]
     lost_in_collisions.append(ind_of_planet[lost_planet])
 
-#~ # We generate a list of colors
-#~ tmp = autiwa.colorList(nb_planete)
-#~ colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
-
 # on trace les plots
-
 fig = pl.figure()
 pl.clf()
 fig.subplots_adjust(left=0.12, bottom=0.1, right=0.96, top=0.95, wspace=0.26, hspace=0.26)
