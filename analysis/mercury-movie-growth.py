@@ -10,6 +10,7 @@ import numpy as np
 import sys # to be able to retrieve arguments of the script
 import mercury
 from matplotlib.lines import Line2D
+from matplotlib.ticker import FormatStrFormatter
 
 # We get the path toward the binaries
 scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
@@ -30,6 +31,7 @@ NB_FRAMES = 2
 
 # We get arguments from the script
 isDisk = True
+isLog = False
 
 #~ pdb.set_trace()
 isProblem = False
@@ -40,6 +42,7 @@ problem_message = "AIM : Movie in a m = f(a) diagram, to see how the planet grow
 " * tmin=1e3 : the beginning of the output [years]" + "\n" + \
 " * amax=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
 " * mmax=1. : The maximum mass displayed (Earths)" + "\n" + \
+" * alog : Display distances in log scale" + "\n" + \
 " * nodisk : to avoid torque diagram display" + "\n" + \
 " * frames=1 : the number of frames you want" + "\n" + \
 " * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
@@ -59,6 +62,10 @@ for arg in sys.argv[1:]:
     t_max = float(value)
   elif (key == 'nodisk'):
     isDisk = False
+    if (value != None):
+      print(value_message % (key, key, value))
+  elif (key == 'alog'):
+    isLog = True
     if (value != None):
       print(value_message % (key, key, value))
   elif (key == 'frames'):
@@ -196,7 +203,11 @@ if not('m_max' in locals()):
   m_max = max([mi[-1] for mi in m]) # We get the biggest mass of the simulation
 
 m_min = 0
-a_min = 0
+
+if isLog:
+  a_min = 0.01
+else:
+  a_min = 0
 #~ a_max = 1.5 * CZ_LOCATION
 delta_t = t[0][1] - t[0][0]
 
@@ -261,6 +272,9 @@ colors = [ '#'+li for li in autiwa.colorList(nb_planete)]
 
 fig = pl.figure()
 plot_orbits = fig.add_subplot(1, 1, 1)
+
+distance_format = FormatStrFormatter("%.3g")
+
 plot = plot_orbits.plot
 MAX_LENGTH = len(str(NB_FRAMES)) # The maximum number of characters needed to display
 
@@ -322,10 +336,15 @@ for frame_i in range(NB_FRAMES):
   plot_orbits.set_xlabel("Distance [AU]")
   plot_orbits.set_ylabel("Mass [Earths]")
   
-  plot_orbits.axis('tight')
+  #~ plot_orbits.axis('tight')
   plot_orbits.set_ylim(m_min, m_max)
   plot_orbits.set_xlim(a_min, a_max)
   plot_orbits.grid(True)
+  
+  if isLog:
+    plot_orbits.set_xscale("log")
+  plot_orbits.xaxis.set_major_formatter(distance_format)
+  
 
   nom_fichier_plot = "%s%0*d" % (FRAME_PREFIX, MAX_LENGTH, frame_i)  
   fig.savefig(os.path.join(OUTPUT_FOLDER, "%s.%s" % (nom_fichier_plot, OUTPUT_EXTENSION)), format=OUTPUT_EXTENSION)
