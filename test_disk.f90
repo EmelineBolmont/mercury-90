@@ -1994,20 +1994,20 @@ program test_disk
     ! mass sample
     integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass_min = 0.1d0 * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 20.d0 * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 40.d0 * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     real(double_precision), dimension(nb_mass) :: mass, mass_earth
     
     ! orbital distance sample
     integer, parameter :: nb_points = 100
     real(double_precision), parameter :: a_min = 0.01d0
-    real(double_precision), parameter :: a_max = 5.d0
+    real(double_precision), parameter :: a_max = 20.d0
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points - 1.d0)
     real(double_precision), dimension(nb_points) :: a
     
     ! time sample
     real(double_precision), parameter :: t_min = 0.d0 ! time in years
-    real(double_precision), parameter :: t_max = 2.7d6 ! time in years
+    real(double_precision), parameter :: t_max = 3d6 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
     
