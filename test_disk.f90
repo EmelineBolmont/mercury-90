@@ -2017,7 +2017,7 @@ program test_disk
     
     ! time sample
     real(double_precision), parameter :: t_min = 0.d0 ! time in years
-    real(double_precision), parameter :: t_max = 3.d6 ! time in years
+    real(double_precision), parameter :: t_max = 5.d6 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
     
@@ -2204,10 +2204,10 @@ program test_disk
     write(11,*) 'set pm3d map'
     write(11,*) 'set pm3d explicit'
     write(11,*) 'set palette rgbformulae 22,13,-31'
-    write(11,*) 'set mxtics 10'
+!~     write(11,*) 'set mxtics 10'
     write(11,*) 'set logscale x'
-    write(11,*) 'set mytics 5'
-    write(11,*) 'set grid xtics ytics mxtics mytics linetype -1, linetype 0'
+!~     write(11,*) 'set mytics 5'
+!~     write(11,*) 'set grid xtics ytics mxtics mytics linetype -1, linetype 0'
     write(11,*) 'set xrange [', a_min, ':', a_max, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
     write(11,*) 'set cbrange [', torque_min, ':', torque_max, ']'
