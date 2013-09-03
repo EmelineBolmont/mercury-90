@@ -91,12 +91,11 @@ program test_disk
     call study_optical_depth_profile()
     call study_thermal_diffusivity_profile()
     call study_scaleheight_profile()
-!    call study_dissipation_at_one_location()
+    call study_dissipation_at_one_location(stellar_mass=stellar_mass)
     
     ! Test dissipation
-    ! EVERYTHING ABOVE MUST BE COMMENTED BEFORE DECOMMENTING 'ONE' AND ONE ALONE OF THESES ONES
 !~     call test_disk_dissipation(stellar_mass)
-!~     call study_influence_of_dissipation_on_torque(stellar_mass)
+!~     call study_influence_of_dissipation_on_torque(stellar_mass=stellar_mass)
 
     
   end subroutine unitary_tests
@@ -546,6 +545,7 @@ program test_disk
     
     write(*,*) '  Force Initialisation again'
     FIRST_CALL = .true.
+    call system("rm disk.out") ! To avoid considering a restart of the code
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
     
     if (DISSIPATION_TYPE.eq.0) then
@@ -1835,7 +1835,7 @@ program test_disk
     
   end subroutine study_torques
   
-  subroutine study_dissipation_at_one_location()
+  subroutine study_dissipation_at_one_location(stellar_mass)
   ! Plot the evolution of the surface density at one location through the dissipation
   
   ! Global parameters
@@ -1850,6 +1850,9 @@ program test_disk
     ! Return: evolution of density at one location with time
     
   implicit none
+  
+    real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
+
     
     ! time sample
     real(double_precision), parameter :: t_min = 0.d0 ! time in years
@@ -1869,6 +1872,11 @@ program test_disk
     integer :: error ! to retrieve error, especially during allocations
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of surface density at one location through dissipation'
+    
+    write(*,*) '  Force Initialisation again'
+    FIRST_CALL = .true.
+    call system("rm disk.out") ! To avoid considering a restart of the code
+    call init_globals(stellar_mass=stellar_mass, time=0.d0)
     
     if (DISSIPATION_TYPE.eq.0) then
       write (error_unit,*) 'Error: There is currently no dissipation (dissipation_type=0) which is a problem to test it.'
@@ -1994,20 +2002,21 @@ program test_disk
     ! mass sample
     integer, parameter :: nb_mass = 150
     real(double_precision), parameter :: mass_min = 0.1d0 * EARTH_MASS
-    real(double_precision), parameter :: mass_max = 40.d0 * EARTH_MASS
+    real(double_precision), parameter :: mass_max = 55.d0 * EARTH_MASS
     real(double_precision), parameter :: mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     real(double_precision), dimension(nb_mass) :: mass, mass_earth
     
     ! orbital distance sample
     integer, parameter :: nb_points = 100
-    real(double_precision), parameter :: a_min = 0.01d0
-    real(double_precision), parameter :: a_max = 20.d0
-    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points - 1.d0)
+    real(double_precision), parameter :: a_min = 0.1d0
+    real(double_precision), parameter :: a_max = 40.d0
+!~     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_points - 1.d0)
+    real(double_precision), parameter :: a_step = (a_max / a_min)**(1.d0 / (dfloat(nb_points)))
     real(double_precision), dimension(nb_points) :: a
     
     ! time sample
     real(double_precision), parameter :: t_min = 0.d0 ! time in years
-    real(double_precision), parameter :: t_max = 3d6 ! time in years
+    real(double_precision), parameter :: t_max = 0.1d6 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
     
@@ -2036,6 +2045,7 @@ program test_disk
     
     write(*,*) '  Force Initialisation again'
     FIRST_CALL = .true.
+    call system("rm disk.out") ! To avoid considering a restart of the code
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
     
     if (DISSIPATION_TYPE.eq.0) then
@@ -2075,8 +2085,13 @@ program test_disk
 !~     call system("rm dissipation/*")
     
     do i=1, nb_points ! loop on the position
-      a(i) = a_min + a_step * (i-1)
+!~       a(i) = a_min + a_step * (i - 1)
+      a(i) = a_min * a_step**(i - 1)
     end do
+    a(1) = a_min
+    a(nb_points) = a_max
+    
+    
     
     do j=1,nb_mass
       mass(j) = (mass_min + mass_step * (j - 1.d0)) * K2
@@ -2084,10 +2099,10 @@ program test_disk
     end do
     
     ! We want to know the max size of the time display in order to have a nice display, with filled spaces in the final plots
-    write(output_time, '(i0)') int(t_max)
+    write(output_time, '(i0)') int(t_max / 1e6)
     time_length = len(trim(output_time))
-    write(time_format, *) '(i',time_length,'.',time_length,')'
-    write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years ; k = ",i5)'
+    write(time_format, '(a,i1,a,i1,a)') '(f',time_length+2,'.',1,')'
+    write(purcent_format, *) '(', trim(time_format), ',"/",',trim(time_format),'," Myr ; k = ",i5)'
     
     !------------------------------------------------------------------------------
     k = 1
@@ -2122,7 +2137,7 @@ program test_disk
         deallocate(time_temp, stat=error)
       end if
       
-      write(*,purcent_format) int(time(k)/365.25d0), int(t_max), k
+      write(*,purcent_format) time(k)/(365.25d0 * 1e6), t_max / 1e6, k
       
       if (.not.disk_effect) then
         next_dissipation_step = t_max * 365.d0
@@ -2177,17 +2192,19 @@ program test_disk
       k = k + 1 ! We increment the integer that point the time in the array (since it's a 'while' and not a 'do' loop)
     end do
     
+    
     nb_time = k - 1 ! since for the last step with incremented 'k' by one step that is beyond the limit.
     !------------------------------------------------------------------------------
     ! Gnuplot script to output the frames of the total torque
     open(11, file="dissipation/total_torque.gnuplot")
-    write(11,*) "set terminal pngcairo enhanced size 1024, 768 font ',20'"
+    write(11,*) "set terminal pngcairo crop enhanced size 1200, 1000 font ',20'"
     write(11,*) 'set xlabel "Semi-major axis (AU)"'
     write(11,*) 'set ylabel "Planet mass (m_{earth})" center'
     write(11,*) 'set pm3d map'
     write(11,*) 'set pm3d explicit'
     write(11,*) 'set palette rgbformulae 22,13,-31'
-    write(11,*) 'set mxtics 5'
+    write(11,*) 'set mxtics 10'
+    write(11,*) 'set logscale x'
     write(11,*) 'set mytics 5'
     write(11,*) 'set grid xtics ytics mxtics mytics linetype -1, linetype 0'
     write(11,*) 'set xrange [', a_min, ':', a_max, ']'
@@ -2198,10 +2215,10 @@ program test_disk
       write(filename_torque, '(a,i0.5,a)') 'total_torque',k,'.dat'
       write(filename_contour, '(a,i0.5,a)') 'contour',k,'.dat'
       write(output_torque, '(a,i0.5,a)') 'total_torque',k,'.png'
-      write(output_time, time_format) int(time(k)/365.25)
+      write(output_time, time_format) time(k)/(365.25 * 1e6)
       
       write(11,*) "set output '",trim(output_torque),"'"
-      write(11,*) 'set title "total torque {/Symbol G}_{tot}/{/Symbol G}_0 T=', trim(output_time),' years"'
+      write(11,*) 'set title "Total torque {/Symbol G}_{tot}/{/Symbol G}_0 T=', trim(output_time),' Myr"'
       write(11,*) "splot '",trim(filename_torque),"' with pm3d notitle, \"
       write(11,*) "      '",trim(filename_contour),"' with line linetype -1 linewidth 2 title '{/Symbol G}=0'"
       write(11,*) ""
@@ -2226,10 +2243,10 @@ program test_disk
     do k=1, nb_time
       write(filename_temperature, '(a,i0.5,a)') 'temperature',k,'.dat'
       write(output_temperature, '(a,i0.5,a)') 'temperature',k,'.png'
-      write(output_time, time_format) int(time(k)/365.25)
+      write(output_time, time_format) time(k)/(365.25 * 1e6)
       
       write(12,*) "set output '",trim(output_temperature),"'"
-      write(12,*) 'set title "T=', trim(output_time),' years"'
+      write(12,*) 'set title "T=', trim(output_time),' Myr"'
       write(12,*) "plot '",trim(filename_temperature_ref),"' using 1:2 with lines linetype 0 linewidth 3 notitle, \"
       write(12,*) "     '",trim(filename_temperature),"' using 1:2 with lines  linetype 1 notitle"
       write(12,*) ""
@@ -2250,10 +2267,10 @@ program test_disk
     do k=1, nb_time
       write(filename_density, '(a,i0.5,a)') 'surface_density',k,'.dat'
       write(output_density, '(a,i0.5,a)') 'surface_density',k,'.png'
-      write(output_time, time_format) int(time(k)/365.25)
+      write(output_time, time_format) time(k)/(365.25 * 1e6)
       
       write(13,*) "set output '",trim(output_density),"'"
-      write(13,*) 'set title "T=', trim(output_time),' years"'
+      write(13,*) 'set title "T=', trim(output_time),' Myr"'
       write(13,*) "plot '",trim(filename_density_ref),"' using 1:2 with lines linetype 0 linewidth 3 notitle, \"
       write(13,*) "     '",trim(filename_density),"' using 1:2 with lines linetype 1 notitle"
       write(13,*) ""
