@@ -568,10 +568,10 @@ program test_disk
     density_max = maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)) * MSUN / AU**2
     
     ! We want to know the max size of the time display in order to have a nice display, with filled spaces in the final plots
-    write(output_time, '(i0)') int(t_max, kind=8)
+    write(output_time, '(i0)') int(t_max / 1e6)
     time_length = len(trim(output_time))
-    write(time_format, *) '(f',time_length,'.0)'
-    write(purcent_format, *) '(i',time_length,'"/",i',time_length,'," years")'
+    write(time_format, '(a,i1,a,i1,a)') '(f',time_length+2,'.',1,')'
+    write(purcent_format, *) '(', trim(time_format), ',"/",',trim(time_format),'," Myr ; k = ",i5)'
     
     !------------------------------------------------------------------------------
     k = 1
@@ -613,8 +613,7 @@ program test_disk
         deallocate(time_temp, stat=error)
       end if
       
-      write(*,purcent_format) int(time(k)/365.25d0, kind=8), int(t_max, kind=8) ! We display on the screen how far we are from the end of the integration.
-      
+      write(*,purcent_format) time(k)/(365.25d0 * 1e6), t_max / 1e6, k
       
       time(k+1) = next_dissipation_step ! days
       
@@ -628,9 +627,11 @@ program test_disk
     ! Gnuplot script to output the frames of the density
     write(filename_density_ref, '(a)') 'theoritical_dissipation.dat'
     open(13, file="unitary_tests/dissipation/density.gnuplot")
-    write(13,*) "set terminal pngcairo enhanced size 800, 600 font ',20'"
-    write(13,*) 'set xlabel "distance (AU)"'
+    write(13,*) "set terminal pngcairo crop enhanced size 1200, 1000 font ',20'"
+    write(13,*) 'set xlabel "Distance (AU)"'
     write(13,*) 'set ylabel "Surface density (g/cm^2)"'
+    write(13,*) 'set logscale x'
+    write(13,*) 'set logscale y'
     write(13,*) 'set grid'
     write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'
     write(13,*) 'set yrange [', density_min, ':', density_max, ']'
@@ -638,11 +639,11 @@ program test_disk
     do k=1, nb_time
       write(filename_density, '(a,i0.5,a)') 'surface_density',k,'.dat'
       write(output_density, '(a,i0.5,a)') 'surface_density',k,'.png'
-      write(output_time, time_format) (time(k)/365.25d0)
+      write(output_time, time_format) (time(k)/(365.25d0 * 1e6))
       
       write(13,*) "set output '",trim(output_density),"'"
-      write(13,*) 'set title "T=', trim(output_time),' years"'
-      write(13,*) "plot '",trim(filename_density),"' using 1:2 with lines linetype 0 linewidth 4 notitle"
+      write(13,*) 'set title "T=', trim(output_time),' Myr"'
+      write(13,*) "plot '",trim(filename_density),"' using 1:2 with lines linetype -1 notitle"
       write(13,*) ""
     end do
     close(13)
@@ -2016,7 +2017,7 @@ program test_disk
     
     ! time sample
     real(double_precision), parameter :: t_min = 0.d0 ! time in years
-    real(double_precision), parameter :: t_max = 0.1d6 ! time in years
+    real(double_precision), parameter :: t_max = 3.d6 ! time in years
     real(double_precision), dimension(:), allocatable :: time, time_temp ! time in days
     integer :: time_size ! the size of the array 'time'. 
     
