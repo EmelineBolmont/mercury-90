@@ -107,6 +107,8 @@ liste_meta_simu.sort()
 #~ liste_meta_simu = ["low_mass", "fiducials", "high_mass"]
 #~ liste_meta_simu = ["150_05", "fiducials", "600_05"]
 #~ labels = {}
+#~ labels["fiducials"] = "Fiducial"
+#~ labels["no_damping"] = "No damping"
 #~ labels["150_05"] = "Low mass disk"
 #~ labels["fiducials"] = "Normal disk"
 #~ labels["600_05"] = "High mass disk"
