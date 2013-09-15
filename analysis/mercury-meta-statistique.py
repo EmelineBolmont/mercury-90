@@ -11,7 +11,7 @@ import sys # To handle options of the script, for instance
 from simu_constantes import *
 import random
 import numpy as np
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.ticker import FormatStrFormatter, FuncFormatter
 
 # Mass threshold
 MASS_THRESHOLD = 5 # Earth mass
@@ -37,6 +37,20 @@ plots = [] # list of plots (the axes of the fig objects, assuming there is no su
 
 distance_format = FormatStrFormatter("%.3g")
 
+def transformLogToNormal(value, dummy):
+	"""
+	Used for histogram that must be in log and normalized. We must consider directly the log values, but the labels are then wrong
+	Thus, we need to modify the labels afterward to go back to non log-scale values
+	"""
+	
+	final_value = 10.**(value)
+	
+	final_label = "%.3g" % final_value
+		
+	return final_label
+
+log_format = FuncFormatter(transformLogToNormal)
+
 nom_fichier_plot.append("histogrammes_m")
 fig_tmp = pl.figure()
 figures.append(fig_tmp)
@@ -44,6 +58,8 @@ hist_m = fig_tmp.add_subplot(1, 1, 1)
 plots.append(hist_m)
 hist_m.set_xlabel("Mass [Earths]")
 hist_m.set_ylabel("Distribution")
+hist_m.xaxis.set_major_formatter(log_format)
+# Must not put in log space an histogram because the height of the bins will not be accurate if "normed=True"
 
 nom_fichier_plot.append("histogrammes_a")
 fig_tmp = pl.figure()
@@ -52,7 +68,7 @@ hist_a = fig_tmp.add_subplot(1, 1, 1)
 plots.append(hist_a)
 hist_a.set_xlabel("Distance [AU]")
 hist_a.set_ylabel("Distribution")
-hist_a.xaxis.set_major_formatter(distance_format)
+hist_a.xaxis.set_major_formatter(log_format)
 # Must not put in log space an histogram because the height of the bins will not be accurate if "normed=True"
 
 nom_fichier_plot.append("m_fct_a")
@@ -87,7 +103,7 @@ liste_meta_simu = [dir for dir in os.listdir(".") if os.path.isdir(dir)]
 autiwa.suppr_dossier(liste_meta_simu,dossier_suppr)
 liste_meta_simu.sort()
 
-liste_meta_simu = ["fiducials", "no_damping"]
+#~ liste_meta_simu = ["fiducials", "no_damping"]
 #~ liste_meta_simu = ["low_mass", "fiducials", "high_mass"]
 #~ liste_meta_simu = ["150_05", "fiducials", "600_05"]
 #~ labels = {}
@@ -335,7 +351,7 @@ for (meta_index, meta_simu) in enumerate(liste_meta_simu):
 
   hist_a.hist(np.log10(a), bins=np.linspace(-2, 2, 50), histtype='step', normed=True, label=meta_prefix)
 
-  hist_m.hist(m, bins=range(50), normed=True, histtype='step', label=meta_prefix)
+  hist_m.hist(np.log10(m), bins=np.linspace(-1, 2, 50), normed=True, histtype='step', label=meta_prefix)
   
   m_fct_a.plot(a, m, 'o', markersize=5, color=colors[meta_index], label=meta_prefix)
   
