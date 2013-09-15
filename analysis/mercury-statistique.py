@@ -39,7 +39,7 @@ binaryPath = os.path.join(scriptFolder, os.path.pardir)
 # Get current working directory
 rep_exec = os.getcwd()
 
-resonances = ["1:1", "2:1", "3:2", "4:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
+resonances = ["1:1", "2:1", "3:2", "4:3", "5:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
 
 #######################
 # We prepare the plots
