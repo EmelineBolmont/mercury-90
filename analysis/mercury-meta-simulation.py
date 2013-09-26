@@ -103,6 +103,9 @@ mass_dep_cz_m_max = None
 is_turbulence = None
 turbulent_forcing = None
 is_irradiation = None
+r_star = None
+t_star = None
+disk_albedo = 0.5
 
 #-------------------------------------------------------------------------------
 # Definition of functions
@@ -300,6 +303,10 @@ torque_type = real # real, linear_indep, tanh_indep, mass_dependant, manual
 #mass_dep_cz_m_max = 5 # (AU)       help to define a CZ(m) by defining two points
 
 is_irradiation = 1 # is there stellar irradiation or not?
+r_star = 2.5 # in stellar radius
+t_star = 4000. # in K
+disk_albedo = 0.5 # between 0 and 1
+
 is_turbulence = 0 # is there turbulence or not?
 #turbulent_forcing = 1e-4 # the turbulence forcing associated with turbulence, if any
 """
@@ -332,7 +339,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
   global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
   global surface_density, adiabatic_index, viscosity_type, viscosity, alpha, alpha_dz, radius_dz
   global b_h, torque_type, disk_edges, inner_smoothing_width
-  global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, opacity_type
+  global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, r_star, t_star, disk_albedo, opacity_type
   global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
   global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
   global is_turbulence, turbulent_forcing, saturation_torque
@@ -407,6 +414,12 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
           is_irradiation = int(value)
         except ValueError:
           raise ValueError("'is_irradiation' must be equal to 0 or 1")
+      elif (key == "r_star"):
+        r_star = float(value)
+      elif (key == "t_star"):
+        t_star = float(value)
+      elif (key == "disk_albedo"):
+        disk_albedo = float(value)
       elif (key == "disk_edges"):
         disk_edges = eval(value)
       elif (key == "inner_smoothing_width"):
@@ -516,6 +529,9 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
   else:
     PARAMETERS += "sigma_0 = %f g/cm^2 ; negative power law index = %f\n" % surface_density
   PARAMETERS += "is_irradiation = "+str(is_irradiation)+"\n"
+  PARAMETERS += "r_star = %.2f\n" % r_star
+  PARAMETERS += "t_star = %.2f\n" % t_star
+  PARAMETERS += "disk_albedo = %.2f\n" % disk_albedo
   PARAMETERS += "sample = "+str(sample)+"\n"
   PARAMETERS += "disk_edges = "+str(disk_edges)+" AU\n"
   PARAMETERS += "inner_smoothing_width = "+str(inner_smoothing_width)+" AU\n"
@@ -710,7 +726,7 @@ def generation_simulation_parameters():
 
   if (user_force == "yes"):
     diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
-                  is_irradiation=is_irradiation,
+                  is_irradiation=is_irradiation, r_star=r_star, t_star=t_star, disk_albedo=disk_albedo,
                   disk_edges=disk_edges, viscosity_type=viscosity_type, viscosity=viscosity, alpha=alpha, alpha_dz=alpha_dz,
                   radius_dz=radius_dz, opacity_type=opacity_type, 
                   sample=sample, dissipation_type=dissipation_type, 
