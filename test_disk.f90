@@ -1306,6 +1306,7 @@ program test_disk
     
     do j=10,12
       write(j,*) 'set xlabel "Semi-major axis a (AU)"'
+      write(j,*) 'set logscale x'
       write(j,'(a,f4.1,a)') 'set title "for planet mass = ',mass / (EARTH_MASS * K2),' m_{earth}"'
     end do
     
