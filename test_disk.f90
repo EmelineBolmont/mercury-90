@@ -1674,14 +1674,12 @@ program test_disk
     type(PlanetProperties) :: p_prop
     
     integer :: i,j ! for loops
-    integer :: deltai, deltaj ! separation between to outputs for the vector part of the display (we do not want a lot of points)
-    real(double_precision) :: vector_limit ! The size limit of the vectors, to prevent chevauching.
     
     !------------------------------------------------------------------------------
-    a_min = INNER_BOUNDARY_RADIUS + INNER_SMOOTHING_WIDTH
+    a_min = INNER_BOUNDARY_RADIUS
     a_max = 20.d0
-    a_step = (a_max - a_min) / (nb_points-1.d0)
-!~     a_step = (a_max / a_min)**(1 / (nb_points - 1.d0))
+!~     a_step = (a_max - a_min) / (nb_points-1.d0)
+    a_step = (a_max / a_min)**(1 / (nb_points - 1.d0))
     
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total, lindblad and corotation torques depending on the planet mass and distance'
@@ -1689,31 +1687,23 @@ program test_disk
     position(1:3) = 0.d0
     velocity(1:3) = 0.d0
     
-    ! We want to have only 10 points both in x and y for vector outputs
-    deltai = nb_points / 15
-    deltaj = nb_mass / 10
-    
-    vector_limit = a_step * (deltai - 1)
-    
     ! We open the file where we want to write the outputs
     open(10, file='unitary_tests/corotation_torque.dat')
     open(11, file='unitary_tests/total_torque.dat')
     open(12, file='unitary_tests/total_torque_units.dat')
     open(13, file='unitary_tests/lindblad_torque.dat')
     open(14, file='unitary_tests/ref_torque.dat')
-    open(15, file='unitary_tests/vector_total_torque.dat')
     
     write(10,*) '# Semi-major axis (AU) ; mass in earth mass ; corotation torque (no dim)'
     write(11,*) '# Semi-major axis (AU) ; mass in earth mass ; total torque (no dim)'
     write(12,*) '# Semi-major axis (AU) ; mass in earth mass ; total torque in M_s.AU^2.day^{-2}'
     write(13,*) '# Semi-major axis (AU) ; mass in earth mass ; lindblad torque (no dim)'
     write(14,*) '# Semi-major axis (AU) ; mass in earth mass ; reference torque in M_s.AU^2.day^{-2}'
-    write(15,*) '# Semi-major axis (AU) ; mass in earth mass ; Delta x ; Delta y'
     
     
     do i=1, nb_points ! loop on the position
-      a(i) = a_min + a_step * (i-1)
-!~       a(i) = a_min * a_step**(i - 1)
+!~       a(i) = a_min + a_step * (i-1)
+      a(i) = a_min * a_step**(i - 1)
       
       ! We generate cartesian coordinate for the given Semi-major axis
       position(1) = a(i)
@@ -1755,10 +1745,6 @@ program test_disk
         write(13,*) a(i), mass(j) / (EARTH_MASS*K2), lindblad_torque
         write(14,*) a(i), mass(j) / (EARTH_MASS*K2), torque_ref
         
-        if ((modulo(i-int(deltai/2.),deltai).eq.0).and.(modulo(j-int(deltaj/2.),deltaj).eq.0)) then
-          write(15,*) a(i), mass(j) / (EARTH_MASS*K2), 0, &
-                      sign(min(sqrt(abs(total_torque(i,j))),vector_limit), total_torque(i,j)), 0, 0
-        end if
         
       end do
       
@@ -1771,7 +1757,6 @@ program test_disk
     close(12)
     close(13)
     close(14)
-    close(15)
     
     
     ! We want to get the contour for the torque equal to 0 for total torque both in physical dimension of units of gamma_0
@@ -1809,20 +1794,22 @@ program test_disk
       write(j,*) 'set pm3d map'
       write(j,*) 'set pm3d explicit'
       write(j,*) 'set palette rgbformulae 22,13,-31'
-      write(j,*) 'set grid xtics ytics linetype 0'
+      write(j,*) 'set mxtics 10'
+      write(j,*) 'set mytics 5'
+      write(j,*) 'set grid xtics ytics mxtics mytics linetype -1, 0'
+!~       write(j,*) 'set grid xtics ytics linetype 0'
       write(j,*) 'set xrange [', a_min, ':', a_max, ']'
       write(j,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+      write(j,*) 'set logscale x'
     end do
 
     write(10,*) "splot 'corotation_torque.dat' with pm3d notitle"
     
     write(11,*) "splot 'total_torque.dat' with pm3d notitle, \"
-    write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle, \"
-    write(11,*) "      'vector_total_torque.dat' with vector notitle head filled linestyle -1"
+    write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
     
     write(12,*) "splot 'total_torque_units.dat' with pm3d notitle, \"
-    write(12,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle, \"
-    write(12,*) "      'vector_total_torque.dat' with vector notitle head filled linestyle -1"
+    write(12,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
     
     write(13,*) "splot 'lindblad_torque.dat' with pm3d notitle"
     
