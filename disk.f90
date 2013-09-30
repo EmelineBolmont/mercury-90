@@ -866,16 +866,16 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 
   !------------------------------------------------------------------------------
 !~   p_prop%sigma = get_surface_density(radius=p_prop%radius) ! [Msun/AU^3]
-  call get_surface_density(radius=p_prop%radius, sigma=p_prop%sigma, sigma_index=p_prop%sigma_index)
+  call get_surface_density(radius=p_prop%semi_major_axis, sigma=p_prop%sigma, sigma_index=p_prop%sigma_index)
 !~   call print_planet_properties(p_prop)
-  call get_temperature(radius=p_prop%radius, & ! Input
+  call get_temperature(radius=p_prop%semi_major_axis, & ! Input
                        temperature=p_prop%temperature, temperature_index=p_prop%temperature_index, chi=p_prop%chi, & ! Output
                        nu=p_prop%nu) ! Output
   
   ! We calculate the angular momentum
   p_prop%angular_momentum = (mass / K2) * h_p  
   p_prop%velocity = sqrt(velocity2_p) ! [AU/day]
-  p_prop%omega = sqrt(gm / (p_prop%radius**3)) ! [day-1]
+  p_prop%omega = sqrt(gm / (p_prop%semi_major_axis**3)) ! [day-1]
   
   !------------------------------------------------------------------------------
   ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
@@ -886,7 +886,7 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 !~   p_prop%nu = alpha * p_prop%omega * p_prop%scaleheight**2 ! [AU^2.day-1]
 !~   p_prop%nu = get_tabulated_viscosity(radius=p_prop%radius)! [AU^2.day-1]
 
-  p_prop%aspect_ratio = p_prop%scaleheight / p_prop%radius
+  p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
 !~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
 
 !~   if (abs(p_prop%radius-p_prop%semi_major_axis)/p_prop%radius.gt.1e-2) then
