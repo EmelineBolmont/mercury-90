@@ -231,7 +231,7 @@ integer :: unit
   write(unit,'(a,es12.2e2,a)')     '| Semi-major axis : ', p_prop%semi_major_axis, ' [AU]'
   write(unit,'(a,f10.7)')       '| Eccentricity : ', p_prop%eccentricity 
   write(unit,'(a,f5.1,a)')     '| Inclination : ', p_prop%inclination*180./PI, ' [degrees]'
-  write(unit,'(a,f5.1,a)')     '| Radius : ', p_prop%radius, ' [AU]'
+  write(unit,'(a,es12.2e2,a)')     '| Radius : ', p_prop%radius, ' [AU]'
   write(unit,'(a,es10.2e2,a)') '| Velocity : ', p_prop%velocity , ' [AU/day]'
   write(unit,'(a,es10.2e2,a)') '| Omega : ', p_prop%omega , ' [day-1]'
   write(unit,'(a,es10.2e2,a)') '| Angular_momentum : ', p_prop%angular_momentum, ' [Ms.AU^2.day^-1]'
@@ -240,13 +240,13 @@ integer :: unit
   write(unit,'(a)')            '|#     location of the planet       #'
   write(unit,'(a)')            '|####################################'
   write(unit,'(a,es10.2e2,a)') '| Sigma : ', p_prop%sigma , ' [Msun.AU^-2]'
-  write(unit,'(a,f5.2)')       '| Sigma_index : ', p_prop%sigma_index
+  write(unit,'(a,f7.2)')       '| Sigma_index : ', p_prop%sigma_index
   write(unit,'(a,es10.2e2,a)')     '| Scaleheight : ', p_prop%scaleheight , ' [AU]'
   write(unit,'(a,f6.4)')       '| Aspect_ratio : ', p_prop%aspect_ratio 
   write(unit,'(a,es10.2e2,a)')     '| Chi : ', p_prop%chi , ' [AU^2.day^-1]'
   write(unit,'(a,es10.2e2,a)') '| Nu : ', p_prop%nu, ' [AU^2.day^-1]'
-  write(unit,'(a,f7.2,a)')     '| Temperature : ', p_prop%temperature , ' [K]'
-  write(unit,'(a,f6.3)')       '| Temperature_index : ', p_prop%temperature_index
+  write(unit,'(a,es12.2e2,a)')     '| Temperature : ', p_prop%temperature , ' [K]'
+  write(unit,'(a,f8.3)')       '| Temperature_index : ', p_prop%temperature_index
   write(unit,'(a)')            '------------------------------------------------'
 
 end subroutine print_planet_properties
