@@ -107,6 +107,10 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   type(PlanetProperties) :: p_prop ! various properties of a planet
   real(double_precision) :: e_h ! the ratio between the eccentricity and the aspect ratio for a given planet [no dim]
   real(double_precision) :: i_h ! the ratio between the inclination and the aspect ratio for a given planet [no dim]
+  real(double_precision) :: e_h2 ! The same, but squared
+  real(double_precision) :: i_h2 ! The same, but squared
+  real(double_precision) :: h_2 ! The square of aspect ratio
+  real(double_precision) :: a_2 ! The square of semi major axis
   
   real(double_precision), dimension(3) :: migration_acceleration
   real(double_precision), dimension(3) :: eccentricity_acceleration
@@ -161,8 +165,13 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             ! prefactor calculation for eccentricity and inclination damping
             e_h = p_prop%eccentricity / p_prop%aspect_ratio
             i_h = p_prop%inclination / p_prop%aspect_ratio
-            time_wave = mass(1)**2 * p_prop%aspect_ratio**4 / (mass(planet) * K2 * p_prop%sigma * &
-                        p_prop%semi_major_axis**2 * p_prop%omega) ! (cresswell, 2008)
+            e_h2 = e_h * e_h
+            i_h2 = i_h * i_h
+            h_2 = p_prop%aspect_ratio**2
+            a_2 = p_prop%semi_major_axis**2
+            
+            time_wave = mass(1)**2 * h_2 * h_2 / (mass(planet) * K2 * p_prop%sigma * &
+                        a_2 * p_prop%omega) ! (cresswell, 2008)
 
             !------------------------------------------------------------------------------
             ! Calculation of the acceleration due to migration
@@ -187,10 +196,10 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             !------------------------------------------------------------------------------
             ! Calculation of the acceleration due to eccentricity damping
             
-            time_ecc = time_wave / 0.780d0 * (1.d0 - 0.14d0 * e_h**2 + 0.06 * e_h**3 + 0.18 * e_h * i_h**2)
+            time_ecc = time_wave / 0.780d0 * (1.d0 + e_h2 * (- 0.14d0 + 0.06 * e_h) + 0.18 * e_h * i_h2)
             
             eccentricity_acc_prefactor = -2.d0 * (position(1,planet) * velocity(1,planet) + position(2,planet) * velocity(2,planet)&
-             + position(3,planet) * velocity(3,planet)) / (p_prop%semi_major_axis**2 * time_ecc)
+             + position(3,planet) * velocity(3,planet)) / (a_2 * time_ecc)
             
             eccentricity_acceleration(1:3) = eccentricity_acc_prefactor * position(1:3,planet)
             
@@ -201,7 +210,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             ! Calculation of the acceleration due to the inclination damping
             
             if (p_prop%inclination.gt.INCLINATION_CUTOFF) then
-              time_inc = time_wave / 0.544d0 * (1.d0 - 0.30d0 * i_h**2 + 0.24 * i_h**3 + 0.14 * e_h**2 * i_h)
+              time_inc = time_wave / 0.544d0 * (1.d0 + i_h2 * (- 0.30d0 + 0.24 * i_h) + 0.14 * e_h2 * i_h)
               
               inclination_acceleration_z = - velocity(3,planet) / time_inc
               acceleration(3,planet) = acceleration(3,planet) + inclination_acceleration_z
