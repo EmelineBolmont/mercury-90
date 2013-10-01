@@ -1602,7 +1602,7 @@ program test_disk
       
       !------------------------------------------------------------------------------
       ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
-      Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%radius**2 = aspect_ratio * scaleheight**2
+      Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%semi_major_axis**2 = aspect_ratio * scaleheight**2
       !------------------------------------------------------------------------------
 
       gamma_eff = 2.d0 * Q_p * ADIABATIC_INDEX / (ADIABATIC_INDEX * Q_p + 0.5d0 * &

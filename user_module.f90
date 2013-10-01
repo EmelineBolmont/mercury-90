@@ -156,7 +156,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         p_prop=p_prop) ! Output
         
         if (planet.le.n_big_bodies) then
-          if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%radius.gt.INNER_BOUNDARY_RADIUS)) then
+          if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%semi_major_axis.gt.INNER_BOUNDARY_RADIUS)) then
             !------------------------------------------------------------------------------
             ! prefactor calculation for eccentricity and inclination damping
             e_h = p_prop%eccentricity / p_prop%aspect_ratio
@@ -222,7 +222,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         end if
         
   !~       if (time.gt.365.25) then
-  !~         if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%radius.gt.INNER_BOUNDARY_RADIUS)) then
+  !~         if ((p_prop%eccentricity.lt.ECCENTRICITY_CUTOFF).and.(p_prop%semi_major_axis.gt.INNER_BOUNDARY_RADIUS)) then
   !~         
   !~           call debug_infos(time, n_bodies, planet, position, velocity, acceleration, &
   !~                        time_mig, migration_acceleration, time_ecc, eccentricity_acceleration, &

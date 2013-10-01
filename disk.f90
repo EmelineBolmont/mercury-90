@@ -2997,9 +2997,9 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
   
   !------------------------------------------------------------------------------
 
-  if ((p_prop%radius .ge. INNER_BOUNDARY_RADIUS) .and. (p_prop%radius .lt. OUTER_BOUNDARY_RADIUS)) then
+  if ((p_prop%semi_major_axis .ge. INNER_BOUNDARY_RADIUS) .and. (p_prop%semi_major_axis .lt. OUTER_BOUNDARY_RADIUS)) then
     
-    x_radius = 2.d0 * sqrt(p_prop%radius)
+    x_radius = 2.d0 * sqrt(p_prop%semi_major_axis)
     ! in the range
     closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
     
@@ -3008,10 +3008,10 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
     y1 = torque_profile(closest_low_id)
     y2 = torque_profile(closest_low_id + 1)
 
-    corotation_torque = y2 + (y1 - y2) * (p_prop%radius - x2) / (x1 - x2)
-  else if (p_prop%radius .lt. INNER_BOUNDARY_RADIUS) then
+    corotation_torque = y2 + (y1 - y2) * (p_prop%semi_major_axis - x2) / (x1 - x2)
+  else if (p_prop%semi_major_axis .lt. INNER_BOUNDARY_RADIUS) then
     corotation_torque = torque_profile(1)
-  else if (p_prop%radius .gt. OUTER_BOUNDARY_RADIUS) then
+  else if (p_prop%semi_major_axis .gt. OUTER_BOUNDARY_RADIUS) then
     corotation_torque = torque_profile(NB_SAMPLE_PROFILES)
   end if
   
