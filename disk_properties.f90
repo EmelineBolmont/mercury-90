@@ -228,9 +228,9 @@ integer :: unit
   write(unit,'(a)')            '|#     Properties of the planet     #'
   write(unit,'(a)')            '|####################################'
   write(unit,'(a,2(es10.2e2,a))') '| Mass : ', p_prop%mass, ' [Msun * K2] (', p_prop%mass/K2 / EARTH_MASS, ' earth mass)'
-  write(unit,'(a,es12.2e2,a)')     '| Semi-major axis : ', p_prop%semi_major_axis, ' [AU]'
+  write(unit,'(a,es14.4e2,a)')     '| Semi-major axis : ', p_prop%semi_major_axis, ' [AU]'
   write(unit,'(a,f10.7)')       '| Eccentricity : ', p_prop%eccentricity 
-  write(unit,'(a,f5.1,a)')     '| Inclination : ', p_prop%inclination*180./PI, ' [degrees]'
+  write(unit,'(a,f7.3,a)')     '| Inclination : ', p_prop%inclination*180./PI, ' [degrees]'
   write(unit,'(a,es12.2e2,a)')     '| Radius : ', p_prop%radius, ' [AU]'
   write(unit,'(a,es10.2e2,a)') '| Velocity : ', p_prop%velocity , ' [AU/day]'
   write(unit,'(a,es10.2e2,a)') '| Omega : ', p_prop%omega , ' [day-1]'
