@@ -301,6 +301,7 @@ write(12,*) 'lindblad torque = ', lindblad_torque
 write(12,*) 'corotation torque = ', corotation_torque
 write(12,*) 'Gamma_0 = ', torque_ref, '[Ms.AU^2]'
 write(12,*) 'corotation damping = ', ecc_corot
+write(12,*) 'total torque = ', lindblad_torque + ecc_corot * corotation_torque
 
 write(12,'(a)') '------------------------------------'
 write(12,'(a)') '|       Eccentricity damping       |'
