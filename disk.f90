@@ -974,10 +974,13 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   
   ! Temporaries
   real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
+  real(double_precision) :: a2 ! Square of semi major axis
+  
+  a2 = p_prop%semi_major_axis**2
   
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
-  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%semi_major_axis**4 * p_prop%omega**2
+  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * a2 * a2 * p_prop%omega**2
   
   !------------------------------------------------------------------------------
   ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
@@ -1002,7 +1005,7 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   
   !------------------------------------------------------------------------------
   ! k_p is defined to limit the number of operation and to have a value independant from chi_p or nu_p
-  k_p = p_prop%semi_major_axis**2 * p_prop%omega * x_s * x_s * x_s / (2.d0 * PI)
+  k_p = a2 * p_prop%omega * x_s * x_s * x_s / (2.d0 * PI)
   
 !~   ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
   ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
