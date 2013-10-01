@@ -190,7 +190,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             time_ecc = time_wave / 0.780d0 * (1.d0 - 0.14d0 * e_h**2 + 0.06 * e_h**3 + 0.18 * e_h * i_h**2)
             
             eccentricity_acc_prefactor = -2.d0 * (position(1,planet) * velocity(1,planet) + position(2,planet) * velocity(2,planet)&
-             + position(3,planet) * velocity(3,planet)) / (p_prop%radius**2 * time_ecc)
+             + position(3,planet) * velocity(3,planet)) / (p_prop%semi_major_axis**2 * time_ecc)
             
             eccentricity_acceleration(1:3) = eccentricity_acc_prefactor * position(1:3,planet)
             
