@@ -64,13 +64,14 @@ program test_disk
     
     ! we store in a .dat file the temperature profile
     call store_temperature_profile(filename='temperature_profile.dat')
+    call store_viscosity_profile(filename='viscosity_profile.dat')
     call store_density_profile(filename='density_profile.dat')
     call store_scaleheight_profile()
     
     ! Unitary tests
     call test_functions_FGK()
     call test_function_zero_temperature(stellar_mass=stellar_mass)
-    call test_temperature_interpolation()
+    call test_temperature_interpolation(stellar_mass=stellar_mass)
     call test_manual_torque_interpolation()
     call test_alpha_dz()
     call test_density_interpolation()
@@ -243,16 +244,22 @@ program test_disk
     
   end subroutine test_function_zero_temperature
 
-  subroutine test_temperature_interpolation()
+  subroutine test_temperature_interpolation(stellar_mass)
   
     implicit none
     
+    real(double_precision), intent(in) :: stellar_mass ! Mass of the central star in msun * K2
+    
     integer, parameter :: nb_a = 1000
-    real(double_precision), parameter :: a_min = 0.d0 ! in AU
+    real(double_precision), parameter :: a_min = 0.1d0 ! in AU
     real(double_precision), parameter :: a_max = 100.d0! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision) :: a, temperature, temperature_index, chi, nu
+    real(double_precision) :: a, temperature, temperature_index, chi, nu, omega, scaleheight
+    
+    real(double_precision) :: num_to_phys_chi = AU**2 / DAY
+    real(double_precision) :: num_to_phys_nu = AU**2 / DAY ! Factor to convert numerical viscosity in CGS viscosity
+
     
     integer :: j ! for loops
     
@@ -266,31 +273,77 @@ program test_disk
       call get_temperature(radius=a, & ! Input
                            temperature=temperature, temperature_index=temperature_index, chi=chi, nu=nu) ! Output
       
+      omega = sqrt(stellar_mass / a**3) ! [day-1]
+      scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
       
-      write(10,*) a, temperature, temperature_index, chi, nu
+      write(10,*) a, temperature, temperature_index, chi * num_to_phys_chi, nu * num_to_phys_nu, scaleheight
     end do
     close(10)
     
     ! We create associated gnuplot files
     open(10, file="unitary_tests/temperature_interpolation.gnuplot")
+    open(11, file="unitary_tests/temperature_idx_interpolation.gnuplot")
+    open(12, file="unitary_tests/diffusivity_interpolation.gnuplot")
+    open(13, file="unitary_tests/viscosity_interpolation.gnuplot")
+    open(14, file="unitary_tests/scaleheight_interpolation.gnuplot")
     
-
-    write(10,*) "set terminal pdfcairo enhanced"
+    do j=10,14
+      write(j,*) "set terminal pdfcairo enhanced"
+    end do
+    
     write(10,*) '!rm "temperature_interpolation.pdf"'
     write(10,*) "set output 'temperature_interpolation.pdf'"
-    
-    write(10,*) 'set xlabel "Semi-major axis a (AU)"'
     write(10,*) 'set ylabel "temperature [K]"'
-      
-    write(10,*) 'set grid'
-    write(10,*) 'set logscale x'
     write(10,*) 'set logscale y'
+    
+    write(11,*) '!rm "temperature_idx_interpolation.pdf"'
+    write(11,*) "set output 'temperature_idx_interpolation.pdf'"
+    write(11,*) 'set ylabel "Temperature index"'
+    write(11,*) 'set yrange [-10:10]'
+    
+    write(12,*) '!rm "diffusivity_interpolation.pdf"'
+    write(12,*) "set output 'diffusivity_interpolation.pdf'"
+    write(12,*) 'set ylabel "Thermal diffusivity {/Symbol c} [cm^2/s]"'
+    write(12,*) 'set logscale y'
+    
+    write(13,*) '!rm "viscosity_interpolation.pdf"'
+    write(13,*) "set output 'viscosity_interpolation.pdf'"
+    write(13,*) 'set ylabel "Viscosity [cm^2/s]"'
+    write(13,*) 'set logscale y'
+    
+    write(14,*) '!rm "scaleheight_interpolation.pdf"'
+    write(14,*) "set output 'scaleheight_interpolation.pdf'"
+    write(14,*) 'set ylabel "Scaleheight [AU]"'
+    write(14,*) 'set logscale y'
+    
+    
+    do j=10,14
+      write(j,*) 'set xlabel "Semi-major axis (AU)"'
+      write(j,*) 'set grid'
+      write(j,*) 'set logscale x'
+    end do
 
 
-    write(10,*) 'plot "temperature_interpolation.dat" using 1:2 with lines title "Interpolation",\'
+    write(10,*) 'plot "temperature_interpolation.dat" using 1:2 with points linetype 1 pointtype 2 title "Interpolation",\'
     write(10,*) '     "../temperature_profile.dat" using 1:2 with lines title "Profile"'
+
+    write(11,*) 'plot "temperature_interpolation.dat" using 1:3 with points linetype 1 pointtype 2 title "Interpolation",\'
+    write(11,*) '     "../temperature_profile.dat" using 1:3 with lines title "Profile"'
+
+    write(12,*) 'plot "temperature_interpolation.dat" using 1:4 with points linetype 1 pointtype 2 title "Interpolation",\'
+    write(12,*) '     "../temperature_profile.dat" using 1:4 with lines title "Profile"'
+
+    write(13,*) 'plot "temperature_interpolation.dat" using 1:5 with points linetype 1 pointtype 2 title "Interpolation",\'
+    write(13,*) '     "../viscosity_profile.dat" using 1:2 with lines title "Profile"'
+
+    write(14,*) 'plot "temperature_interpolation.dat" using 1:6 with points linetype 1 pointtype 2 title "Interpolation",\'
+    write(14,*) '     "../scaleheight_profile.dat" using 1:2 with lines title "Profile"'
     
     close(10)
+    close(11)
+    close(12)
+    close(13)
+    close(14)
   
   end subroutine test_temperature_interpolation
   
@@ -317,33 +370,42 @@ program test_disk
       call get_surface_density(radius=a, sigma=sigma, sigma_index=sigma_index)
       
       
-      write(10,*) a, sigma, sigma_index
+      write(10,*) a, sigma * SIGMA_NUM2CGS, sigma_index
     end do
     close(10)
     
     ! We create associated gnuplot files
     open(10, file="unitary_tests/density_interpolation.gnuplot")
+    open(11, file="unitary_tests/density_idx_interpolation.gnuplot")
     
-
-    write(10,*) "set terminal pdfcairo enhanced"
+    do j=10,11
+      write(j,*) "set terminal pdfcairo enhanced"
+    end do
+    
     write(10,*) '!rm "density_interpolation.pdf"'
     write(10,*) "set output 'density_interpolation.pdf'"
-    
-    write(10,*) 'set xlabel "Semi-major axis a (AU)"'
-
-    
-    write(10,*) 'set ylabel "density [g/cm^2]"'
-      
-    write(10,*) 'set grid'
-    write(10,*) 'set logscale x'
+    write(10,*) 'set ylabel "Density [g/cm^2]"'
     write(10,*) 'set logscale y'
-
-
-    write(10,*) 'plot "density_interpolation.dat" using 1:2 with lines title "Interpolation",\'
-    write(10,*) '     "../density_profile.dat" using 1:2 with lines title "Profile"'
     
+    write(11,*) '!rm "density_idx_interpolation.pdf"'
+    write(11,*) "set output 'density_idx_interpolation.pdf'"
+    write(11,*) 'set ylabel "Density index"'
+    write(11,*) 'set yrange [-10:10]'
+    
+    do j=10,11
+      write(j,*) 'set xlabel "Semi-major axis (AU)"'
+      write(j,*) 'set grid'
+      write(j,*) 'set logscale x'
+    end do
+
+    write(10,*) 'plot "density_interpolation.dat" using 1:2 with points linetype 1 pointtype 2 title "Interpolation",\'
+    write(10,*) '     "../density_profile.dat" using 1:2 with lines title "Profile"'
+
+    write(11,*) 'plot "density_interpolation.dat" using 1:3 with points linetype 1 pointtype 2 title "Interpolation",\'
+    write(11,*) '     "../density_profile.dat" using 1:3 with lines title "Profile"'
     
     close(10)
+    close(11)
   
   end subroutine test_density_interpolation
 
@@ -917,22 +979,16 @@ program test_disk
     write(j,*) 'set xlabel "Semi-major axis a (AU)"'
     write(j,*) 'set nokey'
     write(j,*) 'set logscale x'
-
+    write(j,*) 'set grid'
   end do
   
   write(10,*) 'set ylabel "Scaleheight H [AU]"'
   
   write(11,*) 'set ylabel "Aspect ratio h=H/R"'
-  
-  do j=10,11
-    write(j,*) 'set grid'
-  end do
 
-  write(10,*) "plot '../scaleheight_profile.dat' using 1:2 with line linetype -1 notitle, \"
-  write(10,*) "     '' using 1:(-$2) with line linetype -1 notitle"
+  write(10,*) "plot '../scaleheight_profile.dat' using 1:2 with line linetype -1 notitle"
   
-  write(11,*) "plot '../scaleheight_profile.dat' using 1:3 with line linetype -1 notitle, \"
-  write(11,*) "     '' using 1:(-$3) with line linetype -1 notitle"
+  write(11,*) "plot '../scaleheight_profile.dat' using 1:3 with line linetype -1 notitle"
   
   close(10)
   close(11)
@@ -989,7 +1045,7 @@ program test_disk
     write(10,*) "set output 'thermal_diffusivity_profile.pdf'"
     write(10,*) 'set xlabel "Semi-major axis a (AU)"'
     write(10,*) 'set nokey'
-    write(10,*) 'set ylabel "Thermal diffusivity {/Symbol c} [AU^2/day]"'
+    write(10,*) 'set ylabel "Thermal diffusivity {/Symbol c} [cm^2/s]"'
         
     write(10,*) 'set grid'
     write(10,*) 'set logscale x'

@@ -2200,7 +2200,7 @@ end subroutine initial_density_profile
   
   character(len=*), intent(in) :: filename
   
-  real(double_precision) :: num_to_phys_chi = DAY / AU**2
+  real(double_precision) :: num_to_phys_chi = AU**2 / DAY
   
   integer :: j ! for loops
   
@@ -2216,6 +2216,33 @@ end subroutine initial_density_profile
   close(10)
   
   end subroutine store_temperature_profile
+  
+  subroutine store_viscosity_profile(filename)
+  ! subroutine that store in a '.dat' file the viscosity profile
+  
+  ! Global parameters
+  ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+  ! viscosity_profile : values of the temperature in K for each value of the 'a' sample
+  
+  implicit none
+  
+  character(len=*), intent(in) :: filename
+  
+  real(double_precision) :: num_to_phys_nu = AU**2 / DAY
+  
+  integer :: j ! for loops
+  
+  ! We open the file where we want to write the outputs
+  open(10, file=filename, status='replace')
+  write(10,'(a)') '# a in AU            ;    Viscosity (cm^2/s)'
+
+  do j=1,NB_SAMPLE_PROFILES
+    write(10,*) distance_sample(j), viscosity_profile(j) * num_to_phys_nu
+  end do
+  
+  close(10)
+  
+  end subroutine store_viscosity_profile
   
   subroutine store_density_profile(filename)
   ! subroutine that store in a '.dat' file the temperature profile and negative index of the local power law
