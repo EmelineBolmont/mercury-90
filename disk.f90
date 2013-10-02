@@ -1661,7 +1661,7 @@ end subroutine initial_density_profile
 
     ! Local
     integer :: closest_low_id ! the index of the first closest lower value of radius regarding the radius value given in parameter of the subroutine. 
-    real(double_precision) :: x1, x2, y1, y2
+    real(double_precision) :: ln_x1, ln_x2, ln_y1, ln_y2
     real(double_precision) :: x_radius ! the corresponding 'x' value for the radius given in parameter of the routine. we can retrieve the index of the closest values in this array in only one calculation.
 
     !------------------------------------------------------------------------------
@@ -1672,12 +1672,12 @@ end subroutine initial_density_profile
       ! in the range
       closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
       
-      x1 = distance_sample(closest_low_id)
-      x2 = distance_sample(closest_low_id + 1)
-      y1 = surface_density_profile(closest_low_id)
-      y2 = surface_density_profile(closest_low_id + 1)
+      ln_x1 = x_sample(closest_low_id)
+      ln_x2 = x_sample(closest_low_id + 1)
+      ln_y1 = log(surface_density_profile(closest_low_id))
+      ln_y2 = log(surface_density_profile(closest_low_id + 1))
 
-      sigma = y2 + (y1 - y2) * (radius - x2) / (x1 - x2)
+      sigma = exp(ln_y2 + (ln_y1 - ln_y2) * (x_radius - ln_x2) / (ln_x1 - ln_x2))
       sigma_index = surface_density_index(closest_low_id) ! for the temperature index, no interpolation.
     else if (radius .lt. INNER_BOUNDARY_RADIUS) then
       sigma = surface_density_profile(1)
@@ -2703,7 +2703,7 @@ if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. distance_sample(NB_SA
   ln_y1 = log(temperature_profile(closest_low_id)) ! This could be a problem when creating the temperature profil because we will have a log(0). But in application we do not use this value. This is just a part of a generic function that we do not use when there is a problem
   ln_y2 = log(temperature_profile(closest_low_id + 1))
 
-  temperature = exp(ln_y2 + (ln_y1 - ln_y2) * (log(radius) - ln_x2) / (ln_x1 - ln_x2))
+  temperature = exp(ln_y2 + (ln_y1 - ln_y2) * (x_radius - ln_x2) / (ln_x1 - ln_x2))
   temperature_index = temp_profile_index(closest_low_id) ! for the temperature index, no interpolation.
   chi = chi_profile(closest_low_id)
   nu = viscosity_profile(closest_low_id)
