@@ -250,10 +250,10 @@ program test_disk
     
     real(double_precision), intent(in) :: stellar_mass ! Mass of the central star in msun * K2
     
-    integer, parameter :: nb_a = 1000
+    integer, parameter :: nb_a = 100
     real(double_precision), parameter :: a_min = 0.1d0 ! in AU
     real(double_precision), parameter :: a_max = 100.d0! in AU
-    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    real(double_precision), parameter :: a_step = (a_max / a_min)**(1.d0 / (dfloat(nb_a)))
     
     real(double_precision) :: a, temperature, temperature_index, chi, nu, omega, scaleheight
     
@@ -267,7 +267,7 @@ program test_disk
     
     open(10, file='unitary_tests/temperature_interpolation.dat')
     do j=1,nb_a
-      a = (a_min + a_step * (j - 1.d0))
+      a = a_min * a_step**(j - 1.d0)
       ! We generate cartesian coordinate for the given Semi-major axis
       
       call get_temperature(radius=a, & ! Input
@@ -351,10 +351,10 @@ program test_disk
   
     implicit none
     
-    integer, parameter :: nb_a = 1000
-    real(double_precision), parameter :: a_min = 0.d0 ! in AU
+    integer, parameter :: nb_a = 100
+    real(double_precision), parameter :: a_min = 0.1d0 ! in AU
     real(double_precision), parameter :: a_max = 100.d0! in AU
-    real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
+    real(double_precision), parameter :: a_step = (a_max / a_min)**(1.d0 / (dfloat(nb_a)))
     
     real(double_precision) :: a, sigma, sigma_index
     
@@ -364,7 +364,7 @@ program test_disk
     
     open(10, file='unitary_tests/density_interpolation.dat')
     do j=1,nb_a
-      a = (a_min + a_step * (j - 1.d0))
+      a = a_min * a_step**(j - 1.d0)
       ! We generate cartesian coordinate for the given Semi-major axis
       
       call get_surface_density(radius=a, sigma=sigma, sigma_index=sigma_index)
@@ -1436,9 +1436,8 @@ program test_disk
 
     
     do i=1,NB_SAMPLE_PROFILES
-      a = distance_sample(i)
       ! We generate cartesian coordinate for the given Semi-major axis
-      position(1) = a
+      position(1) = distance_sample(i)
       
       ! We generate cartesian coordinate for the given mass and Semi-major axis
       velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
@@ -1451,7 +1450,7 @@ program test_disk
       ! Calculation of the acceleration due to migration
       viscosity = get_temp_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight, radius=a)
       
-      write(10,*) a, viscosity * num2phys
+      write(10,*) distance_sample(i), viscosity * num2phys
     end do
     
     close(10)
