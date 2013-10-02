@@ -49,7 +49,7 @@ module disk
   real(double_precision) :: X_SAMPLE_STEP ! the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
 
   real(double_precision), dimension(:), allocatable :: distance_sample ! values of 'a' in AU
-  real(double_precision), dimension(:), allocatable :: x_sample ! values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
+  real(double_precision), dimension(:), allocatable :: x_sample ! values of 'x' with x = log(r) (used for the diffusion equation)
   real(double_precision), dimension(:), allocatable :: surface_density_profile ! values of the density in MSUN/AU^2 for each value of the 'a' sample
   real(double_precision), dimension(:), allocatable :: surface_density_index ! values of the local negative slope of the surface density profile
   real(double_precision), dimension(:), allocatable :: temperature_profile ! values of the temperature in K for each value of the 'a' sample
@@ -1082,11 +1082,11 @@ subroutine init_globals(stellar_mass, time)
 ! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
 ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
 ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
-! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
+! X_SAMPLE_STEP : the constant step for the x_sample. Used to find the r values bracketing random values 
 ! X_S_PREFACTOR : prefactor for the half width of the corotation region
 ! SCALEHEIGHT_PREFACTOR : prefactor for the scaleheight
 ! distance_sample : values of 'a' in AU
-! x_sample : values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
+! x_sample : values of 'x' with x = log(r)
 ! surface_density_profile : values of the density in MSUN/AU^2 for each value of the 'a' sample
 ! surface_density_index : values of the local negative slope of the surface density profile
 ! temperature_profile : values of the temperature in K for each value of the 'a' sample
@@ -1239,10 +1239,10 @@ subroutine init_globals(stellar_mass, time)
     
     ! We calculate the initial surface density profile.
     ! First, we want a constant spaced x_sample (which is propto sqrt(r)). Because it is important for diffusion equation which is solved depending on X and not R
-    x_sample(1) = 2.d0 * sqrt(INNER_BOUNDARY_RADIUS)
+    x_sample(1) = log(INNER_BOUNDARY_RADIUS)
     distance_sample(1) = INNER_BOUNDARY_RADIUS
     
-    x_sample(NB_SAMPLE_PROFILES) = 2.d0 * sqrt(OUTER_BOUNDARY_RADIUS)
+    x_sample(NB_SAMPLE_PROFILES) = log(OUTER_BOUNDARY_RADIUS)
     distance_sample(NB_SAMPLE_PROFILES) = OUTER_BOUNDARY_RADIUS
     
     ! We initialize the global variable (in the module) for the constant step of x_sample
@@ -1250,7 +1250,7 @@ subroutine init_globals(stellar_mass, time)
     
     do i=2, NB_SAMPLE_PROFILES - 1
       x_sample(i) = x_sample(1) + X_SAMPLE_STEP * (i - 1.d0)
-      distance_sample(i) = 0.25d0 * x_sample(i)**2
+      distance_sample(i) = exp(x_sample(i))
     end do
     
     ! The x_s value is corrected from (paardekooper, 2010). The expression used is the one from (paardekooper, 2009a)
@@ -1633,11 +1633,11 @@ end subroutine initial_density_profile
     
     ! Global parameter
     ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
-    ! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
+    ! X_SAMPLE_STEP : the constant step for the x_sample. Used to find the r values bracketing random values 
     ! INNER_BOUNDARY_RADIUS : the inner edge of the different profiles
     ! OUTER_BOUNDARY_RADIUS : the outer edge of the different profiles
     ! distance_sample : values of 'a' in AU
-    ! x_sample : values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
+    ! x_sample : values of 'x' with x = log(r)
     ! surface_density_profile : values of the density in MSUN/AU^2 for each value of the 'a' sample
     ! surface_density_index : values of the local negative slope of the surface density profile
     
@@ -1668,7 +1668,7 @@ end subroutine initial_density_profile
 
     if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. distance_sample(NB_SAMPLE_PROFILES-1))) then
       
-      x_radius = 2.d0 * sqrt(radius)
+      x_radius = log(radius)
       ! in the range
       closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
       
@@ -2694,12 +2694,12 @@ real(double_precision) :: x_radius ! the corresponding 'x' value for the radius 
 
 if ((radius .ge. INNER_BOUNDARY_RADIUS) .and. (radius .lt. distance_sample(NB_SAMPLE_PROFILES-1))) then
   
-  x_radius = 2.d0 * sqrt(radius)
+  x_radius = log(radius)
   ! in the range
   closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
   
-  ln_x1 = log(distance_sample(closest_low_id))
-  ln_x2 = log(distance_sample(closest_low_id + 1))
+  ln_x1 = x_sample(closest_low_id)
+  ln_x2 = x_sample(closest_low_id + 1)
   ln_y1 = log(temperature_profile(closest_low_id)) ! This could be a problem when creating the temperature profil because we will have a log(0). But in application we do not use this value. This is just a part of a generic function that we do not use when there is a problem
   ln_y2 = log(temperature_profile(closest_low_id + 1))
 
@@ -2941,11 +2941,11 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
 !
 ! Global parameters
 ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
-! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
+! X_SAMPLE_STEP : the constant step for the x_sample. Used to find the r values bracketing random values 
 ! INNER_BOUNDARY_RADIUS : the inner edge of the different profiles
 ! OUTER_BOUNDARY_RADIUS : the outer edge of the different profiles
 ! distance_sample : values of 'a' in AU
-! x_sample : values of 'x' with x = 2*sqrt(r) (used for the diffusion equation)
+! x_sample : values of 'x' with x = log(r)
 ! torque_profile : The torque profile of the disk, if the option 'manual' is specified for the type of the torque
 
     
@@ -3002,7 +3002,7 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
 
   if ((p_prop%semi_major_axis .ge. INNER_BOUNDARY_RADIUS) .and. (p_prop%semi_major_axis .lt. OUTER_BOUNDARY_RADIUS)) then
     
-    x_radius = 2.d0 * sqrt(p_prop%semi_major_axis)
+    x_radius = log(p_prop%semi_major_axis)
     ! in the range
     closest_low_id = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
     

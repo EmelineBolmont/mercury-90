@@ -1875,7 +1875,7 @@ program test_disk
     
     if ((density_position .gt. INNER_BOUNDARY_RADIUS) .and. (density_position .lt. distance_sample(NB_SAMPLE_PROFILES-1))) then
       
-      x_radius = 2.d0 * sqrt(density_position)
+      x_radius = log(density_position)
       ! in the range
       density_idx = 1 + int((x_radius - x_sample(1)) / X_SAMPLE_STEP) ! X_SAMPLE_STEP being a global value, x_sample also
       density_position = distance_sample(density_idx)

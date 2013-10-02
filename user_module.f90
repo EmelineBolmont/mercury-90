@@ -65,7 +65,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 ! Global parameters
 ! DISSIPATION_TYPE : boolean to tell if there is dissipation of the disk or not.
 ! dissipation_timestep : the timestep between two computation of the disk [in days]
-! X_SAMPLE_STEP : the constant step for the x_sample. Indeed, due to diffusion equation, the sample must be constant in X, and not in r. 
+! X_SAMPLE_STEP : the constant step for the x_sample. Used to find the r values bracketing random values 
 !
   use physical_constant
   use mercury_constant
