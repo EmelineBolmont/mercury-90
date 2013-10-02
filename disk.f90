@@ -961,12 +961,13 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   ! Temporaries
   real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
   real(double_precision) :: a2 ! Square of semi major axis
+  real(double_precision) :: f_nu, g_nu, k_nu ! Temps values that are used several times
   
   a2 = p_prop%semi_major_axis**2
   
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
-  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * a2 * a2 * p_prop%omega**2
+  Gamma_0 = (mass * a2 * p_prop%omega / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma
   
   !------------------------------------------------------------------------------
   ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
@@ -1017,10 +1018,14 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   torque_hs_ent = zeta_eff / gamma_eff * (10.1d0 * sqrt(b_h_factor) - 2.2d0) * b_h_factor ! the factor (1 / Gamma_eff) is applied globally in the corotation torque
   
   !------------------------------------------------------------------------------
-
-  corotation_torque = (1.d0 / gamma_eff) * (torque_hs_baro * get_F(p_nu) * get_G(p_nu) + torque_c_lin_baro * (1.d0 - get_K(p_nu)) &
-    + torque_hs_ent * get_F(p_nu) * get_F(p_chi) * sqrt(get_G(p_nu) * get_G(p_chi)) &
-    + torque_c_lin_ent * sqrt((1.d0 - get_K(p_nu)) * (1.d0 - get_K(p_chi))))
+  
+  f_nu = get_F(p_nu)
+  g_nu = get_G(p_nu)
+  k_nu = get_K(p_nu)
+  
+  corotation_torque = (1.d0 / gamma_eff) * (torque_hs_baro * f_nu * g_nu + torque_c_lin_baro * (1.d0 - k_nu) &
+    + torque_hs_ent * f_nu * get_F(p_chi) * sqrt(g_nu * get_G(p_chi)) &
+    + torque_c_lin_ent * sqrt((1.d0 - k_nu) * (1.d0 - get_K(p_chi))))
   
 
   return
@@ -2709,7 +2714,7 @@ subroutine get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotati
   real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
-  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%semi_major_axis**4 * p_prop%omega**2
+  Gamma_0 = (mass * p_prop%semi_major_axis**2 * p_prop%omega / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma
   
     !------------------------------------------------------------------------------
   ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
@@ -2772,7 +2777,7 @@ subroutine get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corota
   real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
-  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%semi_major_axis**4 * p_prop%omega**2
+  Gamma_0 = (mass * p_prop%semi_major_axis**2 * p_prop%omega / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma
   
     !------------------------------------------------------------------------------
   ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
@@ -2858,7 +2863,7 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
-  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%semi_major_axis**4 * p_prop%omega**2
+  Gamma_0 = (mass * p_prop%semi_major_axis**2 * p_prop%omega / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma
   
     !------------------------------------------------------------------------------
   ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
@@ -2929,7 +2934,7 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
   real(double_precision) :: Q_gamma ! temporary variable : Q_p * ADIABATIC_INDEX
   !------------------------------------------------------------------------------
   ! WE CALCULATE TOTAL TORQUE EXERTED BY THE DISK ON THE PLANET
-  Gamma_0 = (mass / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma * p_prop%semi_major_axis**4 * p_prop%omega**2
+  Gamma_0 = (mass * p_prop%semi_major_axis**2 * p_prop%omega / (stellar_mass * p_prop%aspect_ratio))**2 * p_prop%sigma
   
     !------------------------------------------------------------------------------
   ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
