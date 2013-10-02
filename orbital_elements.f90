@@ -272,7 +272,7 @@ subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
 
 
   
-  ! Inclination and node
+  ! Inclination
   ci = hz / h
   if (abs(ci).lt.1) then
      i = acos (ci)
@@ -291,13 +291,14 @@ subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
 
   ! semi major axis
 !~   a  = gm * r / (2.d0 * gm - r * v2) ! this was the formulae given in the mco_x2a but problems occurs sometimes
-  a = s / (1.d0 - e*e)
+  if (e.lt.1.d0) then
+    a = s / (1.d0 - e*e)
+  else
+    ! In case of collision or any situation where orbits are no longer keplerian, we don't want to get negative values of 'a'. 
+    ! Instead, we will use the instantaneous position as semi major axis.
+    a = r
+  end if
   
-  ! In case of collision or any situation where orbits are no longer keplerian, we don't want to get negative values of 'a'. 
-  ! Instead, we will use the instantaneous position as semi major axis.
-!~   if (a.lt.0.) then
-!~     a = r
-!~   end if
 !~   
 !~   if (e.lt.1.d0) then ! This one seems not to be accurate when e vary a lot. 
 !~     a = s / (1.d0 - e*e)
