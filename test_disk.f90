@@ -283,6 +283,8 @@ program test_disk
     write(10,*) 'set ylabel "temperature [K]"'
       
     write(10,*) 'set grid'
+    write(10,*) 'set logscale x'
+    write(10,*) 'set logscale y'
 
 
     write(10,*) 'plot "temperature_interpolation.dat" using 1:2 with lines title "Interpolation",\'
@@ -333,6 +335,8 @@ program test_disk
     write(10,*) 'set ylabel "density [g/cm^2]"'
       
     write(10,*) 'set grid'
+    write(10,*) 'set logscale x'
+    write(10,*) 'set logscale y'
 
 
     write(10,*) 'plot "density_interpolation.dat" using 1:2 with lines title "Interpolation",\'
@@ -872,21 +876,17 @@ program test_disk
     do j=10,11
       write(j,*) 'set xlabel "Semi-major axis a (AU)"'
       write(j,*) 'set nokey'
+      write(j,*) 'set grid'
+      write(j,*) 'set logscale x'
     end do
     
     write(10,*) 'set logscale y'
-    write(10,*) 'set logscale x'
+    write(11,*) 'set yrange [-10:10]'
+    
     write(10,*) 'set ylabel "Temperature [K]"'
-    
-    
     write(11,*) 'set ylabel "Temperature law index"'
     
-    do j=10,11
-      write(j,*) 'set grid'
-    end do
-
     write(10,*) 'plot "../temperature_profile.dat" using 1:2 with lines notitle'
-    
     write(11,*) 'plot "../temperature_profile.dat" using 1:3 with lines notitle'
     
     close(10)
@@ -916,6 +916,8 @@ program test_disk
   do j=10,11
     write(j,*) 'set xlabel "Semi-major axis a (AU)"'
     write(j,*) 'set nokey'
+    write(j,*) 'set logscale x'
+
   end do
   
   write(10,*) 'set ylabel "Scaleheight H [AU]"'
@@ -959,6 +961,8 @@ program test_disk
     write(10,*) 'set ylabel "Optical depth {/Symbol t}"'
         
     write(10,*) 'set grid'
+    write(10,*) 'set logscale x'
+    write(10,*) 'set logscale y'
 
 
     write(10,*) 'plot "../temperature_profile.dat" using 1:5 with lines notitle'
@@ -988,6 +992,8 @@ program test_disk
     write(10,*) 'set ylabel "Thermal diffusivity {/Symbol c} [AU^2/day]"'
         
     write(10,*) 'set grid'
+    write(10,*) 'set logscale x'
+    write(10,*) 'set logscale y'
 
     write(10,*) 'plot "../temperature_profile.dat" using 1:4 with lines notitle'
     
@@ -1196,6 +1202,7 @@ program test_disk
     do j=10,13
 !~     write(j,*) 'set xrange [', a_min, ':', a_max, '] noreverse'
       write(j,*) 'set grid'
+      write(j,*) 'set logscale x'
       write(j,*) 'set xrange [', mass_min, ':', mass_max, ']'
     end do
 
