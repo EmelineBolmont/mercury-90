@@ -139,12 +139,12 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         call dissipate_disk(time, next_dissipation_step)
         
         ! we get the temperature profile.
-        call calculate_temperature_profile()
+        call calculate_temperature_profile(stellar_mass=mass(1))
         
         ! we store in a .dat file the temperature profile
         call store_temperature_profile(filename='temperature_profile.dat')
         call store_density_profile(filename='surface_density_profile.dat')
-        call store_scaleheight_profile()
+        call store_scaleheight_profile(stellar_mass=mass(1))
       end if
     end if
     !------------------------------------------------------------------------------
@@ -180,8 +180,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             
             
             torque = torque_ref * (lindblad_torque + ecc_corot * corotation_torque)
-    !~         ! use this line instead if you want to cutoff the corotation torque damping due to the eccentricity
-    !~         torque = torque_ref * (lindblad_torque + corotation_torque)
             
 
             time_mig = 0.5d0 * p_prop%angular_momentum / torque

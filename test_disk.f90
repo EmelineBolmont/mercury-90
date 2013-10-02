@@ -60,13 +60,13 @@ program test_disk
 
     
     ! We want to show the torque profile. It is important to check which value has been declared in 'TORQUE_TYPE'
-    call study_torques(stellar_mass)
+    call study_torques(stellar_mass=stellar_mass)
     
     ! we store in a .dat file the temperature profile
     call store_temperature_profile(filename='temperature_profile.dat')
     call store_viscosity_profile(filename='viscosity_profile.dat')
     call store_density_profile(filename='density_profile.dat')
-    call store_scaleheight_profile()
+    call store_scaleheight_profile(stellar_mass=stellar_mass)
     
     ! Unitary tests
     call test_functions_FGK()
@@ -1412,10 +1412,9 @@ program test_disk
     
     real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
     
-    real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2
+    real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2 ! in [msun * K2]
     real(double_precision), parameter :: num2phys = AU**2 / DAY ! convert numerical viscosity to CGS viscosity
     
-    real(double_precision) :: a
     real(double_precision) :: viscosity
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
@@ -1440,7 +1439,7 @@ program test_disk
       position(1) = distance_sample(i)
       
       ! We generate cartesian coordinate for the given mass and Semi-major axis
-      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      velocity(2) = sqrt((stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
@@ -1448,7 +1447,7 @@ program test_disk
       
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to migration
-      viscosity = get_temp_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight, radius=a)
+      viscosity = get_temp_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight, radius=distance_sample(i))
       
       write(10,*) distance_sample(i), viscosity * num2phys
     end do
@@ -1494,7 +1493,7 @@ program test_disk
     real(double_precision), parameter :: a_max = 15d0 ! in AU
     real(double_precision), parameter :: a_step = (a_max - a_min) / (nb_a - 1.d0)
     
-    real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2
+    real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2 ! in [msun * K2]
     
     real(double_precision) :: a, total_torque, corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
@@ -1543,7 +1542,7 @@ program test_disk
       position(1) = a
       
       ! We generate cartesian coordinate for the given mass and Semi-major axis
-      velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+      velocity(2) = sqrt((stellar_mass + mass) / position(1))
       
       ! we store in global parameters various properties of the planet
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
@@ -2196,7 +2195,7 @@ program test_disk
 
       time(k+1) = next_dissipation_step ! days
       ! we get the temperature profile.
-      call calculate_temperature_profile()
+      call calculate_temperature_profile(stellar_mass=stellar_mass)
       
       ! we store in a .dat file the temperature profile
       call store_temperature_profile(filename=filename_temperature)

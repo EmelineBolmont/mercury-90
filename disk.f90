@@ -865,9 +865,8 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
                 p_prop%semi_major_axis,p_prop%eccentricity,p_prop%inclination,p_prop%radius,velocity2_p,h_p)
 
   !------------------------------------------------------------------------------
-!~   p_prop%sigma = get_surface_density(radius=p_prop%radius) ! [Msun/AU^3]
   call get_surface_density(radius=p_prop%semi_major_axis, sigma=p_prop%sigma, sigma_index=p_prop%sigma_index)
-!~   call print_planet_properties(p_prop)
+
   call get_temperature(radius=p_prop%semi_major_axis, & ! Input
                        temperature=p_prop%temperature, temperature_index=p_prop%temperature_index, chi=p_prop%chi, & ! Output
                        nu=p_prop%nu) ! Output
@@ -880,23 +879,11 @@ subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
   !------------------------------------------------------------------------------
   ! H = sqrt(k_B * T / (omega^2 * mu * m_H))
   p_prop%scaleheight = get_scaleheight(temperature=p_prop%temperature, angular_speed=p_prop%omega)
-!~   p_prop%scaleheight = 0.05 * p_prop%semi_major_axis
 
   !------------------------------------------------------------------------------
-!~   p_prop%nu = alpha * p_prop%omega * p_prop%scaleheight**2 ! [AU^2.day-1]
-!~   p_prop%nu = get_tabulated_viscosity(radius=p_prop%radius)! [AU^2.day-1]
 
   p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
-!~     write(*,'(e12.4)') p_prop%nu * AU**2 / DAY 
 
-!~   if (abs(p_prop%radius-p_prop%semi_major_axis)/p_prop%radius.gt.1e-2) then
-!~     write(*,'(a,es10.1e2,a,es10.1e2,a)') 'r = ', p_prop%radius, ' (AU) and a = ', p_prop%semi_major_axis, ' (AU)'
-!~     call print_planet_properties(p_prop) 
-!~     stop
-!~   end if
-  !------------------------------------------------------------------------------
-!~   p_prop%chi = 1.d-5 * p_prop%radius**2 * p_prop%omega ! comment if you want to use the thermal diffusivity calculated from the temperature profile
-  
 end subroutine get_planet_properties
 
 function get_scaleheight(temperature, angular_speed)
@@ -925,7 +912,6 @@ function get_corotation_damping(e, x_s)
   real(double_precision), parameter :: c = -2.34d0
   !------------------------------------------------------------------------------
   
-!~   get_corotation_damping = 1.d0 - dtanh(e / x_s)
   get_corotation_damping = 1.d0 + a * (dtanh(c) - dtanh((b * e) / x_s + c))
 
 end function get_corotation_damping
@@ -995,9 +981,6 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   sqrt(2.d0 * (sqrt((Q_gamma * Q_gamma + 1.d0)**2 - 16.d0 * Q_p * (Q_gamma - Q_p)) &
   + Q_gamma * Q_gamma - 1.d0)))
   
-!~   write(*,*) p_prop%chi, p_prop%aspect_ratio, p_prop%scaleheight, p_prop%omega
-!~   stop
-  
   !------------------------------------------------------------------------------
   zeta_eff = p_prop%temperature_index - (gamma_eff - 1.d0) * p_prop%sigma_index
   
@@ -1007,7 +990,6 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   ! k_p is defined to limit the number of operation and to have a value independant from chi_p or nu_p
   k_p = a2 * p_prop%omega * x_s * x_s * x_s / (2.d0 * PI)
   
-!~   ecc_corot = 1.d0 - dtanh(p_prop%eccentricity / x_s)
   ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
   
   !------------------------------------------------------------------------------
@@ -1287,12 +1269,12 @@ subroutine init_globals(stellar_mass, time)
     end if
     
     ! we get the temperature profile, but we need the surface density profile before.
-    call calculate_temperature_profile() ! WARNING : SCALEHEIGHT_PREFACTOR must exist before the temperature profile is computed !
+    call calculate_temperature_profile(stellar_mass=stellar_mass) ! WARNING : SCALEHEIGHT_PREFACTOR must exist before the temperature profile is computed !
     
     ! we store in a .dat file the temperature profile
     call store_temperature_profile(filename='temperature_profile.dat')
     call store_density_profile(filename='density_profile.dat')
-    call store_scaleheight_profile()
+    call store_scaleheight_profile(stellar_mass=stellar_mass)
     
     if (TORQUE_TYPE.eq.'manual') then
       call read_torque_profile()
@@ -1302,7 +1284,7 @@ subroutine init_globals(stellar_mass, time)
     ! turbulence is not always declared, even if we test it.
     ! We only initialize the turbulence if there is no value (which would means that the value was defined in the parameter file 'disk.in'
     if (TURBULENT_FORCING_MANUAL.eq.0.d0) then
-      call init_turbulence_forcing() 
+      call init_turbulence_forcing(stellar_mass=stellar_mass) 
     else
       TURBULENT_FORCING = TURBULENT_FORCING_MANUAL
     end if
@@ -1530,14 +1512,6 @@ subroutine initial_density_profile()
                                    / (log(distance_sample(i+1)) - log(distance_sample(i)))
     end do
   end if
-  
-  
-!~   write(*,*) 'Warning: the initial profil is linear for tests of viscous dissipation!'
-!~   do i=1,NB_SAMPLE_PROFILES
-!~     surface_density_profile(i)=INITIAL_SIGMA_0_NUM*(1-distance_sample(i)/distance_sample(NB_SAMPLE_PROFILES)) ! linear decay of the surface density, for tests
-!~   end do
-  
-
   
 end subroutine initial_density_profile
 
@@ -1798,7 +1772,7 @@ end subroutine initial_density_profile
   
   end function get_alpha_dz_viscosity
   
-  subroutine init_turbulence_forcing()
+  subroutine init_turbulence_forcing(stellar_mass)
   ! function that return the viscosity of the disk in [AU^2.day^-1]
   
   ! Parameters
@@ -1809,13 +1783,15 @@ end subroutine initial_density_profile
   
   implicit none
   
+  ! Inputs
+  real(double_precision) :: stellar_mass ! stellar mass in [Msun * K2]
+  
   ! Output
   !   No outputs
   
   ! Parameter
   real(double_precision) :: radius ! the distance from the central object in AU
-  real(double_precision), parameter :: mass = 1. * EARTH_MASS ! in [Msun], the mass of a planet (needed to compute the angular velocity)
-  real(double_precision), parameter :: stellar_mass = 1.d0 ! stellar mass in [Msun]
+  real(double_precision), parameter :: mass = 1. * EARTH_MASS * K2 ! in [Msun * K2], the mass of a planet (needed to compute the angular velocity)
   
   ! Locals
   real(double_precision), dimension(3) :: position
@@ -1831,7 +1807,7 @@ end subroutine initial_density_profile
   position(1) = radius
 
   ! We generate cartesian coordinate for the given mass and semi major axis
-  velocity(2) = sqrt(K2 * (stellar_mass + mass) / position(1))
+  velocity(2) = sqrt((stellar_mass + mass) / position(1))
   
   ! we store in global parameters various properties of the planet
   call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
@@ -1840,9 +1816,6 @@ end subroutine initial_density_profile
   ! /!\ Warning : When using dead zone, the variation of turbulence throughough the disk is not taken into account !
   TURBULENT_FORCING = sqrt(get_temp_viscosity(omega=p_prop%omega, scaleheight=p_prop%scaleheight, radius=radius) &
                            / (140. * p_prop%omega)) / radius
-  
-!~   write(*,'(a,es10.3e2)') 'turbulence forcing = ', TURBULENT_FORCING
-!~   stop
   
   end subroutine init_turbulence_forcing
   
@@ -2014,7 +1987,7 @@ end subroutine initial_density_profile
     return
   end function get_opacity_zhu_2009
 
-  subroutine calculate_temperature_profile()
+  subroutine calculate_temperature_profile(stellar_mass)
 ! subroutine that calculate the temperature profile of the disk given various parameters including the surface density profile.
 ! 
 ! Global parameters
@@ -2031,11 +2004,14 @@ end subroutine initial_density_profile
 
     implicit none
 
+    ! Inputs
+    real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
+
     ! Local
     real(double_precision), parameter :: mass = 20. * EARTH_MASS * K2
     
     real(double_precision) :: a
-    real(double_precision) :: stellar_mass, position(3), velocity(3), temperature, exponant
+    real(double_precision) :: position(3), velocity(3), temperature, exponant
     type(PlanetProperties) :: p_prop
 
     ! value for the precedent step of the loop. In order to calculate the index of the local temperature power law.
@@ -2048,9 +2024,6 @@ end subroutine initial_density_profile
     position(1:3) = 0.d0
     velocity(1:3) = 0.d0
     
-    ! stellar mass
-    stellar_mass = 1.d0 * K2  
-  
     ! We create a fantom point after the last point
     a = 1000.d0 ! We place the fantom point at 1000 AU to limit the influence of the outer edge 
     ! We generate cartesian coordinate for the given semi major axis
@@ -2133,8 +2106,6 @@ end subroutine initial_density_profile
     
     do i=1,NB_SAMPLE_PROFILES
       surface_density_profile(i) = surface_density_profile(i) * exp(- delta_t / tau)
-!~       surface_density_index(i) = - (log(surface_density_profile(i)) - log(surface_density_profile(i-1))) &
-!~                                   / (log(distance_sample(i)) - log(distance_sample(i-1)))
     end do
   
   end subroutine exponential_decay_density_profile
@@ -2270,7 +2241,7 @@ end subroutine initial_density_profile
   
   end subroutine store_density_profile
   
-  subroutine store_scaleheight_profile()
+  subroutine store_scaleheight_profile(stellar_mass)
   ! subroutine that store in a '.dat' file the scaleheight profile
   
   ! Global parameters
@@ -2278,16 +2249,16 @@ end subroutine initial_density_profile
   
   implicit none
   
+  real(double_precision), intent(in) :: stellar_mass ! in [msun * K2]
+  
   integer :: j ! for loops
-  real(double_precision) :: a, scaleheight
-  real(double_precision) :: position(3), velocity(3), stellar_mass, mass
+  real(double_precision) :: scaleheight
+  real(double_precision) :: position(3), velocity(3), mass
   type(PlanetProperties) :: p_prop
 
   position(1:3) = 0.d0
   velocity(1:3) = 0.d0
 
-  ! stellar mass
-  stellar_mass = 1.d0 * K2
   ! planet mass
   mass = 20. * EARTH_MASS * K2
   
@@ -2295,9 +2266,8 @@ end subroutine initial_density_profile
   open(10, file='scaleheight_profile.dat', status='replace')
   write(10,'(a)') '# a in AU ; scaleheight (AU) ; aspect ratio'
   do j=1,NB_SAMPLE_PROFILES
-    a = distance_sample(j)
     ! We generate cartesian coordinate for the given semi major axis
-    position(1) = a
+    position(1) = distance_sample(j)
     
     ! We generate cartesian coordinate for the given mass and semi major axis
     velocity(2) = sqrt((stellar_mass + mass) / position(1))
@@ -2305,7 +2275,8 @@ end subroutine initial_density_profile
     ! we store in global parameters various properties of the planet
     call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
      p_prop=p_prop) ! Output
-    write(10,*) a, p_prop%scaleheight, p_prop%aspect_ratio
+    
+    write(10,*) distance_sample(j), p_prop%scaleheight, p_prop%aspect_ratio
   end do
   
   close(10)
@@ -2536,17 +2507,6 @@ real(double_precision) :: rho ! the bulk density of the disk at a given position
 real(double_precision) :: tau_eff
 real(double_precision) :: envelope_heating, viscous_heating, black_body
 !------------------------------------------------------------------------------
-!~ scaleheight = get_scaleheight(temperature=temperature, angular_speed=omega)
-!~ rho = 0.5d0 * sigma / scaleheight
-!~ optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if there is scaleheight in rho, the real formulae is this one. The formulae for rho is an approximation.
-!~ 
-!~ 
-!~ envelope_heating = -SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
-!~ viscous_heating = prefactor * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
-!~ 
-!~ ! 1.7320508075688772d0 = sqrt(3)
-!~ funcv = SIGMA_STEFAN * temperature**4 + viscous_heating + envelope_heating
-
 ! All surface terms have a factor 2 because the disk has 2 surfaces (top and bottom). 
 ! Only the viscous term does not have this 2 factor so far
 ! Heating terms are positive, cooling terms are negative
@@ -2568,20 +2528,6 @@ black_body = -2.d0 * SIGMA_STEFAN * temperature**4 / tau_eff ! cooling term
 !------------------------------------------------------------------------------
 
 funcv =  black_body + viscous_heating + envelope_heating
-
-!~ if (distance_new.lt.0.4) then
-!~   write(*,'(a)')            '------------------------------------------------'
-!~   write(*,'(a,es10.3e2)')   '|Temperature = ', temperature
-!~   write(*,'(a,es10.3e2)')   '|f(T) = ', funcv
-!~   write(*,'(a,es10.3e2,a)') '|Scaleheight = ',scaleheight, ' AU'
-!~   write(*,'(a,es10.3e2)')   '|optical depth = ', optical_depth
-!~   write(*,'(a,es10.3e2,a)') '|bulk density = ',rho, ' MSUN/AU**3'
-!~   write(*,'(a)')            '------------------------------------------------'
-!~   write(*,'(a,es10.3e2)')   '|-9*nu*sigma*omega**2/32 = ',prefactor 
-!~   write(*,'(a,es10.3e2)')   '|viscous heating = ', prefactor * &
-!~                              (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth))
-!~   write(*,'(a)')            '------------------------------------------------'
-!~ end if
 
 return
 end subroutine temperature_pure_viscous
@@ -2658,24 +2604,6 @@ black_body = -2.d0 * SIGMA_STEFAN * temperature**4 / tau_eff ! cooling term
 !------------------------------------------------------------------------------
 
 funcv =  black_body + irradiation + viscous_heating + envelope_heating
-
-!~ write(error_unit,'(a)')            '------------------------------------------------'
-!~ write(error_unit,'(a,es10.3e2)') 'old aspect ratio = ',aspect_ratio_old
-!~ write(error_unit,'(a,es10.3e2)') 'temperature = ', temperature
-!~ write(error_unit,'(a)')            '------------------------------------------------'
-!~ write(error_unit,'(a,es10.3e2)') '-9*nu*sigma*omega**2/32 = ',prefactor 
-!~ write(error_unit,'(a,es10.3e2)') 'prefactor irradiation = ', prefactor_irradiation 
-!~ write(error_unit,'(a,es10.3e2)') 'flaring angle = ',flaring_angle
-!~ write(error_unit,'(a)')            '------------------------------------------------'
-!~ write(error_unit,'(a,es10.3e2,a)') '|scaleheight = ',scaleheight, ' AU'
-!~ write(error_unit,'(a,es10.3e2)')  '|optical depth = ', optical_depth
-!~ write(error_unit,'(a,es10.3e2,a)')'|bulk density = ',rho, ' MSUN/AU**3'
-!~ write(error_unit,'(a,es10.3e2)') '|aspect ratio = ',aspect_ratio_new 
-!~ write(error_unit,'(a)')            '------------------------------------------------'
-!~ write(error_unit,'(a,es10.3e2)') '|envelope_heating = ', envelope_heating 
-!~ write(error_unit,'(a,es10.3e2)') '|viscous heating = ', viscous_heating
-!~ write(error_unit,'(a,es10.3e2)') '|irradiation = ', irradiation 
-!~ write(error_unit,'(a)')            '------------------------------------------------'
 
 return
 end subroutine temperature_with_irradiation
