@@ -1,5 +1,6 @@
-! Program that test different functions implemented in the module user_module.
-program torque_diagram
+! Program that create the migration map of a given disk (from its disk.in informations). The program will generate data files and a 
+! total_torque.gnuplot file that allow you to generate a total_torque.pdf file through Gnuplot
+program migration_map
   use types_numeriques
   use disk
   use disk_properties
@@ -447,4 +448,4 @@ end subroutine write_torquein
     
   end subroutine study_torques
 
-end program torque_diagram
+end program migration_map
