@@ -7,27 +7,27 @@ module tides_constant_GR
   ! Date: 04/04/13
   !
   ! Output of spin every 'output' years
-  integer, parameter :: output=100
+  integer, parameter :: output = 100
   ! If you want Tides or not
-  integer, parameter :: tides=1
+  integer, parameter :: tides = 1
   ! If you want General Relativity or not
-  integer, parameter :: GenRel=1
+  integer, parameter :: GenRel = 1
   ! Number of tidally evolving planets
-  integer, parameter :: ntid=2
+  integer, parameter :: ntid = 2
   ! Nature of host body
-  integer, parameter :: brown_dwarf=1
-  integer, parameter :: M_dwarf=0
-  integer, parameter :: Sun_like_star=0  
-  integer, parameter :: Jupiter_host=0  
+  integer, parameter :: brown_dwarf = 1
+  integer, parameter :: M_dwarf = 0
+  integer, parameter :: Sun_like_star = 0  
+  integer, parameter :: Jupiter_host = 0  
   ! For an utilization of the code with no changing host body
-  integer, parameter :: Rscst=0 !=1 : Rs = cst, rg2s = cst
+  integer, parameter :: Rscst = 0 !=1 : Rs = cst, rg2s = cst
   real(double_precision), parameter :: Rjup = 10.9d0 !rearth	
   
   ! Integration stuff
-  real(double_precision), parameter :: t_init = 1.d6*365.25!1.0d6*365.25
+  real(double_precision), parameter :: t_init = 1.d6 * 365.25!1.0d6*365.25
   ! If crash, write last line of spin.dat here : 
-  integer, parameter :: crash=0
-  real(double_precision), parameter :: t_crash = 0.0d0*365.25!1.0d6*365.25
+  integer, parameter :: crash = 0
+  real(double_precision), parameter :: t_crash = 0.0d0 * 365.25!1.0d6*365.25
   real(double_precision), parameter, dimension(3) :: rot_crash  = (/0.0,0.0,0.0/)
   real(double_precision), parameter, dimension(3) :: rot_crashp1 = (/0.0,0.0,0.0/)
   real(double_precision), parameter, dimension(3) :: rot_crashp2 = (/0.0,0.0,0.0/)
@@ -44,7 +44,7 @@ module tides_constant_GR
   real(double_precision), parameter, dimension(ntid) :: Pp0 = (/24.d0, 24.d0/) 	
   real(double_precision), parameter, dimension(ntid) :: dissplan = (/1.d0,10.d0/)
   ! Planets obliquities in rad
-  real(double_precision), parameter, dimension(ntid) :: oblp = (/0.0d0,0.0d0/)				
+  real(double_precision), parameter, dimension(ntid) :: oblp = (/0.0d0,0.0d0/)	
   
   ! Indicate if Planet is of known parameters.
   ! 0: Earth-like, 1: Terrestrial (no mass-radius relationship), 2: Gas giant
