@@ -20,6 +20,7 @@ program torque_diagram
   real(double_precision) :: mass_max ! in solar mass
   real(double_precision) :: torque_min = -5.d0 ! Torque boundaries for the gnuplot display
   real(double_precision) :: torque_max =  5.d0 ! Torque boundaries for the gnuplot display
+  integer :: is_log_scale = 1 ! (0: False ; 1: True) If the distance is displayed in log-scale or not
   !--------------------------------
   
   call init_and_test()
@@ -141,6 +142,9 @@ program torque_diagram
         case('torque_max')
           read(value, *) torque_max
         
+        case('log_scale')
+          read(value, *) is_log_scale
+        
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
           write(*,*) "identificator='", trim(identificator), "' ; value(s)='", trim(value),"'"
@@ -178,14 +182,6 @@ subroutine write_torquein()
   
   open(10, file='torque.in')
   write(10,'(a)') '! Parameters to build the migration map'
-  write(10,'(a)') '! SAMPLE TUNNING'
-  write(10,'(a)') '! 1) Between a_min and 1st transition radius, we will have 10% of the total '
-  write(10,'(a)') '!    number of points, log-spaced'
-  write(10,'(a)') '! 2) Between 1st and 2nd transition radii, we will have the expected number '
-  write(10,'(a)') '!    of points in this range if everything was log-spaced, except this will '
-  write(10,'(a)') '!    be linearly spaced.'
-  write(10,'(a)') '! 3) Between 2nd transition radius and a_max, remaining points are log-spaced'
-  write(10,'(a,2(f5.1),a)') 'a_transition = ', a_transition, " ! (2 transition radii) in AU"
   write(10,'(a)') '! DISTANCE RANGE'
   write(10,'(a,f5.1,a)') 'a_min = ', a_min, " ! in AU"
   write(10,'(a,f5.1,a)') 'a_max = ', a_max, " ! in AU"
@@ -197,10 +193,16 @@ subroutine write_torquein()
   write(10,'(a)') '! TORQUE RANGE'
   write(10,'(a,f5.1,a)') 'torque_min = ', torque_min, " ! in units of Gamma_0"
   write(10,'(a,f5.1,a)') 'torque_max = ', torque_max, " ! in units of Gamma_0"
-
-
-
-
+  write(10,'(a)') '! DISTANCE IN LOG SCALE'
+  write(10,'(a,i1,a)') 'log_scale = ', is_log_scale, " ! 1: True ; 0: False"
+  write(10,'(a)') '! IF LINEAR SCALE'
+  write(10,'(a)') '! 1) Between a_min and 1st transition radius, we will have 10% of the total '
+  write(10,'(a)') '!    number of points, log-spaced'
+  write(10,'(a)') '! 2) Between 1st and 2nd transition radii, we will have the expected number '
+  write(10,'(a)') '!    of points in this range if everything was log-spaced, except this will '
+  write(10,'(a)') '!    be linearly spaced.'
+  write(10,'(a)') '! 3) Between 2nd transition radius and a_max, remaining points are log-spaced'
+  write(10,'(a,2(f5.1),a)') 'a_transition = ', a_transition, " ! (2 transition radii) in AU"
   write(10,*) ''
   close(10)
   
@@ -252,51 +254,57 @@ end subroutine write_torquein
       allocate(total_torque(nb_distance, nb_mass))
     end if
     
-    
-    mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
-    
-    ! first regime
-    nb_tmp = nb_distance / 10
-    if (a_min.lt.a_transition(1)) then
-      a_step = (a_transition(1) / a_min)**(1.d0 / (dfloat(nb_tmp)))
-      
-      do i=1,nb_tmp
-        a(i) = a_min * a_step**(i - 1)
-      end do
-    end if
-    idx = i
-    
-    ! second regime
-    a_start = max(a_min, a_transition(1))
-    if (a_max.lt.a_transition(2)) then
-      nb_tmp = nb_distance - idx
-      a_stop = a_max
-    else
-      ! We calculate the number of log-spaced points we would have in the second regime if all the remaining space was in log, 
-      ! and we will space them linearly in the second regime.
-      nb_tmp = int(dfloat((nb_distance - idx)) * (log(a_transition(2))-log(a_start)) / (log(a_max)-log(a_start)))
-      a_stop = a_transition(2)
-    end if
-    
-    a_step = (a_stop - a_start) / (dfloat(nb_tmp))
-    
-    do i=idx, idx + nb_tmp
-      a(i) = a_start + a_step * (i-idx)
-    end do
-    idx = i
-    
-    ! third regime
-    a_start = a(idx-1) + a_step
-    a_step = (a_max / a_start)**(1.d0 / (dfloat(nb_distance - idx)))
-    
-    do i=idx, nb_distance
-      a(i) = a_start * a_step**(i - idx)
-    end do
-    
     ! mass array
+    mass_step = (mass_max - mass_min) / (nb_mass - 1.d0)
     do j=1, nb_mass
       mass(j) = (mass_min + mass_step * (j - 1.d0)) * K2 ! mass in [Msun * K2]
     end do
+    
+    ! Distance array
+    if (is_log_scale.eq.0) then
+      ! first regime
+      nb_tmp = nb_distance / 10
+      if (a_min.lt.a_transition(1)) then
+        a_step = (a_transition(1) / a_min)**(1.d0 / (dfloat(nb_tmp)))
+        
+        do i=1,nb_tmp
+          a(i) = a_min * a_step**(i - 1)
+        end do
+      end if
+      idx = i
+      
+      ! second regime
+      a_start = max(a_min, a_transition(1))
+      if (a_max.lt.a_transition(2)) then
+        nb_tmp = nb_distance - idx
+        a_stop = a_max
+      else
+        ! We calculate the number of log-spaced points we would have in the second regime if all the remaining space was in log, 
+        ! and we will space them linearly in the second regime.
+        nb_tmp = int(dfloat((nb_distance - idx)) * (log(a_transition(2))-log(a_start)) / (log(a_max)-log(a_start)))
+        a_stop = a_transition(2)
+      end if
+      
+      a_step = (a_stop - a_start) / (dfloat(nb_tmp))
+      
+      do i=idx, idx + nb_tmp
+        a(i) = a_start + a_step * (i-idx)
+      end do
+      idx = i
+      
+      ! third regime
+      a_start = a(idx-1) + a_step
+      a_step = (a_max / a_start)**(1.d0 / (dfloat(nb_distance - idx)))
+      
+      do i=idx, nb_distance
+        a(i) = a_start * a_step**(i - idx)
+      end do
+    else ! We want a full log-scale
+      a_step = (a_max / a_min)**(1.d0 / (dfloat(nb_distance)))
+      do i=1,nb_distance
+        a(i) = a_min * a_step**(i - 1)
+      end do
+    end if
     
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total, lindblad and corotation torques depending on the planet mass and distance'
@@ -366,6 +374,9 @@ end subroutine write_torquein
     write(11,*) 'set grid xtics ytics linetype 0'
     write(11,*) 'set xrange [', a_min, ':', a_max + range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+    if (is_log_scale.eq.1) then
+      write(11,*) 'set logscale x'
+    end if
     write(11,'(a,f5.1,a,f5.1,a)') ' set cbrange [',torque_min,':', torque_max,']'
     write(11,*) "splot 'total_torque.dat' with pm3d notitle, \"
     write(11,*) "      'contour_total_torque.dat' with line linetype -1 linewidth 1 notitle"
@@ -384,6 +395,9 @@ end subroutine write_torquein
     write(11,*) 'unset colorbox'
     write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
     write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+    if (is_log_scale.eq.1) then
+      write(11,*) 'set logscale x'
+    end if
     write(11,'(a,f5.1,a,f5.1,a)') ' set cbrange [',torque_min,':', torque_max,']'
     write(11,*) "splot 'total_torque.dat' with pm3d notitle"
     write(11,*) ""
@@ -397,6 +411,9 @@ end subroutine write_torquein
     write(11,*) "set cbtics"
     write(11,*) "set colorbox"
     write(11,*) "unset border"
+    if (is_log_scale.eq.1) then
+      write(11,*) 'unset logscale x'
+    end if
     write(11,'(a,f5.1,a,f5.1,a)') ' set cbrange [',torque_min,':', torque_max,']'
     write(11,*) "set lmargin at screen 0.15"
     write(11,*) "set rmargin at screen 0.85"
@@ -414,6 +431,9 @@ end subroutine write_torquein
     write(11,*) "set grid xtics ytics linetype 0"
     write(11,*) "set border"
     write(11,*) "set tics"
+    if (is_log_scale.eq.1) then
+      write(11,*) 'set logscale x'
+    end if
     write(11,*) 'set xlabel "Semi-major axis (AU)"'
     write(11,*) 'set ylabel "Planet mass (m_{earth})"'
     write(11,*) 'set title "Evolution of the total torque {/Symbol G}_{tot}/{/Symbol G}_0 "'
