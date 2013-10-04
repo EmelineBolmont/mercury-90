@@ -61,6 +61,7 @@ module disk_properties
   ! If 'manual' is chosen, the code will read the file 'torque_profile.dat' that must exist and the first column must be semi major axis in AU, and the second one is the torque (in units of \Gamma_0 for the moment)
   character(len=80) :: TORQUE_TYPE = 'real' 
   character(len=80) :: OPACITY_TYPE = 'bell' 
+  character(len=80) :: DAMPING_TYPE = 'cossou' 
   
   ! Here we define the constant value of the viscosity of the disk
   character(len=80) :: VISCOSITY_TYPE = 'constant' ! 'constant' or 'alpha', or 'alpha_dz'
@@ -126,6 +127,7 @@ module disk_properties
   procedure(get_opacity_interface), pointer :: get_opacity
   procedure(get_viscosity_interface), pointer :: get_temp_viscosity ! Only used to retrieve the temperature profile. 
   ! After that, we use a tabulated viscosity profile, fixed once and for all.
+  procedure(get_corotation_damping_interface), pointer :: get_corotation_damping
   
   abstract interface 
   subroutine get_torques_interface(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0, ecc_corot)
@@ -198,6 +200,24 @@ module disk_properties
     real(double_precision) :: get_viscosity_interface ! in [AU^2.day-1]
   
   end function get_viscosity_interface
+  end interface
+  
+  abstract interface 
+  function get_corotation_damping_interface(e, x_s, h)
+  ! subroutine that return the corotation damping for a planet given its eccentricity
+    import
+    
+    implicit none
+    
+    ! Inputs 
+    real(double_precision), intent(in) :: e ! eccentricity
+    real(double_precision), intent(in) :: x_s  ! half-width of the horseshoe region
+    real(double_precision), intent(in) :: h ! aspect ratio of the disk
+  
+    ! Outputs
+    real(double_precision) :: get_corotation_damping_interface
+  
+  end function get_corotation_damping_interface
   end interface
 contains
 

@@ -197,6 +197,9 @@ subroutine read_disk_properties()
         case('opacity_type')
           read(value, *) OPACITY_TYPE
         
+        case('damping_type')
+          read(value, *) DAMPING_TYPE
+        
         case('disk_albedo')
           read(value, *) DISK_ALBEDO
         
@@ -571,6 +574,12 @@ subroutine write_diskin()
 
   write(10,'(a)') ""
   write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!*     Corotation damping    *"
+  write(10,'(a)') "!*****************************"
+  write(10,'(a)') "!# ['cossou', 'pierens', 'fendyke', 'none']"
+  write(10,'(a, a)') 'damping_type = ', trim(DAMPING_TYPE)
+  write(10,'(a)') ""
+  write(10,'(a)') "!*****************************"
   write(10,'(a)') "!*      Migration Torque     *"
   write(10,'(a)') "!*****************************"
   write(10,'(a)') "!# ['real', 'mass_dependant', 'linear_indep', 'tanh_indep', 'manual']"
@@ -777,6 +786,26 @@ subroutine write_disk_properties()
   write(10,'(a,f5.3,a)') 'cut off : semi major axis < ',INNER_BOUNDARY_RADIUS, ' AU'
   write(10,'(a,f5.3)') 'cut off : eccentricity > ',ECCENTRICITY_CUTOFF
   write(10,*) ''
+    write(10,'(a, a)', advance='no') 'damping type = ', trim(DAMPING_TYPE)
+  select case(DAMPING_TYPE)
+    case('cossou')
+      write(10,'(a)') ' (Corotation damping from (Cossou & Raymond, 2013))'
+    
+    case('pierens')
+      write(10,'(a)') ' (Corotation damping from (Pierens & Cossou, 2013))'
+    
+    case('fendyke') !
+      write(10,'(a)') ' (Corotation damping from (Fendyke & Nelson, 2013))'
+      
+    case('none') !
+      write(10,'(a)') ' (No Corotation damping)'
+    
+    case default
+      write(10,'(a)') ' /!\' 
+      write(10,'(a)') '  Warning: The damping rule cannot be found.'
+      write(10,'(a)') '  Values possible : cossou ; pierens ; fendyke ; none'
+  end select
+  write(10,*) ''
   write(10,'(a)') "Possible values : 'real', 'mass_independant', 'linear_indep', 'tanh_indep'"
   write(10,'(a, a)', advance='no') 'torque type = ', trim(TORQUE_TYPE)
   select case(TORQUE_TYPE)
@@ -898,23 +927,89 @@ get_scaleheight = SCALEHEIGHT_PREFACTOR * sqrt(temperature) / angular_speed
 
 end function get_scaleheight
 
-function get_corotation_damping(e, x_s)
+function get_corotation_damping_cossou(e, x_s, h)
   ! Function that return the prefactor, between 0 and 1, to apply on the corotation torque due to the value of the eccentricity
 
   implicit none
-  real(double_precision), intent(in) :: e
-  real(double_precision), intent(in) :: x_s
+  real(double_precision), intent(in) :: e ! Eccentricity
+  real(double_precision), intent(in) :: x_s ! half-width of the horseshoe region
+  real(double_precision), intent(in) :: h ! aspect ratio of the disk
   
-  real(double_precision) :: get_corotation_damping
+  real(double_precision) :: get_corotation_damping_cossou
   
   real(double_precision), parameter :: a = 0.45d0
   real(double_precision), parameter :: b = 3.46d0
   real(double_precision), parameter :: c = -2.34d0
   !------------------------------------------------------------------------------
   
-  get_corotation_damping = 1.d0 + a * (dtanh(c) - dtanh((b * e) / x_s + c))
+  get_corotation_damping_cossou = 1.d0 + a * (dtanh(c) - dtanh((b * e) / x_s + c))
 
-end function get_corotation_damping
+return
+end function get_corotation_damping_cossou
+
+function get_corotation_damping_pierens(e, x_s, h)
+  ! Function that return the prefactor, between 0 and 1, to apply on the corotation torque due to the value of the eccentricity
+
+  implicit none
+  real(double_precision), intent(in) :: e ! Eccentricity
+  real(double_precision), intent(in) :: x_s ! half-width of the horseshoe region
+  real(double_precision), intent(in) :: h ! aspect ratio of the disk
+  
+  real(double_precision) :: get_corotation_damping_pierens
+  real(double_precision) :: e_x_s
+  
+  !------------------------------------------------------------------------------
+  e_x_s = (e / x_s)
+  
+  if (e_x_s.lt.10.d0) then
+    get_corotation_damping_pierens = exp(-0.25d0 * e_x_s**2)
+  else
+    get_corotation_damping_pierens = 0.d0
+  end if
+    
+return
+end function get_corotation_damping_pierens
+
+function get_corotation_damping_fendyke(e, x_s, h)
+  ! Function that return the prefactor, between 0 and 1, to apply on the corotation torque due to the value of the eccentricity
+
+  implicit none
+  real(double_precision), intent(in) :: e ! Eccentricity
+  real(double_precision), intent(in) :: x_s ! half-width of the horseshoe region
+  real(double_precision), intent(in) :: h ! aspect ratio of the disk
+  
+  real(double_precision) :: get_corotation_damping_fendyke
+  
+  real(double_precision) :: me_f ! minus e_f
+  real(double_precision) :: argument
+  !------------------------------------------------------------------------------
+  me_f = -0.5d0 * h - 0.01d0
+  argument = e / me_f
+  
+  if (argument.gt.-100.d0) then
+	get_corotation_damping_fendyke = exp(argument)
+  else
+    get_corotation_damping_fendyke = 0.d0
+  endif
+  
+return
+end function get_corotation_damping_fendyke
+
+function get_corotation_damping_none(e, x_s, h)
+  ! Function that return the prefactor, between 0 and 1, to apply on the corotation torque due to the value of the eccentricity
+
+  implicit none
+  real(double_precision), intent(in) :: e ! Eccentricity
+  real(double_precision), intent(in) :: x_s ! half-width of the horseshoe region
+  real(double_precision), intent(in) :: h ! aspect ratio of the disk
+  
+  real(double_precision) :: get_corotation_damping_none
+  !------------------------------------------------------------------------------
+  
+  get_corotation_damping_none = 1.d0
+
+return
+end function get_corotation_damping_none
 
 subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_torque, lindblad_torque, Gamma_0, ecc_corot)
 ! function that return the total torque exerted by the disk on the planet 
@@ -991,7 +1086,7 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   ! k_p is defined to limit the number of operation and to have a value independant from chi_p or nu_p
   k_p = a2 * p_prop%omega * x_s * x_s * x_s / (2.d0 * PI)
   
-  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
+  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s, h=p_prop%aspect_ratio)
   
   !------------------------------------------------------------------------------
   p_nu = TWOTHIRD * sqrt(k_p / p_prop%nu)
@@ -1127,6 +1222,26 @@ subroutine init_globals(stellar_mass, time)
         write(error_unit,*) 'Values possible : real ; linear_indep ; tanh_indep ; mass_dependant ; manual'
         write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
         call exit(1)
+    end select
+    
+    select case(DAMPING_TYPE)
+      case('cossou')
+        get_corotation_damping => get_corotation_damping_cossou
+      
+      case('pierens')
+        get_corotation_damping => get_corotation_damping_pierens
+      
+      case('fendyke')
+        get_corotation_damping => get_corotation_damping_fendyke
+      
+      case('none')
+        get_corotation_damping => get_corotation_damping_none
+        
+      case default
+        write (error_unit,*) 'The damping_type="', trim(DAMPING_TYPE),'" cannot be found.'
+        write(error_unit,*) 'Values possible : cossou ; pierens ; fendyke ; none'
+        write(error_unit, '(a)') 'Error in user_module, subroutine init_globals' 
+        call exit(9)
     end select
     
     if (IS_IRRADIATION) then
@@ -2526,7 +2641,7 @@ optical_depth = get_opacity(temperature, rho) * rho * scaleheight ! even if ther
 
 !------------------------------------------------------------------------------
 envelope_heating = 2.d0 * SIGMA_STEFAN * 1.d4 ! considering a background temperature of 10K
-viscous_heating = (9.d0 * nu * sigma * omega**2 / 4.d0)
+viscous_heating = ((9.d0 / 4.d0) * nu * sigma * omega**2)
 ! 1.7320508075688772d0 = sqrt(3)
 tau_eff = (0.25d0 * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth)))
 black_body = -2.d0 * SIGMA_STEFAN * temperature**4 / tau_eff ! cooling term
@@ -2602,7 +2717,7 @@ else
   irradiation = 0.d0
 end if
 
-viscous_heating = (9.d0 * nu * sigma * omega**2 / 4.d0)
+viscous_heating = ((9.d0 / 4.d0) * nu * sigma * omega**2)
 ! 1.7320508075688772d0 = sqrt(3)
 tau_eff = (0.25d0 * (1.5d0 * optical_depth  + 1.7320508075688772d0 + 1.d0 / (optical_depth)))
 black_body = -2.d0 * SIGMA_STEFAN * temperature**4 / tau_eff ! cooling term
@@ -2735,7 +2850,7 @@ subroutine get_corotation_torque_tanh_indep(stellar_mass, mass, p_prop, corotati
 
   !------------------------------------------------------------------------------
 
-  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
+  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s, h=p_prop%aspect_ratio)
   
   corotation_torque = SATURATION_TORQUE * dtanh(INDEP_CZ - p_prop%semi_major_axis)
   
@@ -2795,7 +2910,7 @@ subroutine get_corotation_torque_linear_indep(stellar_mass, mass, p_prop, corota
   
   !------------------------------------------------------------------------------
   
-  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
+  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s, h=p_prop%aspect_ratio)
   
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
@@ -2882,7 +2997,7 @@ subroutine get_corotation_torque_mass_dep_CZ(stellar_mass, mass, p_prop, corotat
   
   !------------------------------------------------------------------------------
   
-  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
+  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s, h=p_prop%aspect_ratio)
   
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  
@@ -2953,7 +3068,7 @@ subroutine get_corotation_torque_manual(stellar_mass, mass, p_prop, corotation_t
   
   !------------------------------------------------------------------------------
   
-  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s)
+  ecc_corot = get_corotation_damping(e=p_prop%eccentricity, x_s=x_s, h=p_prop%aspect_ratio)
   
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
   lindblad_torque = lindblad_prefactor / gamma_eff ! lindblad torque formulae from pardekooper, 2010  

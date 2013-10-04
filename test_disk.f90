@@ -1499,25 +1499,18 @@ program test_disk
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
-    real(double_precision), dimension(5) :: eccentricities
-    real(double_precision), dimension(5) :: corot_damping
+    real(double_precision), dimension(5) :: eccentricities, x_s, corot_damping
     real(double_precision), dimension(10) :: outputs
-    real(double_precision) :: x_s
     
     integer :: i,j ! for loops
     
-    write(*,*) 'Evolution of the torque for a fixed planet mass "m"'
-    x_s = 1.d0
-    eccentricities(1) = 0.d0   ! in units of x_s 
-    eccentricities(2) = 0.25d0 ! in units of x_s 
-    eccentricities(3) = 0.5d0  ! in units of x_s
-    eccentricities(4) = 1.d0   ! in units of x_s
-    eccentricities(5) = 2.d0   ! in units of x_s
+    write(*,*) 'Evolution of the torque for an excentric fixed mass planet'
+    eccentricities(1) = 1.d-4 ! excentricity
+    eccentricities(2) = 1.d-3 ! excentricity
+    eccentricities(3) = 1.d-2 ! excentricity
+    eccentricities(4) = 1.d-1 ! excentricity
+    eccentricities(5) = 0.5d0  ! excentricity
     
-    do i=1, 5
-      corot_damping(i) = get_corotation_damping(e=eccentricities(i), x_s=x_s)
-    end do
-
     position(:) = 0.d0
     velocity(:) = 0.d0
     
@@ -1525,11 +1518,11 @@ program test_disk
     open(10, file='unitary_tests/eccentricity_effect_on_corotation.dat')
 
     
-    write(10,'(10(a,f4.2),a)') '# a in AU ; G_c(e/x_s=',eccentricities(1),') ; G_t(e/x_s=',eccentricities(1),&
-                        ') ; G_c(e/x_s=',eccentricities(2),') ; G_t(e/x_s=',eccentricities(2),&
-                        ') ; G_c(e/x_s=',eccentricities(3),') ; G_t(e/x_s=',eccentricities(3),&
-                        ') ; G_c(e/x_s=',eccentricities(4),') ; G_t(e/x_s=',eccentricities(4),&
-                        ') ; G_c(e/x_s=',eccentricities(5),') ; G_t(e/x_s=',eccentricities(5),')'
+    write(10,'(10(a,f4.2),a)') '# a in AU ; G_c(e=',eccentricities(1),') ; G_t(e=',eccentricities(1),&
+                        ') ; G_c(e=',eccentricities(2),') ; G_t(e=',eccentricities(2),&
+                        ') ; G_c(e=',eccentricities(3),') ; G_t(e=',eccentricities(3),&
+                        ') ; G_c(e=',eccentricities(4),') ; G_t(e=',eccentricities(4),&
+                        ') ; G_c(e=',eccentricities(5),') ; G_t(e=',eccentricities(5),')'
 
 
     ! We generate cartesian coordinate for the given Semi-major axis
@@ -1547,6 +1540,11 @@ program test_disk
       ! we store in global parameters various properties of the planet
       call get_planet_properties(stellar_mass=stellar_mass, mass=mass, position=position(1:3), velocity=velocity(1:3),& ! Input
        p_prop=p_prop) ! Output
+       
+      do i=1, 5
+        x_s(i) = X_S_PREFACTOR / 1.4d0**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
+        corot_damping(i) = get_corotation_damping(e=eccentricities(i), x_s=x_s(i), h=p_prop%aspect_ratio)
+      end do
       
       !------------------------------------------------------------------------------
       ! Calculation of the acceleration due to migration
@@ -1586,10 +1584,10 @@ program test_disk
     
     write(10,*) 'plot \'
     do i=1, 5
-      write(10,'(a,i2,a, f4.2,a)') "'eccentricity_effect_on_corotation.dat' using 1:",2*i+1, &
-      " with lines title '{/Symbol G}_c ; e/x_s=",eccentricities(i),"',\"
-      write(10,'(a,i2,a, f4.2,a)') "'eccentricity_effect_on_corotation.dat' using 1:",2*i+2, &
-      " with lines title '{/Symbol G}_{tot} ; e/x_s=",eccentricities(i),"',\"
+      write(10,'(a,i2,a, es5.0e1,a)') "'eccentricity_effect_on_corotation.dat' using 1:",2*i+1, &
+      " with lines title '{/Symbol G}_c ; e=",eccentricities(i),"',\"
+      write(10,'(a,i2,a, es5.0e1,a)') "'eccentricity_effect_on_corotation.dat' using 1:",2*i+2, &
+      " with lines title '{/Symbol G}_{tot} ; e=",eccentricities(i),"',\"
     end do
     write(10,*) "'eccentricity_effect_on_corotation.dat' using 1:2 with lines title '{/Symbol G}_L'"
     
@@ -1622,8 +1620,7 @@ program test_disk
     real(double_precision), parameter :: a = 6.d0 ! in AU
     real(double_precision) :: I = 0.d0 ! in radians
     
-    real(double_precision) :: corotation_torque, lindblad_torque, torque_ref
-    real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
+    real(double_precision) :: damping_cossou, damping_pierens, damping_fendyke, damping_none ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
     real(double_precision) :: e, q, gm, x_s, gamma_eff, Q_p, n
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
@@ -1657,11 +1654,6 @@ program test_disk
        p_prop=p_prop) ! Output
       
       !------------------------------------------------------------------------------
-      ! Calculation of the acceleration due to migration
-      call get_torques(stellar_mass=stellar_mass, mass=mass, p_prop=p_prop, corotation_torque=corotation_torque, &
-          lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot)
-      
-      !------------------------------------------------------------------------------
       ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
       Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%semi_major_axis**2 = aspect_ratio * scaleheight**2
       !------------------------------------------------------------------------------
@@ -1674,9 +1666,12 @@ program test_disk
 
       x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass / p_prop%aspect_ratio)
       
-      
+      damping_cossou = get_corotation_damping_cossou(e=e, x_s=x_s, h=p_prop%aspect_ratio)
+      damping_pierens = get_corotation_damping_pierens(e=e, x_s=x_s, h=p_prop%aspect_ratio)
+      damping_fendyke = get_corotation_damping_fendyke(e=e, x_s=x_s, h=p_prop%aspect_ratio)
+      damping_none = get_corotation_damping_none(e=e, x_s=x_s, h=p_prop%aspect_ratio)
               
-      write(10,*) e / x_s, ecc_corot
+      write(10,*) e, damping_cossou, damping_pierens, damping_fendyke, damping_none
     end do
     
     close(10)
@@ -1687,13 +1682,19 @@ program test_disk
 
     write(10,*) "set terminal pdfcairo enhanced"
     write(10,*) "set output 'ecc_corot.pdf'"
-!~     write(10,'(2(a,f4.1),2a)') 'set title "mass = ',mass / (EARTH_MASS * K2),' m_{earth} ; a = ',a ,'AU"'
 
-    write(10,*) 'set xlabel "e/x_s"'
+
+    write(10,'(a,f4.1,a)') 'set title "for planet mass = ',mass / (EARTH_MASS * K2),' m_{earth}"'
+    write(10,*) 'set xlabel "Eccentricity"'
+    write(10,*) 'set ylabel "Corotation damping"'
+    write(10,*) 'set logscale x'
+    write(10,*) 'set yrange [0:1.1]'
     write(10,*) 'set grid'
-    write(10,*) 'set xrange [0:2]'
 
-    write(10,*) "plot 'ecc_corot.dat' using 1:2 with lines title 'eccentricity correction'"    
+    write(10,*) "plot 'ecc_corot.dat' using 1:2 with lines title '(cossou, 2013)',\"    
+    write(10,*) "                  '' using 1:3 with lines title '(pierens, 2013)',\"    
+    write(10,*) "                  '' using 1:4 with lines title '(fendyke, 2013)',\"    
+    write(10,*) "                  '' using 1:5 with lines title 'No damping'"    
     close(10)
 
     

@@ -80,6 +80,7 @@ alpha = None
 alpha_dz = None
 radius_dz = None
 opacity_type = 'bell' # 'bell' or 'zhu' opacity table
+damping_type = 'cossou' # 'cossou, 'pierens', 'fendyke', or 'none' damping type
 b_h = 0.4 # the smoothing length of the gravitationnal potential of the planet
 sample = 400
 disk_edges = (1., 100.) # (the inner and outer edge of the disk in AU)
@@ -285,6 +286,13 @@ dissipation_type = 0 # The type of dissipation for the disk (0 for none)
 #tau_photoevap = 1e5 # years (for dissipation_type=3)
 #dissipation_time_switch = 2e6 # years (for dissipation_type=3)
 
+## We define which type of corotation torque damping we want (in function of excentricity) :
+## cossou  : Corotation damping from (Cossou & Raymond, 2013)
+## pierens : Corotation damping from (Pierens & Cossou, 2013)
+## fendyke : Corotation damping from (Fendyke & Nelson, 2013)
+## none    : No Corotation damping
+damping_type = cossou # cossou, pierens, fendyke, none
+
 ## We define the type of torque profile : 
 ## real : the profile defined by paardekooper formulas, nothing else to add in parameters here, everything is in the code
 ## manual : the file 'torque_profile.dat' must exist in the folder of meta_simulation.in and 
@@ -338,7 +346,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
   global integration_time, time_format, relative_time, nb_outputs, nb_dumps, user_force, timestep
   global FIXED_TOTAL_MASS, TOTAL_MASS, NB_PLANETS, mass_parameters, a_parameters, e_parameters, I_parameters, radius_star
   global surface_density, adiabatic_index, viscosity_type, viscosity, alpha, alpha_dz, radius_dz
-  global b_h, torque_type, disk_edges, inner_smoothing_width
+  global b_h, torque_type, disk_edges, inner_smoothing_width, damping_type
   global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, r_star, t_star, disk_albedo, opacity_type
   global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
   global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
@@ -469,6 +477,8 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
         inner_boundary_condition = simulations_utilities.str2str(value)
       elif (key == "outer_boundary_condition"):
         outer_boundary_condition = simulations_utilities.str2str(value)
+      elif (key == "damping_type"):
+        damping_type = simulations_utilities.str2str(value)
       elif (key == "torque_type"):
         torque_type = simulations_utilities.str2str(value)
       elif (key == "torque_profile_steepness"):
@@ -556,6 +566,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
     PARAMETERS += "switch time = "+str(dissipation_time_switch)+" years\n"
   PARAMETERS += "inner_boundary_condition = "+str(inner_boundary_condition)+"\n"
   PARAMETERS += "outer_boundary_condition = "+str(outer_boundary_condition)+"\n"
+  PARAMETERS += "damping_type = "+str(damping_type)+"\n"
   PARAMETERS += "torque_type = "+str(torque_type)+"\n"
   PARAMETERS += "torque_profile_steepness = "+str(torque_profile_steepness)+"\n"
   PARAMETERS += "saturation_torque = "+str(saturation_torque)+"\n"
@@ -728,7 +739,7 @@ def generation_simulation_parameters():
     diskin = mercury.Disk(b_over_h=b_h, adiabatic_index=adiabatic_index, mean_molecular_weight=2.35, surface_density=surface_density, 
                   is_irradiation=is_irradiation, r_star=r_star, t_star=t_star, disk_albedo=disk_albedo,
                   disk_edges=disk_edges, viscosity_type=viscosity_type, viscosity=viscosity, alpha=alpha, alpha_dz=alpha_dz,
-                  radius_dz=radius_dz, opacity_type=opacity_type, 
+                  radius_dz=radius_dz, opacity_type=opacity_type, damping_type=damping_type,
                   sample=sample, dissipation_type=dissipation_type, 
                   is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing, inner_smoothing_width=inner_smoothing_width,
                   tau_viscous=tau_viscous, tau_photoevap=tau_photoevap, dissipation_time_switch=dissipation_time_switch, 
