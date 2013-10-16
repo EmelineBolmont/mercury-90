@@ -194,7 +194,7 @@ nb_simu = len(liste_simu)
 if isDisk:
   shutil.copy2("%s/disk.in" % liste_simu[0], ".")
   shutil.copy2("%s/param.in" % liste_simu[0], ".")
-  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "torque_diagram"))
+  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "migration_map"))
   if (returncode != 0):
     print(process_stdout)
     print(process_stderr)
