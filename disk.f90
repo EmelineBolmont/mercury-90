@@ -2244,8 +2244,8 @@ end subroutine initial_density_profile
   
   select case(DISSIPATION_TYPE)
     case(2) ! exponential decay
-      ! we want 1% variation : timestep = - tau * ln(0.99)
-      dissipation_timestep = 0.01 * TAU_DISSIPATION * 365.25d0
+      ! we want 10% variation : timestep = - tau * ln(0.9)
+      dissipation_timestep = 0.1 * TAU_DISSIPATION * 365.25d0
       next_dissipation_step = time + dissipation_timestep
       
       call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
@@ -2255,8 +2255,8 @@ end subroutine initial_density_profile
         TAU_DISSIPATION = TAU_PHOTOEVAP
       end if
       
-      ! we want 1% variation : timestep = - tau * ln(99)
-      dissipation_timestep = 0.01 * TAU_DISSIPATION * 365.25d0
+      ! we want 10% variation : timestep = - tau * ln(0.9)
+      dissipation_timestep = 0.1 * TAU_DISSIPATION * 365.25d0
       next_dissipation_step = time + dissipation_timestep
       
       call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
@@ -2270,7 +2270,7 @@ end subroutine initial_density_profile
 
   end select
   
-  ! When the surface density is to low, we suppress the dissipation of the disk.
+  ! When the surface density is too low, we suppress the dissipation of the disk.
   if (maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)).lt.(GROUND_SURFACE_DENSITY*SIGMA_CGS2NUM)) then
     disk_effect = .false.
   end if

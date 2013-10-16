@@ -92,7 +92,7 @@ program test_disk
     call study_optical_depth_profile()
     call study_thermal_diffusivity_profile()
     call study_scaleheight_profile()
-!~     call study_dissipation_at_one_location(stellar_mass=stellar_mass)
+    call study_dissipation_at_one_location(stellar_mass=stellar_mass)
     
     ! Test dissipation
 !~     call test_disk_dissipation(stellar_mass)
@@ -1912,7 +1912,7 @@ program test_disk
     real(double_precision), dimension(:), allocatable :: density, density_temp ! surface density in MSUN/AU^2
     integer :: time_size ! the size of the array 'time'. 
     
-    real(double_precision) :: density_position = 2.d0 ! in AU
+    real(double_precision) :: density_position = 1.d0 ! in AU
     real(double_precision) :: x_radius
     integer :: density_idx ! the closest index to get around 1 AU
     
@@ -1953,8 +1953,9 @@ program test_disk
     time_size = 512 ! the size of the array. 
     allocate(time(time_size), stat=error)
     allocate(density(time_size), stat=error)
-    time(1) = t_min * 365.25d0 ! days
     
+    time(1) = t_min * 365.25d0 ! days
+    density(1) = surface_density_profile(density_idx)
     
     do while (time(k).lt.(t_max*365.d0))
       ! We calculate the temperature profile for the current time (because the surface density change in function of time)
@@ -1967,10 +1968,10 @@ program test_disk
       end if
       
       if (.not.disk_effect) then
-        next_dissipation_step = t_max*365.d0
+        next_dissipation_step = t_max * 365.25d0
       end if
       
-      density(k) = surface_density_profile(density_idx)
+      
       
       ! we expand the 'time' array if the limit is reached
       if (k.eq.time_size) then
@@ -1993,6 +1994,7 @@ program test_disk
         deallocate(density_temp, stat=error)
       end if
       
+      density(k+1) = surface_density_profile(density_idx)
       time(k+1) = next_dissipation_step ! days
       
       
@@ -2016,8 +2018,7 @@ program test_disk
     write(13,*) 'set xlabel "Time (years)"'
     write(13,*) 'set ylabel "Surface density (g/cm^2)"'
     write(13,*) 'set grid'
-!~     write(13,*) 'set xrange [', INNER_BOUNDARY_RADIUS, ':', OUTER_BOUNDARY_RADIUS, ']'
-!~     write(13,*) 'set yrange [', density_min, ':', density_max, ']'
+    write(13,*) 'set logscale y'
     
     write(13,'(a,f5.1,a)') 'set title "a=', density_position,' AU"'
     write(13,*) "plot 'local_density_dissipation.dat' using 1:2 with lines notitle"
