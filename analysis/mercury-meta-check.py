@@ -178,13 +178,21 @@ for meta in meta_list:
     
 
     # We check if the simulation had time to finish
-    command = 'tail info.out|grep "Integration complete"|wc -l'
-    (stdout, stderr, returnCode) = autiwa.lancer_commande(command)
-    if (returnCode != 0):
-      print("The command '%s' did not end correctly" % command)
-      print(stderr)
-      pdb.set_trace()
-    is_finished = int(stdout.split("\n")[0]) # We get the number of times "Integration complete" is present in the end of the 'info.out' file
+    # We get the integration time
+    paramin = mercury.Param(algorithme="HYBRID", start_time=0, stop_time=0, output_interval=0,h=0)
+    paramin.read(filename="param.dmp")
+    stop_time = paramin.get_stop_time()
+
+    bigdmp = open("big.dmp", 'r')
+    for i in range(5):
+        tmp = object.readline()
+    big_time = float(tmp.split()[-1])
+    
+    if (big_time > stop_time):
+        is_finished = 1
+    else:
+        is_finished = 0
+
     
     # If there is Nan, we do not want to continue the simulation, but restart it, or check manually, so theses two kinds of problems are separated.
     if simu not in NaN_folder:
