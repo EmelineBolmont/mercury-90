@@ -68,6 +68,7 @@ for (key, value) in COMMANDS.items():
 #  `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .' `.   .'
 #    `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'     `-'
 isMeta = False # If we consider the current folder as a folder that list sub-meta-simulations where the simulations really are
+isIndiv = False # If true, we consider to be in a single simulation folder, with mercury parameter files directly in the CWD.
 
 commandKey = None
 
@@ -78,6 +79,7 @@ problem_message = "AIM : Provide a simple script that can execute " + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * help : display a little help message on HOW to use various options" + "\n" + \
 " * meta : option that will consider the current folder as a folder that list meta simulation instead of simple simulations" + "\n" + \
+" * indiv : option that will consider the current folder as a simulation folder" + "\n" + \
 " * nb_outputs=%i : To define the number of outputs we want for .aei files. Only used by the command 'change_nb_outputs'" % NB_OUTPUTS + "\n" + \
 " * extension=%.1g : The time of extension for the simulations (in years). Only used by the command 'extend'" % EXTENSION + "\n" + \
 " * command=commandName : option that will consider the current folder as a folder that list meta simulation instead of simple simulations" + "\n" + \
@@ -105,6 +107,10 @@ for arg in sys.argv[1:]:
     isMeta = True
     if (value != None):
       print(value_message % (key, key, value))
+  elif (key == 'indiv'):
+    isIndiv = True
+    if (value != None):
+      print(value_message % (key, key, value))
   elif (key == 'nb_outputs'):
     NB_OUTPUTS = int(value)
   elif (key == 'extension'):
@@ -122,6 +128,10 @@ if (commandKey == None):
 
 if isProblem:
   print(problem_message)
+  exit()
+
+if (isIndiv and isMeta):
+  print("Error: cannot set meta and indiv at the same time")
   exit()
 
 # We go in each sub folder of the current working directory
@@ -155,6 +165,9 @@ for (meta_i, meta) in enumerate(meta_list):
   #autiwa.suppr_dossier(liste_simu,dossier_suppr)
   simu_list.sort()
   
+  if isIndiv:
+    simu_list = ["."]
+
   nb_simus = len(simu_list)
   
   for (simu_i, simu) in enumerate(simu_list):
