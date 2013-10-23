@@ -1616,7 +1616,7 @@ program test_disk
     real(double_precision), parameter :: e_max = 1.d0-1.d-5 ! eccentricity
     real(double_precision), parameter :: e_step = (e_max / e_min)**(1 / (nb_e - 1.d0))
     
-    real(double_precision), parameter :: mass = 1.d0 * EARTH_MASS * K2
+    real(double_precision), parameter :: mass = 10.d0 * EARTH_MASS * K2
     real(double_precision), parameter :: a = 6.d0 ! in AU
     real(double_precision) :: I = 0.d0 ! in radians
     
