@@ -187,7 +187,8 @@ for meta in meta_list:
     bigdmp = open("big.dmp", 'r')
     for i in range(5):
         tmp = bigdmp.readline()
-    big_time = float(tmp.split()[-1])
+    # We round the result because the result can be slightly lower to the expected time, and the simulation still be over.
+    big_time = float(tmp.split()[-1]) + 1.
     
     if (big_time > stop_time):
         is_finished = 1
