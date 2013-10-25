@@ -83,7 +83,7 @@ if isProblem:
   exit()
 
 if isDisk:
-  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "torque_diagram"))
+  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "migration_map"))
   if (returncode != 0):
     print(process_stdout)
     print(process_stderr)

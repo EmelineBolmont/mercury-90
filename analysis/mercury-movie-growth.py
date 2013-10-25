@@ -92,7 +92,7 @@ if not(os.path.exists(OUTPUT_FOLDER)):
     os.mkdir(OUTPUT_FOLDER)
 
 if isDisk:
-  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(BINARY_FOLDER, "torque_diagram"))
+  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(BINARY_FOLDER, "migration_map"))
   if (returncode != 0):
     print(process_stdout)
     print(process_stderr)
