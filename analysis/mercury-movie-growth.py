@@ -246,7 +246,7 @@ if (t_max > 1e6):
   unit_time = "Million years"
   time_convertion = 1e6
 elif (t_max > 1e3):
-  unit_time = "Thousand years"
+  unit_time = " 000 years"
   time_convertion = 1e3
 else:
   unit_time = "years"
@@ -321,7 +321,7 @@ for frame_i in range(NB_FRAMES):
       pass
       #~ # The planet has been ejected  
 
-  plot_orbits.text(timeline_width, timeline_height, " %.1f %s" % (t_frame / time_convertion, unit_time), 
+  plot_orbits.text(timeline_width, timeline_height, " %.0f %s" % (t_frame / time_convertion, unit_time), 
                    horizontalalignment='left', verticalalignment='center', 
                    size=15, transform=plot_orbits.transAxes)
   

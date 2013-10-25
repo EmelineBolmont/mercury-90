@@ -30,6 +30,7 @@ isTail = True # There is a part where this boolean is changed automatically if t
 isManualTailSize = False
 isReferenceFrame = False # If we display orbits in the reference frame of a given planet
 isVertical = False
+isRelative = False
 ###############################################
 ## Beginning of the program
 ###############################################
@@ -43,6 +44,7 @@ problem_message = "AIM : Movie in the (x,y) plane. Possibility to be in a rotati
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * tmax=1e6 : the end of the output [years]" + "\n" + \
 " * tmin=1e3 : the beginning of the output [years]" + "\n" + \
+" * relative : time is expressed related to the starting time" + "\n" + \
 " * ref=BIG_0001.aei : to display the orbits in the rotating frame of BIG_0001 planet" + "\n" + \
 " * vertical : to display the orbits in the (x,z) plane" + "\n" + \
 " * forceCircle : to display circle instead of real orbits if the output interval is huge\n" + \
@@ -65,6 +67,10 @@ for arg in sys.argv[1:]:
     t_max = float(value)
   elif (key == 'forceCircle'):
     isTail = False
+    if (value != None):
+      print(value_message % (key, key, value))
+  elif (key == 'relative'):
+    isRelative = True
     if (value != None):
       print(value_message % (key, key, value))
   elif (key == 'vertical'):
@@ -257,7 +263,7 @@ if (t_max > 1e6):
   unit_time = "Million years"
   time_convertion = 1e6
 elif (t_max > 1e3):
-  unit_time = "Thousand years"
+  unit_time = "000 years"
   time_convertion = 1e3
 else:
   unit_time = "years"
@@ -350,6 +356,9 @@ for frame_i in range(NB_FRAMES):
     id_time = id_max
     t_frame = t_max
   
+  if isRelative:
+    t_frame -= t_min
+  
   percentage = (frame_i) / float(NB_FRAMES - 1)
   sys.stdout.write("%3.0f%% frame %*d : T = %#.2e years\r" % (percentage*100. , MAX_LENGTH, frame_i, t_frame))
   sys.stdout.flush()
@@ -399,7 +408,7 @@ for frame_i in range(NB_FRAMES):
   plot_orbits.set_ylim(y_min, y_max)
   plot_orbits.set_xlim(x_min, x_max)
   
-  plot_orbits.text(timeline_width, timeline_height, " %.1f %s" % (t_frame / time_convertion, unit_time), 
+  plot_orbits.text(timeline_width, timeline_height, " %.0f %s" % (t_frame / time_convertion, unit_time), 
                    horizontalalignment='left', verticalalignment='center', 
                    size=15, transform=plot_orbits.transAxes)
   
