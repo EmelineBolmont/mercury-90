@@ -29,6 +29,7 @@ NB_P_ORBITS = 1 # The number of orbits to display in case of tail
 isTail = True # There is a part where this boolean is changed automatically if the timestep between two output is to huge.
 isManualTailSize = False
 isReferenceFrame = False # If we display orbits in the reference frame of a given planet
+isVertical = False
 ###############################################
 ## Beginning of the program
 ###############################################
@@ -43,6 +44,7 @@ problem_message = "AIM : Movie in the (x,y) plane. Possibility to be in a rotati
 " * tmax=1e6 : the end of the output [years]" + "\n" + \
 " * tmin=1e3 : the beginning of the output [years]" + "\n" + \
 " * ref=BIG_0001.aei : to display the orbits in the rotating frame of BIG_0001 planet" + "\n" + \
+" * vertical : to display the orbits in the (x,z) plane" + "\n" + \
 " * forceCircle : to display circle instead of real orbits if the output interval is huge\n" + \
 " * tail=%.1f : the size of the tail in number of orbits\n" % NB_P_ORBITS + \
 " * range=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
@@ -62,7 +64,11 @@ for arg in sys.argv[1:]:
   elif (key == 'tmax'):
     t_max = float(value)
   elif (key == 'forceCircle'):
-    isTail = True
+    isTail = False
+    if (value != None):
+      print(value_message % (key, key, value))
+  elif (key == 'vertical'):
+    isVertical = True
     if (value != None):
       print(value_message % (key, key, value))
   elif (key == 'frames'):
@@ -90,6 +96,16 @@ for arg in sys.argv[1:]:
 if isProblem:
   print(problem_message)
   exit()
+
+if (isVertical):
+  if (isReferenceFrame):
+    print("Error: Cannot set a reference frame in the (x,z) plane")
+    exit()
+  
+  if not(isTail):
+    print("Error: Cannot use forced circle in the (x,z) plane")
+    exit()
+    
  
 if not(os.path.exists(OUTPUT_FOLDER)):
     os.mkdir(OUTPUT_FOLDER)
@@ -99,19 +115,22 @@ if (NB_FRAMES <= 1):
   NB_FRAMES = 2
   
 ####################
-# We erase old output files, add 'x, y and z' to the outputs values, and generate new output files
+# We check if output files contain x,y,z datas
 ####################
-
-autiwa.lancer_commande("rm *.aei element.out")
 
 elementin = mercury.Element()
 elementin.read()
-elementin.set_format_sortie(" a21e e21e i8.4 g8.4 n8.4 l8.4 m21e x21e y21e z21e")
-elementin.write()
 
-(stdout, stderr, returnCode) = autiwa.lancer_commande(os.path.join(BINARY_FOLDER, "element"))
-if (returnCode != 0):
-  print("Unable to Launch 'element'")
+# We only generate new output file if element.in does not contain information about x,y,z
+format_tail = elementin.format_sortie[-15:-1]
+if (format_tail != "x21e y21e z21e"):
+  autiwa.lancer_commande("rm *.aei element.out")
+  elementin.set_format_sortie(" a21e e21e i8.4 g8.4 n8.4 l8.4 m21e x21e y21e z21e")
+  elementin.write()
+
+  (stdout, stderr, returnCode) = autiwa.lancer_commande(os.path.join(BINARY_FOLDER, "element"))
+  if (returnCode != 0):
+    print("Unable to Launch 'element'")
 
 ####################
 # On recupere la liste des fichiers planetes.aei
@@ -317,6 +336,12 @@ timeline_start = Line2D([0., 0.], [timeline_height - timetick_length, timeline_h
 timeline_stop = Line2D([timeline_width, timeline_width], [timeline_height - timetick_length, timeline_height + timetick_length], 
                         clip_on=False, color="#000000", linewidth=3, transform=plot_orbits.transAxes)
 
+plot_x = x
+if (isVertical):
+  plot_y = z
+else:
+  plot_y = y
+
 for frame_i in range(NB_FRAMES):
   id_time = id_min + int(frame_i * ts_per_frame)
   t_frame = t_min + int(frame_i * ts_per_frame) * delta_t
@@ -346,8 +371,8 @@ for frame_i in range(NB_FRAMES):
         if (tmp < 0):
           tmp = 0
         idx_tail[planet] = tmp
-        plot(x[planet][idx_tail[planet]:id_time+1], y[planet][idx_tail[planet]:id_time+1], color=colors[planet])
-        plot(x[planet][id_time], y[planet][id_time], 'o', color=colors[planet], markersize=int(5* (m[planet][id_time])**0.33))
+        plot(plot_x[planet][idx_tail[planet]:id_time+1], plot_y[planet][idx_tail[planet]:id_time+1], color=colors[planet])
+        plot(plot_x[planet][id_time], plot_y[planet][id_time], 'o', color=colors[planet], markersize=int(5* (m[planet][id_time])**0.33))
       except:
         pass
         # The planet has been ejected
@@ -365,7 +390,10 @@ for frame_i in range(NB_FRAMES):
         #~ # The planet has been ejected
 
   plot_orbits.set_xlabel("x [AU]")
-  plot_orbits.set_ylabel("y [AU]")
+  if (isVertical):
+    plot_orbits.set_ylabel("z [AU]")
+  else:
+    plot_orbits.set_ylabel("y [AU]")
   
   plot_orbits.axis('tight')
   plot_orbits.set_ylim(y_min, y_max)
