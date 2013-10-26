@@ -117,7 +117,8 @@ subroutine read_disk_properties()
 ! subroutine that read the 'disk.in' file to retrieve disk properties. Default value exist, if a parameter is not defined
 
 ! Global Parameters
-! B_OVER_H : the smoothing length for the planet's potential
+! B_OVER_H_LINDBLAD : the smoothing parameter for the planet's potential related to the lindblad torque
+! B_OVER_H_COROTATION : the smoothing parameter for the planet's potential related to the corotation torque
 ! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
 ! MEAN_MOLECULAR_WEIGHT : the mean molecular weight in mass of a proton
 ! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
@@ -166,7 +167,12 @@ subroutine read_disk_properties()
       if (isParameter) then
         select case(identificator)
         case('b/h')
-          read(value, *) B_OVER_H
+          if (index(trim(value)," ").eq.0) then
+            read(value, *) B_OVER_H_LINDBLAD
+            B_OVER_H_COROTATION = B_OVER_H_LINDBLAD
+          else
+            read(value, *) B_OVER_H_LINDBLAD, B_OVER_H_COROTATION
+          end if
         
         case('adiabatic_index')
           read(value, *) ADIABATIC_INDEX
@@ -404,7 +410,8 @@ subroutine write_diskin()
 ! subroutine that write the parameters of the user_module into the file 'disk.out'
 
 ! Global Parameters
-! B_OVER_H : the smoothing length for the planet's potential
+! B_OVER_H_LINDBLAD : the smoothing parameter for the planet's potential related to the lindblad torque
+! B_OVER_H_COROTATION : the smoothing parameter for the planet's potential related to the corotation torque
 ! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
 ! MEAN_MOLECULAR_WEIGHT : the mean molecular weight in mass of a proton
 ! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
@@ -434,8 +441,10 @@ subroutine write_diskin()
   write(10,'(a)') "!*      Disk Parameters      *"
   write(10,'(a)') "!*****************************"
   write(10,'(a)') ""
-  write(10,'(a)') "!# the smoothing length for the planet's potential"
-  write(10,'(a,f4.2)') 'b/h = ',B_OVER_H
+  write(10,'(a)') "!# the smoothing length for the planet's potential "
+  write(10,'(a)') "!# (if two values, the first one is for Lindblad, and the second for corotation torque"
+  write(10,'(a)') "!# else, the value apply for both)"
+  write(10,'(a,f4.2, a,f4.2)') 'b/h = ',B_OVER_H_LINDBLAD, ' ', B_OVER_H_COROTATION
   write(10,'(a)') ""
   write(10,'(a)') "!# the adiabatic index for the gas equation of state"
   write(10,'(a,f4.2)') 'adiabatic_index = ', ADIABATIC_INDEX
@@ -630,7 +639,8 @@ subroutine write_disk_properties()
 ! subroutine that write the parameters of the user_module into the file 'disk.out'
 
 ! Global Parameters
-! B_OVER_H : the smoothing length for the planet's potential
+! B_OVER_H_LINDBLAD : the smoothing parameter for the planet's potential related to the lindblad torque
+! B_OVER_H_COROTATION : the smoothing parameter for the planet's potential related to the corotation torque
 ! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
 ! MEAN_MOLECULAR_WEIGHT : the mean molecular weight in mass of a proton
 ! INITIAL_SIGMA_0 : the surface density at (R=1AU) [g/cm^2]
@@ -676,7 +686,7 @@ subroutine write_disk_properties()
   write(10,'(a)') '------------------------------------'
   write(10,'(a)') '|   Properties of the disk         |'
   write(10,'(a)') '------------------------------------'
-  write(10,'(a,f4.2)') 'b/h = ',B_OVER_H
+  write(10,'(a,f4.2, a, f4.2)') 'b/h = ',B_OVER_H_LINDBLAD, ' ', B_OVER_H_COROTATION
   write(10,'(a,f4.2)') 'adiabatic index = ', ADIABATIC_INDEX
   write(10,'(a,f4.2)') 'mean molecular weight = ', MEAN_MOLECULAR_WEIGHT
   write(10,'(a, a)', advance='no') 'viscosity type = ', trim(VISCOSITY_TYPE)
@@ -987,7 +997,7 @@ function get_corotation_damping_fendyke(e, x_s, h)
   argument = e / me_f
   
   if (argument.gt.-100.d0) then
-	get_corotation_damping_fendyke = exp(argument)
+    get_corotation_damping_fendyke = exp(argument)
   else
     get_corotation_damping_fendyke = 0.d0
   endif
@@ -1017,7 +1027,8 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
 ! Global parameters
 ! ADIABATIC_INDEX : the adiabatic index for the gas equation of state
 ! X_S_PREFACTOR : prefactor for the half width of the corotation region
-! B_OVER_H : the smoothing length for the planet's potential
+! B_OVER_H_LINDBLAD : the smoothing parameter for the planet's potential related to the lindblad torque
+! B_OVER_H_COROTATION : the smoothing parameter for the planet's potential related to the corotation torque
 
   implicit none
   real(double_precision), intent(in) :: stellar_mass ! the mass of the central body [Msun * K2]
@@ -1093,14 +1104,14 @@ subroutine get_corotation_torque_real(stellar_mass, mass, p_prop, corotation_tor
   
   p_chi = sqrt(k_p / p_prop%chi)
   
-  b_h_factor = 0.4d0 / B_OVER_H ! Correcting factor to take into account smoothing length effect. 
+  b_h_factor = 0.4d0 / B_OVER_H_COROTATION ! Correcting factor to take into account smoothing length effect. 
   
   b_h1 = b_h_factor**0.71d0
   b_h2 = b_h_factor**1.26d0
   
   ! Lindblad torque given by eq. (14) of (Paardekooper et al., 2010 ; I unsaturated) (this version take in to account the effect of smoothing length
   lindblad_prefactor = -(2.5d0 + 1.7d0 * p_prop%temperature_index - 0.1d0 * p_prop%sigma_index) ! paardekooper, baruteau & kley 2010
-  lindblad_torque = lindblad_prefactor / gamma_eff * b_h1 ! lindblad torque formulae from pardekooper, 2010
+  lindblad_torque = lindblad_prefactor / gamma_eff * (0.4d0 / B_OVER_H_LINDBLAD)**0.71d0 ! lindblad torque formulae from pardekooper, 2010
   
   ! Linear torque from eq. (17) of (Paardekooper et al., 2010 ; I unsaturated) The two parts are extrated looking 
   ! for similarities with (4) and (5) of (Paardekooper et al., 2011 ; II Diffusion)
@@ -1159,7 +1170,8 @@ subroutine init_globals(stellar_mass, time)
 ! subroutine that initialize global values that define prefactors or values for torque that does not depend on the planet properties
 !
 ! Global Parameters
-! B_OVER_H : the smoothing length for the planet's potential
+! B_OVER_H_LINDBLAD : the smoothing parameter for the planet's potential related to the lindblad torque
+! B_OVER_H_COROTATION : the smoothing parameter for the planet's potential related to the corotation torque
 ! MEAN_MOLECULAR_WEIGHT : the mean molecular weight in mass of a proton
 ! INNER_BOUNDARY_RADIUS : the inner radius of the various profiles (all based on the radius profile)
 ! OUTER_BOUNDARY_RADIUS : the outer radius of the various profiles (all based on the radius profile)
@@ -1356,7 +1368,7 @@ subroutine init_globals(stellar_mass, time)
     end do
     
     ! The x_s value is corrected from (paardekooper, 2010). The expression used is the one from (paardekooper, 2009a)
-    X_S_PREFACTOR = 1.1d0 * (0.4d0 / B_OVER_H)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
+    X_S_PREFACTOR = 1.1d0 * (0.4d0 / B_OVER_H_COROTATION)**0.25d0 / sqrt(stellar_mass) ! mass(1) is here for the ratio of mass q
     
     ! AU is in cm, so we must turn into meter before doing the conversion
     ! division of k_B by m_H is done separately for exponant and value to have more precision

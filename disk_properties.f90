@@ -32,7 +32,8 @@ module disk_properties
   
   !------------------------------------------------------------------------------
   ! Default values for parameters that are to be read in the parameter file 'disk.in'
-  real(double_precision) :: B_OVER_H = 0.4d0 ! the smoothing length for the planet's potential
+  real(double_precision) :: B_OVER_H_LINDBLAD = 0.4d0 ! the smoothing length for the planet's potential, related to the lindblad torque
+  real(double_precision) :: B_OVER_H_COROTATION = 0.4d0 ! the smoothing length for the planet's potential, related to the corotation torque
   real(double_precision) :: ADIABATIC_INDEX = 1.4d0 ! the adiabatic index for the gas equation of state
   real(double_precision) :: MEAN_MOLECULAR_WEIGHT = 2.35d0 ! the mean molecular weight in mass of a proton
   
