@@ -1930,9 +1930,9 @@ program test_disk
     call init_globals(stellar_mass=stellar_mass, time=0.d0)
     
     if (DISSIPATION_TYPE.eq.0) then
-      write (error_unit,*) 'Error: There is currently no dissipation (dissipation_type=0) which is a problem to test it.'
-      write (error_unit,*) 'Please set a dissipation_type in "disk.in" before testing it'
-      call exit(3)
+      write (error_unit,*) 'Warning: There is currently no dissipation (dissipation_type=0) which is a problem to test it.'
+      write (error_unit,*) 'dissipation type forced equal to 2'
+      DISSIPATION_TYPE = 2
     end if
     
     if ((density_position .gt. INNER_BOUNDARY_RADIUS) .and. (density_position .lt. distance_sample(NB_SAMPLE_PROFILES-1))) then
