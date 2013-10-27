@@ -90,8 +90,6 @@ disk_exponential_decay = None # in years
 tau_viscous = None # in years
 tau_photoevap = None # in years
 dissipation_time_switch = None # in years
-inner_boundary_condition = 'open'
-outer_boundary_condition = 'open'
 torque_type = 'real'
 torque_file = 'torque_profile.dat'
 torque_profile_steepness = None
@@ -198,7 +196,7 @@ def generate_meta_simulationin():
 ## Parameters for the meta simulation
 
 ## Number of simulations we want to launch with the same properties
-NB_SIMULATIONS = 2
+NB_SIMULATIONS = 1
 
 ## The limited time above which the simulation will be stopped in avakas (useless for other servers)
 WALLTIME = 119 # in hours
@@ -272,13 +270,11 @@ disk_edges = (0.1, 100.) # (the inner and outer edge of the disk in AU)
 ## The width of the region where the surface density decay to become 0 at the inner edge
 inner_smoothing_width = 0.05 # (in unit of the inner boundary radius)
 
-b/h = 0.4 # The smoothing width for gravitational effects
+b/h = (0.4, 0.4) # The smoothing width for gravitational effects (
 
 sample = 1000 # The number of points for the surface density profile
 
 dissipation_type = 0 # The type of dissipation for the disk (0 for none)
-#inner_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
-#outer_boundary_condition = 'open' # 'open' or 'closed' (for dissipation_type=1)
 
 #disk_exponential_decay = 1e6 # years (for dissipation_type=2)
 
@@ -348,7 +344,7 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
   global surface_density, adiabatic_index, viscosity_type, viscosity, alpha, alpha_dz, radius_dz
   global b_h, torque_type, disk_edges, inner_smoothing_width, damping_type
   global tau_viscous, tau_photoevap, dissipation_time_switch, is_irradiation, r_star, t_star, disk_albedo, opacity_type
-  global dissipation_type, disk_exponential_decay, sample, inner_boundary_condition, outer_boundary_condition
+  global dissipation_type, disk_exponential_decay, sample
   global torque_profile_steepness, indep_cz, mass_dep_m_min, mass_dep_m_max, mass_dep_cz_m_min, mass_dep_cz_m_max
   global is_turbulence, turbulent_forcing, saturation_torque
   global PARAMETERS
@@ -471,13 +467,9 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
         dissipation_time_switch = float(value)
       elif (key == "sample"):
         sample = int(value)
-      elif (key == "inner_boundary_condition"):
+      elif (key == "damping_type"):
         # We ensure that there is no extra quote in the string with the function str2str that remove extra ' and "
         # There extra quote will generate an error in the mercury.py class Disk
-        inner_boundary_condition = simulations_utilities.str2str(value)
-      elif (key == "outer_boundary_condition"):
-        outer_boundary_condition = simulations_utilities.str2str(value)
-      elif (key == "damping_type"):
         damping_type = simulations_utilities.str2str(value)
       elif (key == "torque_type"):
         torque_type = simulations_utilities.str2str(value)
@@ -564,8 +556,6 @@ def readParameterFile(parameter_file, COMMENT_CHARACTER="#", PARAMETER_SEPARATOR
     PARAMETERS += "tau_viscous = "+str(tau_viscous)+" years\n"
     PARAMETERS += "tau photoevap = "+str(tau_photoevap)+" years\n"
     PARAMETERS += "switch time = "+str(dissipation_time_switch)+" years\n"
-  PARAMETERS += "inner_boundary_condition = "+str(inner_boundary_condition)+"\n"
-  PARAMETERS += "outer_boundary_condition = "+str(outer_boundary_condition)+"\n"
   PARAMETERS += "damping_type = "+str(damping_type)+"\n"
   PARAMETERS += "torque_type = "+str(torque_type)+"\n"
   PARAMETERS += "torque_profile_steepness = "+str(torque_profile_steepness)+"\n"
@@ -744,7 +734,6 @@ def generation_simulation_parameters():
                   is_turbulence=is_turbulence, turbulent_forcing=turbulent_forcing, inner_smoothing_width=inner_smoothing_width,
                   tau_viscous=tau_viscous, tau_photoevap=tau_photoevap, dissipation_time_switch=dissipation_time_switch, 
                   disk_exponential_decay=disk_exponential_decay, torque_type=torque_type,
-                  inner_boundary_condition=inner_boundary_condition, outer_boundary_condition=outer_boundary_condition,
                   torque_profile_steepness=torque_profile_steepness, indep_cz=indep_cz, mass_dep_m_min=mass_dep_m_min, 
                   saturation_torque=saturation_torque,
                   mass_dep_m_max=mass_dep_m_max, mass_dep_cz_m_min=mass_dep_cz_m_min, mass_dep_cz_m_max=mass_dep_cz_m_max)

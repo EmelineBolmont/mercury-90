@@ -441,9 +441,9 @@ subroutine write_diskin()
   write(10,'(a)') "!*      Disk Parameters      *"
   write(10,'(a)') "!*****************************"
   write(10,'(a)') ""
-  write(10,'(a)') "!# the smoothing length for the planet's potential "
-  write(10,'(a)') "!# (if two values, the first one is for Lindblad, and the second for corotation torque"
-  write(10,'(a)') "!# else, the value apply for both)"
+  write(10,'(a)') "!# the smoothing parameter for the planet's potential"
+  write(10,'(a)') "!#  two values : first one for Lindblad and second for corotation torque"
+  write(10,'(a)') "!#  one value  : apply for both"
   write(10,'(a,f4.2, a,f4.2)') 'b/h = ',B_OVER_H_LINDBLAD, ' ', B_OVER_H_COROTATION
   write(10,'(a)') ""
   write(10,'(a)') "!# the adiabatic index for the gas equation of state"
