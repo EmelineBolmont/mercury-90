@@ -186,10 +186,13 @@ for meta in meta_list:
       paramin = mercury.Param(algorithme="HYBRID", start_time=0, stop_time=0, output_interval=0,h=0)
       paramin.read(filename="param.dmp")
       stop_time = paramin.get_stop_time()
-
+      paramin.close()
+      
       bigdmp = open("big.dmp", 'r')
       for i in range(5):
-          tmp = bigdmp.readline()
+        tmp = bigdmp.readline()
+      bigdmp.close()
+      
       # We round the result because the result can be slightly lower to the expected time, and the simulation still be over.
       big_time = float(tmp.split()[-1]) + 1.
       
@@ -218,8 +221,8 @@ for meta in meta_list:
     elif (simulation_status == 2 and not(showFinished)):
       log_message = "%s/%s : NaN are present" % (absolute_parent_path, simu)
     else:
-		log_message = None
-		
+      log_message = None
+    
     if (log_message != None):
       if not(isMeta):
         print(log_message)
