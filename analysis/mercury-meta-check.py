@@ -180,20 +180,21 @@ for meta in meta_list:
 
     # We check if the simulation had time to finish
     # We get the integration time
-    paramin = mercury.Param(algorithme="HYBRID", start_time=0, stop_time=0, output_interval=0,h=0)
-    paramin.read(filename="param.dmp")
-    stop_time = paramin.get_stop_time()
-
-    bigdmp = open("big.dmp", 'r')
-    for i in range(5):
-        tmp = bigdmp.readline()
-    # We round the result because the result can be slightly lower to the expected time, and the simulation still be over.
-    big_time = float(tmp.split()[-1]) + 1.
+    is_finished = 0 # If param.dmp does not even exist, the simulation can't be finished
     
-    if (big_time > stop_time):
-        is_finished = 1
-    else:
-        is_finished = 0
+    if os.path.isfile("param.dmp"):
+      paramin = mercury.Param(algorithme="HYBRID", start_time=0, stop_time=0, output_interval=0,h=0)
+      paramin.read(filename="param.dmp")
+      stop_time = paramin.get_stop_time()
+
+      bigdmp = open("big.dmp", 'r')
+      for i in range(5):
+          tmp = bigdmp.readline()
+      # We round the result because the result can be slightly lower to the expected time, and the simulation still be over.
+      big_time = float(tmp.split()[-1]) + 1.
+      
+      if (big_time > stop_time):
+          is_finished = 1
 
     
     # If there is Nan, we do not want to continue the simulation, but restart it, or check manually, so theses two kinds of problems are separated.
