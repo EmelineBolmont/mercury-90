@@ -15,7 +15,7 @@ import mercury_utilities
 rep_exec = os.getcwd()
 
 NB_OUTPUTS = 2000
-EXTENSION = 1e6 # extension of the simulation in years (for extend())
+INTEGRATION_TIME = None # extension of the simulation in years (for extend())
 
 def regen_aei_files():
   """in the current working directory, 
@@ -37,17 +37,17 @@ def erase_aei():
   command = "rm *.aei"
   (stdout, stderr, returnCode) = autiwa.lancer_commande(command)
 
-def extend():
-  """Will edit the param.* files to add 'extension' to the total integration time
+def change_integration_time():
+  """Will edit the param.* files to change the total integration time
   
-  Parameters : extension (in years)
+  Parameters : new_integration_time (in years)
   """
-  mercury_utilities.extend_simulation(extension=EXTENSION)
+  mercury_utilities.change_integration_time(new_integration_time=INTEGRATION_TIME)
 
 COMMANDS = {"regen_aei":regen_aei_files, 
 "change_nb_outputs":change_nb_outputs,
 "erase_aei":erase_aei,
-"extend":extend
+"extend":change_integration_time
 }
 
 COMMANDS_HELP = ""
@@ -81,7 +81,7 @@ problem_message = "AIM : Provide a simple script that can execute " + "\n" + \
 " * meta : option that will consider the current folder as a folder that list meta simulation instead of simple simulations" + "\n" + \
 " * indiv : option that will consider the current folder as a simulation folder" + "\n" + \
 " * nb_outputs=%i : To define the number of outputs we want for .aei files. Only used by the command 'change_nb_outputs'" % NB_OUTPUTS + "\n" + \
-" * extension=%.1g : The time of extension for the simulations (in years). Only used by the command 'extend'" % EXTENSION + "\n" + \
+" * duration=1e6 : The time of integration for the simulations (in years). Only used by the command 'change_integration_time'" + "\n" + \
 " * command=commandName : option that will consider the current folder as a folder that list meta simulation instead of simple simulations" + "\n" + \
 "   list of commands :\n" + \
 COMMANDS_HELP + \
@@ -113,8 +113,8 @@ for arg in sys.argv[1:]:
       print(value_message % (key, key, value))
   elif (key == 'nb_outputs'):
     NB_OUTPUTS = int(value)
-  elif (key == 'extension'):
-    EXTENSION = float(value)
+  elif (key == 'duration'):
+    INTEGRATION_TIME = float(value)
   elif (key == 'help'):
     isProblem = True
     if (value != None):
@@ -132,6 +132,10 @@ if isProblem:
 
 if (isIndiv and isMeta):
   print("Error: cannot set meta and indiv at the same time")
+  exit()
+
+if (commandKey == 'extend' and INTEGRATION_TIME == None):
+  print("Error: 'duration' not set. See 'help'")
   exit()
 
 # We go in each sub folder of the current working directory
