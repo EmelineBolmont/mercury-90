@@ -207,7 +207,7 @@ WALLTIME = 119 # in hours
 integration_time = 1e7 # in years
 time_format = "years" # days or years
 relative_time = "yes" # yes or no
-nb_outputs = 10000 # number of outputs contained in xv.out (max possibility of accuracy in time)
+nb_outputs = 1000 # number of outputs contained in xv.out (max possibility of accuracy in time)
 nb_dumps = 100 # number of outputs contained in generated .aei files by element
 user_force = "yes" # yes or no, if we use user_module
 timestep = 0.4 # days
@@ -238,7 +238,8 @@ mass_parameters = (0.1, 1, "uniform") # the mass (in earth mass)
 ## which means that from the original dtg (for the innermost region)
 ## , at this point you have to apply the given factor
 #a_parameters = (0.01, (4., 2.), "from-dust")
-a_parameters = ((1, 1.5), (4., 6.), "rh") # the Semi-major axis (in AU)
+#a_parameters = ((1, 1.5), (4., 6.), "rh") # the Semi-major axis (in AU)
+a_parameters = (1., 20., "uniform") # the Semi-major axis (in AU)
 
 e_parameters = (1e-3, 1e-5, "uniform") # the eccentricity
 
@@ -258,13 +259,13 @@ surface_density = (500, 0.5) # g/cm^2 (sigma_0, alpha) help to define a power la
 
 adiabatic_index = 1.4 # The adiabatic index of the disk
 
-viscosity_type = constant # constant, alpha, alpha_dz
-viscosity = 1.e15 # cm^2/s
-# alpha = 1.e-2 # adim
+viscosity_type = alpha # constant, alpha, alpha_dz
+# viscosity = 1.e15 # cm^2/s
+alpha = 5.e-3 # adim
 # alpha_dz = (1e-2, 1e-4, 1e-2) # adim
 # radius_dz = (1., 10.) # In AU
 
-opacity_type = bell # bell, chambers, zhu or hure
+opacity_type = hure # bell, chambers, zhu or hure
 
 disk_edges = (0.1, 100.) # (the inner and outer edge of the disk in AU)
 ## The width of the region where the surface density decay to become 0 at the inner edge
@@ -272,15 +273,15 @@ inner_smoothing_width = 0.05 # (in unit of the inner boundary radius)
 
 b/h = (0.4, 0.4) # The smoothing width for gravitational effects (
 
-sample = 1000 # The number of points for the surface density profile
+sample = 500 # The number of points for the surface density profile
 
 dissipation_type = 0 # The type of dissipation for the disk (0 for none)
 
 #disk_exponential_decay = 1e6 # years (for dissipation_type=2)
 
-#tau_viscous = 1e7 # years (for dissipation_type=3)
-#tau_photoevap = 1e5 # years (for dissipation_type=3)
-#dissipation_time_switch = 2e6 # years (for dissipation_type=3)
+#tau_viscous = 4e5 # years (for dissipation_type=3)
+#tau_photoevap = 4e4 # years (for dissipation_type=3)
+#dissipation_time_switch = 4.5e6 # years (for dissipation_type=3)
 
 ## We define which type of corotation torque damping we want (in function of excentricity) :
 ## cossou  : Corotation damping from (Cossou & Raymond, 2013)
