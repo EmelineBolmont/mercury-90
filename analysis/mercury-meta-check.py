@@ -186,7 +186,6 @@ for meta in meta_list:
       paramin = mercury.Param(algorithme="HYBRID", start_time=0, stop_time=0, output_interval=0,h=0)
       paramin.read(filename="param.dmp")
       stop_time = paramin.get_stop_time()
-      paramin.close()
       
       bigdmp = open("big.dmp", 'r')
       for i in range(5):
