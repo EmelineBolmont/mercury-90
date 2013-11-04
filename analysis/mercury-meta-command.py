@@ -14,6 +14,9 @@ import mercury_utilities
 # Get current working directory
 rep_exec = os.getcwd()
 
+scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
+binaryPath = os.path.join(scriptFolder, os.path.pardir)
+
 NB_OUTPUTS = 2000
 INTEGRATION_TIME = None # extension of the simulation in years (for extend())
 
@@ -43,11 +46,20 @@ def change_integration_time():
   Parameters : new_integration_time (in years)
   """
   mercury_utilities.change_integration_time(new_integration_time=INTEGRATION_TIME)
+  
+
+def prepare():
+  """Will prepare simulation script so that we can run it by launching ./runjob
+  
+  """
+  
+  mercury_utilities.prepareSubmission(BinaryPath=binaryPath, walltime=119)
 
 COMMANDS = {"regen_aei":regen_aei_files, 
 "change_nb_outputs":change_nb_outputs,
 "erase_aei":erase_aei,
-"extend":change_integration_time
+"extend":change_integration_time,
+"prepare":prepare
 }
 
 COMMANDS_HELP = ""
