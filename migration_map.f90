@@ -238,7 +238,7 @@ end subroutine write_torquein
     
     real(double_precision) :: corotation_torque, lindblad_torque, torque_ref
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
-    real(double_precision) :: position(3), velocity(3)
+    real(double_precision) :: position(3), velocity(3), gm
     type(PlanetProperties) :: p_prop
     
     ! Small number, to be just after the last point and ensure to have a good rendering of the map (else, the last point in often missing)
@@ -328,7 +328,8 @@ end subroutine write_torquein
       
       do j=1,nb_mass
         ! We generate cartesian coordinate for the given mass and Semi-major axis
-        velocity(2) = sqrt((stellar_mass + mass(j)) / position(1))
+        gm = stellar_mass + mass(j)
+        velocity(2) = sqrt(gm / position(1))
         
         ! we store in global parameters various properties of the planet
         call get_planet_properties(stellar_mass=stellar_mass, & ! Input
@@ -341,11 +342,23 @@ end subroutine write_torquein
           call print_planet_properties(p_prop) 
         end if
          
+        ! Forcing some values because we wan semi_major_axis to be EXACTLY what we want
+        p_prop%semi_major_axis = a(i)
+        call get_temperature(radius=p_prop%semi_major_axis, & ! Input
+                     temperature=p_prop%temperature, temperature_index=p_prop%temperature_index, chi=p_prop%chi, & ! Output
+                     nu=p_prop%nu) ! Output
+        p_prop%omega = sqrt(gm / (p_prop%semi_major_axis**3)) ! [day-1]
+        p_prop%scaleheight = get_scaleheight(temperature=p_prop%temperature, angular_speed=p_prop%omega)
+        p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
+        
         !------------------------------------------------------------------------------
         ! Calculation of the acceleration due to migration
         
         call get_torques(stellar_mass, mass(j), p_prop, & ! input
             corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
+        
+
+
         
         total_torque(i,j) = lindblad_torque + corotation_torque        
                 
