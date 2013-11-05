@@ -11,6 +11,7 @@ import sys # to be able to retrieve arguments of the script
 import mercury
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FormatStrFormatter
+import glob # to list files with patterns
 
 # We get the path toward the binaries
 scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
@@ -91,54 +92,13 @@ if isProblem:
 if not(os.path.exists(OUTPUT_FOLDER)):
     os.mkdir(OUTPUT_FOLDER)
 
-if isDisk:
-  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(BINARY_FOLDER, "migration_map"))
-  if (returncode != 0):
-    print(process_stdout)
-    print(process_stderr)
-    print("Process terminated with error %d" % returncode)
-    pdb.set_trace()
-    
-  
-  # We read the contour of the zero torque zones
-  contour_filename = "contour_total_torque.dat"
-  
-  contours_a = [[]]
-  contours_m = [[]]
-  contours_aapp = contours_a[-1].append
-  contours_mapp = contours_m[-1].append
 
-  contour_file = open(contour_filename, 'r')
-  for line in contour_file:
-    if (line == ' \n'):
-      contours_a.append([])
-      contours_m.append([])
-      contours_aapp = contours_a[-1].append
-      contours_mapp = contours_m[-1].append
-    else:
-      (a, m, dummy) = line.split()
-      contours_aapp(float(a))
-      contours_mapp(float(m))
-  
-  # We delete all the empty arrays created in the list of contours (one between each contour)
-  while True:
-    try:
-      contours_a.remove([])
-      contours_m.remove([])
-    except:
-      break
 
 ####################
 # On recupere la liste des fichiers planetes.aei
 ####################
-(process_stdout, process_stderr, return_code) = autiwa.lancer_commande("ls *.aei")
-if (return_code != 0):
-  print("the command return an error "+str(return_code))
-  print(process_stderr)
-  exit()
-  
-liste_aei = process_stdout.split("\n")
-liste_aei.remove('') # we remove an extra element that doesn't mean anything
+
+liste_aei = glob.glob("*.aei")
 nb_planete = len(liste_aei)
 
 
@@ -252,7 +212,64 @@ else:
   unit_time = "years"
   time_convertion = 1.
   
+if isDisk:
+  if not(os.path.isfile("total_torque.gnuplot")):
+    (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(BINARY_FOLDER, "migration_map"))
+    if (returncode != 0):
+      print(process_stdout)
+      print(process_stderr)
+      print("Process terminated with error %d" % returncode)
+      pdb.set_trace()
+    
+  
+  contour_name_list = glob.glob("contour_total_torque_*.dat")
+  contour_name_list.sort()
+  
+  if (len(contour_name_list) == 0):
+    contour_name_list = ["contour_total_torque.dat"]
+  
+  nb_contours = len(contour_name_list)
+  id_contour = 0
+  
+  contour_time = []
+  delta_contour_time = (ref_time[-1] - ref_time[0]) / float(nb_contours - 1)
+  for i in range(nb_contours):
+    tmp = ref_time[0] + i * delta_contour_time
+    contour_time.append(tmp)
 
+  # We read the contour of the zero torque zones
+  contours_a_list = []
+  contours_m_list = []
+  
+  for contour_filename in contour_name_list:
+    contours_a = [[]]
+    contours_m = [[]]
+    contours_aapp = contours_a[-1].append
+    contours_mapp = contours_m[-1].append
+
+    contour_file = open(contour_filename, 'r')
+    for line in contour_file:
+      if (line == ' \n'):
+        contours_a.append([])
+        contours_m.append([])
+        contours_aapp = contours_a[-1].append
+        contours_mapp = contours_m[-1].append
+      else:
+        (ai, mi, dummy) = line.split()
+        contours_aapp(float(ai))
+        contours_mapp(float(mi))
+    
+    # We delete all the empty arrays created in the list of contours (one between each contour)
+    while True:
+      try:
+        contours_a.remove([])
+        contours_m.remove([])
+      except:
+        break
+    contours_a_list.append(contours_a)
+    contours_m_list.append(contours_m)
+  contours_a = contours_a_list[id_contour]
+  contours_m = contours_m_list[id_contour]
 
 # on trace les plots
 autiwa.lancer_commande("rm %s/%s*" % (OUTPUT_FOLDER, FRAME_PREFIX)) # We delete the previous frames
@@ -294,6 +311,11 @@ t_frame = -1.
 for frame_i in range(NB_FRAMES):
   id_time = id_min + int(frame_i * ts_per_frame)
   t_frame = t_min + int(frame_i * ts_per_frame) * delta_t
+  
+  if ((contour_time[id_contour] + delta_contour_time) < t_frame):
+    id_contour = int((t_frame - ref_time[0]) / delta_contour_time)
+    contours_a = contours_a_list[id_contour]
+    contours_m = contours_m_list[id_contour]
   
   percentage = (frame_i) / float(NB_FRAMES - 1)
   sys.stdout.write("%3.0f%% frame %*d : T = %#.2e years\r" % (percentage * 100., MAX_LENGTH, frame_i, t_frame))

@@ -95,12 +95,13 @@ if not(os.path.isfile("disk.in")):
   isDisk = False
 
 if isDisk:
-  (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "migration_map"))
-  if (returncode != 0):
-    print(process_stdout)
-    print(process_stderr)
-    print("Process terminated with error %d" % returncode)
-    pdb.set_trace()
+  if not(os.path.isfile("total_torque.gnuplot")):
+    (process_stdout, process_stderr, returncode) = autiwa.lancer_commande(os.path.join(binaryPath, "migration_map"))
+    if (returncode != 0):
+      print(process_stdout)
+      print(process_stderr)
+      print("Process terminated with error %d" % returncode)
+      pdb.set_trace()
     
   
   # We read the contour of the zero torque zones

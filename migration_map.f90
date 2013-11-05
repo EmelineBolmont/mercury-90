@@ -22,6 +22,7 @@ program migration_map
   real(double_precision) :: torque_min = -5.d0 ! Torque boundaries for the gnuplot display
   real(double_precision) :: torque_max =  5.d0 ! Torque boundaries for the gnuplot display
   integer :: is_log_scale = 1 ! (0: False ; 1: True) If the distance is displayed in log-scale or not
+  integer :: nb_dissip = 100
   !--------------------------------
   
   call init_and_test()
@@ -165,7 +166,65 @@ program migration_map
   end if
   
   end subroutine read_torquein
+
+subroutine read_integration_time(integration_time)
+! subroutine that read the 'disk.in' file to retrieve disk properties. Default value exist, if a parameter is not defined
+
+! Global Parameters
+! 
+
+
+  implicit none
   
+  ! Output
+  real(double_precision), intent(out) :: integration_time ! the timestep of mercury in days
+
+  ! Locals
+  character(len=80) :: line
+  character(len=1), parameter :: comment_character = ')' ! character that will indicate that the rest of the line is a comment
+  integer :: error ! to store the state of a read instruction
+  
+  logical :: isParameter, isDefined
+  character(len=80) :: identificator, value
+  integer :: j
+  
+  real(double_precision) :: t_start, t_stop
+  !------------------------------------------------------------------------------
+  
+  inquire(file='param.in', exist=isDefined)
+  if (isDefined) then
+    j = 0
+    open(10, file='param.in', status='old')
+    
+    do
+      read(10, '(a80)', iostat=error) line
+      if (error /= 0) exit
+       
+      ! in param.in, comment must start from the first character, there is no comments starting from a random point of the line. 
+      ! Indeed ')' can be used elsewhere, inside the key, without meaning any comment after this.
+      if (line(1:1).ne.comment_character) then
+        j = j + 1
+      end if
+      call get_parameter_value(line, isParameter, identificator, value)
+      
+      if (j.eq.2) then
+        read(value, *) t_start
+      else if (j.eq.3) then
+        read(value, *) t_stop
+      end if
+    end do
+    close(10)
+  end if
+  
+  integration_time = t_stop - t_start
+  
+  if (isnan(integration_time)) then
+    write(error_unit,*) 'Error in "read_integration_time": There was problem while reading the integration_time in "param.in"'
+    call exit(8)
+  end if
+  
+end subroutine read_integration_time
+
 subroutine write_torquein()
 ! subroutine that write the parameters of the user_module into the file 'disk.out'
 
@@ -225,7 +284,7 @@ end subroutine write_torquein
     
     ! mass sampling
     real(double_precision) :: mass_step
-    real(double_precision), dimension(:), allocatable :: mass
+    real(double_precision), dimension(:), allocatable :: mass, mass_contour
     
 
     ! step for log sampling
@@ -241,6 +300,11 @@ end subroutine write_torquein
     real(double_precision) :: position(3), velocity(3), gm
     type(PlanetProperties) :: p_prop
     
+    integer :: k, nb_disks
+    real(double_precision), dimension(:), allocatable :: time
+    character(len=80) :: contour_name
+    real(double_precision) :: integration_time, delta_dissip, current_time, next_time
+    
     ! Small number, to be just after the last point and ensure to have a good rendering of the map (else, the last point in often missing)
     real(double_precision), parameter :: range_shift = 1.d-7
     
@@ -249,9 +313,11 @@ end subroutine write_torquein
     
     !------------------------------------------------------------------------------
     
+    
     if (.not.allocated(a)) then
       allocate(a(nb_distance))
       allocate(mass(nb_mass))
+      allocate(mass_contour(nb_mass))
       allocate(total_torque(nb_distance, nb_mass))
     end if
     
@@ -307,73 +373,136 @@ end subroutine write_torquein
       end do
     end if
     
+    ! We want to get the contour for the torque equal to 0 for total torque both in physical dimension of units of gamma_0
+    mass_contour(1:nb_mass) = mass(1:nb_mass) / (EARTH_MASS*K2) ! from Msun*K2 to m_earth
+    
     !------------------------------------------------------------------------------
     write(*,*) 'Evolution of the total, lindblad and corotation torques depending on the planet mass and distance'
     
     position(1:3) = 0.d0
     velocity(1:3) = 0.d0
     
-    ! We open the file where we want to write the outputs
-    open(11, file='total_torque.dat')
+    if (DISSIPATION_TYPE.ne.0) then
+      call system("rm contour_total_torque_*.dat")
     
-    write(11,*) '# Semi-major axis (AU) ; mass in earth mass ; total torque (no dim)'
-    
-    do i=1, nb_distance ! loop on the position
-!~       a(i) = a_min + a_step * (i-1)
-!~       a(i) = a_min * a_step**(i - 1)
+      nb_disks = nb_dissip
       
-      ! We generate cartesian coordinate for the given Semi-major axis
-      position(1) = a(i)
+      if (.not.allocated(time)) then
+        allocate(time(nb_dissip))
+      end if
       
+      call read_integration_time(integration_time)
       
-      do j=1,nb_mass
-        ! We generate cartesian coordinate for the given mass and Semi-major axis
-        gm = stellar_mass + mass(j)
-        velocity(2) = sqrt(gm / position(1))
-        
-        ! we store in global parameters various properties of the planet
-        call get_planet_properties(stellar_mass=stellar_mass, & ! Input
-         mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! Input
-         p_prop=p_prop) ! Output
-         
-        ! If the Semi-major axis is not well determined, we display a warning and give the values
-        if (abs(a(i)-p_prop%semi_major_axis)/a(i).gt.1d-2) then
-          write(*,*) 'Warning: for manual a=',a(i), 'we get :'
-          call print_planet_properties(p_prop) 
-        end if
-         
-        ! Forcing some values because we wan semi_major_axis to be EXACTLY what we want
-        p_prop%semi_major_axis = a(i)
-        call get_temperature(radius=p_prop%semi_major_axis, & ! Input
-                     temperature=p_prop%temperature, temperature_index=p_prop%temperature_index, chi=p_prop%chi, & ! Output
-                     nu=p_prop%nu) ! Output
-        p_prop%omega = sqrt(gm / (p_prop%semi_major_axis**3)) ! [day-1]
-        p_prop%scaleheight = get_scaleheight(temperature=p_prop%temperature, angular_speed=p_prop%omega)
-        p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
-        
-        !------------------------------------------------------------------------------
-        ! Calculation of the acceleration due to migration
-        
-        call get_torques(stellar_mass, mass(j), p_prop, & ! input
-            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
-        
-
-
-        
-        total_torque(i,j) = lindblad_torque + corotation_torque        
-                
-        write(11,*) a(i), mass(j) / (EARTH_MASS*K2), total_torque(i,j)
-        
+      delta_dissip = integration_time / dfloat(nb_dissip - 1)
+      
+      do k=1, nb_dissip
+        time(k) = delta_dissip * (k - 1)
       end do
+    else
+      nb_disks = 1
+    end if
+    
+    
+    do k=1, nb_disks
+      if (disk_effect) then
+        if (k.eq.1) then
+          ! We open the file where we want to write the outputs
+          open(11, file='total_torque.dat')
+          
+          write(11,*) '# Semi-major axis (AU) ; mass in earth mass ; total torque (no dim)'
+        end if
+        
+        do i=1, nb_distance ! loop on the position
+    !~       a(i) = a_min + a_step * (i-1)
+    !~       a(i) = a_min * a_step**(i - 1)
+          
+          ! We generate cartesian coordinate for the given Semi-major axis
+          position(1) = a(i)
+          
+          
+          do j=1,nb_mass
+            ! We generate cartesian coordinate for the given mass and Semi-major axis
+            gm = stellar_mass + mass(j)
+            velocity(2) = sqrt(gm / position(1))
+            
+            ! we store in global parameters various properties of the planet
+            call get_planet_properties(stellar_mass=stellar_mass, & ! Input
+             mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! Input
+             p_prop=p_prop) ! Output
+             
+            ! If the Semi-major axis is not well determined, we display a warning and give the values
+            if (abs(a(i)-p_prop%semi_major_axis)/a(i).gt.1d-2) then
+              write(*,*) 'Warning: for manual a=',a(i), 'we get :'
+              
+              call print_planet_properties(p_prop) 
+            end if
+            
+            ! Forcing some values because we wan semi_major_axis to be EXACTLY what we want
+            p_prop%semi_major_axis = a(i)
+            call get_temperature(radius=p_prop%semi_major_axis, & ! Input
+                         temperature=p_prop%temperature, temperature_index=p_prop%temperature_index, chi=p_prop%chi, & ! Output
+                         nu=p_prop%nu) ! Output
+            p_prop%omega = sqrt(gm / (p_prop%semi_major_axis**3)) ! [day-1]
+            p_prop%scaleheight = get_scaleheight(temperature=p_prop%temperature, angular_speed=p_prop%omega)
+            p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
+            
+            !------------------------------------------------------------------------------
+            ! Calculation of the acceleration due to migration
+            
+            call get_torques(stellar_mass, mass(j), p_prop, & ! input
+            corotation_torque=corotation_torque, lindblad_torque=lindblad_torque, Gamma_0=torque_ref, ecc_corot=ecc_corot) ! Output
+            
+            
+            total_torque(i,j) = lindblad_torque + corotation_torque        
+            
+            if (k.eq.1) then
+              write(11,*) a(i), mass(j) / (EARTH_MASS*K2), total_torque(i,j)
+            end if
+          end do
+          
+          if (k.eq.1) then
+            write(11,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
+          end if
+        end do
+        if (k.eq.1) then
+          close(11)
+        end if
+        
+
+        
+        if (k.eq.1) then
+          call get_contour(total_torque, a, mass_contour,'contour_total_torque.dat', 0.d0) ! This line opens a file (unit=10), thus this unit must not be used at that time
+        end if
+        
+        if (nb_disks > 1) then
+          write(contour_name, '(a,i0.5,a)') 'contour_total_torque_',k,'.dat'
+          call get_contour(total_torque, a, mass_contour,contour_name, 0.d0) ! This line opens a file (unit=10), thus this unit must not be used at that time
+          
+          ! We dissipate while the next time of dissipation is lower than the absolute time of the next k-time
+          current_time = time(k)
+          do while (next_time.lt.(time(k)+delta_dissip)) 
+            call dissipate_disk(current_time, next_time) ! Input=current_time ; Output=next_time
+            current_time = next_time
+          end do
+          ! we get the temperature profile.
+          call calculate_temperature_profile(stellar_mass=stellar_mass)
+        end if
+      else
+        if (k.eq.1) then
+          open(11, file='contour_total_torque.dat')
+          close(11)
+        end if
+        
+        if (nb_disks > 1) then
+          write(contour_name, '(a,i0.5,a)') 'contour_total_torque_',k,'.dat'
+          open(11, file=contour_name)
+          close(11)
+        end if
+      end if
       
-      write(11,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
     end do
-    close(11)
     
     
-    ! We want to get the contour for the torque equal to 0 for total torque both in physical dimension of units of gamma_0
-    mass(1:nb_mass) = mass(1:nb_mass) / (EARTH_MASS*K2)
-    call get_contour(total_torque, a, mass,'contour_total_torque.dat', 0.d0) ! This line opens a file (unit=10), thus this unit must not be used at that time
     
     open(11, file="total_torque.gnuplot")
 
