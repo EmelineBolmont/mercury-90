@@ -227,15 +227,21 @@ if isDisk:
   
   if (len(contour_name_list) == 0):
     contour_name_list = ["contour_total_torque.dat"]
+    
   
   nb_contours = len(contour_name_list)
   id_contour = 0
   
   contour_time = []
-  delta_contour_time = (ref_time[-1] - ref_time[0]) / float(nb_contours - 1)
-  for i in range(nb_contours):
-    tmp = ref_time[0] + i * delta_contour_time
-    contour_time.append(tmp)
+  
+  if (nb_contours == 1):
+    delta_contour_time = (ref_time[-1] - ref_time[0])
+    contour_time.append(0.)
+  else:
+    delta_contour_time = (ref_time[-1] - ref_time[0]) / float(nb_contours - 1)
+    for i in range(nb_contours):
+      tmp = ref_time[0] + i * delta_contour_time
+      contour_time.append(tmp)
 
   # We read the contour of the zero torque zones
   contours_a_list = []
