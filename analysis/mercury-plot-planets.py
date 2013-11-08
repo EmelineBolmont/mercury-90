@@ -15,7 +15,7 @@ import pylab as pl
 from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 from analysis import get_x_s
 import mercury_utilities
-
+import glob
 
 ###############################################
 ## Beginning of the program
@@ -87,15 +87,9 @@ if isProblem:
 ####################
 # On récupère la liste des fichiers planètes.aei
 ####################
-(process_stdout, process_stderr, return_code) = autiwa.lancer_commande("ls *.aei")
-if (return_code != 0):
-  print("the command return an error "+str(return_code))
-  print(process_stderr)
-  exit()
-  
-liste_aei = process_stdout.split("\n")
-liste_aei.remove('') # we remove an extra element that doesn't mean anything
+liste_aei = glob.glob("*.aei")
 nb_planete = len(liste_aei)
+
 
 ####################
 # On lit, pour chaque planete, le contenu du fichier et on stocke les variables qui nous intÃ©ressent.
