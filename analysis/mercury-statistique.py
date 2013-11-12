@@ -115,7 +115,7 @@ pr_all.set_ylabel("Distribution")
 # où on doit lire les résultats des simulations
 #######################
 # We define a list of forbidden names that will not be considered as simulations
-dossier_suppr = ["output", "test", "reference_simu"]
+dossier_suppr = ["output", "test", "reference_simu", "movie"]
 
 #    .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-.     .-. 
 #  .'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `._.'   `.

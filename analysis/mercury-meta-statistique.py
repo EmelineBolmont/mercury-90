@@ -94,7 +94,7 @@ hist_res.set_ylabel("Distribution")
 #######################
 # We define a list of folder names we don't want to read. 
 # Theses names will be suppressed from the final list, in case they exist.
-dossier_suppr = ["output", "indiv_simu_01"]
+dossier_suppr = ["output", "indiv_simu_01", "movie"]
 
 #######################
 # We list all the simulations of the current working directory each one of them being a 'meta simulation'
