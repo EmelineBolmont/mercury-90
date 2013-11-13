@@ -336,12 +336,13 @@ for simu in liste_simu:
   m.extend(m_system)
   
   #~ inOutwardZone = False
-  #~ for ai in a_system:
-	  #~ if ((ai > 1.) and (ai < 15.)):
-		  #~ inOutwardZone = True
+  #~ for (ai, mi) in zip(a_system, m_system):
+    #~ if ((ai > 1.) and (ai < 15.)):
+      #~ if ((mi > 5.) and (mi < 30.)):
+        #~ inOutwardZone = True
   #~ 
   #~ if inOutwardZone:
-	  #~ print("%s has planet in Outward zone" % simu)
+    #~ print("%s has planet in Outward zone" % simu)
   
   # We calculate successive period ratios
   for (a1, a2) in zip(a_system[:-1], a_system[1:]):
