@@ -39,7 +39,7 @@ binaryPath = os.path.join(scriptFolder, os.path.pardir)
 # Get current working directory
 rep_exec = os.getcwd()
 
-resonances = ["1:1", "2:1", "3:2", "4:3", "5:3", "5:4", "6:5", "7:6", "8:7", "9:8", "10:9", "11:10"]
+resonances = ["1:1", "2:1", "3:2", "4:3", "5:3", "5:4", "6:5", "7:6", "8:7"]#, "9:8", "10:9", "11:10"]
 
 #######################
 # We prepare the plots
@@ -57,16 +57,18 @@ distance_format = FormatStrFormatter("%.3g")
 nom_fichier_plot.append("hist_distances")
 fig_tmp = pl.figure()
 figures.append(fig_tmp)
-hist_a = fig_tmp.add_subplot(2, 1, 1)
-plots.append([]) # Because it is a subplots figure
-plots[-1].append(hist_a)
+hist_a = fig_tmp.add_subplot(1, 1, 1)
+plots.append(hist_a)
 hist_a.set_xlabel("Orbital Distance [AU]")
 hist_a.set_ylabel("Distribution")
 hist_a.set_xscale("log")
 hist_a.xaxis.set_major_formatter(distance_format)
 
-hist_delta = fig_tmp.add_subplot(2, 1, 2)
-plots[-1].append(hist_delta)
+nom_fichier_plot.append("hist_hill")
+fig_tmp = pl.figure()
+figures.append(fig_tmp)
+hist_delta = fig_tmp.add_subplot(1, 1, 1)
+plots.append(hist_delta)
 hist_delta.set_xlabel("Hill Separation")
 hist_delta.set_ylabel("Distribution")
 hist_delta.set_xscale("log")
@@ -506,7 +508,7 @@ for res in resonances:
   ratio = nb_period[0] / nb_period[1]
   pr_all.plot([ratio, ratio], ylims, 'k--')
   pr_all.text(ratio, ylims[1], " "+res, horizontalalignment='center', 
-  verticalalignment='bottom', rotation='vertical', size=7)
+  verticalalignment='bottom', rotation='vertical', size=12)
 
 m_fct_a.legend()
 
