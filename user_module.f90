@@ -523,8 +523,8 @@ contains
              normspin2(j) = spin(1,j)*spin(1,j)+spin(2,j)*spin(2,j)+spin(3,j)*spin(3,j)
              
              ! (r scalar w/w)^2
-             rscalws2(j) =(xh(1,j)*spin(1,1)+xh(2,j)*spin(2,1)+xh(3,j)*spin(3,1))^2/normspin2(1)
-             rscalwp2(j) =(xh(1,j)*spin(1,j)+xh(2,j)*spin(2,j)+xh(3,j)*spin(3,j))^2/normspin2(j)
+             rscalws2(j) =(xh(1,j)*spin(1,1)+xh(2,j)*spin(2,1)+xh(3,j)*spin(3,1))**2/normspin2(1)
+             rscalwp2(j) =(xh(1,j)*spin(1,j)+xh(2,j)*spin(2,j)+xh(3,j)*spin(3,j))**2/normspin2(j)
 
           end do
 
