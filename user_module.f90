@@ -776,7 +776,7 @@ contains
                 ! Froto in Msun.AU.day-2 
                 Jpi = k2p(j-1)*normspin2(j)*Rp(j)*Rp(j)*Rp(j)/(3.d0*m(j))
                 Jsi = k2s*normspin2(1)*Rsth*Rsth*Rsth/(3.d0*m(1))
-                Cpi = (m(j)*m(1))/(2.d0*K2)*Jpi(j)*Rp(j)*Rp(j)
+                Cpi = (m(j)*m(1))/(2.d0*K2)*Jpi*Rp(j)*Rp(j)
                 Csi = (m(j)*m(1))/(2.d0*K2)*Jsi*Rsth*Rsth 
                 
                 Frotr(j) = -3.d0/r4(j)*(Csi+Cpi) &
