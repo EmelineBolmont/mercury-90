@@ -71,8 +71,9 @@ contains
     real(double_precision), dimension(3,nbig+1) :: Nts,Ntp
     real(double_precision), dimension(3,8) :: spin
     real(double_precision), dimension(8) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
+    real(double_precision), dimension(8) :: Jpi,Jsi,Cpi,Csi,rscalws2,rscalwp2,normspin
     ! don't use after collision
-    real(double_precision), dimension(nbig+1) :: r,r2,r7,r8,v2,vv,vrad
+    real(double_precision), dimension(nbig+1) :: r,r2,r4,r5,r7,r8,v2,vv,vrad
     real(double_precision), dimension(nbig+1) :: horbn
     real(double_precision), dimension(4161) :: timeBD,radiusBD,lumiBD,HZinGJ,HZoutGJ,HZinb,HZoutb
     real(double_precision), dimension(1065) :: timestar,radiusstar,d2radiusstar
@@ -81,7 +82,7 @@ contains
     real(double_precision), dimension(37) :: rg2st,trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
     real(double_precision) :: Rst,Rst5,Rst10,Rstb,Rsth,Rsth5,Rsth10,Rstbh,Rst0,Rstj0,Rstb0,spin0,spinp0,spinb0
     real(double_precision) :: rg2s,rg2sh,rg2s0,k2s
-    real(double_precision), dimension(nbig+1) :: Ftr,Ftso,Ftpo
+    real(double_precision), dimension(nbig+1) :: Ftr,Ftso,Ftpo,Frotr,Frotos,Frotop
     real(double_precision), dimension(nbig+1) :: FGRo,FGRr
     real(double_precision), parameter, dimension(12) :: Ps0 = (/8.d0,13.d0,19.d0,24.d0,30.d0,36.d0,41.d0, &
          47.d0,53.d0,58.d0,64.d0,70.d0/)
@@ -498,6 +499,7 @@ contains
              r2(j) = xh(1,j)*xh(1,j)+xh(2,j)*xh(2,j)+xh(3,j)*xh(3,j)
              r(j)  = sqrt(r2(j))
              r4(j) = r2(j)*r2(j)
+             r5(j) = r2(j)*r2(j)*r(j)
              r8(j) = r2(j)*r2(j)*r2(j)*r2(j)
              r7(j) = r2(j)*r2(j)*r2(j)*r(j) 
              v2(j) = vh(1,j)*vh(1,j)+vh(2,j)*vh(2,j)+vh(3,j)*vh(3,j)
@@ -521,8 +523,8 @@ contains
              normspin2(j) = spin(1,j)*spin(1,j)+spin(2,j)*spin(2,j)+spin(3,j)*spin(3,j)
              
              ! (r scalar w/w)^2
-             rscalw2(1) =(xh(1,j)*spin(1,1)+xh(2,j)*spin(2,1)+xh(3,j)*spin(3,1))^2/normspin2(1)
-             rscalw2(j) =(xh(1,j)*spin(1,j)+xh(2,j)*spin(2,j)+xh(3,j)*spin(3,j))^2/normspin2(j)
+             rscalws2(j) =(xh(1,j)*spin(1,1)+xh(2,j)*spin(2,1)+xh(3,j)*spin(3,1))^2/normspin2(1)
+             rscalwp2(j) =(xh(1,j)*spin(1,j)+xh(2,j)*spin(2,j)+xh(3,j)*spin(3,j))^2/normspin2(j)
 
           end do
 
@@ -769,17 +771,18 @@ contains
                 
                 ! ****************** force due to rotational deformation ********************* 
                 ! Jpi and Jsi: no unit
-                ! Cpi in AU^5.day-2
-                
+                ! Cpi in Msun.AU^5.day-2
+                ! Frotr in Msun.AU.day-2
+                ! Froto in Msun.AU.day-2 
                 Jpi(j) = k2p(j-1)*normspin2(j)*Rp(j)*Rp(j)*Rp(j)/(3.d0*m(j))
                 Jsi    = k2s*normspin2(1)*Rsth*Rsth*Rsth/(3.d0*m(1))
-                Cpi(j) = (m(j)+m(1))/2.d0*Jpi(j)*Rp(j)*Rp(j)
-                Csi(j) = (m(j)+m(1))/2.d0*Jsi*Rsth*Rsth 
+                Cpi(j) = (m(j)*m(1))/(2.d0*K2)*Jpi(j)*Rp(j)*Rp(j)
+                Csi(j) = (m(j)*m(1))/(2.d0*K2)*Jsi*Rsth*Rsth 
                 
-                Frotr(j) = -3.d0/r4(j)*(Csi(j)-Cpi(j)) &
-                     + 15.d0*r(j)/r7(j)(Csi(j)*rscalw2(1)+Cpi(j)*rscalw2(j))
-                Froto(j) = -6.d0/r5(j)(Csi(j)*sqrt(rscalw2(1))+Cpi(j)*sqrt(rscalw2(j)))
-                
+                Frotr(j) = -3.d0/r4(j)*(Csi(j)+Cpi(j)) &
+                     + 15.d0*r(j)/r7(j)(Csi(j)*rscalws2(1)+Cpi(j)*rscalwp2(j))
+                Frotos(j) = -6.d0/r5(j)*Csi(j)*sqrt(rscalws2(1))
+                Frotop(j) = -6.d0/r5(j)*Cpi(j)*sqrt(rscalwp2(j))
              endif
 
              !****************** GR forces ****************************
@@ -801,24 +804,30 @@ contains
                    ! star
                    Nts(1,j)  =  Ftso(j)*1.d0/r(j) &
                         *(xh(2,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
-                        - xh(3,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)))
+                        - xh(3,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j))) &
+                        + Frotos(j)*(spin(3,1)*xh(2,j)-spin(2,1)*xh(3,j))/sqrt(normspin2(1))
                    Nts(2,j)  =  Ftso(j)*1.d0/r(j) &
                         *(xh(3,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)) &
-                        - xh(1,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)))     
+                        - xh(1,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j))) &  
+                        + Frotos(j)*(spin(1,1)*xh(3,j)-spin(3,1)*xh(1,j))/sqrt(normspin2(1))
                    Nts(3,j)  =  Ftso(j)*1.d0/r(j) &
                         *(xh(1,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)) &
-                        - xh(2,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)))  
+                        - xh(2,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j))) &
+                        + Frotos(j)*(spin(2,1)*xh(1,j)-spin(1,1)*xh(2,j))/sqrt(normspin2(1))  
                 
                    ! planet
                    Ntp(1,j)  =  Ftpo(j)*1.d0/r(j) &
                         *(xh(2,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)) &
-                        - xh(3,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)))
+                        - xh(3,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j))) &
+                        + Frotop(j)*(spin(3,j)*xh(2,j)-spin(2,j)*xh(3,j))/sqrt(normspin2(j))
                    Ntp(2,j)  =  Ftpo(j)*1.d0/r(j) &
                         *(xh(3,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)) &
-                        - xh(1,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)))     
+                        - xh(1,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j))) & 
+                        + Frotop(j)*(spin(1,j)*xh(3,j)-spin(3,j)*xh(1,j))/sqrt(normspin2(j))
                    Ntp(3,j)  =  Ftpo(j)*1.d0/r(j) &
                         *(xh(1,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)) &
-                        - xh(2,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)))        
+                        - xh(2,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j))) & 
+                        + Frotop(j)*(spin(2,j)*xh(1,j)-spin(1,j)*xh(2,j))/sqrt(normspin2(j))
                 end do
 			        
 		        ! **************************************************************
