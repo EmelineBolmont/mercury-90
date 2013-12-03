@@ -923,15 +923,21 @@ contains
           ! We add acceleration due to tides and GR
           do j=2,ntid+1 
              if (tides.eq.1) then 
-                a1(1,j) = K2/m(j)*(Ftr(j)*xh(1,j)/r(j) &
+                a1(1,j) = K2/m(j)*((Ftr(j)+Frotr(j))*xh(1,j)/r(j) &
                      +Ftso(j)/r(j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)) &
-                     +Ftpo(j)/r(j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)))
-                a1(2,j) = K2/m(j)*(Ftr(j)*xh(2,j)/r(j) &
+                     +Ftpo(j)/r(j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)) &
+                     +Frotop(j)*spin(1,j)/sqrt(normspin2(j)) &
+                     +Frotos(j)*spin(1,1)/sqrt(normspin2(1)))
+                a1(2,j) = K2/m(j)*((Ftr(j)+Frotr(j))*xh(2,j)/r(j) &
                      +Ftso(j)/r(j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)) &
-                     +Ftpo(j)/r(j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)))
-                a1(3,j) = K2/m(j)*(Ftr(j)*xh(3,j)/r(j) &
+                     +Ftpo(j)/r(j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)) &
+                     +Frotop(j)*spin(2,j)/sqrt(normspin2(j)) &
+                     +Frotos(j)*spin(2,1)/sqrt(normspin2(1)))
+                a1(3,j) = K2/m(j)*((Ftr(j)+Frotr(j))*xh(3,j)/r(j) &
                      +Ftso(j)/r(j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
-                     +Ftpo(j)/r(j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)))
+                     +Ftpo(j)/r(j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)) &
+                     +Frotop(j)*spin(3,j)/sqrt(normspin2(j)) &
+                     +Frotos(j)*spin(3,1)/sqrt(normspin2(1)))
              endif
 		     if (GenRel.eq.1) then 
                 a2(1,j) = (FGRr(j)*xh(1,j)/r(j)+FGRo(j)*vh(1,j)/vv(j))
