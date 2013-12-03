@@ -62,7 +62,7 @@ contains
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: timestep!=3.6525d5!3.65d5 !4.56d6 !
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
-    real(double_precision) :: dt,tstop,tmp,tmp1,tmp2,sigmast
+    real(double_precision) :: dt,tstop,tmp,tmp1,tmp2,sigmast,Jpi,Jsi,Cpi,Csi
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
     real(double_precision), dimension(3,nbig+1) :: a1,a2,xh,vh
@@ -71,7 +71,7 @@ contains
     real(double_precision), dimension(3,nbig+1) :: Nts,Ntp
     real(double_precision), dimension(3,8) :: spin
     real(double_precision), dimension(8) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
-    real(double_precision), dimension(8) :: Jpi,Jsi,Cpi,Csi,rscalws2,rscalwp2,normspin2
+    real(double_precision), dimension(8) :: rscalws2,rscalwp2,normspin2
     ! don't use after collision
     real(double_precision), dimension(nbig+1) :: r,r2,r4,r5,r7,r8,v2,vv,vrad
     real(double_precision), dimension(nbig+1) :: horbn
@@ -774,15 +774,15 @@ contains
                 ! Cpi in Msun.AU^5.day-2
                 ! Frotr in Msun.AU.day-2
                 ! Froto in Msun.AU.day-2 
-                Jpi(j) = k2p(j-1)*normspin2(j)*Rp(j)*Rp(j)*Rp(j)/(3.d0*m(j))
-                Jsi    = k2s*normspin2(1)*Rsth*Rsth*Rsth/(3.d0*m(1))
-                Cpi(j) = (m(j)*m(1))/(2.d0*K2)*Jpi(j)*Rp(j)*Rp(j)
-                Csi(j) = (m(j)*m(1))/(2.d0*K2)*Jsi*Rsth*Rsth 
+                Jpi = k2p(j-1)*normspin2(j)*Rp(j)*Rp(j)*Rp(j)/(3.d0*m(j))
+                Jsi = k2s*normspin2(1)*Rsth*Rsth*Rsth/(3.d0*m(1))
+                Cpi = (m(j)*m(1))/(2.d0*K2)*Jpi(j)*Rp(j)*Rp(j)
+                Csi = (m(j)*m(1))/(2.d0*K2)*Jsi*Rsth*Rsth 
                 
-                Frotr(j) = -3.d0/r4(j)*(Csi(j)+Cpi(j)) &
-                     + 15.d0*r(j)/r7(j)*(Csi(j)*rscalws2(1)+Cpi(j)*rscalwp2(j))
-                Frotos(j) = -6.d0/r5(j)*Csi(j)*sqrt(rscalws2(1))
-                Frotop(j) = -6.d0/r5(j)*Cpi(j)*sqrt(rscalwp2(j))
+                Frotr(j) = -3.d0/r4(j)*(Csi+Cpi) &
+                     + 15.d0*r(j)/r7(j)*(Csi*rscalws2(1)+Cpi*rscalwp2(j))
+                Frotos(j) = -6.d0/r5(j)*Csi*sqrt(rscalws2(1))
+                Frotop(j) = -6.d0/r5(j)*Cpi*sqrt(rscalwp2(j))
              endif
 
              !****************** GR forces ****************************
