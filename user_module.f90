@@ -497,6 +497,7 @@ contains
 
              r2(j) = xh(1,j)*xh(1,j)+xh(2,j)*xh(2,j)+xh(3,j)*xh(3,j)
              r(j)  = sqrt(r2(j))
+             r4(j) = r2(j)*r2(j)
              r8(j) = r2(j)*r2(j)*r2(j)*r2(j)
              r7(j) = r2(j)*r2(j)*r2(j)*r(j) 
              v2(j) = vh(1,j)*vh(1,j)+vh(2,j)*vh(2,j)+vh(3,j)*vh(3,j)
@@ -513,6 +514,15 @@ contains
 		     trueanom(1,j) = 1.d0/r2(j)*(horb(2,j)*xh(3,j)-horb(3,j)*xh(2,j))
 		     trueanom(2,j) = 1.d0/r2(j)*(horb(3,j)*xh(1,j)-horb(1,j)*xh(3,j))
 		     trueanom(3,j) = 1.d0/r2(j)*(horb(1,j)*xh(2,j)-horb(2,j)*xh(1,j))
+
+             ! For part of force due to rotational deformation
+             ! Norm of spin
+             normspin2(1) = spin(1,1)*spin(1,1)+spin(2,1)*spin(2,1)+spin(3,1)*spin(3,1)
+             normspin2(j) = spin(1,j)*spin(1,j)+spin(2,j)*spin(2,j)+spin(3,j)*spin(3,j)
+             
+             ! (r scalar w/w)^2
+             rscalw2(1) =(xh(1,j)*spin(1,1)+xh(2,j)*spin(2,1)+xh(3,j)*spin(3,1))^2/normspin2(1)
+             rscalw2(j) =(xh(1,j)*spin(1,j)+xh(2,j)*spin(2,j)+xh(3,j)*spin(3,j))^2/normspin2(j)
 
           end do
 
@@ -745,6 +755,7 @@ contains
                 ! ****************** tidal force *********************
                 ! Ftr in Msun.AU.day-2
                 ! Ftso and Ftpo in Msun.AU.day-1
+                ! K2 = G in AU^3.Msun-1.day-2
 			    tmp  = K2*K2
 			    tmp1 = m(1)*m(1)
 			    tmp2 = m(j)*m(j)
@@ -755,6 +766,20 @@ contains
                      +tmp1*Rp10(j)*sigmap(j))           
                 Ftso(j) = 4.5d0*tmp2*Rsth10*dissstar*sigmast/(tmp*r7(j))
                 Ftpo(j) = 4.5d0*tmp1*Rp10(j)*sigmap(j)/(tmp*r7(j))
+                
+                ! ****************** force due to rotational deformation ********************* 
+                ! Jpi and Jsi: no unit
+                ! Cpi in AU^5.day-2
+                
+                Jpi(j) = k2p(j-1)*normspin2(j)*Rp(j)*Rp(j)*Rp(j)/(3.d0*m(j))
+                Jsi    = k2s*normspin2(1)*Rsth*Rsth*Rsth/(3.d0*m(1))
+                Cpi(j) = (m(j)+m(1))/2.d0*Jpi(j)*Rp(j)*Rp(j)
+                Csi(j) = (m(j)+m(1))/2.d0*Jsi*Rsth*Rsth 
+                
+                Frotr(j) = -3.d0/r4(j)*(Csi(j)-Cpi(j)) &
+                     + 15.d0*r(j)/r7(j)(Csi(j)*rscalw2(1)+Cpi(j)*rscalw2(j))
+                Froto(j) = -6.d0/r5(j)(Csi(j)*sqrt(rscalw2(1))+Cpi(j)*sqrt(rscalw2(j)))
+                
              endif
 
              !****************** GR forces ****************************
