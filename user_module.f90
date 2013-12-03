@@ -517,15 +517,6 @@ contains
 		     trueanom(2,j) = 1.d0/r2(j)*(horb(3,j)*xh(1,j)-horb(1,j)*xh(3,j))
 		     trueanom(3,j) = 1.d0/r2(j)*(horb(1,j)*xh(2,j)-horb(2,j)*xh(1,j))
 
-             ! For part of force due to rotational deformation
-             ! Norm of spin
-             normspin2(1) = spin(1,1)*spin(1,1)+spin(2,1)*spin(2,1)+spin(3,1)*spin(3,1)
-             normspin2(j) = spin(1,j)*spin(1,j)+spin(2,j)*spin(2,j)+spin(3,j)*spin(3,j)
-             
-             ! (r scalar w/w)^2
-             rscalws2(j) =(xh(1,j)*spin(1,1)+xh(2,j)*spin(2,1)+xh(3,j)*spin(3,1))**2/normspin2(1)
-             rscalwp2(j) =(xh(1,j)*spin(1,j)+xh(2,j)*spin(2,j)+xh(3,j)*spin(3,j))**2/normspin2(j)
-
           end do
 
 
@@ -774,6 +765,14 @@ contains
                 ! Cpi in Msun.AU^5.day-2
                 ! Frotr in Msun.AU.day-2
                 ! Froto in Msun.AU.day-2 
+                
+                ! Norm of spin
+                normspin2(1) = spin(1,1)*spin(1,1)+spin(2,1)*spin(2,1)+spin(3,1)*spin(3,1)
+                normspin2(j) = spin(1,j)*spin(1,j)+spin(2,j)*spin(2,j)+spin(3,j)*spin(3,j)
+                ! (r scalar w/w)^2
+                rscalws2(j) =(xh(1,j)*spin(1,1)+xh(2,j)*spin(2,1)+xh(3,j)*spin(3,1))**2/normspin2(1)
+                rscalwp2(j) =(xh(1,j)*spin(1,j)+xh(2,j)*spin(2,j)+xh(3,j)*spin(3,j))**2/normspin2(j)
+                
                 Jpi = k2p(j-1)*normspin2(j)*Rp(j)*Rp(j)*Rp(j)/(3.d0*m(j))
                 Jsi = k2s*normspin2(1)*Rsth*Rsth*Rsth/(3.d0*m(1))
                 Cpi = (m(j)*m(1))/(2.d0*K2)*Jpi*Rp(j)*Rp(j)
