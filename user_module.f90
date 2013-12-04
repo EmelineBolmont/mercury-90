@@ -761,12 +761,12 @@ contains
                 Ftpo(j) = 4.5d0*tmp1*Rp10(j)*sigmap(j)/(tmp*r7(j))
                 
                 ! ****************** force due to rotational deformation ********************* 
-                ! Jpi and Jsi: no unit
+                ! J2 of planet and star: Jpi and Jsi  (no unit)
                 ! Cpi in Msun.AU^5.day-2
                 ! Frotr in Msun.AU.day-2
                 ! Froto in Msun.AU.day-2 
                 
-                ! Norm of spin
+                ! Square of the norm of the spin
                 normspin2(1) = spin(1,1)*spin(1,1)+spin(2,1)*spin(2,1)+spin(3,1)*spin(3,1)
                 normspin2(j) = spin(1,j)*spin(1,j)+spin(2,j)*spin(2,j)+spin(3,j)*spin(3,j)
                 ! (r scalar w/w)^2
@@ -779,8 +779,8 @@ contains
                 Csi = (m(j)*m(1))/(2.d0*K2)*Jsi*Rsth*Rsth 
                 
                 Frotr(j) = -3.d0/r4(j)*(Csi+Cpi) &
-                     + 15.d0*r(j)/r7(j)*(Csi*rscalws2(1)+Cpi*rscalwp2(j))
-                Frotos(j) = -6.d0/r5(j)*Csi*sqrt(rscalws2(1))
+                     + 15.d0*r(j)/r7(j)*(Csi*rscalws2(j)+Cpi*rscalwp2(j))
+                Frotos(j) = -6.d0/r5(j)*Csi*sqrt(rscalws2(j))
                 Frotop(j) = -6.d0/r5(j)*Cpi*sqrt(rscalwp2(j))
              endif
 
