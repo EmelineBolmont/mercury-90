@@ -182,9 +182,12 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             torque = torque_ref * (lindblad_torque + ecc_corot * corotation_torque)
             
 
-            time_mig = 0.5d0 * p_prop%angular_momentum / torque
+            ! See (tanaka et al., 2002 for t_mig. We calculate the specific acceleration starting from 
+            ! a = - v / tau (as a friction force) and then decompose in cylindrical coordinates. We then get tau = - J / dot(J)
+            ! time_mig = - p_prop%angular_momentum / (2. * torque)
+            ! acc = - v / (2 * t_mig)
             
-            migration_acc_prefactor = 1.d0 / time_mig
+            migration_acc_prefactor = torque / p_prop%angular_momentum
             
             migration_acceleration(1:3) = migration_acc_prefactor * velocity(1:3,planet)
             
