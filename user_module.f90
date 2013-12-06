@@ -196,7 +196,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             
             !------------------------------------------------------------------------------
             ! Calculation of the acceleration due to eccentricity damping
-            
+            ! Formulae from (Cresswell & Nelson, 2008)
             time_ecc = time_wave / 0.780d0 * (1.d0 + e_h2 * (- 0.14d0 + 0.06 * e_h) + 0.18 * e_h * i_h2)
             
             eccentricity_acc_prefactor = -2.d0 * (position(1,planet) * velocity(1,planet) + position(2,planet) * velocity(2,planet)&
@@ -209,7 +209,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
             
             !------------------------------------------------------------------------------
             ! Calculation of the acceleration due to the inclination damping
-            
+            ! Formulae from (Cresswell & Nelson, 2008)
             if (p_prop%inclination.gt.INCLINATION_CUTOFF) then
               time_inc = time_wave / 0.544d0 * (1.d0 + i_h2 * (- 0.30d0 + 0.24 * i_h) + 0.14 * e_h2 * i_h)
               
