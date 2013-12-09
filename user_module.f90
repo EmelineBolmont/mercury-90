@@ -913,7 +913,8 @@ contains
                    write(*,*) "h6",time/365.25d0,horb(1,7)/horbn(7),horb(2,7)/horbn(7) &
                      ,horb(3,7)/horbn(7),horbn(7)
                 endif
-                timestep = time + output*365.25d0
+                timestep = timestep + output*365.25d0
+                
              endif
           endif
 
