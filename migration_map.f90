@@ -22,6 +22,7 @@ program migration_map
   real(double_precision) :: torque_min = -5.d0 ! Torque boundaries for the gnuplot display
   real(double_precision) :: torque_max =  5.d0 ! Torque boundaries for the gnuplot display
   integer :: is_log_scale = 1 ! (0: False ; 1: True) If the distance is displayed in log-scale or not
+  integer :: is_timescale = 0 ! (0: False ; 1: True) If we store the timescales for corotation torque in an extra file or not
   integer :: nb_dissip = 100
   !--------------------------------
   
@@ -147,6 +148,9 @@ program migration_map
         case('log_scale')
           read(value, *) is_log_scale
         
+        case('timescale')
+          read(value, *) is_timescale
+        
         case default
           write(*,*) 'Warning: An unknown parameter has been found'
           write(*,*) "identificator='", trim(identificator), "' ; value(s)='", trim(value),"'"
@@ -242,6 +246,8 @@ subroutine write_torquein()
   
   open(10, file='torque.in')
   write(10,'(a)') '! Parameters to build the migration map'
+  write(10,'(a)') '! DISPLAY TIMESCALES in an extra file'
+  write(10,'(a,i1,a)') 'timescale = ', is_timescale, " ! 1: True ; 0: False"
   write(10,'(a)') '! DISTANCE RANGE'
   write(10,'(a,f5.1,a)') 'a_min = ', a_min, " ! in AU"
   write(10,'(a,f5.1,a)') 'a_max = ', a_max, " ! in AU"
@@ -310,6 +316,10 @@ end subroutine write_torquein
     
     integer :: i,j ! for loops
     integer :: idx, nb_tmp ! to fill the radius array step by step
+    
+    !timescales
+    real(double_precision) :: t_lib, t_uturn, t_rad, t_visc
+    real(double_precision) :: x_s, hill_radius, Q_p, Q_gamma, gamma_eff
     
     !------------------------------------------------------------------------------
     
@@ -410,6 +420,13 @@ end subroutine write_torquein
           open(11, file='total_torque.dat')
           
           write(11,*) '# Semi-major axis (AU) ; mass in earth mass ; total torque (no dim)'
+          
+        ! We open the timescale file only if the option is true
+        if (is_timescale.eq.1) then
+          open(12, file='timescales.dat')
+          
+          write(12,*) ' # Semi-major axis (AU) ; mass in earth mass ; t_lib, t_uturn, t_rad, t_nu (in days)'
+        end if
         end if
         
         do i=1, nb_distance ! loop on the position
@@ -446,6 +463,35 @@ end subroutine write_torquein
             p_prop%scaleheight = get_scaleheight(temperature=p_prop%temperature, angular_speed=p_prop%omega)
             p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
             
+            
+            if (is_timescale.eq.1) then
+              !------------------------------------------------------------------------------
+              ! Q is needed by the lindblad torque. We set Q for m ~ 2 /3 h (45): 
+              Q_p = TWOTHIRD * p_prop%chi / (p_prop%aspect_ratio * p_prop%scaleheight**2 * p_prop%omega) ! p_prop%aspect_ratio**3 * p_prop%semi_major_axis**2 = aspect_ratio * scaleheight**2
+              !------------------------------------------------------------------------------
+
+              Q_gamma = Q_p * ADIABATIC_INDEX
+
+              ! gamma_eff can cause a lot of floating point exceptions and NaN. If the adiabatic index is far from 1.4, this can be the cause. 
+              ! In particular, if gamma=2, then Q_p must be greater than 0.5, else, one make the sqrt of a negative number, causing a NaN
+              gamma_eff = 2.d0 * Q_gamma / (Q_gamma + 0.5d0 * &
+              sqrt(2.d0 * (sqrt((Q_gamma * Q_gamma + 1.d0)**2 - 16.d0 * Q_p * (Q_gamma - Q_p)) &
+              + Q_gamma * Q_gamma - 1.d0)))
+              
+              x_s = X_S_PREFACTOR / gamma_eff**0.25d0 * sqrt(mass(j) / p_prop%aspect_ratio)
+              t_lib = (8. * PI / 3.) / (p_prop%omega * x_s)
+              
+              hill_radius = p_prop%semi_major_axis * (mass(j) / (3. * stellar_mass))**(THIRD)
+              t_uturn = 4. / p_prop%omega * (p_prop%scaleheight / hill_radius)**1.5
+              
+              t_visc = x_s * x_s / p_prop%nu
+              t_rad = x_s * x_s / p_prop%chi
+              
+              if (k.eq.1) then
+                write(12,*) a(i), mass(j) / (EARTH_MASS*K2), t_lib, t_uturn, t_rad, t_visc
+              end if
+            end if
+            
             !------------------------------------------------------------------------------
             ! Calculation of the acceleration due to migration
             
@@ -463,9 +509,24 @@ end subroutine write_torquein
           if (k.eq.1) then
             write(11,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
           end if
+          
+          if (is_timescale.eq.1) then
+              if (k.eq.1) then
+                write(12,*) ""! we write a blank line to separate them in the data file, else, gnuplot doesn't want to make the surface plot
+              end if
+            end if
         end do
         if (k.eq.1) then
           close(11)
+        end if
+        
+        ! We close the timescale file only if the option is true
+        if (is_timescale.eq.1) then
+          if (k.eq.1) then
+            close(12)
+          end if
+          
+          call write_gnuplot_timescales()
         end if
         
 
@@ -589,5 +650,258 @@ end subroutine write_torquein
     close(11)
     
   end subroutine study_torques
+  
+  subroutine write_gnuplot_timescales()
+! Subroutine to write the 4 gnuplot files that will plot the 4 timescales comparisons important for corotation torque saturation
+  
+  ! Local values
+  ! Small number, to be just after the last point and ensure to have a good rendering of the map (else, the last point in often missing)
+  real(double_precision), parameter :: range_shift = 1.d-7
+  
+  ! linear rad
+  open(11, file='timescale_01.gnuplot')
+  write(11, *) 'set terminal png crop enhanced size 1200, 1000'
+  write(11, *) 'set output "timescale_diagram.png"'
+  write(11, *) 'set pm3d map'
+  write(11, *) 'set pm3d explicit'
+  write(11, *) 'set palette rgbformulae 22,13,-31'
+  write(11, *) 'unset xtics'
+  write(11, *) 'unset ytics'
+  write(11, *) 'unset xlabel'
+  write(11, *) 'unset ylabel'
+  write(11, *) 'unset title'
+  write(11, *) 'unset border'
+  write(11, *) 'unset colorbox'
+  write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
+  write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'set logscale x'
+  end if
+  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'splot "timescales.dat" using 1:2:($5/$4) with pm3d notitle'
+  write(11, *) ''
+  write(11, *) "set terminal pdfcairo enhanced font ' ,8'"
+  write(11, *) 'set output "linear_rad.pdf"'
+  write(11, *) 'set multiplot'
+  write(11, *) '# To display the colorbox (without displaying any map)'
+  write(11, *) 'set cbtics'
+  write(11, *) 'set colorbox'
+  write(11, *) 'unset border'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'unset logscale x'
+  end if
+  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set lmargin at screen 0.15'
+  write(11, *) 'set rmargin at screen 0.85'
+  write(11, *) 'set bmargin at screen 0.175'
+  write(11, *) 'set tmargin at screen 0.85'
+  write(11, *) 'unset surface'
+  write(11, *) 'splot 0.1 with pm3d notitle'
+  write(11, *) ''
+  write(11, *) '# We display the bitmap, that we include in the .pdf file'
+  write(11, *) 'set xrange [0:*]'
+  write(11, *) 'set yrange [0:*]'
+  write(11, *) 'set cbrange[*:*] # To have correct display of bitmap colors'
+  write(11, *) 'plot "timescale_diagram.png" binary filetype=png with rgbimage notitle'
+  write(11, *) ''
+  write(11, *) 'set grid xtics ytics linetype 0'
+  write(11, *) 'set border'
+  write(11, *) 'set tics'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'set logscale x'
+  end if
+  write(11, *) 'set xlabel "Semi-major axis (AU)"'
+  write(11, *) 'set ylabel "Planet mass (m_{earth})"'
+  write(11, *) 'set title "Evolution of t_{rad}/t_{uturn}"'
+  write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
+  write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+  write(11, *) 'plot "contour_total_torque.dat" using 1:2 with line linetype -1 linewidth 1 notitle'
+  write(11, *) 'unset multiplot'
+  close(11)
+  
+  ! linear visc
+  open(11, file='timescale_02.gnuplot')
+  write(11, *) 'set terminal png crop enhanced size 1200, 1000'
+  write(11, *) 'set output "timescale_diagram.png"'
+  write(11, *) 'set pm3d map'
+  write(11, *) 'set pm3d explicit'
+  write(11, *) 'set palette rgbformulae 22,13,-31'
+  write(11, *) 'unset xtics'
+  write(11, *) 'unset ytics'
+  write(11, *) 'unset xlabel'
+  write(11, *) 'unset ylabel'
+  write(11, *) 'unset title'
+  write(11, *) 'unset border'
+  write(11, *) 'unset colorbox'
+  write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
+  write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'set logscale x'
+  end if
+  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'splot "timescales.dat" using 1:2:($6/$4) with pm3d notitle'
+  write(11, *) ''
+  write(11, *) "set terminal pdfcairo enhanced font ' ,8'"
+  write(11, *) 'set output "linear_visc.pdf"'
+  write(11, *) 'set multiplot'
+  write(11, *) '# To display the colorbox (without displaying any map)'
+  write(11, *) 'set cbtics'
+  write(11, *) 'set colorbox'
+  write(11, *) 'unset border'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'unset logscale x'
+  end if
+  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set lmargin at screen 0.15'
+  write(11, *) 'set rmargin at screen 0.85'
+  write(11, *) 'set bmargin at screen 0.175'
+  write(11, *) 'set tmargin at screen 0.85'
+  write(11, *) 'unset surface'
+  write(11, *) 'splot 0.1 with pm3d notitle'
+  write(11, *) ''
+  write(11, *) '# We display the bitmap, that we include in the .pdf file'
+  write(11, *) 'set xrange [0:*]'
+  write(11, *) 'set yrange [0:*]'
+  write(11, *) 'set cbrange[*:*] # To have correct display of bitmap colors'
+  write(11, *) 'plot "timescale_diagram.png" binary filetype=png with rgbimage notitle'
+  write(11, *) ''
+  write(11, *) 'set grid xtics ytics linetype 0'
+  write(11, *) 'set border'
+  write(11, *) 'set tics'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'set logscale x'
+  end if
+  write(11, *) 'set xlabel "Semi-major axis (AU)"'
+  write(11, *) 'set ylabel "Planet mass (m_{earth})"'
+  write(11, *) 'set title "Evolution of t_{visc}/t_{uturn}"'
+  write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
+  write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+  write(11, *) 'plot "contour_total_torque.dat" using 1:2 with line linetype -1 linewidth 1 notitle'
+  write(11, *) 'unset multiplot'
+  close(11)
+  
+  ! sat rad
+  open(11, file='timescale_03.gnuplot')
+  write(11, *) 'set terminal png crop enhanced size 1200, 1000'
+  write(11, *) 'set output "timescale_diagram.png"'
+  write(11, *) 'set pm3d map'
+  write(11, *) 'set pm3d explicit'
+  write(11, *) 'set palette rgbformulae 22,13,-31'
+  write(11, *) 'unset xtics'
+  write(11, *) 'unset ytics'
+  write(11, *) 'unset xlabel'
+  write(11, *) 'unset ylabel'
+  write(11, *) 'unset title'
+  write(11, *) 'unset border'
+  write(11, *) 'unset colorbox'
+  write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
+  write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+    if (is_log_scale.eq.1) then
+      write(11,*) 'set logscale x'
+    end if
+  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'splot "timescales.dat" using 1:2:(0.5*$3/$5) with pm3d notitle'
+  write(11, *) ''
+  write(11, *) "set terminal pdfcairo enhanced font ' ,8'"
+  write(11, *) 'set output "sat_rad.pdf"'
+  write(11, *) 'set multiplot'
+  write(11, *) '# To display the colorbox (without displaying any map)'
+  write(11, *) 'set cbtics'
+  write(11, *) 'set colorbox'
+  write(11, *) 'unset border'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'unset logscale x'
+  end if
+  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set lmargin at screen 0.15'
+  write(11, *) 'set rmargin at screen 0.85'
+  write(11, *) 'set bmargin at screen 0.175'
+  write(11, *) 'set tmargin at screen 0.85'
+  write(11, *) 'unset surface'
+  write(11, *) 'splot 0.1 with pm3d notitle'
+  write(11, *) ''
+  write(11, *) '# We display the bitmap, that we include in the .pdf file'
+  write(11, *) 'set xrange [0:*]'
+  write(11, *) 'set yrange [0:*]'
+  write(11, *) 'set cbrange[*:*] # To have correct display of bitmap colors'
+  write(11, *) 'plot "timescale_diagram.png" binary filetype=png with rgbimage notitle'
+  write(11, *) ''
+  write(11, *) 'set grid xtics ytics linetype 0'
+  write(11, *) 'set border'
+  write(11, *) 'set tics'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'set logscale x'
+  end if
+  write(11, *) 'set xlabel "Semi-major axis (AU)"'
+  write(11, *) 'set ylabel "Planet mass (m_{earth})"'
+  write(11, *) 'set title "Evolution of t_{lib}/(2*t_{rad})"'
+  write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
+  write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+  write(11, *) 'plot "contour_total_torque.dat" using 1:2 with line linetype -1 linewidth 1 notitle'
+  write(11, *) 'unset multiplot'
+  close(11)
+  
+  ! sat_visc
+  open(11, file='timescale_04.gnuplot')
+  write(11, *) 'set terminal png crop enhanced size 1200, 1000'
+  write(11, *) 'set output "timescale_diagram.png"'
+  write(11, *) 'set pm3d map'
+  write(11, *) 'set pm3d explicit'
+  write(11, *) 'set palette rgbformulae 22,13,-31'
+  write(11, *) 'unset xtics'
+  write(11, *) 'unset ytics'
+  write(11, *) 'unset xlabel'
+  write(11, *) 'unset ylabel'
+  write(11, *) 'unset title'
+  write(11, *) 'unset border'
+  write(11, *) 'unset colorbox'
+  write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
+  write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'set logscale x'
+  end if
+  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'splot "timescales.dat" using 1:2:(0.5*$3/$6) with pm3d notitle'
+  write(11, *) ''
+  write(11, *) "set terminal pdfcairo enhanced font ' ,8'"
+  write(11, *) 'set output "sat_visc.pdf"'
+  write(11, *) 'set multiplot'
+  write(11, *) '# To display the colorbox (without displaying any map)'
+  write(11, *) 'set cbtics'
+  write(11, *) 'set colorbox'
+  write(11, *) 'unset border'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'unset logscale x'
+  end if
+  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set lmargin at screen 0.15'
+  write(11, *) 'set rmargin at screen 0.85'
+  write(11, *) 'set bmargin at screen 0.175'
+  write(11, *) 'set tmargin at screen 0.85'
+  write(11, *) 'unset surface'
+  write(11, *) 'splot 0.1 with pm3d notitle'
+  write(11, *) ''
+  write(11, *) '# We display the bitmap, that we include in the .pdf file'
+  write(11, *) 'set xrange [0:*]'
+  write(11, *) 'set yrange [0:*]'
+  write(11, *) 'set cbrange[*:*] # To have correct display of bitmap colors'
+  write(11, *) 'plot "timescale_diagram.png" binary filetype=png with rgbimage notitle'
+  write(11, *) ''
+  write(11, *) 'set grid xtics ytics linetype 0'
+  write(11, *) 'set border'
+  write(11, *) 'set tics'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'set logscale x'
+  end if
+  write(11, *) 'set xlabel "Semi-major axis (AU)"'
+  write(11, *) 'set ylabel "Planet mass (m_{earth})"'
+  write(11, *) 'set title "Evolution of t_{lib}/(2*t_{visc})"'
+  write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
+  write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+  write(11, *) 'plot "contour_total_torque.dat" using 1:2 with line linetype -1 linewidth 1 notitle'
+  write(11, *) 'unset multiplot'
+  close(11)
+  
+  end subroutine write_gnuplot_timescales
 
 end program migration_map
