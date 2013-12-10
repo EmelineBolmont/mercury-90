@@ -677,7 +677,7 @@ end subroutine write_torquein
   if (is_log_scale.eq.1) then
     write(11,*) 'set logscale x'
   end if
-  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set cbrange [0.5:1.5]'
   write(11, *) 'splot "timescales.dat" using 1:2:($5/$4) with pm3d notitle'
   write(11, *) ''
   write(11, *) "set terminal pdfcairo enhanced font ' ,8'"
@@ -690,7 +690,7 @@ end subroutine write_torquein
   if (is_log_scale.eq.1) then
     write(11,*) 'unset logscale x'
   end if
-  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set cbrange [0.5:1.5]'
   write(11, *) 'set lmargin at screen 0.15'
   write(11, *) 'set rmargin at screen 0.85'
   write(11, *) 'set bmargin at screen 0.175'
@@ -712,7 +712,7 @@ end subroutine write_torquein
   end if
   write(11, *) 'set xlabel "Semi-major axis (AU)"'
   write(11, *) 'set ylabel "Planet mass (m_{earth})"'
-  write(11, *) 'set title "Evolution of t_{rad}/t_{uturn}"'
+  write(11, *) 'set title "Evolution of t_{rad}/t_{uturn}<1 : linear case"'
   write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
   write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
   write(11, *) 'plot "contour_total_torque.dat" using 1:2 with line linetype -1 linewidth 1 notitle'
@@ -738,7 +738,7 @@ end subroutine write_torquein
   if (is_log_scale.eq.1) then
     write(11,*) 'set logscale x'
   end if
-  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set cbrange [0.5:1.5]'
   write(11, *) 'splot "timescales.dat" using 1:2:($6/$4) with pm3d notitle'
   write(11, *) ''
   write(11, *) "set terminal pdfcairo enhanced font ' ,8'"
@@ -751,7 +751,7 @@ end subroutine write_torquein
   if (is_log_scale.eq.1) then
     write(11,*) 'unset logscale x'
   end if
-  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set cbrange [0.5:1.5]'
   write(11, *) 'set lmargin at screen 0.15'
   write(11, *) 'set rmargin at screen 0.85'
   write(11, *) 'set bmargin at screen 0.175'
@@ -773,7 +773,7 @@ end subroutine write_torquein
   end if
   write(11, *) 'set xlabel "Semi-major axis (AU)"'
   write(11, *) 'set ylabel "Planet mass (m_{earth})"'
-  write(11, *) 'set title "Evolution of t_{visc}/t_{uturn}"'
+  write(11, *) 'set title "Evolution of t_{visc}/t_{uturn}<1 : linear case"'
   write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
   write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
   write(11, *) 'plot "contour_total_torque.dat" using 1:2 with line linetype -1 linewidth 1 notitle'
@@ -799,7 +799,7 @@ end subroutine write_torquein
     if (is_log_scale.eq.1) then
       write(11,*) 'set logscale x'
     end if
-  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set cbrange [0.5:1.5]'
   write(11, *) 'splot "timescales.dat" using 1:2:(0.5*$3/$5) with pm3d notitle'
   write(11, *) ''
   write(11, *) "set terminal pdfcairo enhanced font ' ,8'"
@@ -812,7 +812,7 @@ end subroutine write_torquein
   if (is_log_scale.eq.1) then
     write(11,*) 'unset logscale x'
   end if
-  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set cbrange [0.5:1.5]'
   write(11, *) 'set lmargin at screen 0.15'
   write(11, *) 'set rmargin at screen 0.85'
   write(11, *) 'set bmargin at screen 0.175'
@@ -834,7 +834,7 @@ end subroutine write_torquein
   end if
   write(11, *) 'set xlabel "Semi-major axis (AU)"'
   write(11, *) 'set ylabel "Planet mass (m_{earth})"'
-  write(11, *) 'set title "Evolution of t_{lib}/(2*t_{rad})"'
+  write(11, *) 'set title "Evolution of t_{lib}/(2*t_{rad})<1 : Saturated case"'
   write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
   write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
   write(11, *) 'plot "contour_total_torque.dat" using 1:2 with line linetype -1 linewidth 1 notitle'
@@ -860,7 +860,7 @@ end subroutine write_torquein
   if (is_log_scale.eq.1) then
     write(11,*) 'set logscale x'
   end if
-  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set cbrange [0.5:1.5]'
   write(11, *) 'splot "timescales.dat" using 1:2:(0.5*$3/$6) with pm3d notitle'
   write(11, *) ''
   write(11, *) "set terminal pdfcairo enhanced font ' ,8'"
@@ -873,7 +873,7 @@ end subroutine write_torquein
   if (is_log_scale.eq.1) then
     write(11,*) 'unset logscale x'
   end if
-  write(11, *) 'set cbrange [0:1]'
+  write(11, *) 'set cbrange [0.5:1.5]'
   write(11, *) 'set lmargin at screen 0.15'
   write(11, *) 'set rmargin at screen 0.85'
   write(11, *) 'set bmargin at screen 0.175'
@@ -895,7 +895,68 @@ end subroutine write_torquein
   end if
   write(11, *) 'set xlabel "Semi-major axis (AU)"'
   write(11, *) 'set ylabel "Planet mass (m_{earth})"'
-  write(11, *) 'set title "Evolution of t_{lib}/(2*t_{visc})"'
+  write(11, *) 'set title "Evolution of t_{lib}/(2*t_{visc})<1 : Saturated case"'
+  write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
+  write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+  write(11, *) 'plot "contour_total_torque.dat" using 1:2 with line linetype -1 linewidth 1 notitle'
+  write(11, *) 'unset multiplot'
+  close(11)
+  
+  ! rad visc comparison
+  open(11, file='timescale_05.gnuplot')
+  write(11, *) 'set terminal png crop enhanced size 1200, 1000'
+  write(11, *) 'set output "timescale_diagram.png"'
+  write(11, *) 'set pm3d map'
+  write(11, *) 'set pm3d explicit'
+  write(11, *) 'set palette rgbformulae 22,13,-31'
+  write(11, *) 'unset xtics'
+  write(11, *) 'unset ytics'
+  write(11, *) 'unset xlabel'
+  write(11, *) 'unset ylabel'
+  write(11, *) 'unset title'
+  write(11, *) 'unset border'
+  write(11, *) 'unset colorbox'
+  write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
+  write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'set logscale x'
+  end if
+  write(11, *) 'set cbrange [0.5:1.5]'
+  write(11, *) 'splot "timescales.dat" using 1:2:($6/$5) with pm3d notitle'
+  write(11, *) ''
+  write(11, *) "set terminal pdfcairo enhanced font ' ,8'"
+  write(11, *) 'set output "diffusion_timescale.pdf"'
+  write(11, *) 'set multiplot'
+  write(11, *) '# To display the colorbox (without displaying any map)'
+  write(11, *) 'set cbtics'
+  write(11, *) 'set colorbox'
+  write(11, *) 'unset border'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'unset logscale x'
+  end if
+  write(11, *) 'set cbrange [0.5:1.5]'
+  write(11, *) 'set lmargin at screen 0.15'
+  write(11, *) 'set rmargin at screen 0.85'
+  write(11, *) 'set bmargin at screen 0.175'
+  write(11, *) 'set tmargin at screen 0.85'
+  write(11, *) 'unset surface'
+  write(11, *) 'splot 0.1 with pm3d notitle'
+  write(11, *) ''
+  write(11, *) '# We display the bitmap, that we include in the .pdf file'
+  write(11, *) 'set xrange [0:*]'
+  write(11, *) 'set yrange [0:*]'
+  write(11, *) 'set cbrange[*:*] # To have correct display of bitmap colors'
+  write(11, *) 'plot "timescale_diagram.png" binary filetype=png with rgbimage notitle'
+  write(11, *) ''
+  write(11, *) 'set grid xtics ytics linetype 0'
+  write(11, *) 'set border'
+  write(11, *) 'set tics'
+  if (is_log_scale.eq.1) then
+    write(11,*) 'set logscale x'
+  end if
+  write(11, *) 'set xlabel "Semi-major axis (AU)"'
+  write(11, *) 'set ylabel "Planet mass (m_{earth})"'
+  write(11, *) 'set title "Evolution of t_{rad}/t_{visc}<1 : viscous diffusion quicker"'
   write(11,*) 'set xrange [', a_min, ':', a_max+range_shift, ']'
   write(11,*) 'set yrange [', mass_min / EARTH_MASS, ':', mass_max / EARTH_MASS, ']'
   write(11, *) 'plot "contour_total_torque.dat" using 1:2 with line linetype -1 linewidth 1 notitle'
