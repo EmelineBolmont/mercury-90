@@ -893,7 +893,7 @@ contains
              endif
           endif   
              ! Write stuff
-          if (tides.eq.1) then   
+          if ((tides.eq.1).or.(rot_flat.eq.1)) then   
              if (flagbug.eq.0.0d0) then 
                 write(*,*) "time(yr)    spin x,y,z(day-1)     R(Rsun)   rg2  k2s sigmast"
              endif         
