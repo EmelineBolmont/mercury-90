@@ -8,19 +8,24 @@ module tides_constant_GR
   !
   ! Output of spin every 'output' years
   integer, parameter :: output = 100
-  ! If you want Tides or not
-  integer, parameter :: tides = 1
+  
+  ! If you want effect of rotational induced flattening or not
+  integer, parameter :: rot_flat = 1
   ! If you want General Relativity or not
   integer, parameter :: GenRel = 1
+  ! If you want Tides or not
+  integer, parameter :: tides = 1
   ! Number of tidally evolving planets
   integer, parameter :: ntid = 2
+  
   ! Nature of host body
   integer, parameter :: brown_dwarf = 1
   integer, parameter :: M_dwarf = 0
   integer, parameter :: Sun_like_star = 0  
   integer, parameter :: Jupiter_host = 0  
-  ! For an utilization of the code with no changing host body
-  integer, parameter :: Rscst = 0 !=1 : Rs = cst, rg2s = cst
+  ! For an utilization of the code with non-evolving host body
+  ! if Rscst = 1, Rs = cst, rg2s = cst
+  integer, parameter :: Rscst = 0
   real(double_precision), parameter :: Rjup = 10.9d0 !rearth	
   
   ! Integration stuff
@@ -196,6 +201,7 @@ subroutine write_simus_properties()
   write(10,'(a)') '------------------------------------'
   if (tides.eq.1) write(10,'(a)') 'Tides are on'
   if (GenRel.eq.1) write(10,'(a)') 'General Relativity effects taken into account'
+  if (rot_flat.eq.1) write(10,'(a)') 'Effect of rotation-induced flattening taken into account'
   if (brown_dwarf.eq.1) write(10,'(a)') 'The central body is an evolving Brown-dwarf'
   if (M_dwarf.eq.1) write(10,'(a)') 'The central body is an evolving M-dwarf'
   if (Sun_like_star.eq.1) write(10,'(a)') 'The central body is an evolving Sun-like star'
@@ -206,16 +212,16 @@ subroutine write_simus_properties()
      do j = 1, ntid
         write(10,'(a,i1)') 'PLANET',j
         if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.1)) then
-           write(10,'(a,f8.4,a,f8.4)') 'k2p =',k2p_terr,', rg2p =',rg2p_terr
-           write(10,'(a,f8.4,a,f8.4)') 'k2pdeltap =',k2pdeltap_terr,' day, dissplan =',dissplan(j)     
+           write(10,'(a,f12.5,a,f12.5)') 'k2p =',k2p_terr,', rg2p =',rg2p_terr
+           write(10,'(a,f12.5,a,f12.5)') 'k2pdeltap =',k2pdeltap_terr,' day, dissplan =',dissplan(j)     
         endif
         if (jupiter(j-1).eq.2) then
-           write(10,'(a,f8.4,a,f8.4)') 'k2p =',k2p_gg,', rg2p =',rg2p_gg
-           write(10,'(a,f8.4,a,f8.4)') 'k2pdeltap =',k2pdeltap_gg,' day, dissplan =',dissplan(j)   
+           write(10,'(a,f12.5,a,f12.5)') 'k2p =',k2p_gg,', rg2p =',rg2p_gg
+           write(10,'(a,f12.5,a,f12.5)') 'k2pdeltap =',k2pdeltap_gg,' day, dissplan =',dissplan(j)   
         endif
         if (jupiter(j-1).eq.3) then
-           write(10,'(a,f8.4,a,f8.4)') 'k2p =',k2p_what,', rg2p =',rg2p_what
-           write(10,'(a,f8.4,a,f8.4)') 'k2pdeltap =',k2pdeltap_what,' day, dissplan =',dissplan(j)
+           write(10,'(a,f12.5,a,f12.5)') 'k2p =',k2p_what,', rg2p =',rg2p_what
+           write(10,'(a,f12.5,a,f12.5)') 'k2pdeltap =',k2pdeltap_what,' day, dissplan =',dissplan(j)
         endif
      enddo
   endif

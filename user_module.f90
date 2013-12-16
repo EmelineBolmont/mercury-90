@@ -65,7 +65,7 @@ contains
     real(double_precision) :: dt,tstop,tmp,tmp1,tmp2,sigmast,Jpi,Jsi,Cpi,Csi
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
-    real(double_precision), dimension(3,nbig+1) :: a1,a2,xh,vh
+    real(double_precision), dimension(3,nbig+1) :: a1,a2,a3,xh,vh
     real(double_precision), dimension(3,nbig+1) :: horb,trueanom
     real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la
     real(double_precision), dimension(3,nbig+1) :: Nts,Ntp
@@ -142,6 +142,9 @@ contains
        a2(1,j) = 0.d0
        a2(2,j) = 0.d0
        a2(3,j) = 0.d0
+       a3(1,j) = 0.d0
+       a3(2,j) = 0.d0
+       a3(3,j) = 0.d0
        if (ispin.eq.0) then
           qq = 0.d0
           ee = 0.d0
@@ -759,7 +762,13 @@ contains
                      +tmp1*Rp10(j)*sigmap(j))           
                 Ftso(j) = 4.5d0*tmp2*Rsth10*dissstar*sigmast/(tmp*r7(j))
                 Ftpo(j) = 4.5d0*tmp1*Rp10(j)*sigmap(j)/(tmp*r7(j))
-                
+             endif
+             if (tides.eq.0) then 
+                Ftr(j)  = 0.0d0
+                Ftso(j) = 0.0d0
+                Ftpo(j) = 0.0d0
+             endif
+             if (rot_flat.eq.1) then   
                 ! ****************** force due to rotational deformation ********************* 
                 ! J2 of planet and star: Jpi and Jsi  (no unit)
                 ! Cpi in Msun.AU^5.day-2
@@ -783,6 +792,11 @@ contains
                 Frotos(j) = -6.d0/r5(j)*Csi*sqrt(rscalws2(j))
                 Frotop(j) = -6.d0/r5(j)*Cpi*sqrt(rscalwp2(j))
              endif
+             if (rot_flat.eq.0) then 
+                Frotr(j)  = 0.0d0
+                Frotos(j) = 0.0d0
+                Frotop(j) = 0.0d0
+             endif  
 
              !****************** GR forces ****************************
              ! FGRr in AU.day-2 and FGRo in day-1
@@ -797,7 +811,7 @@ contains
           enddo   
           
           if (ispin.eq.1) then
-             if (tides.eq.1) then 
+             if ((tides.eq.1).or.(rot_flat.eq.1)) then 
                 ! Calculation of tidal torque !AU,Msun,day
                 do j=2,ntid+1  
                    ! star
@@ -923,7 +937,7 @@ contains
 
           ! We add acceleration due to tides and GR
           do j=2,ntid+1 
-             if (tides.eq.1) then 
+             if ((tides.eq.1).or.(rot_flat.eq.1)) then 
                 a1(1,j) = K2/m(j)*((Ftr(j)+Frotr(j))*xh(1,j)/r(j) &
                      +Ftso(j)/r(j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)) &
                      +Ftpo(j)/r(j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)) &
