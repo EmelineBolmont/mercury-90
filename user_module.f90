@@ -177,7 +177,7 @@ contains
     ! Following calculations in heliocentric coordinates   
     call conversion_dh2h(nbod,nbig,m,x,v,xh,vh)    
 
-    if (tides.eq.1) then 
+    if ((tides.eq.1).or.(rot_flat.eq.1)) then 
        ! Charge host body data 
        ! + initial condition on host body spin, radius
       
@@ -527,7 +527,7 @@ contains
           if (ispin.eq.0) then 
           
              do j=2,ntid+1
-                if (tides.eq.1) then 
+                if ((tides.eq.1).or.(rot_flat.eq.1)) then 
                    ! Calculate the planets properties   
                    ! Planetary radius in AU (rearth in AU) Rocky planet
 	               if (jupiter(j-1).eq.0) Rp(j) = rearth*((0.0592d0*0.7d0+0.0975d0) &
@@ -563,7 +563,7 @@ contains
                 if (GenRel.eq.1) tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
              enddo
           
-             if (tides.eq.1) then 
+             if ((tides.eq.1).or.(rot_flat.eq.1)) then 
 !~              ! Initialization of spin planets
 			    if (crash.eq.0) then
 			       do j=2,ntid+1
@@ -632,7 +632,7 @@ contains
              endif
           endif
           
-          if (tides.eq.1) then 
+          if ((tides.eq.1).or.(rot_flat.eq.1)) then 
              ! Interpolation to have the host body radius (and radius of gyration for BDs)
              ! Here Rst in AU, Rsth5; Rsth10
              if (brown_dwarf.eq.1) then
