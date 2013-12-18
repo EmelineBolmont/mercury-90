@@ -62,16 +62,16 @@ contains
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: timestep!=3.6525d5!3.65d5 !4.56d6 !
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
-    real(double_precision) :: dt,tstop,tmp,tmp1,tmp2,sigmast,Jpi,Jsi,Cpi,Csi
+    real(double_precision) :: dt,tstop,tmp,tmp1,tmp2,sigmast,Cpi,Csi
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
-    real(double_precision), dimension(3,nbig+1) :: a1,a2,xh,vh
+    real(double_precision), dimension(3,nbig+1) :: a1,a2,a3,xh,vh
     real(double_precision), dimension(3,nbig+1) :: horb,trueanom
     real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la
-    real(double_precision), dimension(3,nbig+1) :: Nts,Ntp
-    real(double_precision), dimension(3,8) :: spin
-    real(double_precision), dimension(8) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
-    real(double_precision), dimension(8) :: rscalws,rscalwp,normspin2
+    real(double_precision), dimension(3,nbig+1) :: Nts,Ntp,Nrs,Nrp,Ns,Np
+    real(double_precision), dimension(3,10) :: spin
+    real(double_precision), dimension(10) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
+    real(double_precision), dimension(10) :: rscalws,rscalwp,normspin2
     ! don't use after collision
     real(double_precision), dimension(nbig+1) :: r,r2,r4,r5,r7,r8,v2,vv,vrad
     real(double_precision), dimension(nbig+1) :: horbn
@@ -142,6 +142,9 @@ contains
        a2(1,j) = 0.d0
        a2(2,j) = 0.d0
        a2(3,j) = 0.d0
+       a3(1,j) = 0.d0
+       a3(2,j) = 0.d0
+       a3(3,j) = 0.d0
        if (ispin.eq.0) then
           qq = 0.d0
           ee = 0.d0
@@ -498,7 +501,6 @@ contains
 
              r2(j) = xh(1,j)*xh(1,j)+xh(2,j)*xh(2,j)+xh(3,j)*xh(3,j)
              r(j)  = sqrt(r2(j))
-             r4(j) = r2(j)*r2(j)
              r5(j) = r2(j)*r2(j)*r(j)
              r8(j) = r2(j)*r2(j)*r2(j)*r2(j)
              r7(j) = r2(j)*r2(j)*r2(j)*r(j) 
@@ -512,11 +514,6 @@ contains
 		     horb(3,j)  = (xh(1,j)*vh(2,j)-xh(2,j)*vh(1,j))    
 		     horbn(j) = sqrt(horb(1,j)*horb(1,j)+horb(2,j)*horb(2,j)+horb(3,j)*horb(3,j))
 		     
-		     ! Term called truenanom in textbook = theta_point x er
-		     trueanom(1,j) = 1.d0/r2(j)*(horb(2,j)*xh(3,j)-horb(3,j)*xh(2,j))
-		     trueanom(2,j) = 1.d0/r2(j)*(horb(3,j)*xh(1,j)-horb(1,j)*xh(3,j))
-		     trueanom(3,j) = 1.d0/r2(j)*(horb(1,j)*xh(2,j)-horb(2,j)*xh(1,j))
-
           end do
 
 
@@ -787,8 +784,8 @@ contains
                 Frotr(j) = -3.d0/r5(j)*(Csi+Cpi) &
                      + 15.d0/r7(j)*(Csi*rscalws(j)*rscalws(j)/normspin2(1) &
                      +Cpi*rscalwp(j)*rscalwp(j)/normspin2(j))
-                Frotos(j) = -6.d0/r5(j)*Csi*rscalws(j)
-                Frotop(j) = -6.d0/r5(j)*Cpi*rscalwp(j)
+                Frotos(j) = -6.d0*Csi*rscalws(j)/(normspin2(1)*r5(j))
+                Frotop(j) = -6.d0*Cpi*rscalwp(j)/(normspin2(j)*r5(j))
              endif
              if (rot_flat.eq.0) then 
                 Frotr(j)  = 0.0d0
@@ -809,43 +806,55 @@ contains
           enddo   
           
           if (ispin.eq.1) then
-             if ((tides.eq.1).or.(rot_flat.eq.1)) then 
-                ! Calculation of tidal torque !AU,Msun,day
-                do j=2,ntid+1  
+                             
+             do j=2,ntid+1  
+                if (tides.eq.1) then
+                   ! Calculation of tidal torque !AU,Msun,day
                    ! star
-                   Nts(1,j)  =  Ftso(j)*1.d0/r(j) &
-                        *(xh(2,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
-                        - xh(3,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j))) &
-                        + Frotos(j)*(spin(3,1)*xh(2,j)-spin(2,1)*xh(3,j))/sqrt(normspin2(1))
-                   Nts(2,j)  =  Ftso(j)*1.d0/r(j) &
-                        *(xh(3,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)) &
-                        - xh(1,j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j))) &  
-                        + Frotos(j)*(spin(1,1)*xh(3,j)-spin(3,1)*xh(1,j))/sqrt(normspin2(1))
-                   Nts(3,j)  =  Ftso(j)*1.d0/r(j) &
-                        *(xh(1,j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)) &
-                        - xh(2,j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j))) &
-                        + Frotos(j)*(spin(2,1)*xh(1,j)-spin(1,1)*xh(2,j))/sqrt(normspin2(1))  
-                
+                   Nts(1,j)  =  Ftso(j)*(r(j)*spin(1,1)-rscalws(j)*xh(1,j)/r(j) &
+                        -1.0d0/r(j)*(xh(2,j)*vh(3,j)-xh(3,j)*vh(2,j)))
+                   Nts(2,j)  =  Ftso(j)*(r(j)*spin(2,1)-rscalws(j)*xh(2,j)/r(j) &
+                        -1.0d0/r(j)*(xh(3,j)*vh(1,j)-xh(1,j)*vh(3,j)))
+                   Nts(3,j)  =  Ftso(j)*(r(j)*spin(3,1)-rscalws(j)*xh(3,j)/r(j) &
+                        -1.0d0/r(j)*(xh(1,j)*vh(2,j)-xh(2,j)*vh(1,j)))
                    ! planet
-                   Ntp(1,j)  =  Ftpo(j)*1.d0/r(j) &
-                        *(xh(2,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)) &
-                        - xh(3,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j))) &
-                        + Frotop(j)*(spin(3,j)*xh(2,j)-spin(2,j)*xh(3,j))/sqrt(normspin2(j))
-                   Ntp(2,j)  =  Ftpo(j)*1.d0/r(j) &
-                        *(xh(3,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)) &
-                        - xh(1,j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j))) & 
-                        + Frotop(j)*(spin(1,j)*xh(3,j)-spin(3,j)*xh(1,j))/sqrt(normspin2(j))
-                   Ntp(3,j)  =  Ftpo(j)*1.d0/r(j) &
-                        *(xh(1,j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)) &
-                        - xh(2,j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j))) & 
-                        + Frotop(j)*(spin(2,j)*xh(1,j)-spin(1,j)*xh(2,j))/sqrt(normspin2(j))
-                end do
-			        
+                   Ntp(1,j)  =  Ftpo(j)*(r(j)*spin(1,j)-rscalwp(j)*xh(1,j)/r(j) &
+                        -1.0d0/r(j)*(xh(2,j)*vh(3,j)-xh(3,j)*vh(2,j)))
+                   Ntp(2,j)  =  Ftpo(j)*(r(j)*spin(2,j)-rscalwp(j)*xh(2,j)/r(j) &
+                        -1.0d0/r(j)*(xh(3,j)*vh(1,j)-xh(1,j)*vh(3,j)))
+                   Ntp(3,j)  =  Ftpo(j)*(r(j)*spin(3,j)-rscalwp(j)*xh(3,j)/r(j) &
+                        -1.0d0/r(j)*(xh(1,j)*vh(2,j)-xh(2,j)*vh(1,j)))
+                endif
+                
+                if (rot_flat.eq.1) then 
+                   ! Calculation of tidal torque !AU,Msun,day
+                   ! star
+                   tmp = -6.0d0/r5(j)*Csi*rscalws(j)/normspin2(1)
+                   Nrs(1,j)  =  tmp*(xh(2,j)*spin(3,1)-xh(3,j)*spin(2,1))
+                   Nrs(2,j)  =  tmp*(xh(3,j)*spin(1,1)-xh(1,j)*spin(3,1))
+                   Nrs(3,j)  =  tmp*(xh(1,j)*spin(2,1)-xh(2,j)*spin(1,1))
+                   ! planet
+                   tmp1 = -6.0d0/r5(j)*Cpi*rscalwp(j)/normspin2(j)
+                   Nrp(1,j)  =  tmp1*(xh(2,j)*spin(3,1)-xh(3,j)*spin(2,1))
+                   Nrp(2,j)  =  tmp1*(xh(3,j)*spin(1,1)-xh(1,j)*spin(3,1))
+                   Nrp(3,j)  =  tmp1*(xh(1,j)*spin(2,1)-xh(2,j)*spin(1,1))
+                endif
+                
+                if ((tides.eq.1).or.(rot_flat.eq.1)) then
+                   ! star
+                   Ns(1,j)   =  tides*Nts(1,j) + rot_flat*Nrs(1,j)
+                   Ns(2,j)   =  tides*Nts(2,j) + rot_flat*Nrs(2,j)
+                   Ns(3,j)   =  tides*Nts(3,j) + rot_flat*Nrs(3,j)
+                   ! planet
+                   Np(1,j)   =  tides*Ntp(1,j) + rot_flat*Nrp(1,j)
+                   Np(2,j)   =  tides*Ntp(2,j) + rot_flat*Nrp(2,j)
+                   Np(3,j)   =  tides*Ntp(3,j) + rot_flat*Nrp(3,j)
+                endif
+             end do
+			 
+			 if ((tides.eq.1).or.(rot_flat.eq.1)) then       
 		        ! **************************************************************
-                ! **************************************************************
-                
                 ! Spin evolution
-                
                 ! STAR
                 ! Sum of the different contribution from the different planets        
                 totftides(1) = 0.d0
@@ -853,9 +862,9 @@ contains
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
                    tmp = K2/(m(1)+m(j))
-                   totftides(1) = totftides(1) + tmp*Nts(1,j)
-                   totftides(2) = totftides(2) + tmp*Nts(2,j)
-                   totftides(3) = totftides(3) + tmp*Nts(3,j)
+                   totftides(1) = totftides(1) + tmp*Ns(1,j)
+                   totftides(2) = totftides(2) + tmp*Ns(2,j)
+                   totftides(3) = totftides(3) + tmp*Ns(3,j)
                 end do
                 ! d/dt(I.Omega) = - (r x F)
                 if (Rscst.eq.1) then 
@@ -884,9 +893,9 @@ contains
 		        !PLANETS
 		        do j=2,ntid+1 
 		           tmp = - dt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
-		           spin(1,j) = spin(1,j) + tmp*Ntp(1,j)
-		           spin(2,j) = spin(2,j) + tmp*Ntp(2,j)
-		           spin(3,j) = spin(3,j) + tmp*Ntp(3,j)
+		           spin(1,j) = spin(1,j) + tmp*Np(1,j)
+		           spin(2,j) = spin(2,j) + tmp*Np(2,j)
+		           spin(3,j) = spin(3,j) + tmp*Np(3,j)
 		        enddo
              endif
           endif   
@@ -935,22 +944,27 @@ contains
 
           ! We add acceleration due to tides and GR
           do j=2,ntid+1 
-             if ((tides.eq.1).or.(rot_flat.eq.1)) then 
-                a1(1,j) = K2/m(j)*((Ftr(j)+Frotr(j))*xh(1,j)/r(j) &
-                     +Ftso(j)/r(j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-trueanom(1,j)) &
-                     +Ftpo(j)/r(j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-trueanom(1,j)) &
-                     +Frotop(j)*spin(1,j)/sqrt(normspin2(j)) &
-                     +Frotos(j)*spin(1,1)/sqrt(normspin2(1)))
-                a1(2,j) = K2/m(j)*((Ftr(j)+Frotr(j))*xh(2,j)/r(j) &
-                     +Ftso(j)/r(j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-trueanom(2,j)) &
-                     +Ftpo(j)/r(j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-trueanom(2,j)) &
-                     +Frotop(j)*spin(2,j)/sqrt(normspin2(j)) &
-                     +Frotos(j)*spin(2,1)/sqrt(normspin2(1)))
-                a1(3,j) = K2/m(j)*((Ftr(j)+Frotr(j))*xh(3,j)/r(j) &
-                     +Ftso(j)/r(j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-trueanom(3,j)) &
-                     +Ftpo(j)/r(j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-trueanom(3,j)) &
-                     +Frotop(j)*spin(3,j)/sqrt(normspin2(j)) &
-                     +Frotos(j)*spin(3,1)/sqrt(normspin2(1)))
+             if (tides.eq.1) then 
+                tmp  = K2/m(j)
+                tmp1 = Ftr(j)+(Ftso(j)+Ftpo(j))*vrad(j)/r(j)
+                a1(1,j) = tmp*(tmp1*xh(1,j)/r(j) &
+                     + Ftso(j)/r(j)*(spin(2,1)*xh(3,j)-spin(3,1)*xh(2,j)-vh(1,j)) &
+                     + Ftpo(j)/r(j)*(spin(2,j)*xh(3,j)-spin(3,j)*xh(2,j)-vh(1,j)))
+                a1(2,j) = tmp*(tmp1*xh(2,j)/r(j) &
+                     + Ftso(j)/r(j)*(spin(3,1)*xh(1,j)-spin(1,1)*xh(3,j)-vh(2,j)) &
+                     + Ftpo(j)/r(j)*(spin(3,j)*xh(1,j)-spin(1,j)*xh(3,j)-vh(2,j)))
+                a1(3,j) = tmp*(tmp1*xh(3,j)/r(j) &
+                     + Ftso(j)/r(j)*(spin(1,1)*xh(2,j)-spin(2,1)*xh(1,j)-vh(3,j)) &
+                     + Ftpo(j)/r(j)*(spin(1,j)*xh(2,j)-spin(2,j)*xh(1,j)-vh(3,j)))
+             endif
+             if (rot_flat.eq.1) then 
+                tmp = K2/m(j)
+                a3(1,j) = tmp*(Frotr(j)*xh(1,j)/r(j) &
+                     + Frotop(j)*spin(1,j)+Frotos(j)*spin(1,1))
+                a3(2,j) = tmp*(Frotr(j)*xh(2,j)/r(j) &
+                     + Frotop(j)*spin(2,j)+Frotos(j)*spin(2,1))
+                a3(3,j) = tmp*(Frotr(j)*xh(3,j)/r(j) &
+                     + Frotop(j)*spin(3,j)+Frotos(j)*spin(3,1))
              endif
 		     if (GenRel.eq.1) then 
                 a2(1,j) = (FGRr(j)*xh(1,j)/r(j)+FGRo(j)*vh(1,j)/vv(j))
@@ -958,9 +972,9 @@ contains
                 a2(3,j) = (FGRr(j)*xh(3,j)/r(j)+FGRo(j)*vh(3,j)/vv(j))
              endif
 
-             a(1,j) = a1(1,j)+a2(1,j)
-             a(2,j) = a1(2,j)+a2(2,j)
-             a(3,j) = a1(3,j)+a2(3,j)
+             a(1,j) = tides*a1(1,j)+GenRel*a2(1,j)+rot_flat*a3(1,j)
+             a(2,j) = tides*a1(2,j)+GenRel*a2(2,j)+rot_flat*a3(2,j)
+             a(3,j) = tides*a1(3,j)+GenRel*a2(3,j)+rot_flat*a3(3,j)
           end do
 
           flagbug = flagbug+1
