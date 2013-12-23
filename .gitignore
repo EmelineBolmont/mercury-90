@@ -5,7 +5,6 @@ close
 mercury
 element
 test_disk
-torque_diagram
 *.in
 *.out
 git_infos.f90
@@ -18,3 +17,7 @@ parameter_study
 *.bak
 *~
 *.pdf
+*.tmp
+html/
+latex/
+migration_map
