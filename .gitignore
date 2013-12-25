@@ -21,3 +21,4 @@ parameter_study
 html/
 latex/
 migration_map
+*.dSYM
