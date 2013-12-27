@@ -54,11 +54,23 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),stopflag
-  integer :: nclo,iclo(nclo),jclo(nclo),nstored,ceflush
-  real(double_precision) :: time,rcen,m(nbod),tclo(nclo),dclo(nclo)
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: stat(nbod)
+  integer, intent(out) :: stopflag
+  
+  integer, intent(in) :: nclo
+  integer, intent(in) :: iclo(nclo)
+  integer, intent(in) :: jclo(nclo)
+  integer, intent(inout) :: nstored
+  integer, intent(in) :: ceflush
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: tclo(nclo)
+  real(double_precision), intent(in) :: dclo(nclo)
   real(double_precision) :: ixvclo(6,nclo),jxvclo(6,nclo)
-  character(len=8) :: id(nbod)
+  character(len=8), intent(in) :: id(nbod)
   
   ! Local
   integer :: k,year,month
@@ -382,10 +394,7 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   
   !------------------------------------------------------------------------------
   
-311 format (1x,a8,1x,a1,1p,e22.15,2(1x,e11.5))
 312 format (1p,3(1x,e22.15),1x,i8)
-313 format (1p,1x,e22.15,0p,2x,a)
-314 format (1x,a8,1x,a1,1p,e22.15,4(1x,e12.5),1x,e22.15,2(1x,e11.5))
   return
 end subroutine mio_dump
 
