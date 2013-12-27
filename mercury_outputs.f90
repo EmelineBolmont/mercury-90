@@ -1,10 +1,14 @@
+!******************************************************************************
+! MODULE: mercury_outputs
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that write files, wether they are outputs files, or errors
+!
+!******************************************************************************
+
 module mercury_outputs
 
-!*************************************************************
-!** Modules that write files, wheter they are outputs files, or errors
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
   use mercury_globals
   
