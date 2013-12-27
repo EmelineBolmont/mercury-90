@@ -705,10 +705,13 @@ subroutine mio_clo (id,unitnum,header,lenhead)
 
   
   ! Input/Output
-  integer :: unitnum,lenhead
+  integer, intent(inout) :: unitnum
+  integer, intent(in) :: lenhead
+  character(len=8), intent(in) :: id
+  character(len=250), intent(in) :: header
+  
+  ! Parameter
   character(len=4),parameter :: extn = ".clo"
-  character(len=8) :: id
-  character(len=250) :: header
   
   ! Local
   integer :: j,k,itmp,nsub,lim(2,4)
