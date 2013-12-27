@@ -775,11 +775,14 @@ subroutine mio_aei (id,unitnum,header,lenhead)
 
   
   ! Input/Output
-  integer :: unitnum,lenhead
-  character(len=4),parameter :: extn = ".aei"
-  character(len=8) :: id
-  character(len=250) :: header
+  integer, intent(in) :: unitnum
+  integer, intent(in) :: lenhead
+  character(len=8), intent(in) :: id
+  character(len=250), intent(in) :: header
   
+  ! Parameter
+  character(len=4),parameter :: extn = ".aei"
+
   ! Local
   integer :: j,k,itmp,nsub,lim(2,4)
   logical test
