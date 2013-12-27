@@ -10,30 +10,32 @@ module kepler_equation
   
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_KEP.FOR    (ErikSoft  7 July 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Solves Kepler's equation for eccentricities less than one.
-! Algorithm from A. Nijenhuis (1991) Cel. Mech. Dyn. Astron. 51, 319-330.
-
-!  e = eccentricity
-!  l = mean anomaly      (radians)
-!  u = eccentric anomaly (   "   )
-
-!------------------------------------------------------------------------------
-
+   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   !> @author 
+   !> John E. Chambers
+   !
+   !> @date 7 July 1999
+   !
+   ! DESCRIPTION: 
+   !> @brief Solves Kepler's equation for eccentricities less than one.
+   !! Algorithm from A. Nijenhuis (1991) Cel. Mech. Dyn. Astron. 51, 319-330.
+   !!\n\n
+   !!  e = eccentricity\n
+   !!  l = mean anomaly      (radians)\n
+   !!  u = eccentric anomaly (   "   )\n
+   !
+   !> @return mco_kep blablabla
+   !
+   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function mco_kep (e,oldl)
 
   implicit none
 
   
   ! Input/Outout
-  real(double_precision) :: oldl,e,mco_kep
+  real(double_precision), intent(in) :: oldl
+  real(double_precision), intent(in) :: e
+  real(double_precision) :: mco_kep
   
   ! Local
   real(double_precision) :: l,pi,twopi,piby2,u1,u2,ome,sign
