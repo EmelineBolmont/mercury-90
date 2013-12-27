@@ -183,7 +183,7 @@ end function mco_kep
 !*     REVISIONS: 
 !***********************************************************************
 
-real*8 function orbel_flon(e,capn)
+function orbel_flon(e,capn0)
 
   use mercury_constant
 
@@ -191,9 +191,14 @@ real*8 function orbel_flon(e,capn)
 
 
   !...  Inputs Only: 
-  real(double_precision) :: e,capn
+  real(double_precision), intent(in) :: e
+  real(double_precision), intent(in) :: capn0
+  
+  ! Output
+  real(double_precision) :: orbel_flon
 
   !...  Internals:
+  real(double_precision) :: capn !< copy of the input capn0 that is not modified
   integer :: iflag,i
   real(double_precision) :: a,b,sq,biga,bigb
   real(double_precision) :: x,x2
@@ -218,7 +223,9 @@ real*8 function orbel_flon(e,capn)
   !----
   !...  Executable code 
 
-
+  ! We copy the input parameter to be able to modify it.
+  capn = capn0
+  
   ! Function to solve "Kepler's eqn" for F (here called
   ! x) for given e and CAPN. Only good for smallish CAPN 
 
@@ -256,7 +263,6 @@ real*8 function orbel_flon(e,capn)
      dx = -f/fp
      !    write(6,*) 'i,dx,x,f : '
      !    write(6,432) i,dx,x,f
-432  format(1x,i3,3(2x,1p1e22.15))
      orbel_flon = x + dx
      !   If we have converged here there's no point in going on
      if(abs(dx) .le. TINY) go to 100
