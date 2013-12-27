@@ -1,10 +1,14 @@
+!******************************************************************************
+! MODULE: drift
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Module that group all the subroutines linked to drift 
+!! (don't know exactly what it is)
+!
+!******************************************************************************
 module drift
 
-!*************************************************************
-!** Modules that group all the subroutine linked to drift  ***
-!** (don't know exactly what it is)
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
 
   implicit none
@@ -52,14 +56,19 @@ subroutine drift_one(mu,x,y,z,vx,vy,vz,dt,iflg)
 
 
   !...  Inputs Only: 
-  real(double_precision) :: mu,dt
+  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: dt
 
   !...  Inputs and Outputs:
-  real(double_precision) :: x,y,z
-  real(double_precision) :: vx,vy,vz
+  real(double_precision), intent(inout) :: x
+  real(double_precision), intent(inout) :: y
+  real(double_precision), intent(inout) :: z
+  real(double_precision), intent(inout) :: vx
+  real(double_precision), intent(inout) :: vy
+  real(double_precision), intent(inout) :: vz
 
   !...  Output
-  integer :: iflg
+  integer, intent(out) :: iflg
 
   !...  Internals:
   integer :: i
@@ -117,14 +126,19 @@ subroutine drift_dan(mu,x0,y0,z0,vx0,vy0,vz0,dt0,iflg)
 
 
   !...  Inputs Only: 
-  real(double_precision) :: mu,dt0
+  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: dt0
 
   !...  Inputs and Outputs:
-  real(double_precision) :: x0,y0,z0
-  real(double_precision) :: vx0,vy0,vz0
+  real(double_precision), intent(inout) :: x0
+  real(double_precision), intent(inout) :: y0
+  real(double_precision), intent(inout) :: z0
+  real(double_precision), intent(inout) :: vx0
+  real(double_precision), intent(inout) :: vy0
+  real(double_precision), intent(inout) :: vz0
 
   !...  Output
-  integer :: iflg
+  integer, intent(out) :: iflg
 
   !...  Internals:
   real(double_precision) :: x,y,z,vx,vy,vz,dt
@@ -247,10 +261,14 @@ subroutine drift_kepmd(dm,es,ec,x,s,c)
 
 
   !...    Inputs
-  real(double_precision) :: dm,es,ec
+  real(double_precision), intent(in) :: dm
+  real(double_precision), intent(in) :: es
+  real(double_precision), intent(in) :: ec
 
   !...  Outputs
-  real(double_precision) :: x,s,c
+  real(double_precision), intent(out) :: x
+  real(double_precision), intent(out) :: s
+  real(double_precision), intent(out) :: c
 
   !...    Internals
   real(double_precision), parameter :: A0 = 39916800.d0
@@ -325,11 +343,18 @@ subroutine drift_kepu(dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
 
   !...  Inputs: 
-  real(double_precision) :: dt,r0,mu,alpha,u
+  real(double_precision), intent(in) :: dt
+  real(double_precision), intent(in) :: r0
+  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: alpha
+  real(double_precision), intent(in) :: u
 
   !...  Outputs:
-  real(double_precision) :: fp,c1,c2,c3
-  integer :: iflg
+  real(double_precision), intent(out) :: fp
+  real(double_precision), intent(out) :: c1
+  real(double_precision), intent(out) :: c2
+  real(double_precision), intent(out) :: c3
+  integer, intent(out) :: iflg
 
   !...  Internals:
   real(double_precision) :: s,st,fo,fn
@@ -384,10 +409,15 @@ subroutine drift_kepu_fchk(dt,r0,mu,alpha,u,s,f)
   implicit none
 
   !...  Inputs: 
-  real(double_precision) :: dt,r0,mu,alpha,u,s
+  real(double_precision), intent(in) :: dt
+  real(double_precision), intent(in) :: r0
+  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: alpha
+  real(double_precision), intent(in) :: u
+  real(double_precision), intent(in) :: s
 
   !...  Outputs:
-  real(double_precision) :: f
+  real(double_precision), intent(out) :: f
 
   !...  Internals:
   real(double_precision) ::  x,c0,c1,c2,c3
@@ -436,10 +466,14 @@ subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
 
 
   !...  Inputs: 
-  real(double_precision) :: dt,r0,mu,alpha,u
+  real(double_precision), intent(in) :: dt
+  real(double_precision), intent(in) :: r0
+  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: alpha
+  real(double_precision), intent(in) :: u
 
   !...  Inputs and Outputs:
-  real(double_precision) :: s
+  real(double_precision), intent(inout) :: s
 
   !...  Internals:
   integer :: iflg
@@ -517,11 +551,21 @@ subroutine drift_kepu_lag(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
 
   !...  Inputs: 
-  real(double_precision) :: s,dt,r0,mu,alpha,u
+  real(double_precision), intent(in) :: dt
+  real(double_precision), intent(in) :: r0
+  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: alpha
+  real(double_precision), intent(in) :: u
 
   !...  Outputs:
-  real(double_precision) :: fp,c1,c2,c3
-  integer :: iflg
+  real(double_precision), intent(out) :: fp
+  real(double_precision), intent(out) :: c1
+  real(double_precision), intent(out) :: c2
+  real(double_precision), intent(out) :: c3
+  integer, intent(out) :: iflg
+  
+  !... Input/Output
+  real(double_precision), intent(inout) :: s
 
   !...  Internals:
   integer :: nc,ncmax
@@ -608,11 +652,22 @@ subroutine drift_kepu_new(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflgn)
 
 
   !...  Inputs: 
-  real(double_precision) :: s,dt,r0,mu,alpha,u
+  real(double_precision), intent(in) :: dt
+  real(double_precision), intent(in) :: r0
+  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: alpha
+  real(double_precision), intent(in) :: u
 
   !...  Outputs:
-  real(double_precision) :: fp,c1,c2,c3
-  integer :: iflgn
+  real(double_precision), intent(out) :: fp
+  real(double_precision), intent(out) :: c1
+  real(double_precision), intent(out) :: c2
+  real(double_precision), intent(out) :: c3
+  integer, intent(out) :: iflgn
+  
+  !...  Input/Output
+  real(double_precision), intent(inout) :: s
+
 
   !...  Internals:
   integer :: nc
@@ -682,11 +737,15 @@ subroutine drift_kepu_p3solve(dt,r0,mu,alpha,u,s,iflg)
   implicit none
 
   !...  Inputs: 
-  real(double_precision) :: dt,r0,mu,alpha,u
+  real(double_precision), intent(in) :: dt
+  real(double_precision), intent(in) :: r0
+  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: alpha
+  real(double_precision), intent(in) :: u
 
   !...  Outputs:
-  integer :: iflg
-  real(double_precision) :: s
+  integer, intent(out) :: iflg
+  real(double_precision), intent(out) :: s
 
   !...  Internals:
   real(double_precision) :: denom,a0,a1,a2,q,r,sq2,sq,p1,p2
@@ -745,7 +804,7 @@ end subroutine drift_kepu_p3solve     !   drift_kepu_p3solve
 ! Last revision: 2/3/93
 ! Modified by JEC: 31/3/98
 
-subroutine drift_kepu_stumpff(x,c0,c1,c2,c3)
+subroutine drift_kepu_stumpff(arg,c0,c1,c2,c3)
 
   use mercury_constant
 
@@ -753,18 +812,23 @@ subroutine drift_kepu_stumpff(x,c0,c1,c2,c3)
 
 
   !...  Inputs: 
-  real(double_precision) :: x
+  real(double_precision), intent(in) :: arg
 
   !...  Outputs:
-  real(double_precision) :: c0,c1,c2,c3
+  real(double_precision), intent(out) :: c0
+  real(double_precision), intent(out) :: c1
+  real(double_precision), intent(out) :: c2
+  real(double_precision), intent(out) :: c3
 
   !...  Internals:
+  real(double_precision) :: x !< copy of argument that we can modify
   integer :: n,i
   real(double_precision) :: xm,x2,x3,x4,x5,x6
 
   !----
   !...  Executable code 
-
+  x = arg
+  
   n = 0
   xm = 0.1
   do while(abs(x).ge.xm)
