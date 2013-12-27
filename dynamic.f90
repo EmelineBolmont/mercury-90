@@ -180,18 +180,18 @@ subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s
   integer, intent(in) :: planet_id_2
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
-  integer, intent(in) :: stat(nbod)
+  integer, intent(inout) :: stat(nbod)
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: m(nbod)
-  real(double_precision), intent(in) :: xh(3,nbod)
-  real(double_precision), intent(in) :: vh(3,nbod)
-  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: xh(3,nbod)
+  real(double_precision), intent(inout) :: vh(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod)
   real(double_precision), intent(in) :: rphys(nbod)
   character(len=80), intent(in) :: outfile
   character(len=8), intent(in) :: id(nbod)
   
-  real(double_precision), intent(out) :: elost
+  real(double_precision), intent(inout) :: elost
   
   ! Local
   integer :: i
@@ -289,9 +289,20 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   implicit none
 
   
-  ! Input/Output
-  integer :: i, j, nbod, nbig, stat(nbod)
-  real(double_precision) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),elost
+  ! Input
+  integer, intent(in) :: i
+  integer, intent(in) :: j
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  real(double_precision), intent(in) :: jcen(3)
+  
+  ! Output
+  integer, intent(inout) :: stat(nbod)
+  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: xh(3,nbod)
+  real(double_precision), intent(inout) :: vh(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod)
+  real(double_precision), intent(inout) :: elost
   
   ! Local
   integer :: k
