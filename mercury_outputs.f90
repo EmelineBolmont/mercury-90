@@ -560,11 +560,20 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
 
   
   ! Input/Output
-  integer :: nbod, nbig, stat(nbod), opflag
-  real(double_precision) :: time,jcen(3),rcen,m(nbod),xh(3,nbod),vh(3,nbod)
-  real(double_precision) :: s(3,nbod),rho(nbod)
-  character(len=80) :: outfile
-  character(len=8) :: id(nbod)
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: stat(nbod)
+  integer, intent(inout) :: opflag
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: xh(3,nbod)
+  real(double_precision), intent(in) :: vh(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: rho(nbod)
+  character(len=80), intent(in) :: outfile
+  character(len=8), intent(in) :: id(nbod)
   
   ! Local
   integer :: k, len, nchar
