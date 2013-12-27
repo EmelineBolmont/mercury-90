@@ -309,7 +309,7 @@ end function orbel_flon     ! orbel_flon
 !*     REVISIONS: 2/26/93 hfl
 !*     Modified by JEC
 !***********************************************************************
-real*8 function orbel_fget(e,capn)
+function orbel_fget(e,capn)
 
   use mercury_constant
 
@@ -318,6 +318,9 @@ real*8 function orbel_fget(e,capn)
 
   !...  Inputs Only: 
   real(double_precision) :: e,capn
+  
+  ! Output
+  real(double_precision) :: orbel_fget
 
   !...  Internals:
   integer :: i,IMAX
@@ -388,7 +391,7 @@ end function orbel_fget   ! orbel_fget
 !*     REVISIONS: 2/26/93 hfl
 !***********************************************************************
 
-real*8 function orbel_fhybrid(e,n)
+function orbel_fhybrid(e,n)
 
   use mercury_constant
 
@@ -397,7 +400,10 @@ real*8 function orbel_fhybrid(e,n)
 
   !...  Inputs Only: 
   real(double_precision) :: e,n
-
+  
+  ! Output
+  real(double_precision) :: orbel_fhybrid
+  
   !...  Internals:
   real(double_precision) :: abn
 
@@ -438,7 +444,7 @@ end function orbel_fhybrid  ! orbel_fhybrid
 !*        series for small Q.
 !***********************************************************************
 
-real*8 function orbel_zget(q)
+function orbel_zget(q)
 
   use mercury_constant
 
@@ -451,6 +457,9 @@ real*8 function orbel_zget(q)
   !...  Internals:
   integer :: iflag
   real(double_precision) :: x,tmp
+    
+  ! Output
+  real(double_precision) :: orbel_zget
 
   !----
   !...  Executable code 
