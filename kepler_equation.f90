@@ -400,7 +400,8 @@ function orbel_fhybrid(e,n)
 
 
   !...  Inputs Only: 
-  real(double_precision) :: e,n
+  real(double_precision), intent(in) :: e
+  real(double_precision), intent(in) :: n
   
   ! Output
   real(double_precision) :: orbel_fhybrid
