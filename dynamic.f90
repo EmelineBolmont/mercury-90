@@ -167,7 +167,7 @@ end subroutine mce_cent
 
 !------------------------------------------------------------------------------
 
-subroutine mce_coll (time,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfile)
+subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfile)
   
   use physical_constant
   use mercury_constant
@@ -176,13 +176,26 @@ subroutine mce_coll (time,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfi
 
   
   ! Input/Output
-  integer :: i,j,nbod,nbig,stat(nbod)
-  real(double_precision) :: time,elost,jcen(3)
-  real(double_precision) :: m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),rphys(nbod)
-  character(len=80) :: outfile
-  character(len=8) :: id(nbod)
+  integer, intent(in) :: planet_id_1
+  integer, intent(in) :: planet_id_2
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: stat(nbod)
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: xh(3,nbod)
+  real(double_precision), intent(in) :: vh(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: rphys(nbod)
+  character(len=80), intent(in) :: outfile
+  character(len=8), intent(in) :: id(nbod)
+  
+  real(double_precision), intent(out) :: elost
   
   ! Local
+  integer :: i
+  integer :: j
   integer :: year,month,itmp, error
   real(double_precision) :: t1
   character(len=38) :: flost,fcol
@@ -192,11 +205,13 @@ subroutine mce_coll (time,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfi
   
   ! If two bodies collided, check that the less massive one is removed
   ! (unless the more massive one is a Small body)
-  if (i.ne.0) then
-     if (m(j).gt.m(i).and.j.le.nbig) then
-        itmp = i
-        i = j
-        j = itmp
+  if (planet_id_1.ne.0) then
+     if (m(planet_id_2).gt.m(planet_id_1).and.planet_id_2.le.nbig) then
+        i = planet_id_2
+        j = planet_id_1
+     else
+        i = planet_id_1
+        j = planet_id_2
      end if
   end if
   
