@@ -434,9 +434,15 @@ subroutine mio_err (unit,s1,ls1,s2,ls2,s3,ls3,s4,ls4)
 
   
   ! Input/Output
-  integer :: unit,ls1,ls2,ls3,ls4
-  character(len=80) :: s1,s2
-  character(len=*) :: s3,s4
+  integer, intent(in) :: unit
+  integer, intent(in) :: ls1
+  integer, intent(in) :: ls2
+  integer, intent(in) :: ls3
+  integer, intent(in) :: ls4
+  character(len=80), intent(in) :: s1
+  character(len=80), intent(in) :: s2
+  character(len=*), intent(in) :: s3
+  character(len=*), intent(in) :: s4
   
   !------------------------------------------------------------------------------
   
