@@ -104,7 +104,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   
   ! If required, output the stored close encounter details
   if ((nstored.ge.CMAX*2).or.(ceflush.eq.0)) then
-     open (22, file=outfile(2), status='old', access='append',iostat=error)
+     open (22, file=outfile(2), status='old', position='append',iostat=error)
      if (error /= 0) then
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(2))
         stop
@@ -119,7 +119,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   ! If new encounter minima have occurred, decide whether to stop integration
   stopflag = 0
   if ((opt(1).eq.1).and.(nclo.gt.0)) then
-     open (23, file=outfile(3), status='old', access='append',iostat=error)
+     open (23, file=outfile(3), status='old', position='append',iostat=error)
      if (error /= 0) then
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
         stop
@@ -557,7 +557,7 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   if (len.ge.10) write (fout(3:4),'(i2)') len
   
   ! Open the orbital-elements output file
-  open (21, file=outfile, status='old', access='append', iostat=error)
+  open (21, file=outfile, status='old', position='append', iostat=error)
   if (error /= 0) then
      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
      stop

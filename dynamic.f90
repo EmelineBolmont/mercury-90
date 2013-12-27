@@ -1,11 +1,15 @@
+!******************************************************************************
+! MODULE: dynamic
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that compute various dynamic behaviour such as 
+!! collision, close encounter, close approach to central body
+!
+!******************************************************************************
+
 module dynamic
 
-!*************************************************************
-!** Modules that compute various dynamic behaviour such as 
-!** collision, close encounter, close approach to central body
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
   use utilities
   use mercury_globals
@@ -13,38 +17,51 @@ module dynamic
   implicit none
   
   contains
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!    MCE_CENT.FOR    (ErikSoft   4 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Checks all objects with index I >= I0, to see if they have had a collision
-! with the central body in a time interval H, when given the initial and 
-! final coordinates and velocities. The routine uses cubic interpolation
-! to estimate the minimum separations.
-
-! N.B. All coordinates & velocities must be with respect to the central body!
-! ===
-!------------------------------------------------------------------------------
-
-subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,dhit,ngf,ngflag)
+   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   !> @author 
+   !> John E. Chambers
+   !
+   !> @date 4 March 2001
+   !
+   ! DESCRIPTION: 
+   !> @brief Checks all objects with index I >= I0, to see if they have had a collision
+   !! with the central body in a time interval H, when given the initial and 
+   !! final coordinates and velocities. The routine uses cubic interpolation
+   !! to estimate the minimum separations.
+   !
+   !> @attention All coordinates & velocities must be with respect to the central body!
+   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine mce_cent (time,h,rcen,jcen,start_index,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,dhit,ngf,ngflag)
   
   use physical_constant
   use mercury_constant
 
   implicit none
-
   
-  ! Input/Output
-  integer :: i0, nbod, nbig, nhit, jhit(CMAX), ngflag
-  real(double_precision) :: time,h,rcen,jcen(3),m(nbod),x0(3,nbod),v0(3,nbod)
-  real(double_precision) :: x1(3,nbod),v1(3,nbod),thit(CMAX),dhit(CMAX),ngf(4,nbod)
+  ! Input
+  integer, intent(in) :: start_index
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: ngflag
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x0(3,nbod)
+  real(double_precision), intent(in) :: v0(3,nbod)
+  real(double_precision), intent(in) :: x1(3,nbod)
+  real(double_precision), intent(in) :: v1(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  
+  ! Output
+  integer, intent(out) :: nhit
+  integer, intent(out) :: jhit(CMAX)
+  real(double_precision), intent(out) :: thit(CMAX)
+  real(double_precision), intent(out) :: dhit(CMAX)
   
   ! Local
+  integer :: i0 !< starting index for checking close encounters, mainly equal to start_index
   integer :: j
   real(double_precision) :: rcen2,a,q,u0,uhit,m0,mhit,mm,r0,mcen
   real(double_precision) :: hx,hy,hz,h2,p,rr0,rr1,rv0,rv1,temp,e,v2
@@ -52,7 +69,11 @@ subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,
   
   !------------------------------------------------------------------------------
   
-  if (i0.le.0) i0 = 2
+  if (start_index.le.0) then
+    i0 = 2
+  else
+    i0 = start_index
+  endif
   nhit = 0
   rcen2 = rcen * rcen
   mcen = m(1)
@@ -180,7 +201,7 @@ subroutine mce_coll (time,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfi
   end if
   
   ! Write message to info file (I=0 implies collision with the central body)
-  open (23, file=outfile, status='old', access='append', iostat=error)
+  open (23, file=outfile, status='old', position='append', iostat=error)
   if (error /= 0) then
      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
      stop
@@ -439,7 +460,7 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   
   ! If no massive bodies remain, stop the integration
   if (nbig.lt.1) then
-     open (23,file=outfile,status='old',access='append',iostat=error)
+     open (23,file=outfile,status='old',position='append',iostat=error)
      if (error /= 0) then
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
         stop
@@ -692,7 +713,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
                ! print *, 'clo', time, nclo, i, j
               !end if
               if (nclo.gt.CMAX) then
-                 open (23,file=outfile,status='old',access='append',iostat=error)
+                 open (23,file=outfile,status='old',position='append',iostat=error)
                  if (error /= 0) then
                     write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
                     stop

@@ -168,7 +168,7 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   end do
   
   ! Write compressed output to file
-  open (22, file=outfile, status='old', access='append', iostat=error)
+  open (22, file=outfile, status='old', position='append', iostat=error)
   if (error /= 0) then
      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
      stop
@@ -430,7 +430,7 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
         s(3,j) = 0.d0
         
         ! Write message to information file
-        open  (23,file=outfile,status='old',access='append',iostat=error)
+        open  (23,file=outfile,status='old',position='append',iostat=error)
         if (error /= 0) then
            write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
            stop
