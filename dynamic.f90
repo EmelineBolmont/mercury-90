@@ -534,7 +534,7 @@ end subroutine mxx_elim
 
 !------------------------------------------------------------------------------
 
-subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
+subroutine mce_snif (h,start_index,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   
   use physical_constant
   use mercury_constant
@@ -543,13 +543,23 @@ subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
 
   
   ! Input/Output
-  integer :: i0
-  integer, intent(in) :: nbod,nbig
-  real(double_precision) :: x0(3,nbod),v0(3,nbod),x1(3,nbod),v1(3,nbod),h,rcrit(nbod)
+  integer, intent(in) :: start_index
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  real(double_precision), intent(in) :: x0(3,nbod)
+  real(double_precision), intent(in) :: v0(3,nbod)
+  real(double_precision), intent(in) :: x1(3,nbod)
+  real(double_precision), intent(in) :: v1(3,nbod)
+  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: rcrit(nbod)
   
-  integer, intent(out) :: ce(nbod),nce,ice(CMAX),jce(CMAX)
+  integer, intent(out) :: ce(nbod)
+  integer, intent(out) :: nce
+  integer, intent(out) :: ice(CMAX)
+  integer, intent(out) :: jce(CMAX)
   
   ! Local
+  integer :: i0 !< starting index for checking close encounters, mainly equal to start_index
   integer :: i,j
   real(double_precision) :: d0,d1,d0t,d1t,d2min,temp,tmin,rc,rc2
   real(double_precision) :: dx0,dy0,dz0,du0,dv0,dw0,dx1,dy1,dz1,du1,dv1,dw1
@@ -557,7 +567,12 @@ subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   
   !------------------------------------------------------------------------------
   
-  if (i0.le.0) i0 = 2
+  if (start_index.le.0) then
+    i0 = 2
+  else
+    i0 = start_index
+  endif
+  
   nce = 0
   do j = 2, nbod
      ce(j) = 0
