@@ -685,14 +685,39 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),nowflag
-  integer :: nclo,iclo(CMAX),jclo(CMAX)
-  integer :: nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
-  real(double_precision) :: time,h,rcen,m(nbod),x0(3,nbod),v0(3,nbod)
-  real(double_precision) :: x1(3,nbod),v1(3,nbod),rce(nbod),rphys(nbod)
-  real(double_precision) :: dclo(CMAX),tclo(CMAX),thit(CMAX),dhit(CMAX),thit1
-  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character(len=80) :: outfile
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: stat(nbod)
+  integer, intent(out) :: nowflag
+  
+  integer, intent(out) :: nclo
+  integer, intent(out) :: iclo(CMAX)
+  integer, intent(out) :: jclo(CMAX)
+  
+  integer, intent(out) :: nhit
+  integer, intent(out) :: ihit(CMAX)
+  integer, intent(out) :: jhit(CMAX)
+  integer, intent(out) :: chit(CMAX)
+  
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x0(3,nbod)
+  real(double_precision), intent(in) :: v0(3,nbod)
+  
+  real(double_precision), intent(in) :: x1(3,nbod)
+  real(double_precision), intent(in) :: v1(3,nbod)
+  real(double_precision), intent(in) :: rce(nbod)
+  real(double_precision), intent(in) :: rphys(nbod)
+  real(double_precision), intent(out) :: dclo(CMAX)
+  real(double_precision), intent(out) :: tclo(CMAX)
+  real(double_precision), intent(out) :: thit(CMAX)
+  real(double_precision), intent(out) :: dhit(CMAX)
+  real(double_precision), intent(out) :: thit1
+  real(double_precision), intent(out) :: ixvclo(6,CMAX)
+  real(double_precision), intent(out) :: jxvclo(6,CMAX)
+  character(len=80), intent(in) :: outfile
   
   ! Local
   integer :: i,j, error
