@@ -317,7 +317,8 @@ function orbel_fget(e,capn)
 
 
   !...  Inputs Only: 
-  real(double_precision) :: e,capn
+  real(double_precision), intent(in) :: e
+  real(double_precision), intent(in) :: capn
   
   ! Output
   real(double_precision) :: orbel_fget
