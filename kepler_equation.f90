@@ -446,7 +446,7 @@ end function orbel_fhybrid  ! orbel_fhybrid
 !*        series for small Q.
 !***********************************************************************
 
-function orbel_zget(q)
+function orbel_zget(q0)
 
   use mercury_constant
 
@@ -454,17 +454,22 @@ function orbel_zget(q)
 
 
   !...  Inputs Only: 
-  real(double_precision) :: q
-
-  !...  Internals:
-  integer :: iflag
-  real(double_precision) :: x,tmp
-    
+  real(double_precision), intent(in) :: q0
+  
   ! Output
   real(double_precision) :: orbel_zget
 
+  !...  Internals:
+  real(double_precision) :: q !< copy of q0 to modify it without propagating the modified value
+  integer :: iflag
+  real(double_precision) :: x,tmp
+
+
   !----
   !...  Executable code 
+
+  ! We copy the input parameter to be able to modify it.
+  q = q0
 
   iflag = 0
   if(q.lt.0.d0) then
