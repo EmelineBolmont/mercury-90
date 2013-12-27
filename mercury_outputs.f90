@@ -705,7 +705,7 @@ subroutine mio_clo (id,unitnum,header,lenhead)
 
   
   ! Input/Output
-  integer, intent(inout) :: unitnum
+  integer, intent(in) :: unitnum
   integer, intent(in) :: lenhead
   character(len=8), intent(in) :: id
   character(len=250), intent(in) :: header
@@ -742,7 +742,6 @@ subroutine mio_clo (id,unitnum,header,lenhead)
   inquire (file=filename, exist=test)
   if (test) then
      write (*,'(/,3a)') mem(121)(1:lmem(121)),mem(87)(1:lmem(87)),filename(1:80)
-     unitnum = -1
   else
      open (unitnum, file=filename, status='new')
      write (unitnum, '(/,30x,a8,//,a)') id,header(1:lenhead)
@@ -809,7 +808,6 @@ subroutine mio_aei (id,unitnum,header,lenhead)
   inquire (file=filename, exist=test)
   if (test) then
      write (*,'(/,3a)') mem(121)(1:lmem(121)),mem(87)(1:lmem(87)),filename(1:80)
-     unitnum = -1
   else
      open (unitnum, file=filename, status='new')
      write (unitnum, '(/,30x,a8,//,a)') id,header(1:lenhead)
