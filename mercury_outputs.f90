@@ -478,7 +478,9 @@ subroutine mio_log (time,en,am)
 
   
   ! Input/Output
-  real(double_precision) :: time, en(3), am(3)
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: en(3)
+  real(double_precision), intent(in) :: am(3)
   
   ! Local
   integer :: year, month
