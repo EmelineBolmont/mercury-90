@@ -188,11 +188,29 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),opflag,ndump,nfun
-  real(double_precision) :: time,h0,tol,en(3),am(3)
-  real(double_precision) :: jcen(3),rcen,cefac,m(nbod),x(3,nbod),v(3,nbod)
-  real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod),epoch(nbod)
-  character(len=8) :: id(nbod)
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: stat(nbod)
+  integer, intent(in) :: opflag
+  integer, intent(in) :: ndump
+  integer, intent(in) :: nfun
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: en(3)
+  real(double_precision), intent(in) :: am(3)
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: cefac
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: rho(nbod)
+  real(double_precision), intent(in) :: rceh(nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: epoch(nbod)
+  character(len=8), intent(in) :: id(nbod)
   
   ! Local
   integer :: idp,i,j,k,len,j1,j2
