@@ -428,14 +428,23 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   use mercury_constant
 
   implicit none
-
   
   ! Input/Output
-  integer :: nbod, nbig, nelim, stat(nbod)
-  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
-  real(double_precision) :: rho(nbod), rceh(nbod), rcrit(nbod), ngf(4,nbod)
-  character(len=8) :: id(nbod)
-  character(len=80) :: outfile
+  integer, intent(inout) :: nbod
+  integer, intent(inout) :: nbig
+  integer, intent(inout) :: nelim
+  integer, intent(inout) :: stat(nbod)
+  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: x(3,nbod)
+  real(double_precision), intent(inout) :: v(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod)
+  real(double_precision), intent(inout) :: rho(nbod)
+  real(double_precision), intent(inout) :: rceh(nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
+  real(double_precision), intent(inout) :: ngf(4,nbod)
+  
+  character(len=8), intent(inout) :: id(nbod)
+  character(len=80), intent(in) :: outfile
   
   ! Local
   integer :: j, k, l, nbigelim, elim(nb_bodies_initial+1)
