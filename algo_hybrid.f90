@@ -243,17 +243,40 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
 
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig,nce,ice(CMAX),jce(CMAX),ngflag,ce(nbod)
-  integer,intent(in) :: nclo
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: nce
+  integer, intent(in) :: ice(CMAX)
+  integer, intent(in) :: jce(CMAX)
+  integer, intent(in) :: ngflag
+  integer, intent(in) :: ce(nbod)
+  integer, intent(inout) :: nclo
 
-  real(double_precision),intent(in) :: time,h0,tol,elost,jcen(3),rcen
-  real(double_precision),intent(in) :: rce(nbod),rphy(nbod),rcrit(nbod),ngf(4,nbod)
-  real(double_precision),intent(in) :: tclo(CMAX),dclo(CMAX),ixvclo(6,CMAX),jxvclo(6,CMAX)
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(inout) :: elost
+  real(double_precision), intent(inout) :: dclo(CMAX)
+  real(double_precision), intent(in) :: rce(nbod)
+  real(double_precision), intent(in) :: rphy(nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(inout) :: tclo(CMAX)
+  real(double_precision), intent(inout) :: ixvclo(6,CMAX)
+  real(double_precision), intent(inout) :: jxvclo(6,CMAX)
   character(len=8), dimension(nbod),intent(in) :: id
   
-  integer, intent(out) :: colflag,iclo(CMAX),jclo(CMAX),stat(nbod)
-  real(double_precision),intent(out) :: hrec
-  real(double_precision),intent(out) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
+  integer, intent(out) :: colflag
+  integer, intent(out) :: iclo(CMAX)
+  integer, intent(out) :: jclo(CMAX)
+  integer, intent(out) :: stat(nbod)
+  real(double_precision), intent(out) :: hrec
+  real(double_precision), intent(out) :: m(nbod)
+  real(double_precision), intent(out) :: x(3,nbod)
+  real(double_precision), intent(out) :: v(3,nbod)
+  real(double_precision), intent(out) :: s(3,nbod)
   
   external force
   
