@@ -355,7 +355,13 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   implicit none
   
   ! Input/Output
-  real(double_precision), intent(in) :: gm,q,e,i,p,n,l
+  real(double_precision), intent(in) :: gm
+  real(double_precision), intent(in) :: q
+  real(double_precision), intent(in) :: e
+  real(double_precision), intent(inout) :: i
+  real(double_precision), intent(in) :: p
+  real(double_precision), intent(inout) :: n
+  real(double_precision), intent(in) :: l
   real(double_precision), intent(out) :: x,y,z,u,v,w
   
   ! Local

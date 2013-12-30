@@ -1,12 +1,16 @@
+!******************************************************************************
+! MODULE: utilities
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that gather various functions about string manipulation
+!! and things that are perfectly separated from mercury particuliar
+!! behaviour
+!
+!******************************************************************************
+
 module utilities
 
-!*************************************************************
-!** Modules that gather various functions about string manipulation
-!** and things that are perfectly separated from mercury particuliar
-!** behaviour
-!**
-!** Version 1.2 - juillet 2012
-!*************************************************************
   use types_numeriques
 
   implicit none
@@ -36,8 +40,9 @@ subroutine mxx_sort (n,x,index)
 
   
   ! Input/Output
-  integer :: n,index(n)
-  real(double_precision) :: x(n)
+  integer, intent(in) :: n
+  integer, intent(out) :: index(n)
+  real(double_precision), intent(inout) :: x(n)
   
   ! Local
   integer :: i,j,k,l,m,inc,iy
@@ -103,9 +108,16 @@ subroutine mce_box (nbod,h,x0,v0,x1,v1,xmin,xmax,ymin,ymax)
 
   
   ! Input/Output
-  integer :: nbod
-  real(double_precision) :: h,x0(3,nbod), x1(3,nbod), v0(3,nbod),v1(3,nbod)
-  real(double_precision) ::   xmin(nbod), xmax(nbod), ymin(nbod),ymax(nbod)
+  integer, intent(in) :: nbod
+  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: x0(3,nbod)
+  real(double_precision), intent(in) :: x1(3,nbod)
+  real(double_precision), intent(in) :: v0(3,nbod)
+  real(double_precision), intent(in) :: v1(3,nbod)
+  real(double_precision), intent(out) :: xmin(nbod)
+  real(double_precision), intent(out) :: xmax(nbod)
+  real(double_precision), intent(out) :: ymin(nbod)
+  real(double_precision), intent(out) :: ymax(nbod)
   
   ! Local
   integer :: j
@@ -166,7 +178,13 @@ subroutine mce_min (d0,d1,d0t,d1t,h,d2min,tmin)
 
   
   ! Input/Output
-  real(double_precision) :: d0,d1,d0t,d1t,h,d2min,tmin
+  real(double_precision), intent(in) :: d0
+  real(double_precision), intent(in) :: d1
+  real(double_precision), intent(in) :: d0t
+  real(double_precision), intent(in) :: d1t
+  real(double_precision), intent(in) :: h
+  real(double_precision), intent(out) :: d2min
+  real(double_precision), intent(out) :: tmin
   
   ! Local
   real(double_precision) :: a,b,c,temp,tau
@@ -243,8 +261,10 @@ subroutine mio_jd2y (jd0,year,month,day)
 
   
   ! Input/Output
-  integer :: year,month
-  real(double_precision) :: jd0,day
+  integer, intent(out) :: year
+  integer, intent(out) :: month
+  real(double_precision), intent(in) :: jd0
+  real(double_precision), intent(out) :: day
   
   ! Local
   integer :: i,a,b,c,d,e,g
@@ -345,7 +365,7 @@ subroutine mio_spl (length,string,nsub,delimit)
   integer, intent(out) :: nsub!,delimit(2,100)
   integer, dimension(:,:), intent(out) :: delimit
 
-  character(len=1), dimension(length),intent(in) :: string
+  character(len=1), dimension(length), intent(in) :: string
   
   ! Local
   integer :: j,k
@@ -413,7 +433,7 @@ function arcosh (x)
 
   
   ! Input/Output
-  real(double_precision),intent(in) :: x
+  real(double_precision), intent(in) :: x
   real(double_precision) :: arcosh
   
   !------------------------------------------------------------------------------
@@ -448,9 +468,10 @@ subroutine mco_sine (x,sx,cx)
 
   
   ! Input/Output
-  real(double_precision) :: x
-  real(double_precision), intent(out) :: sx,cx
-  
+  real(double_precision), intent(inout) :: x
+  real(double_precision), intent(out) :: sx
+  real(double_precision), intent(out) :: cx
+    
   !------------------------------------------------------------------------------
   
   ! TODO why results of this routine are different from simple calls of intrinsec cos() and sin()
@@ -482,7 +503,8 @@ subroutine getNumberOfBodies(nb_big_bodies, nb_bodies)
 
   implicit none
 
-  integer, intent(out) :: nb_bodies, nb_big_bodies
+  integer, intent(out) :: nb_bodies
+  integer, intent(out) :: nb_big_bodies
   
   ! Local
   integer :: j,k,lim(2,10),nsub, error
@@ -580,10 +602,13 @@ subroutine get_polar_coordinates(x, y, z, radius, theta)
   implicit none
   
   ! Inputs
-  real(double_precision), intent(in) :: x, y, z
+  real(double_precision), intent(in) :: x
+  real(double_precision), intent(in) :: y
+  real(double_precision), intent(in) :: z
   
   ! Outputs
-  real(double_precision), intent(out) :: radius, theta
+  real(double_precision), intent(out) :: radius
+  real(double_precision), intent(out) :: theta
   
   radius = sqrt(x * x + y * y + z * z)
   
@@ -648,7 +673,8 @@ function vect_product(x, y)
   real(double_precision), dimension(3) :: vect_product
 
   ! Inputs :
-  real(double_precision), dimension(3), intent(in) :: x, y
+  real(double_precision), dimension(3), intent(in) :: x
+  real(double_precision), dimension(3), intent(in) :: y
 !--------------------------------------------------------
 
   vect_product(1) = x(2) * y(3) - x(3) * y(2)
