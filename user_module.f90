@@ -1,25 +1,15 @@
+!******************************************************************************
+! MODULE: user_module
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Module that contain user defined function. This module can call other module and subroutine. 
+!! The only public routine is mfo_user, that return an acceleration that 
+!! mimic a random force that depend on what the user want to model.
+!
+!******************************************************************************
+
 module user_module
-
-!*************************************************************
-!** Modules that contains user defined modules. 
-!** Only mfo_user will be public.
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
-
-! The user_module is divided in several parts. First of all, some parameters are calculated at the beginning of the run, in 
-! init_globals. This subroutine must be executed before the rest. Since mfo_user is used by mercury, we can't execute init_globals 
-! only once, we must include an 'if' test that  run init_globals only if it's the first time we pass in the routine. Another thing 
-! to keep in mind is that the temperature profile of the disk is calculated manually. Since the density profile evolve in time, You
-! must re-calculate the temperature profile each time you need it. A mistake can be made because the surface density will evolve 
-! in time automatically. BUT, the temperature profile will not correspond to it. Another set of routine are prefixed with 'test_', 
-! they are all coded to test something, either a routine or a physical value (and plot it). Each plot consist in a data file (*
-! .dat) and a gnuplot file (*.gnuplot). You only have to run the gnuplot file with gnuplot with a command "gnuplot file.gnuplot". 
-
-! Most of the plot are stored in a subdirectory "unitary_tests" of the current directory Theses tests are used ONLY in the 
-! subroutine "unitary_tests" that can be used outside the module. For instance, I made a fortran source code that use this module 
-! and call the routine 'unitary_tests'. That's how I test my module before running it in mercury. The problem is to prepare 
-! variable in the same way, both in mfo_user and my tests. That's why init_globals exists, thus I can run it in my tests also.
 
   use types_numeriques
   use physical_constant
@@ -67,8 +57,13 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 
   
   ! Input
-  integer, intent(in) :: n_bodies,n_big_bodies
-  real(double_precision),intent(in) :: time,jcen(3),mass(n_bodies),position(3,n_bodies),velocity(3,n_bodies)
+  integer, intent(in) :: n_bodies
+  integer, intent(in) :: n_big_bodies
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: mass(n_bodies)
+  real(double_precision), intent(in) :: position(3,n_bodies)
+  real(double_precision), intent(in) :: velocity(3,n_bodies)
   
   ! Output
   real(double_precision),intent(out) :: acceleration(3,n_bodies)
