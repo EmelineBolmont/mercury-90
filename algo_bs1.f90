@@ -1,3 +1,13 @@
+!******************************************************************************
+! MODULE: algo_bs1
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that gather various functions about the BS
+!! algorithm.
+!
+!******************************************************************************
+
 module algo_bs1
 
 !*************************************************************
@@ -43,15 +53,28 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   implicit none
   
   ! Input/Output
-  integer,intent(in) :: nbod, nbig, stat(nbod), dtflag, ngflag
-  integer,intent(in) :: nce, ice(nce), jce(nce)
-  real(double_precision),intent(in) :: time,tol,jcen(3)
-  real(double_precision),intent(in) :: mass(nbod),s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: stat(nbod)
+  integer, intent(in) :: dtflag
+  integer, intent(in) :: ngflag
+  integer, intent(in) :: nce
+  integer, intent(in) :: ice(nce)
+  integer, intent(in) :: jce(nce)
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: mass(nbod)
+  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: rphys(nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
   
   real(double_precision), intent(out) :: hdid
   
   real(double_precision), intent(inout) :: h0
-  real(double_precision), intent(inout) :: x0(3,nbod),v0(3,nbod)
+  real(double_precision), intent(inout) :: x0(3,nbod)
+  real(double_precision), intent(inout) :: v0(3,nbod)
   
   external force
   
