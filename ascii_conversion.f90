@@ -1,10 +1,15 @@
+!******************************************************************************
+! MODULE: ascii_conversion
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that allow conversion between reals and ascii strings
+!! in order to store those strings in files and thus compress data
+!
+!******************************************************************************
+
 module ascii_conversion
 
-!*************************************************************
-!** Modules that allow conversion between reals and ascii strings
-!** in order to store those strings in files and thus compress data
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
 
   implicit none
@@ -32,7 +37,7 @@ function mio_c2fl (c)
   
   ! Input/Output
   real(double_precision) :: mio_c2fl
-  character(len=8) :: c
+  character(len=8), intent(in) :: c
   
   ! Local
   integer :: ex
@@ -76,9 +81,11 @@ function mio_c2re (c,xmin,xmax,nchar)
 
   
   ! Input/output
-  integer :: nchar
-  real(double_precision) :: xmin,xmax,mio_c2re
-  character(len=8) :: c
+  integer, intent(in) :: nchar
+  real(double_precision), intent(in) :: xmin
+  real(double_precision), intent(in) :: xmax
+  real(double_precision) :: mio_c2re
+  character(len=8), intent(in) :: c
   
   ! Local
   integer :: j
@@ -130,7 +137,7 @@ function mio_fl2c (x)
 
   
   ! Input/Output
-  real(double_precision) :: x
+  real(double_precision), intent(in) :: x
   character(len=8) :: mio_fl2c
   
   ! Local
@@ -192,7 +199,9 @@ function mio_re2c (x,xmin,xmax)
 
   
   ! Input/output
-  real(double_precision) :: x,xmin,xmax
+  real(double_precision), intent(in) :: x
+  real(double_precision), intent(in) :: xmin
+  real(double_precision), intent(in) :: xmax
   character(len=8) :: mio_re2c
   
   ! Local
