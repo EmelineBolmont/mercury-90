@@ -1,3 +1,13 @@
+!******************************************************************************
+! MODULE: physical_constant
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that contain all physical and mathematical constants 
+!! needed for Mercury
+!
+!******************************************************************************
+
 module physical_constant
   use types_numeriques
 
