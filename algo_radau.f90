@@ -1,11 +1,14 @@
+!******************************************************************************
+! MODULE: algo_radau
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that gather various functions about the RADAU algorithm.
+!
+!******************************************************************************
+
 module algo_radau
 
-!*************************************************************
-!** Modules that gather various functions about the RADAU
-!** algorithm.
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
 
   implicit none
@@ -96,11 +99,28 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
 
   
   ! Input/Output
-  integer :: nbod,nbig,dtflag,ngflag,stat(nbod)
-  integer :: nce,ice(nce),jce(nce)
-  real(double_precision) :: time,t,tdid,tol,jcen(3),mass(nbod)
-  real(double_precision) :: x1(3*nbod),v1(3*nbod),spin(3*nbod)
-  real(double_precision) :: ngf(4,nbod),rphys(nbod),rcrit(nbod)
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(inout) :: dtflag
+  integer, intent(in) :: ngflag
+  integer, intent(in) :: stat(nbod)
+  integer, intent(in) :: nce
+  integer, intent(in) :: ice(nce)
+  integer, intent(in) :: jce(nce)
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(inout) :: t
+  real(double_precision), intent(out) :: tdid
+  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: mass(nbod)
+  
+  real(double_precision), intent(inout) :: x1(3*nbod)
+  real(double_precision), intent(inout) :: v1(3*nbod)
+  real(double_precision), intent(in) :: spin(3*nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: rphys(nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
+  
   external force
   
   ! Local
