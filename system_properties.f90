@@ -411,17 +411,22 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
 
   
   ! Input/Output
-  integer,intent(in) :: i0, nbod, nbig
+  integer, intent(in) :: i0, nbod, nbig
 
-  real(double_precision),intent(in) :: time, jcen(3)
-  real(double_precision),intent(in) :: x(3,nbod), v(3,nbod)
-  character(len=80),intent(in) :: outfile
-  character(len=8),intent(in) :: id(nbod)
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  character(len=80), intent(in) :: outfile
+  character(len=8), intent(in) :: id(nbod)
   
-  real(double_precision), intent(out) :: en(3), am(3)
-  integer, intent(out) :: ejflag, stat(nbod)
+  real(double_precision), intent(out) :: en(3)
+  real(double_precision), intent(out) :: am(3)
+  integer, intent(out) :: ejflag
+  integer, intent(out) :: stat(nbod)
   
-  real(double_precision),intent(inout) :: m(nbod), s(3,nbod)
+  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: s(3,nbod)
 
   ! Local
   integer :: j,j0, year, month
