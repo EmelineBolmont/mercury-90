@@ -695,10 +695,16 @@ subroutine mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
   implicit none
 
   
-  ! Input/Output
-  integer,intent(in) :: nbod, nbig, stat(nbod)
-  real(double_precision),intent(in) :: jcen(3), m(nbod), x(3,nbod), rcrit(nbod)
+  ! Inputs
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: stat(nbod)
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
   
+  ! Output
   real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
