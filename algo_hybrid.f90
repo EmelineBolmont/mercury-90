@@ -754,7 +754,7 @@ end subroutine mfo_hy
 
 !------------------------------------------------------------------------------
 
-subroutine mfo_drct (i0,nbod,nbig,m,x,rcrit,a,stat)
+subroutine mfo_drct (start_index,nbod,nbig,m,x,rcrit,a,stat)
   use physical_constant
   use mercury_constant
 
@@ -762,17 +762,30 @@ subroutine mfo_drct (i0,nbod,nbig,m,x,rcrit,a,stat)
 
   
   ! Input/Output
-  integer :: i0, nbod, nbig, stat(nbod)
-  real(double_precision) :: m(nbod), x(3,nbod), a(3,nbod), rcrit(nbod)
+  integer, intent(in) :: start_index
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: stat(nbod)
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
   
+  ! Input/Output
+    real(double_precision), intent(inout) :: a(3,nbod)
+
   ! Local
+  integer :: i0
   integer :: i,j
   real(double_precision) :: dx,dy,dz,s,s_1,s2,s_3,rc,rc2,q,q2,q3,q4,q5,tmp2,faci,facj
   
   !------------------------------------------------------------------------------
   
-  if (i0.le.0) i0 = 2
-  
+  if (start_index.le.0) then
+    i0 = 2
+  else
+    i0 = start_index
+  endif
+    
   do i = i0, nbig
      do j = i + 1, nbod
         dx = x(1,j) - x(1,i)
