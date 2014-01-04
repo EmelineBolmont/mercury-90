@@ -587,10 +587,25 @@ subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,nce,
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod,nbig,stat(nbod),ngflag,nce,ice(nce),jce(nce)
-  real(double_precision) :: time,jcen(3),rcrit(nbod),ngf(4,nbod),m(nbod)
-  real(double_precision) :: x(3,nbod),v(3,nbod),a(3,nbod),spin(3,nbod)
+  ! Inputs
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: stat(nbod)
+  integer, intent(in) :: ngflag
+  integer, intent(in) :: nce
+  integer, intent(in) :: ice(nce)
+  integer, intent(in) :: jce(nce)
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: rcrit(nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: spin(3,nbod)
+  
+  ! Output
+    real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: i, j, k
