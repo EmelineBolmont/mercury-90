@@ -155,9 +155,22 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   implicit none
 
   
-  ! Input/Output
-  real(double_precision),intent(in) :: gm,x,y,z,u,v,w
-  real(double_precision),intent(out) :: q,e,i,p,n,l
+  ! Input
+  real(double_precision), intent(in) :: gm
+  real(double_precision), intent(in) :: x
+  real(double_precision), intent(in) :: y
+  real(double_precision), intent(in) :: z
+  real(double_precision), intent(in) :: u
+  real(double_precision), intent(in) :: v
+  real(double_precision), intent(in) :: w
+  
+  ! Output
+  real(double_precision), intent(out) :: q
+  real(double_precision), intent(out) :: e
+  real(double_precision), intent(out) :: i
+  real(double_precision), intent(out) :: p
+  real(double_precision), intent(out) :: n
+  real(double_precision), intent(out) :: l
   
   ! Local
   real(double_precision) :: hx,hy,hz,h2,h,v2,r,rv,s,true
