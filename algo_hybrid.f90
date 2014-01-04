@@ -1,11 +1,14 @@
+!******************************************************************************
+! MODULE: algo_hybrid
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that gather various functions about the hybrid algorithm.
+!
+!******************************************************************************
+
 module algo_hybrid
 
-!*************************************************************
-!** Modules that gather various functions about the hybrid
-!** algorithm.
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
   use mercury_globals
   use user_module
