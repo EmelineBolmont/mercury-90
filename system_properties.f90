@@ -47,9 +47,12 @@ subroutine mce_hill (nbod,m,x,v,hill,a)
   implicit none
   
   ! Input/Output
-  integer,intent(in) :: nbod
-  real(double_precision),intent(in) :: m(nbod),x(3,nbod),v(3,nbod)
-  real(double_precision),intent(out) :: hill(nbod),a(nbod)
+  integer, intent(in) :: nbod
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(out) :: hill(nbod)
+  real(double_precision), intent(out) :: a(nbod)
   
   ! Local
   integer :: j
