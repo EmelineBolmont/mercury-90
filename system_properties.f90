@@ -722,10 +722,19 @@ subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig,ngflag
-  real(double_precision),intent(in) :: time,jcen(3),h,m(nbod),x_in(3,nbod),v_in(3,nbod),ngf(4,nbod)
+  integer,intent(in) :: nbod
+  integer,intent(in) :: nbig
+  integer,intent(in) :: ngflag
+  real(double_precision),intent(in) :: time
+  real(double_precision),intent(in) :: jcen(3)
+  real(double_precision),intent(in) :: h
+  real(double_precision),intent(in) :: m(nbod)
+  real(double_precision),intent(in) :: x_in(3,nbod)
+  real(double_precision),intent(in) :: v_in(3,nbod)
+  real(double_precision),intent(in) :: ngf(4,nbod)
 
-  real(double_precision), intent(out) ::x_out(3,nbod),v_out(3,nbod)
+  real(double_precision), intent(out) :: x_out(3,nbod)
+  real(double_precision), intent(out) :: v_out(3,nbod)
   
   ! Local
   integer :: j
