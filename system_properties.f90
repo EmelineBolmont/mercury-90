@@ -1,11 +1,16 @@
+!******************************************************************************
+! MODULE: system_properties
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that compute various properties of the system like
+!! the total energy and angular momentum, jacobi constants, 
+!! hill radii, if there are ejections and so on.
+!
+!******************************************************************************
+
 module system_properties
 
-!*************************************************************
-!** Modules that compute various properties of the system like
-!** the total energy and angular momentum, jocobi constants, 
-!** hill radii, if there are ejections and so on.
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
   use mercury_globals
 
