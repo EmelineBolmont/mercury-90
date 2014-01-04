@@ -780,7 +780,11 @@ subroutine mce_spin (g,mass,spin,rho,rote)
 
   
   ! Input/Output
-  real(double_precision),intent(in) :: g,mass,spin,rho
+  real(double_precision),intent(in) :: g
+  real(double_precision),intent(in) :: mass
+  real(double_precision),intent(in) :: spin
+  real(double_precision),intent(in) :: rho
+  
   real(double_precision),intent(out) :: rote ! spin rate (in rotations per day)
   
   ! Local
