@@ -226,14 +226,14 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   ! Input/Output
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
-  real(double_precision),intent(in) :: jcen(3)
-  real(double_precision),intent(in) :: m(nbod)
-  real(double_precision),intent(in) :: xh(3,nbod)
-  real(double_precision),intent(in) :: vh(3,nbod)
-  real(double_precision),intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: xh(3,nbod)
+  real(double_precision), intent(in) :: vh(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod)
   
-  real(double_precision),intent(out) :: e ! energy
-  real(double_precision),intent(out) :: l2 ! angular momentum
+  real(double_precision), intent(out) :: e ! energy
+  real(double_precision), intent(out) :: l2 ! angular momentum
   
   ! Local
   integer :: j,k,iflag,itmp(8)
@@ -338,10 +338,14 @@ subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig
-  real(double_precision),intent(in) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod)
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: xh(3,nbod)
+  real(double_precision), intent(in) :: vh(3,nbod)
   
-  real(double_precision),intent(out) :: jac(nbod)
+  real(double_precision), intent(out) :: jac(nbod)
   
   ! Local
   integer :: j,itmp(8),iflag
