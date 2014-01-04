@@ -85,34 +85,38 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   ! Input/Output
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
-  integer, intent(in) :: stat(nbod)
-  integer, intent(inout) :: dtflag
   integer, intent(in) :: ngflag
   integer, intent(in) :: opflag
-  integer, intent(out) :: colflag
-  integer, intent(out) :: nclo
-  integer, intent(out) :: iclo(CMAX)
-  integer, intent(out) :: jclo(CMAX)
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: h0
   real(double_precision), intent(in) :: tol
-  real(double_precision), intent(inout) :: en(3)
   real(double_precision), intent(in) :: am(3)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
-  real(double_precision), intent(in) :: m(nbod)
-  real(double_precision), intent(inout) :: x(3,nbod)
-  real(double_precision), intent(inout) :: v(3,nbod)
-  real(double_precision), intent(in) :: s(3,nbod)
   real(double_precision), intent(in) :: rphys(nbod)
   real(double_precision), intent(in) :: rce(nbod)
   real(double_precision), intent(in) :: rcrit(nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
+  character(len=8), intent(in) :: id(nbod)
+  
+  ! Outputs
+  integer, intent(out) :: colflag
+  integer, intent(out) :: nclo
+  integer, intent(out) :: iclo(CMAX)
+  integer, intent(out) :: jclo(CMAX)
   real(double_precision), intent(out) :: tclo(CMAX)
   real(double_precision), intent(out) :: dclo(CMAX)
   real(double_precision), intent(out) :: ixvclo(6,CMAX)
   real(double_precision), intent(out) :: jxvclo(6,CMAX)
-  character(len=8), intent(in) :: id(nbod)
+  
+  ! Input/Output
+  integer, intent(inout) :: stat(nbod)
+  integer, intent(inout) :: dtflag
+  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: x(3,nbod)
+  real(double_precision), intent(inout) :: v(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod)
+  real(double_precision), intent(inout) :: en(3)
   
   ! Local
 !~   integer :: j,nce,ice(nbod),jce(nbod),ce(nbod),iflag
@@ -265,7 +269,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   implicit none
 
   
-  ! Input/Output
+  ! Input
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
   integer, intent(in) :: nce
@@ -273,35 +277,34 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   integer, intent(in) :: jce(CMAX)
   integer, intent(in) :: ngflag
   integer, intent(in) :: ce(nbod)
-  integer, intent(inout) :: nclo
-
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: h0
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
-  real(double_precision), intent(inout) :: elost
-  real(double_precision), intent(inout) :: dclo(CMAX)
   real(double_precision), intent(in) :: rce(nbod)
   real(double_precision), intent(in) :: rphy(nbod)
   real(double_precision), intent(in) :: rcrit(nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
+  character(len=8), dimension(nbod),intent(in) :: id
+  
+  ! Input/Output
+  integer, intent(inout) :: nclo
+  integer, intent(inout) :: colflag
+  integer, intent(inout) :: iclo(CMAX)
+  integer, intent(inout) :: jclo(CMAX)
+  integer, intent(inout) :: stat(nbod)
+  real(double_precision), intent(inout) :: hrec
+  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: x(3,nbod)
+  real(double_precision), intent(inout) :: v(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod)
+  real(double_precision), intent(inout) :: elost
+  real(double_precision), intent(inout) :: dclo(CMAX)
   real(double_precision), intent(inout) :: tclo(CMAX)
   real(double_precision), intent(inout) :: ixvclo(6,CMAX)
   real(double_precision), intent(inout) :: jxvclo(6,CMAX)
-  character(len=8), dimension(nbod),intent(in) :: id
-  
-  ! to be done intent
-  integer :: colflag
-  integer :: iclo(CMAX)
-  integer :: jclo(CMAX)
-  integer :: stat(nbod)
-  real(double_precision) :: hrec
-  real(double_precision) :: m(nbod)
-  real(double_precision) :: x(3,nbod)
-  real(double_precision) :: v(3,nbod)
-  real(double_precision) :: s(3,nbod)
-  !end TODO
+
   external force
   
   ! Local
