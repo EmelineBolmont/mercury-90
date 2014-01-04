@@ -833,7 +833,8 @@ subroutine m_sfunc (s,z,dz)
   
   ! Input/Output
   real(double_precision),intent(in) :: s
-  real(double_precision),intent(out) :: z, dz
+  real(double_precision),intent(out) :: z
+  real(double_precision),intent(out) :: dz
   
   ! Local
   real(double_precision) :: s2,s4,s6,s8,a
