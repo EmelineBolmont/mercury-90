@@ -83,8 +83,24 @@ subroutine mco_x2ov (rcen,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
   implicit none
 
   
-  ! Input/Output
-  real(double_precision) :: rcen,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi
+  ! Input
+  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: mcen
+  real(double_precision), intent(in) :: m
+  real(double_precision), intent(in) :: x
+  real(double_precision), intent(in) :: y
+  real(double_precision), intent(in) :: z
+  real(double_precision), intent(in) :: u
+  real(double_precision), intent(in) :: v
+  real(double_precision), intent(in) :: w
+  
+  ! Output
+  real(double_precision), intent(out) :: fr
+  real(double_precision), intent(out) :: theta
+  real(double_precision), intent(out) :: phi
+  real(double_precision), intent(out) :: fv
+  real(double_precision), intent(out) :: vtheta
+  real(double_precision), intent(out) :: vphi
   
   ! Local
   real(double_precision) :: r,v2,v1,be,ke,temp
