@@ -108,13 +108,25 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   real(double_precision), parameter :: N2=.4d0
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig,rcritflag
-  real(double_precision),intent(in) :: m(nbod),x(3,nbod),v(3,nbod),rho(nbod),rceh(nbod),jcen(3),s(3,nbod)
-  real(double_precision),intent(in) :: h,rcen,cefac
-  character(len=8),intent(in) :: id(nbod)
-  character(len=80),intent(in) :: outfile
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: rcritflag
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: rho(nbod)
+  real(double_precision), intent(in) :: rceh(nbod)
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: cefac
+  character(len=8), intent(in) :: id(nbod)
+  character(len=80), intent(in) :: outfile
   
-  real(double_precision), intent(out) :: rce(nbod),rphys(nbod),rcrit(nbod)
+  real(double_precision), intent(out) :: rce(nbod)
+  real(double_precision), intent(out) :: rphys(nbod)
+  real(double_precision), intent(out) :: rcrit(nbod)
 
   
   ! Local
