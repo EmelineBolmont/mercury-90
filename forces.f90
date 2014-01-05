@@ -445,9 +445,15 @@ subroutine mfo_obl (jcen,nbod,m,x,a,acen)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod
-  real(double_precision) :: jcen(3), m(nbod), x(3,nbod), a(3,nbod), acen(3)
+  ! Input
+  integer, intent(in) :: nbod
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x(3,nbod)
+  
+  ! Output
+  real(double_precision), intent(out) :: acen(3)
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: i
