@@ -31,7 +31,7 @@
 ! Variables:
 ! ---------
 !  NBOD  = current number of bodies (INCLUDING the central object)
-!  NBIG  =    "       "    " big bodies (ones that perturb everything else)
+!  NBIG  = current number of big bodies (ones that perturb everything else)
 !  TIME  = current epoch (days)
 !  TOUT  = time of next output evaluation
 !  TDUMP = time of next data dump
@@ -318,7 +318,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   
   ! Output
   integer, intent(out) :: nbod !< [out] current number of bodies (INCLUDING the central object)
-  integer, intent(out) :: nbig
+  integer, intent(out) :: nbig !< [out] current number of big bodies (ones that perturb everything else)
   integer, intent(out) :: opflag
   integer, intent(out) :: ngflag
   integer, intent(out) :: ndump
@@ -954,7 +954,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   ! Input/Output
   integer, intent(inout) :: opflag
   integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
-  integer, intent(inout) :: nbig
+  integer, intent(inout) :: nbig !< [in,out] current number of big bodies (ones that perturb everything else)
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(inout) :: time
   real(double_precision), intent(inout) :: en(3)
@@ -1207,7 +1207,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
   ! Input/Output
   integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
-  integer, intent(inout) :: nbig
+  integer, intent(inout) :: nbig !< [in,out] current number of big bodies (ones that perturb everything else)
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   integer, intent(inout) :: opflag
   real(double_precision), intent(inout) :: time
@@ -1494,7 +1494,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   
   ! Input
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
-  integer, intent(in) :: nbig
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: ngflag
   real(double_precision), intent(in) :: h0
   real(double_precision), intent(in) :: tol

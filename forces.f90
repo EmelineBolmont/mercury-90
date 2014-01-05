@@ -51,7 +51,7 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   
   ! Input
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
-  integer, intent(in) :: nbig
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: ngflag
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   integer, intent(in) :: nce
@@ -164,7 +164,7 @@ subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   
   ! Input
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
-  integer, intent(in) :: nbig
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
@@ -350,7 +350,7 @@ subroutine mfo_pn (nbod,nbig,m,x,v,a)
   
   ! Input
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
-  integer, intent(in) :: nbig
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
@@ -404,7 +404,7 @@ subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   
   ! Input
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
-  integer, intent(in) :: nbig
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
