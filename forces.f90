@@ -340,9 +340,15 @@ subroutine mfo_pn (nbod,nbig,m,x,v,a)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod, nbig
-  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), a(3,nbod)
+  ! Input
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  
+  ! Output
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: j
