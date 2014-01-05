@@ -184,7 +184,7 @@ subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
-  real(double_precision), intent(inout) :: xh(3,nbod)
+  real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(inout) :: vh(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod)
   real(double_precision), intent(in) :: rphys(nbod)
@@ -299,7 +299,7 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   ! Output
   integer, intent(inout) :: stat(nbod)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
-  real(double_precision), intent(inout) :: xh(3,nbod)
+  real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(inout) :: vh(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod)
   real(double_precision), intent(inout) :: elost

@@ -455,7 +455,7 @@ subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   real(double_precision),intent(in) :: jcen(3)
   real(double_precision),intent(in) :: h
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
-  real(double_precision),intent(in) :: xh(3,nbod)
+  real(double_precision),intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision),intent(in) :: vh(3,nbod)
   real(double_precision),intent(in) :: ngf(4,nbod)
   
@@ -531,7 +531,7 @@ subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   real(double_precision),intent(in) :: v(3,nbod)
   real(double_precision),intent(in) :: ngf(4,nbod)
   
-  real(double_precision), intent(out) :: xh(3,nbod)
+  real(double_precision), intent(out) :: xh(3,nbod) !< [out] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(out) :: vh(3,nbod)
   
   ! Local

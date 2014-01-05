@@ -572,7 +572,7 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
-  real(double_precision), intent(in) :: xh(3,nbod)
+  real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(in) :: vh(3,nbod)
   real(double_precision), intent(in) :: s(3,nbod)
   real(double_precision), intent(in) :: rho(nbod)
