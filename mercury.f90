@@ -1498,11 +1498,26 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   implicit none
 
   
+  ! Input
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: ngflag
+  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  
   ! Input/Output
-  integer :: nbod,nbig,ngflag,stat(nbod)
-  real(double_precision) :: time,h0,tol,jcen(3),m(nbod),x(3,nbod),v(3,nbod)
-  real(double_precision) :: s(3,nbod),rceh(nbod),rho(nbod),epoch(nbod),ngf(4,nbod)
-  character(len=8) :: id(nbod)
+  integer, intent(inout) :: stat(nbod)
+  real(double_precision), intent(inout) :: time
+  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: x(3,nbod)
+  real(double_precision), intent(inout) :: v(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod)
+  real(double_precision), intent(inout) :: rceh(nbod)
+  real(double_precision), intent(inout) :: rho(nbod)
+  real(double_precision), intent(inout) :: epoch(nbod)
+  character(len=8), intent(inout) :: id(nbod)
   
   ! Local
   integer :: j,k,l,nsml,nsofar,indx(nb_bodies_initial),itemp,jtemp(nb_bodies_initial)
