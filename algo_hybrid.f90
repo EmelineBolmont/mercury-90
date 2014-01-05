@@ -281,7 +281,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   integer, intent(in) :: ice(CMAX)
   integer, intent(in) :: jce(CMAX)
   integer, intent(in) :: ngflag
-  integer, intent(in) :: ce(nbod)
+  integer, intent(in) :: ce(nbod) !< [in] close encounter status
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: h0
   real(double_precision), intent(in) :: tol

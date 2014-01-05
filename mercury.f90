@@ -30,8 +30,6 @@
 
 ! Variables:
 ! ---------
-!  ID     = name of the object (8 characters)
-!  CE     = close encounter status
 !  NGF    = (1-3) cometary non-gravitational (jet) force parameters
 !   "     =  (4)  beta parameter for radiation pressure and P-R drag
 !  EPOCH  = epoch of orbit (days)

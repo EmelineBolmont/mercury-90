@@ -542,7 +542,7 @@ subroutine mce_snif (h,start_index,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   implicit none
 
   
-  ! Input/Output
+  ! Input
   integer, intent(in) :: start_index
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
@@ -553,7 +553,8 @@ subroutine mce_snif (h,start_index,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   real(double_precision), intent(in) :: h
   real(double_precision), intent(in) :: rcrit(nbod)
   
-  integer, intent(out) :: ce(nbod)
+  ! Output
+  integer, intent(out) :: ce(nbod) !< [out] close encounter status
   integer, intent(out) :: nce
   integer, intent(out) :: ice(CMAX)
   integer, intent(out) :: jce(CMAX)
