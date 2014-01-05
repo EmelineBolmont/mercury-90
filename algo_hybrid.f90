@@ -3,7 +3,9 @@
 !******************************************************************************
 !
 ! DESCRIPTION: 
-!> @brief Modules that gather various functions about the hybrid algorithm.
+!> @brief Modules that gather various functions about the hybrid algorithm.\n\n
+!! The hybrid symplectic algorithm is described in J.E.Chambers (1999)
+!! Monthly Notices of the RAS, vol 304, pp793.
 !
 !******************************************************************************
 

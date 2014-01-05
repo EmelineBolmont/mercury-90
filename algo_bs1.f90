@@ -4,7 +4,9 @@
 !
 ! DESCRIPTION: 
 !> @brief Modules that gather various functions about the BS
-!! algorithm.
+!! algorithm.\n\n
+!! The Bulirsch-Stoer algorithms are described in W.H.Press et al. (1992)
+!! ``Numerical Recipes in Fortran'', pub. Cambridge.
 !
 !******************************************************************************
 

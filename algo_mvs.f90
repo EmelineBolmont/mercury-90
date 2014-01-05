@@ -4,7 +4,9 @@
 !
 ! DESCRIPTION: 
 !> @brief Modules that gather various functions about the mvs
-!! algorithm.
+!! algorithm.\n\n
+!! The standard symplectic (MVS) algorithm is described in J.Widsom and
+!! M.Holman (1991) Astronomical Journal, vol 102, pp1528.
 !
 !******************************************************************************
 

@@ -3,7 +3,10 @@
 !******************************************************************************
 !
 ! DESCRIPTION: 
-!> @brief Modules that gather various functions about the RADAU algorithm.
+!> @brief Modules that gather various functions about the RADAU algorithm.\n\n
+!! RADAU is described in E.Everhart (1985) in ``The Dynamics of Comets:
+!! Their Origin and Evolution'' p185-202, eds. A.Carusi & G.B.Valsecchi,
+!! pub. Reidel.
 !
 !******************************************************************************
 
