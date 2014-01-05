@@ -30,7 +30,6 @@
 
 ! Variables:
 ! ---------
-!  RHO    = physical density (g/cm^3)
 !  RCEH   = close-encounter limit (Hill radii)
 !  STAT   = status (0 => alive, <>0 => to be removed)
 !  ID     = name of the object (8 characters)
@@ -343,7 +342,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   real(double_precision), intent(out) :: v(3,nb_bodies_initial)
   real(double_precision), intent(out) :: s(3,nb_bodies_initial) !< [out] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(out) :: rho(nb_bodies_initial) !< [out] physical density (g/cm^3)
-  real(double_precision), intent(out) :: rceh(nb_bodies_initial)
+  real(double_precision), intent(out) :: rceh(nb_bodies_initial) !< [out] close-encounter limit (Hill radii)
   real(double_precision), intent(out) :: epoch(nb_bodies_initial)
   real(double_precision), intent(out) :: ngf(4,nb_bodies_initial)
   real(double_precision), intent(out) :: cefac
@@ -970,7 +969,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
-  real(double_precision), intent(inout) :: rceh(nbod)
+  real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
   real(double_precision), intent(inout) :: ngf(4,nbod)
   character(len=8), intent(inout) :: id(nbod)
   
@@ -1223,7 +1222,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
-  real(double_precision), intent(inout) :: rceh(nbod)
+  real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
   real(double_precision), intent(inout) :: ngf(4,nbod)
   character(len=8), intent(inout) :: id(nbod)
   
@@ -1510,7 +1509,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   real(double_precision), intent(inout) :: x(3,nbod)
   real(double_precision), intent(inout) :: v(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
-  real(double_precision), intent(inout) :: rceh(nbod)
+  real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
   real(double_precision), intent(inout) :: epoch(nbod)
   character(len=8), intent(inout) :: id(nbod)

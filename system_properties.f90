@@ -120,7 +120,7 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   real(double_precision), intent(in) :: rho(nbod) !< [in] physical density (g/cm^3)
-  real(double_precision), intent(in) :: rceh(nbod)
+  real(double_precision), intent(in) :: rceh(nbod) !< [in] close-encounter limit (Hill radii)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(in) :: h

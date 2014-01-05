@@ -439,7 +439,7 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   real(double_precision), intent(inout) :: v(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
-  real(double_precision), intent(inout) :: rceh(nbod)
+  real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
   real(double_precision), intent(in) :: rcrit(nbod)
   real(double_precision), intent(inout) :: ngf(4,nbod)
   
