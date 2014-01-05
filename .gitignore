@@ -7,7 +7,6 @@ element
 test_disk
 *.in
 *.out
-git_infos.f90
 dissipation
 simu_test
 *.dat
