@@ -30,7 +30,6 @@
 
 ! Variables:
 ! ---------
-!  TIME  = current epoch (days)
 !  TOUT  = time of next output evaluation
 !  TDUMP = time of next data dump
 !  TFUN  = time of next periodic effect (e.g. next check for ejections)

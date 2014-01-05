@@ -596,9 +596,16 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
   implicit none
 
 
-  ! Input/Output
-  integer :: timestyle,nel,iel(22),lenhead
-  character(len=250) :: string,header,fout
+  ! Input
+  integer, intent(in) :: timestyle
+  character(len=250), intent(in) :: string
+  
+  ! Output
+  integer, intent(out) :: nel
+  integer, intent(out) :: iel(22)
+  integer, intent(out) :: lenhead
+  character(len=250), intent(out) :: header
+  character(len=250), intent(out) :: fout
 
   ! Local
   integer :: i,j,pos,nsub,lim(2,20),formflag,lenfout,f1,f2,itmp
