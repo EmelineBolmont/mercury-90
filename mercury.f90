@@ -337,7 +337,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   real(double_precision), intent(out) :: s(3,nb_bodies_initial) !< [out] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(out) :: rho(nb_bodies_initial) !< [out] physical density (g/cm^3)
   real(double_precision), intent(out) :: rceh(nb_bodies_initial) !< [out] close-encounter limit (Hill radii)
-  real(double_precision), intent(out) :: epoch(nb_bodies_initial)
+  real(double_precision), intent(out) :: epoch(nb_bodies_initial) !< [out] epoch of orbit (days)
   real(double_precision), intent(out) :: ngf(4,nb_bodies_initial) !< [out] non gravitational forces parameters
   !! \n(1-3) cometary non-gravitational (jet) force parameters
   !! \n(4)  beta parameter for radiation pressure and P-R drag
@@ -1513,7 +1513,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
-  real(double_precision), intent(inout) :: epoch(nbod)
+  real(double_precision), intent(inout) :: epoch(nbod) !< [in,out] epoch of orbit (days)
   character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   
   ! Local
