@@ -84,10 +84,22 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   implicit none
 
   
+  ! Input
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: ngflag
+  
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: xh(3,nbod)
+  real(double_precision), intent(in) :: vh(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  
   ! Input/Output
-  integer :: nbod,nbig,ngflag
-  real(double_precision) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
-  real(double_precision) :: v(3,nbod),ngf(4,nbod)
+  real(double_precision), intent(inout) :: x(3,nbod)
+  real(double_precision), intent(inout) :: v(3,nbod)
   
   ! Local
   integer :: j,k,iflag,stat(nb_bodies_initial)
