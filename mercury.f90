@@ -30,9 +30,6 @@
 
 ! Variables:
 ! ---------
-!  M      = mass (in solar masses)
-!  XH     = coordinates (x,y,z) with respect to the central body (AU)
-!  VH     = velocities (vx,vy,vz) with respect to the central body (AU/day)
 !  S      = spin angular momentum (solar masses AU^2/day)
 !  RHO    = physical density (g/cm^3)
 !  RCEH   = close-encounter limit (Hill radii)
@@ -971,7 +968,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: am(3)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
-  real(double_precision), intent(inout) :: vh(3,nbod)
+  real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
   real(double_precision), intent(inout) :: s(3,nbod)
   real(double_precision), intent(inout) :: rho(nbod)
   real(double_precision), intent(inout) :: rceh(nbod)
@@ -1224,7 +1221,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: am(3)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
-  real(double_precision), intent(inout) :: vh(3,nbod)
+  real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
   real(double_precision), intent(inout) :: s(3,nbod)
   real(double_precision), intent(inout) :: rho(nbod)
   real(double_precision), intent(inout) :: rceh(nbod)

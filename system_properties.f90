@@ -234,7 +234,7 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
-  real(double_precision), intent(in) :: vh(3,nbod)
+  real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
   real(double_precision), intent(in) :: s(3,nbod)
   
   real(double_precision), intent(out) :: e ! energy
@@ -348,7 +348,7 @@ subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
-  real(double_precision), intent(in) :: vh(3,nbod)
+  real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
   
   real(double_precision), intent(out) :: jac(nbod)
   
@@ -536,7 +536,7 @@ subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   real(double_precision),intent(in) :: ngf(4,nbod)
   
   real(double_precision),intent(out) :: xh(3,nbod) !< [out] coordinates (x,y,z) with respect to the central body (AU)
-  real(double_precision),intent(out) :: vh(3,nbod)
+  real(double_precision),intent(out) :: vh(3,nbod) !< [out] velocities (vx,vy,vz) with respect to the central body (AU/day)
   
   ! Local
   integer :: j
@@ -583,7 +583,7 @@ subroutine mco_h2b (jcen,nbod,nbig,h,m,xh,vh,x,v)
   real(double_precision),intent(in) :: jcen(3)
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision),intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
-  real(double_precision),intent(in) :: vh(3,nbod)
+  real(double_precision),intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
   real(double_precision),intent(out) :: x(3,nbod)
   real(double_precision),intent(out) :: v(3,nbod)
   
@@ -661,7 +661,7 @@ subroutine mco_h2cb (jcen,nbod,nbig,h,m,xh,vh,x,v)
   real(double_precision),intent(in) :: h
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision),intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
-  real(double_precision),intent(in) :: vh(3,nbod)
+  real(double_precision),intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
   
   real(double_precision),intent(out) :: x(3,nbod)
   real(double_precision),intent(out) :: v(3,nbod)
