@@ -53,7 +53,7 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
   integer, intent(in) :: ngflag
-  integer, intent(in) :: stat(nbod)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   integer, intent(in) :: nce
   integer, intent(in) :: ice(nce)
   integer, intent(in) :: jce(nce)
@@ -163,7 +163,7 @@ subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   ! Input
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
-  integer, intent(in) :: stat(nbod)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)

@@ -180,7 +180,7 @@ subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s
   integer, intent(in) :: planet_id_2
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
-  integer, intent(inout) :: stat(nbod)
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
@@ -297,7 +297,7 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   real(double_precision), intent(in) :: jcen(3)
   
   ! Output
-  integer, intent(inout) :: stat(nbod)
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
@@ -433,7 +433,7 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   integer, intent(inout) :: nbod
   integer, intent(inout) :: nbig
   integer, intent(inout) :: nelim
-  integer, intent(inout) :: stat(nbod)
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: x(3,nbod)
   real(double_precision), intent(inout) :: v(3,nbod)
@@ -687,7 +687,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   ! Input/Output
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
-  integer, intent(in) :: stat(nbod)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   integer, intent(out) :: nowflag
   
   integer, intent(out) :: nclo

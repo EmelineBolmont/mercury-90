@@ -428,7 +428,7 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   real(double_precision), intent(out) :: en(3)
   real(double_precision), intent(out) :: am(3)
   integer, intent(out) :: ejflag
-  integer, intent(out) :: stat(nbod)
+  integer, intent(out) :: stat(nbod) !< [out] status (0 => alive, <>0 => to be removed)
   
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)

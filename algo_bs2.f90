@@ -54,7 +54,7 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   ! Input/Output
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
-  integer, intent(in) :: stat(nbod)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   integer, intent(in) :: dtflag
   integer, intent(in) :: ngflag
   integer, intent(in) :: nce

@@ -30,7 +30,6 @@
 
 ! Variables:
 ! ---------
-!  RCEH   = close-encounter limit (Hill radii)
 !  STAT   = status (0 => alive, <>0 => to be removed)
 !  ID     = name of the object (8 characters)
 !  CE     = close encounter status
@@ -960,7 +959,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(inout) :: opflag
   integer, intent(inout) :: nbod
   integer, intent(inout) :: nbig
-  integer, intent(inout) :: stat(nbod)
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(inout) :: time
   real(double_precision), intent(inout) :: en(3)
   real(double_precision), intent(inout) :: am(3)
@@ -1211,7 +1210,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   ! Input/Output
   integer, intent(inout) :: nbod
   integer, intent(inout) :: nbig
-  integer, intent(inout) :: stat(nbod)
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   integer, intent(inout) :: opflag
   real(double_precision), intent(inout) :: time
   real(double_precision), intent(inout) :: h0
@@ -1503,7 +1502,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   real(double_precision), intent(in) :: ngf(4,nbod)
   
   ! Input/Output
-  integer, intent(inout) :: stat(nbod)
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(inout) :: time
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: x(3,nbod)
