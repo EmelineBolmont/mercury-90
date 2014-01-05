@@ -686,10 +686,21 @@ subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod,nbig,ngflag
-  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
+  ! Input
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: ngflag
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  
+  ! Output
+  real(double_precision), intent(out) :: xh(3,nbod)
+  real(double_precision), intent(out) :: vh(3,nbod)
   
   ! Local
   integer :: j
