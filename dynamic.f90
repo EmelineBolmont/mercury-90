@@ -189,7 +189,7 @@ subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(in) :: rphys(nbod)
   character(len=80), intent(in) :: outfile
-  character(len=8), intent(in) :: id(nbod)
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   real(double_precision), intent(inout) :: elost
   
@@ -443,7 +443,7 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   real(double_precision), intent(in) :: rcrit(nbod)
   real(double_precision), intent(inout) :: ngf(4,nbod)
   
-  character(len=8), intent(inout) :: id(nbod)
+  character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   character(len=80), intent(in) :: outfile
   
   ! Local

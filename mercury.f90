@@ -30,7 +30,6 @@
 
 ! Variables:
 ! ---------
-!  STAT   = status (0 => alive, <>0 => to be removed)
 !  ID     = name of the object (8 characters)
 !  CE     = close encounter status
 !  NGF    = (1-3) cometary non-gravitational (jet) force parameters
@@ -345,7 +344,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   real(double_precision), intent(out) :: epoch(nb_bodies_initial)
   real(double_precision), intent(out) :: ngf(4,nb_bodies_initial)
   real(double_precision), intent(out) :: cefac
-  character(len=8), intent(out) :: id(nb_bodies_initial)
+  character(len=8), intent(out) :: id(nb_bodies_initial) !< [out] name of the object (8 characters)
   
   ! Local
   integer :: j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
@@ -970,7 +969,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
   real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
   real(double_precision), intent(inout) :: ngf(4,nbod)
-  character(len=8), intent(inout) :: id(nbod)
+  character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   
   ! Local
   integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
@@ -1223,7 +1222,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
   real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
   real(double_precision), intent(inout) :: ngf(4,nbod)
-  character(len=8), intent(inout) :: id(nbod)
+  character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   
   ! Local
   integer :: i,j,k,n,itmp,nclo,nhit,jhit(CMAX),iclo(CMAX),jclo(CMAX)
@@ -1511,7 +1510,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
   real(double_precision), intent(inout) :: epoch(nbod)
-  character(len=8), intent(inout) :: id(nbod)
+  character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   
   ! Local
   integer :: j,k,l,nsml,nsofar,indx(nb_bodies_initial),itemp,jtemp(nb_bodies_initial)

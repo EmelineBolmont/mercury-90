@@ -403,7 +403,7 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   real(double_precision), intent(in) :: rce(nbod)
   real(double_precision), intent(in) :: rcrit(nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
-  character(len=8), intent(in) :: id(nbod)
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   ! Output
   integer, intent(out) :: colflag

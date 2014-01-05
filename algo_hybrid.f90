@@ -102,7 +102,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   real(double_precision), intent(in) :: rce(nbod)
   real(double_precision), intent(in) :: rcrit(nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
-  character(len=8), intent(in) :: id(nbod)
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   ! Output
   integer, intent(out) :: colflag
@@ -291,7 +291,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   real(double_precision), intent(in) :: rphy(nbod)
   real(double_precision), intent(in) :: rcrit(nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
-  character(len=8), dimension(nbod),intent(in) :: id
+  character(len=8), dimension(nbod), intent(in) :: id !< [in] name of the object (8 characters)
   
   ! Input/Output
   integer, intent(inout) :: nclo

@@ -74,7 +74,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   real(double_precision), intent(in) :: tclo(nclo)
   real(double_precision), intent(in) :: dclo(nclo)
   real(double_precision) :: ixvclo(6,nclo),jxvclo(6,nclo)
-  character(len=8), intent(in) :: id(nbod)
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   ! Local
   integer :: k,year,month
@@ -214,7 +214,7 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   real(double_precision), intent(in) :: rceh(nbod) !< [in] close-encounter limit (Hill radii)
   real(double_precision), intent(in) :: ngf(4,nbod)
   real(double_precision), intent(in) :: epoch(nbod)
-  character(len=8), intent(in) :: id(nbod)
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   ! Local
   integer :: idp,i,j,k,len,j1,j2
@@ -577,7 +577,7 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(in) :: rho(nbod) !< [in] physical density (g/cm^3)
   character(len=80), intent(in) :: outfile
-  character(len=8), intent(in) :: id(nbod)
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   ! Local
   integer :: k, len, nchar
@@ -711,7 +711,7 @@ subroutine mio_clo (id,unitnum,header,lenhead)
   ! Input/Output
   integer, intent(in) :: unitnum
   integer, intent(in) :: lenhead
-  character(len=8), intent(in) :: id
+  character(len=8), intent(in) :: id !< [in] name of the object (8 characters)
   character(len=250), intent(in) :: header
   
   ! Parameter
@@ -781,7 +781,7 @@ subroutine mio_aei (id,unitnum,header,lenhead)
   ! Input/Output
   integer, intent(in) :: unitnum
   integer, intent(in) :: lenhead
-  character(len=8), intent(in) :: id
+  character(len=8), intent(in) :: id !< [in] name of the object (8 characters)
   character(len=250), intent(in) :: header
   
   ! Parameter

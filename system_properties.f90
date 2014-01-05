@@ -126,7 +126,7 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   real(double_precision), intent(in) :: h
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: cefac
-  character(len=8), intent(in) :: id(nbod)
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   character(len=80), intent(in) :: outfile
   
   real(double_precision), intent(out) :: rce(nbod)
@@ -423,7 +423,7 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   character(len=80), intent(in) :: outfile
-  character(len=8), intent(in) :: id(nbod)
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   real(double_precision), intent(out) :: en(3)
   real(double_precision), intent(out) :: am(3)
