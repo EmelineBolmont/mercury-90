@@ -1,10 +1,15 @@
+!******************************************************************************
+! MODULE: orbital_elements
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Module that allow conversion of orbital elements from (x,v) coordinates
+!! or output format. 
+!
+!******************************************************************************
+
 module orbital_elements
 
-!*************************************************************
-!** Modules that allow to get position from orbital elements
-!** and the opposite. 
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
 
   implicit none
