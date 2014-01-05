@@ -253,9 +253,14 @@ subroutine mfo_ngf (nbod,x,v,a,ngf)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod
-  real(double_precision) :: x(3,nbod), v(3,nbod), a(3,nbod), ngf(4,nbod)
+  ! Input
+  integer, intent(in) :: nbod
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  
+  ! Output
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: j
