@@ -950,12 +950,33 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   implicit none
 
   
+  ! Input
+  integer, intent(in) :: ngflag
+  integer, intent(in) :: ndump
+  integer, intent(in) :: nfun
+  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: cefac
+  
+  
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),opflag,ngflag,ndump,nfun
-  real(double_precision) :: time,h0,tol,jcen(3),rcen
-  real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
-  real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
-  character(len=8) :: id(nbod)
+  integer, intent(inout) :: opflag
+  integer, intent(inout) :: nbod
+  integer, intent(inout) :: nbig
+  integer, intent(inout) :: stat(nbod)
+  real(double_precision), intent(inout) :: time
+  real(double_precision), intent(inout) :: en(3)
+  real(double_precision), intent(inout) :: am(3)
+  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: xh(3,nbod)
+  real(double_precision), intent(inout) :: vh(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod)
+  real(double_precision), intent(inout) :: rho(nbod)
+  real(double_precision), intent(inout) :: rceh(nbod)
+  real(double_precision), intent(inout) :: ngf(4,nbod)
+  character(len=8), intent(inout) :: id(nbod)
   
   ! Local
   integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
