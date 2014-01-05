@@ -1,3 +1,13 @@
+!******************************************************************************
+! MODULE: mercury_constant
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Global constant of the Mercury Code, numerical constant that fix
+!! some numerical problems.
+!
+!******************************************************************************
+
 module mercury_constant
   use types_numeriques
 
