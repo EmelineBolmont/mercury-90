@@ -10,12 +10,6 @@
 
 module algo_bs1
 
-!*************************************************************
-!** Modules that gather various functions about the BS
-!** algorithm.
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
 
   private

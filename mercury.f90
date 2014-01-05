@@ -328,13 +328,30 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod,nbig,opflag,ngflag
-  integer :: ndump,nfun
-  real(double_precision) :: time,h0,tol,rcen,jcen(3)
-  real(double_precision) :: en(3),am(3),m(nb_bodies_initial),x(3,nb_bodies_initial),v(3,nb_bodies_initial),s(3,nb_bodies_initial)
-  real(double_precision) :: rho(nb_bodies_initial),rceh(nb_bodies_initial),epoch(nb_bodies_initial),ngf(4,nb_bodies_initial),cefac
-  character(len=8) :: id(nb_bodies_initial)
+  ! Output
+  integer, intent(out) :: nbod
+  integer, intent(out) :: nbig
+  integer, intent(out) :: opflag
+  integer, intent(out) :: ngflag
+  integer, intent(out) :: ndump
+  integer, intent(out) :: nfun
+  real(double_precision), intent(out) :: time
+  real(double_precision), intent(out) :: h0
+  real(double_precision), intent(out) :: tol
+  real(double_precision), intent(out) :: rcen
+  real(double_precision), intent(out) :: jcen(3)
+  real(double_precision), intent(out) :: en(3)
+  real(double_precision), intent(out) :: am(3)
+  real(double_precision), intent(out) :: m(nb_bodies_initial)
+  real(double_precision), intent(out) :: x(3,nb_bodies_initial)
+  real(double_precision), intent(out) :: v(3,nb_bodies_initial)
+  real(double_precision), intent(out) :: s(3,nb_bodies_initial)
+  real(double_precision), intent(out) :: rho(nb_bodies_initial)
+  real(double_precision), intent(out) :: rceh(nb_bodies_initial)
+  real(double_precision), intent(out) :: epoch(nb_bodies_initial)
+  real(double_precision), intent(out) :: ngf(4,nb_bodies_initial)
+  real(double_precision), intent(out) :: cefac
+  character(len=8), intent(out) :: id(nb_bodies_initial)
   
   ! Local
   integer :: j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
