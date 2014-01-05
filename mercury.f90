@@ -342,7 +342,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   real(double_precision), intent(out) :: jcen(3)
   real(double_precision), intent(out) :: en(3)
   real(double_precision), intent(out) :: am(3)
-  real(double_precision), intent(out) :: m(nb_bodies_initial)
+  real(double_precision), intent(out) :: m(nb_bodies_initial) !< [out] mass (in solar masses * K2)
   real(double_precision), intent(out) :: x(3,nb_bodies_initial)
   real(double_precision), intent(out) :: v(3,nb_bodies_initial)
   real(double_precision), intent(out) :: s(3,nb_bodies_initial)
@@ -969,7 +969,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: time
   real(double_precision), intent(inout) :: en(3)
   real(double_precision), intent(inout) :: am(3)
-  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod)
   real(double_precision), intent(inout) :: vh(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod)
@@ -1222,7 +1222,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: h0
   real(double_precision), intent(inout) :: en(3)
   real(double_precision), intent(inout) :: am(3)
-  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod)
   real(double_precision), intent(inout) :: vh(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod)
@@ -1510,7 +1510,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   ! Input/Output
   integer, intent(inout) :: stat(nbod)
   real(double_precision), intent(inout) :: time
-  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: x(3,nbod)
   real(double_precision), intent(inout) :: v(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod)

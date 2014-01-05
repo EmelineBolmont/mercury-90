@@ -70,7 +70,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   integer, intent(in) :: ceflush
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: rcen
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: tclo(nclo)
   real(double_precision), intent(in) :: dclo(nclo)
   real(double_precision) :: ixvclo(6,nclo),jxvclo(6,nclo)
@@ -206,7 +206,7 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: cefac
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   real(double_precision), intent(in) :: s(3,nbod)
@@ -571,7 +571,7 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbod)
   real(double_precision), intent(in) :: vh(3,nbod)
   real(double_precision), intent(in) :: s(3,nbod)

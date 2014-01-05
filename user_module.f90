@@ -61,7 +61,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   integer, intent(in) :: n_big_bodies
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: mass(n_bodies)
+  real(double_precision), intent(in) :: mass(n_bodies) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: position(3,n_bodies)
   real(double_precision), intent(in) :: velocity(3,n_bodies)
   

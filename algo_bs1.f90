@@ -60,7 +60,7 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: mass(nbod)
+  real(double_precision), intent(in) :: mass(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: s(3,nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
   real(double_precision), intent(in) :: rphys(nbod)

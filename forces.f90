@@ -58,7 +58,7 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   integer, intent(in) :: ice(nce)
   integer, intent(in) :: jce(nce)
   real(double_precision), intent(in) :: time,jcen(3)
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   real(double_precision), intent(in) :: s(3,nbod)
@@ -164,7 +164,7 @@ subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
   integer, intent(in) :: stat(nbod)
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   
@@ -347,7 +347,7 @@ subroutine mfo_pn (nbod,nbig,m,x,v,a)
   ! Input
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   
@@ -401,7 +401,7 @@ subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   ! Input
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
@@ -452,7 +452,7 @@ subroutine mfo_obl (jcen,nbod,m,x,a,acen)
   ! Input
   integer, intent(in) :: nbod
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   
   ! Output

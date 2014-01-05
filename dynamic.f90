@@ -47,7 +47,7 @@ subroutine mce_cent (time,h,rcen,jcen,start_index,nbod,nbig,m,x0,v0,x1,v1,nhit,j
   real(double_precision), intent(in) :: h
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x0(3,nbod)
   real(double_precision), intent(in) :: v0(3,nbod)
   real(double_precision), intent(in) :: x1(3,nbod)
@@ -183,7 +183,7 @@ subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s
   integer, intent(inout) :: stat(nbod)
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod)
   real(double_precision), intent(inout) :: vh(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod)
@@ -298,7 +298,7 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   
   ! Output
   integer, intent(inout) :: stat(nbod)
-  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod)
   real(double_precision), intent(inout) :: vh(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod)
@@ -434,7 +434,7 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   integer, intent(inout) :: nbig
   integer, intent(inout) :: nelim
   integer, intent(inout) :: stat(nbod)
-  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: x(3,nbod)
   real(double_precision), intent(inout) :: v(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod)
@@ -702,7 +702,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: h
   real(double_precision), intent(in) :: rcen
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x0(3,nbod)
   real(double_precision), intent(in) :: v0(3,nbod)
   

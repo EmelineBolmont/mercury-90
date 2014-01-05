@@ -115,7 +115,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   real(double_precision), intent(out) :: tdid
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: mass(nbod)
+  real(double_precision), intent(in) :: mass(nbod) !< [in] mass (in solar masses * K2)
   
   real(double_precision), intent(inout) :: x1(3*nbod)
   real(double_precision), intent(inout) :: v1(3*nbod)

@@ -56,7 +56,7 @@ subroutine drift_one(mu,x,y,z,vx,vy,vz,dt,iflg)
 
 
   !...  Inputs Only: 
-  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: dt
 
   !...  Inputs and Outputs:
@@ -126,7 +126,7 @@ subroutine drift_dan(mu,x0,y0,z0,vx0,vy0,vz0,dt0,iflg)
 
 
   !...  Inputs Only: 
-  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: dt0
 
   !...  Inputs and Outputs:
@@ -345,7 +345,7 @@ subroutine drift_kepu(dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
   !...  Inputs: 
   real(double_precision), intent(in) :: dt
   real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: alpha
   real(double_precision), intent(in) :: u
 
@@ -411,7 +411,7 @@ subroutine drift_kepu_fchk(dt,r0,mu,alpha,u,s,f)
   !...  Inputs: 
   real(double_precision), intent(in) :: dt
   real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: alpha
   real(double_precision), intent(in) :: u
   real(double_precision), intent(in) :: s
@@ -468,7 +468,7 @@ subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
   !...  Inputs: 
   real(double_precision), intent(in) :: dt
   real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: alpha
   real(double_precision), intent(in) :: u
 
@@ -553,7 +553,7 @@ subroutine drift_kepu_lag(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
   !...  Inputs: 
   real(double_precision), intent(in) :: dt
   real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: alpha
   real(double_precision), intent(in) :: u
 
@@ -654,7 +654,7 @@ subroutine drift_kepu_new(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflgn)
   !...  Inputs: 
   real(double_precision), intent(in) :: dt
   real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: alpha
   real(double_precision), intent(in) :: u
 
@@ -739,7 +739,7 @@ subroutine drift_kepu_p3solve(dt,r0,mu,alpha,u,s,iflg)
   !...  Inputs: 
   real(double_precision), intent(in) :: dt
   real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu
+  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: alpha
   real(double_precision), intent(in) :: u
 

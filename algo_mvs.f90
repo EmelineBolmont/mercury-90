@@ -104,7 +104,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: h
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbod)
   real(double_precision), intent(in) :: vh(3,nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
@@ -245,7 +245,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: h
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
@@ -418,7 +418,7 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   ! Input/Output
   integer, intent(inout) :: stat(nbod)
   integer, intent(inout) :: dtflag
-  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: x(3,nbod)
   real(double_precision), intent(inout) :: v(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod)
@@ -534,7 +534,7 @@ subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   integer, intent(in) :: nbig
   integer, intent(in) :: stat(nbod)
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: xj(3,nbod)
   
@@ -705,7 +705,7 @@ subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: h
-  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
@@ -800,7 +800,7 @@ subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
   integer, intent(in) :: nbig
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: h
-  real(double_precision), intent(in) :: m(nbig)
+  real(double_precision), intent(in) :: m(nbig) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbig)
   real(double_precision), intent(in) :: vh(3,nbig)
   
