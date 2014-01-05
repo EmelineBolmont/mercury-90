@@ -45,10 +45,24 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod,nbig,ngflag,stat(nbod),nce,ice(nce),jce(nce)
-  real(double_precision) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
-  real(double_precision) :: a(3,nbod),ngf(4,nbod),rcrit(nbod)
+  ! Input
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: ngflag
+  integer, intent(in) :: stat(nbod)
+  integer, intent(in) :: nce
+  integer, intent(in) :: ice(nce)
+  integer, intent(in) :: jce(nce)
+  real(double_precision), intent(in) :: time,jcen(3)
+  real(double_precision), intent(in) :: m(nbod)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
+  
+  ! Output
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: j
