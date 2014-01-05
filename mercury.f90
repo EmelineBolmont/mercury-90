@@ -30,7 +30,6 @@
 
 ! Variables:
 ! ---------
-!  EPOCH  = epoch of orbit (days)
 !  NBOD  = current number of bodies (INCLUDING the central object)
 !  NBIG  =    "       "    " big bodies (ones that perturb everything else)
 !  TIME  = current epoch (days)
@@ -318,7 +317,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
 
   
   ! Output
-  integer, intent(out) :: nbod
+  integer, intent(out) :: nbod !< [out] current number of bodies (INCLUDING the central object)
   integer, intent(out) :: nbig
   integer, intent(out) :: opflag
   integer, intent(out) :: ngflag
@@ -954,7 +953,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
   ! Input/Output
   integer, intent(inout) :: opflag
-  integer, intent(inout) :: nbod
+  integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
   integer, intent(inout) :: nbig
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(inout) :: time
@@ -1207,7 +1206,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(in) :: cefac
   
   ! Input/Output
-  integer, intent(inout) :: nbod
+  integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
   integer, intent(inout) :: nbig
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   integer, intent(inout) :: opflag
@@ -1494,7 +1493,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
 
   
   ! Input
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: ngflag
   real(double_precision), intent(in) :: h0

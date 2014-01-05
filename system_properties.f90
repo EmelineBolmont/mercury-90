@@ -52,7 +52,7 @@ subroutine mce_hill (nbod,m,x,v,hill,a)
   implicit none
   
   ! Input/Output
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
@@ -113,7 +113,7 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   real(double_precision), parameter :: N2=.4d0
   
   ! Input/Output
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: rcritflag
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
@@ -229,7 +229,7 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
 
   
   ! Input/Output
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
@@ -343,7 +343,7 @@ subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
 
   
   ! Input/Output
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
@@ -524,7 +524,7 @@ subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod
+  integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer,intent(in) :: nbig
   integer,intent(in) :: ngflag
   real(double_precision),intent(in) :: time
@@ -579,7 +579,7 @@ subroutine mco_h2b (jcen,nbod,nbig,h,m,xh,vh,x,v)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod
+  integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer,intent(in) :: nbig
   real(double_precision),intent(in) :: h
   real(double_precision),intent(in) :: jcen(3)
@@ -657,7 +657,7 @@ subroutine mco_h2cb (jcen,nbod,nbig,h,m,xh,vh,x,v)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod
+  integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer,intent(in) :: nbig
   real(double_precision),intent(in) :: jcen(3)
   real(double_precision),intent(in) :: h
@@ -734,7 +734,7 @@ subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod
+  integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer,intent(in) :: nbig
   integer,intent(in) :: ngflag
   real(double_precision),intent(in) :: time

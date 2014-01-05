@@ -40,7 +40,7 @@ subroutine mce_cent (time,h,rcen,jcen,start_index,nbod,nbig,m,x0,v0,x1,v1,nhit,j
   
   ! Input
   integer, intent(in) :: start_index
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: ngflag
   real(double_precision), intent(in) :: time
@@ -180,7 +180,7 @@ subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s
   ! Input/Output
   integer, intent(in) :: planet_id_1
   integer, intent(in) :: planet_id_2
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(in) :: time
@@ -294,7 +294,7 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   ! Input
   integer, intent(in) :: i
   integer, intent(in) :: j
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   real(double_precision), intent(in) :: jcen(3)
   
@@ -431,8 +431,12 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
 
   implicit none
   
+  ! Input
+  real(double_precision), intent(in) :: rcrit(nbod)
+  character(len=80), intent(in) :: outfile
+  
   ! Input/Output
-  integer, intent(inout) :: nbod
+  integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
   integer, intent(inout) :: nbig
   integer, intent(inout) :: nelim
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
@@ -442,13 +446,11 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
   real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
-  real(double_precision), intent(in) :: rcrit(nbod)
   real(double_precision), intent(inout) :: ngf(4,nbod) !< [in,out] non gravitational forces parameters
   !! \n(1-3) cometary non-gravitational (jet) force parameters
   !! \n(4)  beta parameter for radiation pressure and P-R drag
   
   character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
-  character(len=80), intent(in) :: outfile
   
   ! Local
   integer :: j, k, l, nbigelim, elim(nb_bodies_initial+1)
@@ -548,7 +550,7 @@ subroutine mce_snif (h,start_index,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   
   ! Input
   integer, intent(in) :: start_index
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   real(double_precision), intent(in) :: x0(3,nbod)
   real(double_precision), intent(in) :: v0(3,nbod)
@@ -690,7 +692,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
 
   
   ! Input/Output
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   integer, intent(out) :: nowflag

@@ -50,7 +50,7 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
 
   
   ! Input
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: ngflag
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
@@ -163,7 +163,7 @@ subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
 
   
   ! Input
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
@@ -260,7 +260,7 @@ subroutine mfo_ngf (nbod,x,v,a,ngf)
 
   
   ! Input
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
@@ -349,7 +349,7 @@ subroutine mfo_pn (nbod,nbig,m,x,v,a)
 
   
   ! Input
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
@@ -403,7 +403,7 @@ subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
 
   
   ! Input
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
@@ -456,7 +456,7 @@ subroutine mfo_obl (jcen,nbod,m,x,a,acen)
 
   
   ! Input
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)

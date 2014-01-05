@@ -57,7 +57,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
 
   
   ! Input
-  integer, intent(in) :: n_bodies
+  integer, intent(in) :: n_bodies !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: n_big_bodies
   real(double_precision), intent(in) :: time
   real(double_precision), intent(in) :: jcen(3)

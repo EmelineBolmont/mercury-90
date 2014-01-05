@@ -88,7 +88,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
 
   
   ! Input
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: ngflag
   integer, intent(in) :: opflag
@@ -277,7 +277,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
 
   
   ! Input
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: nce
   integer, intent(in) :: ice(CMAX)
@@ -452,7 +452,7 @@ subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
 
   
   ! Input/Output
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: ngflag
   real(double_precision),intent(in) :: time
@@ -526,7 +526,7 @@ subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod
+  integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer,intent(in) :: nbig
   integer,intent(in) :: ngflag
   real(double_precision),intent(in) :: time
@@ -601,7 +601,7 @@ subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,nce,
 
   
   ! Inputs
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   integer, intent(in) :: ngflag
@@ -711,7 +711,7 @@ subroutine mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
 
   
   ! Inputs
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(in) :: jcen(3)
@@ -778,7 +778,7 @@ subroutine mfo_drct (start_index,nbod,nbig,m,x,rcrit,a,stat)
   
   ! Input/Output
   integer, intent(in) :: start_index
-  integer, intent(in) :: nbod
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
