@@ -783,10 +783,18 @@ subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod,nbig
-  real(double_precision) :: jcen(3),h,m(nbig),xh(3,nbig),vh(3,nbig),x(3,nbig)
-  real(double_precision) :: v(3,nbig)
+  ! Input
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: m(nbig)
+  real(double_precision), intent(in) :: xh(3,nbig)
+  real(double_precision), intent(in) :: vh(3,nbig)
+  
+  ! Output
+  real(double_precision), intent(out) :: x(3,nbig)
+  real(double_precision), intent(out) :: v(3,nbig)
   
   ! Local
   integer :: j
