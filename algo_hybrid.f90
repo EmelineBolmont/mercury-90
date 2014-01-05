@@ -85,7 +85,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   implicit none
 
   
-  ! Input/Output
+  ! Input
   integer, intent(in) :: nbod
   integer, intent(in) :: nbig
   integer, intent(in) :: ngflag
@@ -102,7 +102,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   real(double_precision), intent(in) :: ngf(4,nbod)
   character(len=8), intent(in) :: id(nbod)
   
-  ! Outputs
+  ! Output
   integer, intent(out) :: colflag
   integer, intent(out) :: nclo
   integer, intent(out) :: iclo(CMAX)

@@ -376,14 +376,41 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   implicit none
 
   
+  ! Input
+  integer, intent(in) :: nbod
+  integer, intent(in) :: nbig
+  integer, intent(in) :: ngflag
+  integer, intent(in) :: opflag
+  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: am(3)
+  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: rphys(nbod)
+  real(double_precision), intent(in) :: rce(nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod)
+  character(len=8), intent(in) :: id(nbod)
+  
+  ! Output
+  integer, intent(out) :: colflag
+  integer, intent(out) :: nclo
+  integer, intent(out) :: iclo(CMAX)
+  integer, intent(out) :: jclo(CMAX)
+  real(double_precision), intent(out) :: tclo(CMAX)
+  real(double_precision), intent(out) :: dclo(CMAX)
+  real(double_precision), intent(out) :: ixvclo(6,CMAX)
+  real(double_precision), intent(out) :: jxvclo(6,CMAX)
+  
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),dtflag,ngflag,opflag
-  integer :: colflag,nclo,iclo(CMAX),jclo(CMAX)
-  real(double_precision) :: time,h0,tol,en(3),am(3),jcen(3),rcen
-  real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
-  real(double_precision) :: rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
-  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character(len=8), dimension(nbod) :: id
+  integer, intent(inout) :: stat(nbod)
+  integer, intent(inout) :: dtflag
+  real(double_precision), intent(inout) :: m(nbod)
+  real(double_precision), intent(inout) :: x(3,nbod)
+  real(double_precision), intent(inout) :: v(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod)
+  real(double_precision), intent(inout) :: en(3)
   
   ! Local
   integer :: j,iflag,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),nowflag
