@@ -62,7 +62,9 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   real(double_precision), intent(in) :: rcrit(nbod)
   
   ! Output
@@ -261,7 +263,9 @@ subroutine mfo_ngf (nbod,x,v,a,ngf)
   integer, intent(in) :: nbod
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   
   ! Output
   real(double_precision), intent(out) :: a(3,nbod)
@@ -404,7 +408,9 @@ subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   
   ! Output
   real(double_precision), intent(out) :: a(3,nbod)

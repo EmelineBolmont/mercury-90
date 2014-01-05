@@ -107,7 +107,9 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   
   ! Input/Output
   real(double_precision), intent(inout) :: x(3,nbod)
@@ -248,7 +250,9 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   
    ! Input/Output
   real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
@@ -402,7 +406,9 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   real(double_precision), intent(in) :: rphys(nbod)
   real(double_precision), intent(in) :: rce(nbod)
   real(double_precision), intent(in) :: rcrit(nbod)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   ! Output
@@ -708,7 +714,9 @@ subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   
   ! Output
   real(double_precision), intent(out) :: xh(3,nbod) !< [out] coordinates (x,y,z) with respect to the central body (AU)

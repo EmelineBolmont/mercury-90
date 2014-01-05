@@ -30,8 +30,6 @@
 
 ! Variables:
 ! ---------
-!  NGF    = (1-3) cometary non-gravitational (jet) force parameters
-!   "     =  (4)  beta parameter for radiation pressure and P-R drag
 !  EPOCH  = epoch of orbit (days)
 !  NBOD  = current number of bodies (INCLUDING the central object)
 !  NBIG  =    "       "    " big bodies (ones that perturb everything else)
@@ -340,7 +338,9 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   real(double_precision), intent(out) :: rho(nb_bodies_initial) !< [out] physical density (g/cm^3)
   real(double_precision), intent(out) :: rceh(nb_bodies_initial) !< [out] close-encounter limit (Hill radii)
   real(double_precision), intent(out) :: epoch(nb_bodies_initial)
-  real(double_precision), intent(out) :: ngf(4,nb_bodies_initial)
+  real(double_precision), intent(out) :: ngf(4,nb_bodies_initial) !< [out] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   real(double_precision), intent(out) :: cefac
   character(len=8), intent(out) :: id(nb_bodies_initial) !< [out] name of the object (8 characters)
   
@@ -966,7 +966,9 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
   real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
-  real(double_precision), intent(inout) :: ngf(4,nbod)
+  real(double_precision), intent(inout) :: ngf(4,nbod) !< [in,out] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   
   ! Local
@@ -1219,7 +1221,9 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
   real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
-  real(double_precision), intent(inout) :: ngf(4,nbod)
+  real(double_precision), intent(inout) :: ngf(4,nbod) !< [in,out] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   
   ! Local
@@ -1496,7 +1500,9 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   real(double_precision), intent(in) :: h0
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   
   ! Input/Output
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)

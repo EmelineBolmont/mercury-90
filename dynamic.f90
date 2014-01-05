@@ -52,7 +52,9 @@ subroutine mce_cent (time,h,rcen,jcen,start_index,nbod,nbig,m,x0,v0,x1,v1,nhit,j
   real(double_precision), intent(in) :: v0(3,nbod)
   real(double_precision), intent(in) :: x1(3,nbod)
   real(double_precision), intent(in) :: v1(3,nbod)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   
   ! Output
   integer, intent(out) :: nhit
@@ -441,7 +443,9 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
   real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
   real(double_precision), intent(in) :: rcrit(nbod)
-  real(double_precision), intent(inout) :: ngf(4,nbod)
+  real(double_precision), intent(inout) :: ngf(4,nbod) !< [in,out] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   
   character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   character(len=80), intent(in) :: outfile

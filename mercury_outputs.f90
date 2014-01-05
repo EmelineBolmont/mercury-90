@@ -212,7 +212,9 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(in) :: rho(nbod) !< [in] physical density (g/cm^3)
   real(double_precision), intent(in) :: rceh(nbod) !< [in] close-encounter limit (Hill radii)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   real(double_precision), intent(in) :: epoch(nbod)
   character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   

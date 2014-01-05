@@ -120,7 +120,9 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   real(double_precision), intent(inout) :: x1(3*nbod)
   real(double_precision), intent(inout) :: v1(3*nbod)
   real(double_precision), intent(in) :: spin(3*nbod)
-  real(double_precision), intent(in) :: ngf(4,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
   real(double_precision), intent(in) :: rphys(nbod)
   real(double_precision), intent(in) :: rcrit(nbod)
   
