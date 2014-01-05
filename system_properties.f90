@@ -415,21 +415,23 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   implicit none
 
   
-  ! Input/Output
+  ! Input
   integer, intent(in) :: i0, nbod, nbig
 
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
   character(len=80), intent(in) :: outfile
   character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
+  ! Output
   real(double_precision), intent(out) :: en(3)
   real(double_precision), intent(out) :: am(3)
   integer, intent(out) :: ejflag
   integer, intent(out) :: stat(nbod) !< [out] status (0 => alive, <>0 => to be removed)
   
+  ! Input/Output
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
 
@@ -523,11 +525,11 @@ subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   implicit none
 
   
-  ! Input/Output
+  ! Input
   integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer,intent(in) :: ngflag
-  real(double_precision),intent(in) :: time
+  real(double_precision),intent(in) :: time !< [in] current epoch (days)
   real(double_precision),intent(in) :: h
   real(double_precision),intent(in) :: jcen(3)
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
@@ -537,6 +539,7 @@ subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   !! \n(1-3) cometary non-gravitational (jet) force parameters
   !! \n(4)  beta parameter for radiation pressure and P-R drag
   
+  ! Output
   real(double_precision),intent(out) :: xh(3,nbod) !< [out] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision),intent(out) :: vh(3,nbod) !< [out] velocities (vx,vy,vz) with respect to the central body (AU/day)
   
@@ -733,11 +736,11 @@ subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag)
   implicit none
 
   
-  ! Input/Output
+  ! Input
   integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer,intent(in) :: ngflag
-  real(double_precision),intent(in) :: time
+  real(double_precision),intent(in) :: time !< [in] current epoch (days)
   real(double_precision),intent(in) :: jcen(3)
   real(double_precision),intent(in) :: h
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
@@ -747,6 +750,7 @@ subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag)
   !! \n(1-3) cometary non-gravitational (jet) force parameters
   !! \n(4)  beta parameter for radiation pressure and P-R drag
 
+  ! Output
   real(double_precision), intent(out) :: x_out(3,nbod)
   real(double_precision), intent(out) :: v_out(3,nbod)
   

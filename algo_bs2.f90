@@ -60,7 +60,7 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   integer, intent(in) :: nce
   integer, intent(in) :: ice(nce)
   integer, intent(in) :: jce(nce)
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: mass(nbod)

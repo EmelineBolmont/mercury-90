@@ -43,7 +43,7 @@ subroutine mce_cent (time,h,rcen,jcen,start_index,nbod,nbig,m,x0,v0,x1,v1,nhit,j
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: ngflag
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: jcen(3)
@@ -183,7 +183,7 @@ subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
@@ -706,7 +706,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   integer, intent(out) :: jhit(CMAX)
   integer, intent(out) :: chit(CMAX)
   
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)

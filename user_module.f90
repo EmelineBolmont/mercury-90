@@ -59,7 +59,7 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   ! Input
   integer, intent(in) :: n_bodies !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: n_big_bodies !< [in] current number of big bodies (ones that perturb everything else)
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: mass(n_bodies) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: position(3,n_bodies)

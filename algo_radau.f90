@@ -110,7 +110,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   integer, intent(in) :: nce
   integer, intent(in) :: ice(nce)
   integer, intent(in) :: jce(nce)
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(inout) :: t
   real(double_precision), intent(out) :: tdid
   real(double_precision), intent(in) :: tol

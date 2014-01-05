@@ -68,7 +68,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   integer, intent(in) :: jclo(nclo)
   integer, intent(inout) :: nstored
   integer, intent(in) :: ceflush
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: tclo(nclo)
@@ -198,7 +198,7 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   integer, intent(in) :: opflag
   integer, intent(in) :: ndump
   integer, intent(in) :: nfun
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h0
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: en(3)
@@ -483,8 +483,8 @@ subroutine mio_log (time,en,am)
   implicit none
 
   
-  ! Input/Output
-  real(double_precision), intent(in) :: time
+  ! Input
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: en(3)
   real(double_precision), intent(in) :: am(3)
   
@@ -565,12 +565,11 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   implicit none
 
   
-  ! Input/Output
+  ! Input
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
-  integer, intent(inout) :: opflag
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
@@ -580,6 +579,9 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   real(double_precision), intent(in) :: rho(nbod) !< [in] physical density (g/cm^3)
   character(len=80), intent(in) :: outfile
   character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
+  
+  ! Input/Output
+  integer, intent(inout) :: opflag
   
   ! Local
   integer :: k, len, nchar

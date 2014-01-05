@@ -92,7 +92,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: ngflag
   integer, intent(in) :: opflag
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h0
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: am(3)
@@ -284,7 +284,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   integer, intent(in) :: jce(CMAX)
   integer, intent(in) :: ngflag
   integer, intent(in) :: ce(nbod) !< [in] close encounter status
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h0
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: jcen(3)
@@ -455,7 +455,7 @@ subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: ngflag
-  real(double_precision),intent(in) :: time
+  real(double_precision),intent(in) :: time !< [in] current epoch (days)
   real(double_precision),intent(in) :: jcen(3)
   real(double_precision),intent(in) :: h
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
@@ -529,7 +529,7 @@ subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer,intent(in) :: ngflag
-  real(double_precision),intent(in) :: time
+  real(double_precision),intent(in) :: time !< [in] current epoch (days)
   real(double_precision),intent(in) :: jcen(3)
   real(double_precision),intent(in) :: h
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
@@ -608,7 +608,7 @@ subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,nce,
   integer, intent(in) :: nce
   integer, intent(in) :: ice(nce)
   integer, intent(in) :: jce(nce)
-  real(double_precision), intent(in) :: time
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcrit(nbod)
   real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters

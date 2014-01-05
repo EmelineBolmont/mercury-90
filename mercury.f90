@@ -30,8 +30,6 @@
 
 ! Variables:
 ! ---------
-!  NBOD  = current number of bodies (INCLUDING the central object)
-!  NBIG  = current number of big bodies (ones that perturb everything else)
 !  TIME  = current epoch (days)
 !  TOUT  = time of next output evaluation
 !  TDUMP = time of next data dump
@@ -323,7 +321,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   integer, intent(out) :: ngflag
   integer, intent(out) :: ndump
   integer, intent(out) :: nfun
-  real(double_precision), intent(out) :: time
+  real(double_precision), intent(out) :: time !< [out] current epoch (days)
   real(double_precision), intent(out) :: h0
   real(double_precision), intent(out) :: tol
   real(double_precision), intent(out) :: rcen
@@ -956,7 +954,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
   integer, intent(inout) :: nbig !< [in,out] current number of big bodies (ones that perturb everything else)
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
-  real(double_precision), intent(inout) :: time
+  real(double_precision), intent(inout) :: time !< [in,out] current epoch (days)
   real(double_precision), intent(inout) :: en(3)
   real(double_precision), intent(inout) :: am(3)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
@@ -1210,7 +1208,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(inout) :: nbig !< [in,out] current number of big bodies (ones that perturb everything else)
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   integer, intent(inout) :: opflag
-  real(double_precision), intent(inout) :: time
+  real(double_precision), intent(inout) :: time !< [in,out] current epoch (days)
   real(double_precision), intent(inout) :: h0
   real(double_precision), intent(inout) :: en(3)
   real(double_precision), intent(inout) :: am(3)
@@ -1505,7 +1503,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   
   ! Input/Output
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
-  real(double_precision), intent(inout) :: time
+  real(double_precision), intent(inout) :: time !< [in,out] current epoch (days)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: x(3,nbod)
   real(double_precision), intent(inout) :: v(3,nbod)
