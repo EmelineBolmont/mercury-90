@@ -119,7 +119,7 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
-  real(double_precision), intent(in) :: rho(nbod)
+  real(double_precision), intent(in) :: rho(nbod) !< [in] physical density (g/cm^3)
   real(double_precision), intent(in) :: rceh(nbod)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
@@ -792,10 +792,10 @@ subroutine mce_spin (g,mass,spin,rho,rote)
   ! Input/Output
   real(double_precision),intent(in) :: g
   real(double_precision),intent(in) :: mass !< [in] mass (in solar masses * K2)
-  real(double_precision),intent(in) :: spin
-  real(double_precision),intent(in) :: rho
+  real(double_precision),intent(in) :: spin !< [in] spin angular momentum (solar masses AU^2/day)
+  real(double_precision),intent(in) :: rho !< [in] physical density (g/cm^3)
   
-  real(double_precision),intent(out) :: rote ! spin rate (in rotations per day)
+  real(double_precision),intent(out) :: rote !< [out] spin rate (in rotations per day)
   
   ! Local
   integer :: k
