@@ -61,7 +61,7 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
-  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(in) :: ngf(4,nbod)
   real(double_precision), intent(in) :: rcrit(nbod)
   

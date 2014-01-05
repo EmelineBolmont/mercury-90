@@ -209,7 +209,7 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
-  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(in) :: rho(nbod)
   real(double_precision), intent(in) :: rceh(nbod)
   real(double_precision), intent(in) :: ngf(4,nbod)
@@ -574,7 +574,7 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
-  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(in) :: rho(nbod)
   character(len=80), intent(in) :: outfile
   character(len=8), intent(in) :: id(nbod)

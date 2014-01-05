@@ -122,7 +122,7 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   real(double_precision), intent(in) :: rho(nbod)
   real(double_precision), intent(in) :: rceh(nbod)
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(in) :: h
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: cefac
@@ -235,7 +235,7 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
-  real(double_precision), intent(in) :: s(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
   
   real(double_precision), intent(out) :: e ! energy
   real(double_precision), intent(out) :: l2 ! angular momentum
@@ -431,7 +431,7 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   integer, intent(out) :: stat(nbod)
   
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
-  real(double_precision), intent(inout) :: s(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
 
   ! Local
   integer :: j,j0, year, month
