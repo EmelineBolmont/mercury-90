@@ -459,6 +459,8 @@ end function arcosh
 
 ! Calculates sin and cos of an angle X (in radians).
 
+! Warning: x is modified by the routine. Without this part, outputs of mercury are different, don't ask me why.
+
 !------------------------------------------------------------------------------
 
 subroutine mco_sine (x,sx,cx)
