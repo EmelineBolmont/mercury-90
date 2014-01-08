@@ -809,7 +809,7 @@ contains
                              
              do j=2,ntid+1  
                 if (tides.eq.1) then
-                   ! Calculation of tidal torque !AU,Msun,day
+                   ! Calculation of tidal torque !Msun.AU^2.day-2
                    ! star
                    Nts(1,j)  =  Ftso(j)*(r(j)*spin(1,1)-rscalws(j)*xh(1,j)/r(j) &
                         -1.0d0/r(j)*(xh(2,j)*vh(3,j)-xh(3,j)*vh(2,j)))
@@ -827,17 +827,17 @@ contains
                 endif
                 
                 if (rot_flat.eq.1) then 
-                   ! Calculation of tidal torque !AU,Msun,day
+                   ! Calculation of rotational torque !Msun.AU^2.day-2
                    ! star
-                   tmp = -6.0d0/r5(j)*Csi*rscalws(j)/normspin2(1)
-                   Nrs(1,j)  =  tmp*(xh(2,j)*spin(3,1)-xh(3,j)*spin(2,1))
-                   Nrs(2,j)  =  tmp*(xh(3,j)*spin(1,1)-xh(1,j)*spin(3,1))
-                   Nrs(3,j)  =  tmp*(xh(1,j)*spin(2,1)-xh(2,j)*spin(1,1))
+!~                    tmp = -6.0d0/r5(j)*Csi*rscalws(j)/normspin2(1)
+                   Nrs(1,j)  =  Frotos(j)*(xh(2,j)*spin(3,1)-xh(3,j)*spin(2,1))
+                   Nrs(2,j)  =  Frotos(j)*(xh(3,j)*spin(1,1)-xh(1,j)*spin(3,1))
+                   Nrs(3,j)  =  Frotos(j)*(xh(1,j)*spin(2,1)-xh(2,j)*spin(1,1))
                    ! planet
-                   tmp1 = -6.0d0/r5(j)*Cpi*rscalwp(j)/normspin2(j)
-                   Nrp(1,j)  =  tmp1*(xh(2,j)*spin(3,1)-xh(3,j)*spin(2,1))
-                   Nrp(2,j)  =  tmp1*(xh(3,j)*spin(1,1)-xh(1,j)*spin(3,1))
-                   Nrp(3,j)  =  tmp1*(xh(1,j)*spin(2,1)-xh(2,j)*spin(1,1))
+!~                    tmp1 = -6.0d0/r5(j)*Cpi*rscalwp(j)/normspin2(j)
+                   Nrp(1,j)  =  Frotop(j)*(xh(2,j)*spin(3,1)-xh(3,j)*spin(2,1))
+                   Nrp(2,j)  =  Frotop(j)*(xh(3,j)*spin(1,1)-xh(1,j)*spin(3,1))
+                   Nrp(3,j)  =  Frotop(j)*(xh(1,j)*spin(2,1)-xh(2,j)*spin(1,1))
                 endif
                 
                 if ((tides.eq.1).or.(rot_flat.eq.1)) then
