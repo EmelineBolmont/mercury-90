@@ -959,11 +959,11 @@ contains
              endif
              if (rot_flat.eq.1) then 
                 tmp = K2/m(j)
-                a3(1,j) = tmp*(Frotr(j)*xh(1,j)/r(j) &
+                a3(1,j) = tmp*(Frotr(j)*xh(1,j) &
                      + Frotop(j)*spin(1,j)+Frotos(j)*spin(1,1))
-                a3(2,j) = tmp*(Frotr(j)*xh(2,j)/r(j) &
+                a3(2,j) = tmp*(Frotr(j)*xh(2,j) &
                      + Frotop(j)*spin(2,j)+Frotos(j)*spin(2,1))
-                a3(3,j) = tmp*(Frotr(j)*xh(3,j)/r(j) &
+                a3(3,j) = tmp*(Frotr(j)*xh(3,j) &
                      + Frotop(j)*spin(3,j)+Frotos(j)*spin(3,1))
              endif
 		     if (GenRel.eq.1) then 
