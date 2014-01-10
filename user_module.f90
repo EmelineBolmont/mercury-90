@@ -792,10 +792,9 @@ contains
                 Frotos(j) = 0.0d0
                 Frotop(j) = 0.0d0
              endif  
-
-             !****************** GR forces ****************************
-             ! FGRr in AU.day-2 and FGRo in day-1
              if (GenRel.eq.1) then
+                !****************** GR forces ****************************
+                ! FGRr in AU.day-2 and FGRo in day-1
                 FGRr(j) = -(m(1)+m(j))/(r2(j)*C2*C2) &
                      *((1.0d0+3.0d0*tintin(j))*v2(j) &  
                        -2.d0*(2.d0+tintin(j))*(m(1)+m(j))/r(j) &
@@ -806,7 +805,7 @@ contains
           enddo   
           
           if (ispin.eq.1) then
-                             
+                                      
              do j=2,ntid+1  
                 if (tides.eq.1) then
                    ! Calculation of tidal torque !Msun.AU^2.day-2
@@ -835,9 +834,9 @@ contains
                    Nrs(3,j)  =  Frotos(j)*(xh(1,j)*spin(2,1)-xh(2,j)*spin(1,1))
                    ! planet
 !~                    tmp1 = -6.0d0/r5(j)*Cpi*rscalwp(j)/normspin2(j)
-                   Nrp(1,j)  =  Frotop(j)*(xh(2,j)*spin(3,1)-xh(3,j)*spin(2,1))
-                   Nrp(2,j)  =  Frotop(j)*(xh(3,j)*spin(1,1)-xh(1,j)*spin(3,1))
-                   Nrp(3,j)  =  Frotop(j)*(xh(1,j)*spin(2,1)-xh(2,j)*spin(1,1))
+                   Nrp(1,j)  =  Frotop(j)*(xh(2,j)*spin(3,j)-xh(3,j)*spin(2,j))
+                   Nrp(2,j)  =  Frotop(j)*(xh(3,j)*spin(1,j)-xh(1,j)*spin(3,j))
+                   Nrp(3,j)  =  Frotop(j)*(xh(1,j)*spin(2,j)-xh(2,j)*spin(1,j))
                 endif
                 
                 if ((tides.eq.1).or.(rot_flat.eq.1)) then
