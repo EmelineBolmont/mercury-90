@@ -44,7 +44,7 @@ subroutine mce_cent (time,h,rcen,jcen,start_index,nbod,nbig,m,x0,v0,x1,v1,nhit,j
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: ngflag
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
-  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
@@ -556,7 +556,7 @@ subroutine mce_snif (h,start_index,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   real(double_precision), intent(in) :: v0(3,nbod)
   real(double_precision), intent(in) :: x1(3,nbod)
   real(double_precision), intent(in) :: v1(3,nbod)
-  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision), intent(in) :: rcrit(nbod)
   
   ! Output
@@ -707,7 +707,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   integer, intent(out) :: chit(CMAX)
   
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
-  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x0(3,nbod)

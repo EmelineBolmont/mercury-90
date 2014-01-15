@@ -103,7 +103,7 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
@@ -246,7 +246,7 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   integer, intent(in) :: ngflag
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
@@ -398,7 +398,7 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   integer, intent(in) :: ngflag
   integer, intent(in) :: opflag
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
-  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: am(3)
   real(double_precision), intent(in) :: jcen(3)
@@ -710,7 +710,7 @@ subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   integer, intent(in) :: ngflag
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: v(3,nbod)
@@ -807,7 +807,7 @@ subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision), intent(in) :: m(nbig) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbig) !< [in] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(in) :: vh(3,nbig) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)

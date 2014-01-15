@@ -75,7 +75,7 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   real(double_precision), intent(out) :: x0(3,nbod)
   real(double_precision), intent(out) :: v0(3,nbod)
   
-  real(double_precision), intent(inout) :: h0
+  real(double_precision), intent(inout) :: h0 !< [in,out] initial integration timestep (days)
   
   external force
   

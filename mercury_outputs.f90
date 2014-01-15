@@ -199,7 +199,7 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   integer, intent(in) :: ndump
   integer, intent(in) :: nfun
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
-  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: en(3)
   real(double_precision), intent(in) :: am(3)

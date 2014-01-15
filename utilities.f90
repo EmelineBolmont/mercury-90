@@ -109,7 +109,7 @@ subroutine mce_box (nbod,h,x0,v0,x1,v1,xmin,xmax,ymin,ymax)
   
   ! Input/Output
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
-  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision), intent(in) :: x0(3,nbod)
   real(double_precision), intent(in) :: x1(3,nbod)
   real(double_precision), intent(in) :: v0(3,nbod)
@@ -182,7 +182,7 @@ subroutine mce_min (d0,d1,d0t,d1t,h,d2min,tmin)
   real(double_precision), intent(in) :: d1
   real(double_precision), intent(in) :: d0t
   real(double_precision), intent(in) :: d1t
-  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision), intent(out) :: d2min
   real(double_precision), intent(out) :: tmin
   

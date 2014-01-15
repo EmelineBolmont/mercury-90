@@ -123,7 +123,7 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   real(double_precision), intent(in) :: rceh(nbod) !< [in] close-encounter limit (Hill radii)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
-  real(double_precision), intent(in) :: h
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: cefac
   character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
@@ -530,7 +530,7 @@ subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer,intent(in) :: ngflag
   real(double_precision),intent(in) :: time !< [in] current epoch (days)
-  real(double_precision),intent(in) :: h
+  real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision),intent(in) :: jcen(3)
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision),intent(in) :: x(3,nbod)
@@ -584,7 +584,7 @@ subroutine mco_h2b (jcen,nbod,nbig,h,m,xh,vh,x,v)
   ! Input/Output
   integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
-  real(double_precision),intent(in) :: h
+  real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision),intent(in) :: jcen(3)
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision),intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
@@ -663,7 +663,7 @@ subroutine mco_h2cb (jcen,nbod,nbig,h,m,xh,vh,x,v)
   integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   real(double_precision),intent(in) :: jcen(3)
-  real(double_precision),intent(in) :: h
+  real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision),intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision),intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
@@ -742,7 +742,7 @@ subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag)
   integer,intent(in) :: ngflag
   real(double_precision),intent(in) :: time !< [in] current epoch (days)
   real(double_precision),intent(in) :: jcen(3)
-  real(double_precision),intent(in) :: h
+  real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision),intent(in) :: x_in(3,nbod)
   real(double_precision),intent(in) :: v_in(3,nbod)

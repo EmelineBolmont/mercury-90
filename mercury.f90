@@ -33,7 +33,6 @@
 !  TOUT  = time of next output evaluation
 !  TDUMP = time of next data dump
 !  TFUN  = time of next periodic effect (e.g. next check for ejections)
-!  H     = current integration timestep (days)
 !  EN(1) = initial energy of the system
 !  " (2) = current    "    "  "    "
 !  " (3) = energy change due to collisions, ejections etc.
@@ -54,7 +53,6 @@
 ! DTOUT  = data output interval           ( "  )
 ! DTDUMP = data-dump interval             ( "  )
 ! DTFUN  = interval for other periodic effects (e.g. check for ejections)
-!  H0    = initial integration timestep (days)
 !  TOL   = Integrator tolerance parameter (approx. error per timestep)
 !  RMAX  = heliocentric distance at which objects are considered ejected (AU)
 !  RCEN  = radius of central body (AU)
@@ -321,7 +319,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   integer, intent(out) :: ndump
   integer, intent(out) :: nfun
   real(double_precision), intent(out) :: time !< [out] current epoch (days)
-  real(double_precision), intent(out) :: h0
+  real(double_precision), intent(out) :: h0 !< [out] initial integration timestep (days)
   real(double_precision), intent(out) :: tol
   real(double_precision), intent(out) :: rcen
   real(double_precision), intent(out) :: jcen(3)
@@ -941,7 +939,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(in) :: ngflag
   integer, intent(in) :: ndump
   integer, intent(in) :: nfun
-  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
@@ -1208,7 +1206,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   integer, intent(inout) :: opflag
   real(double_precision), intent(inout) :: time !< [in,out] current epoch (days)
-  real(double_precision), intent(inout) :: h0
+  real(double_precision), intent(inout) :: h0 !< [in,out] initial integration timestep (days)
   real(double_precision), intent(inout) :: en(3)
   real(double_precision), intent(inout) :: am(3)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
@@ -1493,7 +1491,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: ngflag
-  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters

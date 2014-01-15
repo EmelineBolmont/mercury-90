@@ -93,7 +93,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   integer, intent(in) :: ngflag
   integer, intent(in) :: opflag
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
-  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: am(3)
   real(double_precision), intent(in) :: jcen(3)
@@ -126,8 +126,6 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   real(double_precision), intent(inout) :: en(3)
   
   ! Local
-!~   integer :: j,nce,ice(nbod),jce(nbod),ce(nbod),iflag
-!~   real(double_precision) :: hby2,x0(3,nbod),v0(3,nbod),mvsum(3),temp
   integer :: j,nce,iflag
   integer, dimension(nbod) :: ce ! is the planet in a close encounter?
   integer, dimension(CMAX) :: ice, jce ! arrays for close encounters
@@ -285,7 +283,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   integer, intent(in) :: ngflag
   integer, intent(in) :: ce(nbod) !< [in] close encounter status
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
-  real(double_precision), intent(in) :: h0
+  real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
@@ -457,7 +455,7 @@ subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   integer, intent(in) :: ngflag
   real(double_precision),intent(in) :: time !< [in] current epoch (days)
   real(double_precision),intent(in) :: jcen(3)
-  real(double_precision),intent(in) :: h
+  real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision),intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision),intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
@@ -531,7 +529,7 @@ subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   integer,intent(in) :: ngflag
   real(double_precision),intent(in) :: time !< [in] current epoch (days)
   real(double_precision),intent(in) :: jcen(3)
-  real(double_precision),intent(in) :: h
+  real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision),intent(in) :: x(3,nbod)
   real(double_precision),intent(in) :: v(3,nbod)

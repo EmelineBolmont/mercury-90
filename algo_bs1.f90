@@ -16,8 +16,8 @@ module algo_bs1
 
   private
   
-  real(double_precision), parameter :: SHRINK=.55d0
-  real(double_precision), parameter :: GROW=1.3d0
+  real(double_precision), parameter :: SHRINK=.55d0 !< Multiplication factor in case we have to decrease the timestep
+  real(double_precision), parameter :: GROW=1.3d0 !< Multiplication factor in case we can increase the timestep
   
   public :: mdt_bs1
   
@@ -70,7 +70,7 @@ subroutine mdt_bs1 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   
   real(double_precision), intent(out) :: hdid
   
-  real(double_precision), intent(inout) :: h0
+  real(double_precision), intent(inout) :: h0 !< [inout] initial integration timestep (days)
   real(double_precision), intent(inout) :: x0(3,nbod)
   real(double_precision), intent(inout) :: v0(3,nbod)
   
