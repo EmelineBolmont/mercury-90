@@ -31,9 +31,6 @@
 ! Integration Parameters :
 ! ----------------------
 
-!  TOL   = Integrator tolerance parameter (approx. error per timestep)
-!  RMAX  = heliocentric distance at which objects are considered ejected (AU)
-!  RCEN  = radius of central body (AU)
 !  JCEN(1,2,3) = J2,J4,J6 for central body (units of RCEN^i for Ji)
 
 ! Options:
@@ -299,8 +296,8 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   real(double_precision), intent(out) :: time !< [out] current epoch (days)
   real(double_precision), intent(out) :: h0 !< [out] initial integration timestep (days)
   real(double_precision), intent(out) :: tol !< [out] Integrator tolerance parameter (approx. error per timestep)
-  real(double_precision), intent(out) :: rcen
-  real(double_precision), intent(out) :: jcen(3)
+  real(double_precision), intent(out) :: rcen !< [out] radius of central body (AU)
+  real(double_precision), intent(out) :: jcen(3) !< [out] J2,J4,J6 for central body (units of RCEN^i for Ji)
   real(double_precision), intent(out) :: en(3) !< [out] (initial energy, current energy, energy change due to collision and ejection) of the system
   real(double_precision), intent(out) :: am(3) !< [out] (initial angular momentum, current angular momentum, 
   !! angular momentum change due to collision and ejection) of the system
@@ -920,8 +917,8 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(in) :: nfun
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
-  real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
   real(double_precision), intent(in) :: cefac
   
   
@@ -1176,8 +1173,8 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(in) :: ndump
   integer, intent(in) :: nfun
   real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
-  real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
   real(double_precision), intent(in) :: cefac
   
   ! Input/Output
@@ -1474,7 +1471,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   integer, intent(in) :: ngflag
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
-  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
   real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
   !! \n(1-3) cometary non-gravitational (jet) force parameters
   !! \n(4)  beta parameter for radiation pressure and P-R drag

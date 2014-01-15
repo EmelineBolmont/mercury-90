@@ -62,7 +62,7 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   integer, intent(in) :: jce(nce)
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
-  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
   real(double_precision), intent(in) :: mass(nbod)
   real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
   real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters

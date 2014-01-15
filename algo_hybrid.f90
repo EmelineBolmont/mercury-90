@@ -97,8 +97,8 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
   real(double_precision), intent(in) :: am(3) !< [in] (initial angular momentum, current angular momentum, 
   !! angular momentum change due to collision and ejection) of the system
-  real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
   real(double_precision), intent(in) :: rphys(nbod)
   real(double_precision), intent(in) :: rce(nbod)
   real(double_precision), intent(in) :: rcrit(nbod)
@@ -286,8 +286,8 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
-  real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
   real(double_precision), intent(in) :: rce(nbod)
   real(double_precision), intent(in) :: rphy(nbod)
   real(double_precision), intent(in) :: rcrit(nbod)
@@ -455,7 +455,7 @@ subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: ngflag
   real(double_precision),intent(in) :: time !< [in] current epoch (days)
-  real(double_precision),intent(in) :: jcen(3)
+  real(double_precision),intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
   real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision),intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
@@ -529,7 +529,7 @@ subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer,intent(in) :: ngflag
   real(double_precision),intent(in) :: time !< [in] current epoch (days)
-  real(double_precision),intent(in) :: jcen(3)
+  real(double_precision),intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
   real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
   real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision),intent(in) :: x(3,nbod)
@@ -608,7 +608,7 @@ subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,nce,
   integer, intent(in) :: ice(nce)
   integer, intent(in) :: jce(nce)
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
-  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
   real(double_precision), intent(in) :: rcrit(nbod)
   real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
   !! \n(1-3) cometary non-gravitational (jet) force parameters
@@ -713,7 +713,7 @@ subroutine mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
-  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
   real(double_precision), intent(in) :: rcrit(nbod)

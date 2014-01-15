@@ -69,7 +69,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   integer, intent(inout) :: nstored
   integer, intent(in) :: ceflush
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
-  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: tclo(nclo)
   real(double_precision), intent(in) :: dclo(nclo)
@@ -204,8 +204,8 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   real(double_precision), intent(in) :: en(3) !< [in] (initial energy, current energy, energy change due to collision and ejection) of the system
   real(double_precision), intent(in) :: am(3) !< [in] (initial angular momentum, current angular momentum, 
   !! angular momentum change due to collision and ejection) of the system
-  real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
   real(double_precision), intent(in) :: cefac
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x(3,nbod)
@@ -572,8 +572,8 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
-  real(double_precision), intent(in) :: jcen(3)
-  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)

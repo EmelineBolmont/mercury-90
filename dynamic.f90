@@ -45,8 +45,8 @@ subroutine mce_cent (time,h,rcen,jcen,start_index,nbod,nbig,m,x0,v0,x1,v1,nhit,j
   integer, intent(in) :: ngflag
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
-  real(double_precision), intent(in) :: rcen
-  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x0(3,nbod)
   real(double_precision), intent(in) :: v0(3,nbod)
@@ -184,7 +184,7 @@ subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
-  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
@@ -296,7 +296,7 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   integer, intent(in) :: j
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
-  real(double_precision), intent(in) :: jcen(3)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
   
   ! Output
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
@@ -708,7 +708,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
   
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
-  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
   real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x0(3,nbod)
   real(double_precision), intent(in) :: v0(3,nbod)

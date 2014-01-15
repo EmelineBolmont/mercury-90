@@ -89,7 +89,7 @@ subroutine mco_x2ov (rcen,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
 
   
   ! Input
-  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
   real(double_precision), intent(in) :: mcen
   real(double_precision), intent(in) :: m !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: x
@@ -533,7 +533,7 @@ subroutine mco_ov2x (rcen,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
 
   
   ! Input
-  real(double_precision), intent(in) :: rcen
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
   real(double_precision), intent(in) :: mcen
   real(double_precision), intent(in) :: m !< [in] mass (in solar masses * K2)
   real(double_precision), intent(in) :: fr
