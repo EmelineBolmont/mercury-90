@@ -33,9 +33,6 @@
 !  TOUT  = time of next output evaluation
 !  TDUMP = time of next data dump
 !  TFUN  = time of next periodic effect (e.g. next check for ejections)
-!  EN(1) = initial energy of the system
-!  " (2) = current    "    "  "    "
-!  " (3) = energy change due to collisions, ejections etc.
 !  AM(1,2,3) = as above but for angular momentum
 
 ! Integration Parameters :
@@ -324,7 +321,8 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   real(double_precision), intent(out) :: rcen
   real(double_precision), intent(out) :: jcen(3)
   real(double_precision), intent(out) :: en(3) !< [out] (initial energy, current energy, energy change due to collision and ejection) of the system
-  real(double_precision), intent(out) :: am(3)
+  real(double_precision), intent(out) :: am(3) !< [out] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
   real(double_precision), intent(out) :: m(nb_bodies_initial) !< [out] mass (in solar masses * K2)
   real(double_precision), intent(out) :: x(3,nb_bodies_initial)
   real(double_precision), intent(out) :: v(3,nb_bodies_initial)
@@ -953,7 +951,8 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
   real(double_precision), intent(inout) :: time !< [in,out] current epoch (days)
   real(double_precision), intent(inout) :: en(3) !< [in,out] (initial energy, current energy, energy change due to collision and ejection) of the system
-  real(double_precision), intent(inout) :: am(3)
+  real(double_precision), intent(inout) :: am(3) !< [in,out] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
@@ -1208,7 +1207,8 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   real(double_precision), intent(inout) :: time !< [in,out] current epoch (days)
   real(double_precision), intent(inout) :: h0 !< [in,out] initial integration timestep (days)
   real(double_precision), intent(inout) :: en(3) !< [in,out] (initial energy, current energy, energy change due to collision and ejection) of the system
-  real(double_precision), intent(inout) :: am(3)
+  real(double_precision), intent(inout) :: am(3) !< [in,out] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
   real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
   real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
   real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)

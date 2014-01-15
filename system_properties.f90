@@ -427,7 +427,8 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   
   ! Output
   real(double_precision), intent(out) :: en(3) !< [out] (initial energy, current energy, energy change due to collision and ejection) of the system
-  real(double_precision), intent(out) :: am(3)
+  real(double_precision), intent(out) :: am(3) !< [out] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
   integer, intent(out) :: ejflag
   integer, intent(out) :: stat(nbod) !< [out] status (0 => alive, <>0 => to be removed)
   

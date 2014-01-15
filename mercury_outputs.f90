@@ -202,7 +202,8 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol
   real(double_precision), intent(in) :: en(3) !< [in] (initial energy, current energy, energy change due to collision and ejection) of the system
-  real(double_precision), intent(in) :: am(3)
+  real(double_precision), intent(in) :: am(3) !< [in] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: cefac
@@ -486,7 +487,8 @@ subroutine mio_log (time,en,am)
   ! Input
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: en(3) !< [in] (initial energy, current energy, energy change due to collision and ejection) of the system
-  real(double_precision), intent(in) :: am(3)
+  real(double_precision), intent(in) :: am(3) !< [in] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
   
   ! Local
   integer :: year, month

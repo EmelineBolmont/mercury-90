@@ -400,7 +400,8 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol
-  real(double_precision), intent(in) :: am(3)
+  real(double_precision), intent(in) :: am(3) !< [in] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: rphys(nbod)

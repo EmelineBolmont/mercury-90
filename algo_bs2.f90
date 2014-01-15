@@ -15,8 +15,8 @@ module algo_bs2
 
   private
 
-  real(double_precision), parameter :: SHRINK=.55d0
-  real(double_precision), parameter :: GROW=1.3d0
+  real(double_precision), parameter :: SHRINK=.55d0 !< Multiplication factor in case we have to decrease the timestep
+  real(double_precision), parameter :: GROW=1.3d0 !< Multiplication factor in case we can increase the timestep
   
   public :: mdt_bs2
   
