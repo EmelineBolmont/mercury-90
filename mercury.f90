@@ -28,21 +28,6 @@
 ! ``Numerical Recipes in Fortran'', pub. Cambridge.
 !------------------------------------------------------------------------------
 
-! Integration Parameters :
-! ----------------------
-
-!  JCEN(1,2,3) = J2,J4,J6 for central body (units of RCEN^i for Ji)
-
-! Options:
-!  OPT(1) = close-encounter option (0=stop after an encounter, 1=continue)
-!  OPT(2) = collision option (0=no collisions, 1=merge, 2=merge+fragment)
-!  OPT(3) = time style (0=days 1=Greg.date 2/3=days/years w/respect to start)
-!  OPT(4) = o/p precision (1,2,3 = 4,9,15 significant figures)
-!  OPT(5) = < Not used at present >
-!  OPT(6) = < Not used at present >
-!  OPT(7) = apply post-Newtonian correction? (0=no, 1=yes)
-!  OPT(8) = apply user-defined force routine mfo_user? (0=no, 1=yes)
-
 ! File variables :
 ! --------------
 !  OUTFILE  (1) = osculating coordinates/velocities and masses

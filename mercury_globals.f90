@@ -15,7 +15,15 @@ module mercury_globals
   implicit none
   
   integer :: nb_bodies_initial !< number of bodies when we start the simulation. Used for local variables in several modules. 
-  integer, dimension(8) :: opt = (/0,1,1,2,0,1,0,0/) !< Default options (can be overwritten later in the code) for mercury.
+  integer, dimension(8) :: opt = (/0,1,1,2,0,1,0,0/) !< Default options (can be overwritten later in the code) for mercury.\n
+!!\n  OPT(1) = close-encounter option (0=stop after an encounter, 1=continue)
+!!\n  OPT(2) = collision option (0=no collisions, 1=merge, 2=merge+fragment)
+!!\n  OPT(3) = time style (0=days 1=Greg.date 2/3=days/years w/respect to start)
+!!\n  OPT(4) = o/p precision (1,2,3 = 4,9,15 significant figures)
+!!\n  OPT(5) = < Not used at present >
+!!\n  OPT(6) = < Not used at present >
+!!\n  OPT(7) = apply post-Newtonian correction? (0=no, 1=yes)
+!!\n  OPT(8) = apply user-defined force routine mfo_user? (0=no, 1=yes)
   
   character(len=80), dimension(NMESS) :: mem !< Various messages and strings used by mercury
   integer, dimension(NMESS) :: lmem !< the length of each string of the 'mem' elements
