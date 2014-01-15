@@ -113,7 +113,7 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(inout) :: t
   real(double_precision), intent(out) :: tdid
-  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: mass(nbod) !< [in] mass (in solar masses * K2)
   

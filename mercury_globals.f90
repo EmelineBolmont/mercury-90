@@ -23,7 +23,14 @@ module mercury_globals
   character(len=80), dimension(3) :: outfile
   character(len=80), dimension(4) :: dumpfile
   
-  integer :: algor !< An index that represent the algorithm used. (may change over time, especially for the HYBRID integrator).
+  integer :: algor !< An index that represent the algorithm used. \n
+!!\n  ALGOR = 1  ->  Mixed-variable symplectic
+!!\n          2  ->  Bulirsch-Stoer integrator
+!!\n          3  ->         "           "      (conservative systems only)
+!!\n          4  ->  RA15 `radau' integrator
+!!\n          10 ->  Hybrid MVS/BS (democratic-heliocentric coords)
+!!\n          11 ->  Close-binary hybrid (close-binary coords)
+!!\n          12 ->  Wide-binary hybrid (wide-binary coords)
   
   real(double_precision) :: tstart !< epoch of first required output (days)
   real(double_precision) :: tstop !< epoch final required output (days)

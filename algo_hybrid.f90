@@ -94,7 +94,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   integer, intent(in) :: opflag
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
-  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
   real(double_precision), intent(in) :: am(3) !< [in] (initial angular momentum, current angular momentum, 
   !! angular momentum change due to collision and ejection) of the system
   real(double_precision), intent(in) :: jcen(3)
@@ -285,7 +285,7 @@ subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcr
   integer, intent(in) :: ce(nbod) !< [in] close encounter status
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
-  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: rce(nbod)

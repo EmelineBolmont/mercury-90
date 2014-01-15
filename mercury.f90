@@ -28,28 +28,9 @@
 ! ``Numerical Recipes in Fortran'', pub. Cambridge.
 !------------------------------------------------------------------------------
 
-! Variables:
-! ---------
-!  TOUT  = time of next output evaluation
-!  TDUMP = time of next data dump
-!  TFUN  = time of next periodic effect (e.g. next check for ejections)
-!  AM(1,2,3) = as above but for angular momentum
-
 ! Integration Parameters :
 ! ----------------------
-!  ALGOR = 1  ->  Mixed-variable symplectic
-!          2  ->  Bulirsch-Stoer integrator
-!          3  ->         "           "      (conservative systems only)
-!          4  ->  RA15 `radau' integrator
-!          10 ->  Hybrid MVS/BS (democratic-heliocentric coords)
-!          11 ->  Close-binary hybrid (close-binary coords)
-!          12 ->  Wide-binary hybrid (wide-binary coords)
 
-! TSTART = epoch of first required output (days)
-! TSTOP  =   "      final required output ( "  )
-! DTOUT  = data output interval           ( "  )
-! DTDUMP = data-dump interval             ( "  )
-! DTFUN  = interval for other periodic effects (e.g. check for ejections)
 !  TOL   = Integrator tolerance parameter (approx. error per timestep)
 !  RMAX  = heliocentric distance at which objects are considered ejected (AU)
 !  RCEN  = radius of central body (AU)
@@ -317,7 +298,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   integer, intent(out) :: nfun
   real(double_precision), intent(out) :: time !< [out] current epoch (days)
   real(double_precision), intent(out) :: h0 !< [out] initial integration timestep (days)
-  real(double_precision), intent(out) :: tol
+  real(double_precision), intent(out) :: tol !< [out] Integrator tolerance parameter (approx. error per timestep)
   real(double_precision), intent(out) :: rcen
   real(double_precision), intent(out) :: jcen(3)
   real(double_precision), intent(out) :: en(3) !< [out] (initial energy, current energy, energy change due to collision and ejection) of the system
@@ -938,7 +919,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(in) :: ndump
   integer, intent(in) :: nfun
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
-  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: cefac
@@ -1194,7 +1175,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(in) :: ngflag
   integer, intent(in) :: ndump
   integer, intent(in) :: nfun
-  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: rcen
   real(double_precision), intent(in) :: cefac
@@ -1492,7 +1473,7 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: ngflag
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
-  real(double_precision), intent(in) :: tol
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
   real(double_precision), intent(in) :: jcen(3)
   real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
   !! \n(1-3) cometary non-gravitational (jet) force parameters
