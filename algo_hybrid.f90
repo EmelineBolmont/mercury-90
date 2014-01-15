@@ -123,7 +123,7 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   real(double_precision), intent(inout) :: x(3,nbod)
   real(double_precision), intent(inout) :: v(3,nbod)
   real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
-  real(double_precision), intent(inout) :: en(3)
+  real(double_precision), intent(inout) :: en(3) !< [in,out] (initial energy, current energy, energy change due to collision and ejection) of the system
   
   ! Local
   integer :: j,nce,iflag

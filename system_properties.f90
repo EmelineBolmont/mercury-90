@@ -426,7 +426,7 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   ! Output
-  real(double_precision), intent(out) :: en(3)
+  real(double_precision), intent(out) :: en(3) !< [out] (initial energy, current energy, energy change due to collision and ejection) of the system
   real(double_precision), intent(out) :: am(3)
   integer, intent(out) :: ejflag
   integer, intent(out) :: stat(nbod) !< [out] status (0 => alive, <>0 => to be removed)
