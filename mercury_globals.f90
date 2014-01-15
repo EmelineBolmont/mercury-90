@@ -28,8 +28,16 @@ module mercury_globals
   character(len=80), dimension(NMESS) :: mem !< Various messages and strings used by mercury
   integer, dimension(NMESS) :: lmem !< the length of each string of the 'mem' elements
   
-  character(len=80), dimension(3) :: outfile
-  character(len=80), dimension(4) :: dumpfile
+  character(len=80), dimension(3) :: outfile !< filenames for output files (*.out)
+!!\n  OUTFILE  (1) = osculating coordinates/velocities and masses
+!!\n  OUTFILE  (2) = close encounter details
+!!\n  OUTFILE  (3) = information file
+
+  character(len=80), dimension(4) :: dumpfile !< filenames for dump files (*.dmp)
+!!\n  DUMPFILE (1) = Big-body data
+!!\n  DUMPFILE (2) = Small-body data
+!!\n  DUMPFILE (3) = integration parameters
+!!\n  DUMPFILE (4) = restart file  
   
   integer :: algor !< An index that represent the algorithm used. \n
 !!\n  ALGOR = 1  ->  Mixed-variable symplectic

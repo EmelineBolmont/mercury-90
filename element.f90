@@ -49,7 +49,11 @@ program element
   character(len=2) :: c2
   
   ! fake variables to be able to use mco_iden
-  integer :: ngflag
+  integer :: ngflag !< do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
   real(double_precision), dimension(1,1) :: ngf
   
   integer :: error ! to store error when we allocate

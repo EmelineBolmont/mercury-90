@@ -9,42 +9,9 @@
 ! Mercury is a general-purpose N-body integration package for problems in
 ! celestial mechanics.
 
-!------------------------------------------------------------------------------
-! This package contains some subroutines taken from the Swift integration 
-! package by H.F.Levison and M.J.Duncan (1994) Icarus, vol 108, pp18.
-! Routines taken from Swift have names beginning with `drift' or `orbel'.
-
-! The standard symplectic (MVS) algorithm is described in J.Widsom and
-! M.Holman (1991) Astronomical Journal, vol 102, pp1528.
-
-! The hybrid symplectic algorithm is described in J.E.Chambers (1999)
-! Monthly Notices of the RAS, vol 304, pp793.
-
-! RADAU is described in E.Everhart (1985) in ``The Dynamics of Comets:
-! Their Origin and Evolution'' p185-202, eds. A.Carusi & G.B.Valsecchi,
-! pub. Reidel.
-
-! The Bulirsch-Stoer algorithms are described in W.H.Press et al. (1992)
-! ``Numerical Recipes in Fortran'', pub. Cambridge.
-!------------------------------------------------------------------------------
-
-! File variables :
-! --------------
-!  OUTFILE  (1) = osculating coordinates/velocities and masses
-!     "     (2) = close encounter details
-!     "     (3) = information file
-!  DUMPFILE (1) = Big-body data
-!     "     (2) = Small-body data
-!     "     (3) = integration parameters
-!     "     (4) = restart file
 
 ! Flags :
 ! -----
-!  NGFLAG = do any bodies experience non-grav. forces?
-!                            ( 0 = no non-grav forces)
-!                              1 = cometary jets only
-!                              2 = radiation pressure/P-R drag only
-!                              3 = both
 !  OPFLAG = integration mode (-2 = synchronising epochs)
 !                             -1 = integrating towards start epoch
 !                              0 = main integration, normal output
@@ -274,8 +241,15 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   ! Output
   integer, intent(out) :: nbod !< [out] current number of bodies (INCLUDING the central object)
   integer, intent(out) :: nbig !< [out] current number of big bodies (ones that perturb everything else)
-  integer, intent(out) :: opflag
-  integer, intent(out) :: ngflag
+  integer, intent(out) :: opflag !< [out] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
+  integer, intent(out) :: ngflag !< [out] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
   integer, intent(out) :: ndump
   integer, intent(out) :: nfun
   real(double_precision), intent(out) :: time !< [out] current epoch (days)
@@ -897,7 +871,11 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
 
   
   ! Input
-  integer, intent(in) :: ngflag
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
   integer, intent(in) :: ndump
   integer, intent(in) :: nfun
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
@@ -908,7 +886,10 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
   
   ! Input/Output
-  integer, intent(inout) :: opflag
+  integer, intent(inout) :: opflag !< [in,out] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
   integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
   integer, intent(inout) :: nbig !< [in,out] current number of big bodies (ones that perturb everything else)
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
@@ -1154,7 +1135,11 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   implicit none
 
   ! Input
-  integer, intent(in) :: ngflag
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
   integer, intent(in) :: ndump
   integer, intent(in) :: nfun
   real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
@@ -1166,7 +1151,10 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
   integer, intent(inout) :: nbig !< [in,out] current number of big bodies (ones that perturb everything else)
   integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
-  integer, intent(inout) :: opflag
+  integer, intent(inout) :: opflag !< [in,out] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
   real(double_precision), intent(inout) :: time !< [in,out] current epoch (days)
   real(double_precision), intent(inout) :: h0 !< [in,out] initial integration timestep (days)
   real(double_precision), intent(inout) :: en(3) !< [in,out] (initial energy, current energy, energy change due to collision and ejection) of the system
@@ -1453,7 +1441,11 @@ subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,n
   ! Input
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
-  integer, intent(in) :: ngflag
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
   real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
   real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
   real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)

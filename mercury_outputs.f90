@@ -195,7 +195,10 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
   integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
   integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
-  integer, intent(in) :: opflag
+  integer, intent(in) :: opflag !< [in] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
   integer, intent(in) :: ndump
   integer, intent(in) :: nfun
   real(double_precision), intent(in) :: time !< [in] current epoch (days)
@@ -583,7 +586,10 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   ! Input/Output
-  integer, intent(inout) :: opflag
+  integer, intent(inout) :: opflag !< [in,out] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
   
   ! Local
   integer :: k, len, nchar
