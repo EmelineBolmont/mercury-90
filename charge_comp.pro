@@ -39,9 +39,9 @@ if idl eq 1 then begin
 endif
 
 if n_tid ge 1 then begin
-   filenames = 'spins.dat'
+   filenames = 'spins.out'
    print,filenames
-   readcol,filenames,sss,toto1,spinstx,spinsty,spinstz,Rst,rg2s,format='A,F,F,F,F,F'
+   readcol,filenames,toto1,spinstx,spinsty,spinstz,Rst,rg2s,k2s,sigmas,format='F,F,F,F,F,F,F,F'
    
    spinpx = dblarr(n_tid,n_elements(toto1))
    spinpy = dblarr(n_tid,n_elements(toto1))
@@ -54,15 +54,15 @@ if n_tid ge 1 then begin
    rg2p   = dblarr(n_tid,n_elements(toto1))
    
    for i=0,n_tid-1 do begin 
-      filenamep = 'spinp'+strtrim(i+1,2)+'.dat'
+      filenamep = 'spinp'+strtrim(i+1,2)+'.out'
       print,filenamep
-      readcol,filenamep,ppp,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='A,F,F,F,F'
+      readcol,filenamep,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='F,F,F,F,F,F'
       spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpz(i,*) = spinp1z
       Rp(i,*) = Rp1 & rg2p(i,*) = rg2p1
       
-      filenameh = 'horb'+strtrim(i+1,2)+'.dat'
+      filenameh = 'horb'+strtrim(i+1,2)+'.out'
       print,filenameh
-      readcol,filenameh,hhh,toto1,horb1x,horb1y,horb1z,horb1,format='A,F,F,F,F'
+      readcol,filenameh,toto1,horb1x,horb1y,horb1z,horb1,format='F,F,F,F,F'
       horbx(i,*) = horb1x & horby(i,*) = horb1y & horbz(i,*) = horb1z  
       horbp(i,*) = horb1
    endfor

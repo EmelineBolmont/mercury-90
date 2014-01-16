@@ -88,7 +88,10 @@ contains
          47.d0,53.d0,58.d0,64.d0,70.d0/)
     real(double_precision), parameter, dimension(12) :: k2st = (/0.379d0,0.378d0,0.376d0,0.369d0, &
          0.355d0,0.342d0,0.333d0,0.325d0,0.311d0,0.308d0,0.307d0,0.307d0/)
-
+	
+	character(len=80) :: planet_spin_filename
+	character(len=80) :: planet_orbt_filename
+	
     ! Data 
     save timestar,radiusstar,d2radiusstar
     save timeBD,radiusBD
@@ -899,40 +902,24 @@ contains
              endif
           endif   
              ! Write stuff
-          if ((tides.eq.1).or.(rot_flat.eq.1)) then   
-             if (flagbug.eq.0.0d0) then 
-                write(*,*) "time(yr)    spin x,y,z(day-1)     R(Rsun)   rg2  k2s sigmast"
-             endif         
+          if ((tides.eq.1).or.(rot_flat.eq.1)) then          
              if (time.ge.timestep) then
-                write(*,*) "s",time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
-                write(*,*) "p1",time/365.25d0,spin(1,2),spin(2,2),spin(3,2),Rp(2)/rsun,rg2p(1)
-                write(*,*) "h1",time/365.25d0,horb(1,2)/horbn(2),horb(2,2)/horbn(2) &
-                     ,horb(3,2)/horbn(2),horbn(2)
-                if (ntid.ge.2) then
-                   write(*,*) "p2",time/365.25d0,spin(1,3),spin(2,3),spin(3,3),Rp(3)/rsun,rg2p(2)
-                   write(*,*) "h2",time/365.25d0,horb(1,3)/horbn(3),horb(2,3)/horbn(3) &
-                     ,horb(3,3)/horbn(3),horbn(3)
-                endif
-                if (ntid.ge.3) then
-                   write(*,*) "p3",time/365.25d0,spin(1,4),spin(2,4),spin(3,4),Rp(4)/rsun,rg2p(3)
-                   write(*,*) "h3",time/365.25d0,horb(1,4)/horbn(4),horb(2,4)/horbn(4) &
-                     ,horb(3,4)/horbn(4),horbn(4)
-                endif
-                if (ntid.ge.4) then
-                   write(*,*) "p4",time/365.25d0,spin(1,5),spin(2,5),spin(3,5),Rp(5)/rsun,rg2p(4)
-                   write(*,*) "h4",time/365.25d0,horb(1,5)/horbn(5),horb(2,5)/horbn(5) &
-                     ,horb(3,5)/horbn(5),horbn(5)
-                endif
-                if (ntid.ge.5) then
-                   write(*,*) "p5",time/365.25d0,spin(1,6),spin(2,6),spin(3,6),Rp(6)/rsun,rg2p(5)
-                   write(*,*) "h5",time/365.25d0,horb(1,6)/horbn(6),horb(2,6)/horbn(6) &
-                     ,horb(3,6)/horbn(6),horbn(6)
-                endif
-                if (ntid.ge.6) then
-                   write(*,*) "p6",time/365.25d0,spin(1,7),spin(2,7),spin(3,7),Rp(7)/rsun,rg2p(6)
-                   write(*,*) "h6",time/365.25d0,horb(1,7)/horbn(7),horb(2,7)/horbn(7) &
-                     ,horb(3,7)/horbn(7),horbn(7)
-                endif
+                open(13, file="spins.out", access="append")
+                write(13,'(8f)') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
+                close(13)
+                
+                do j=2,ntid+1
+                    write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
+                    write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
+                    open(13, file=planet_spin_filename, access='append')
+					write(13,'(6f)') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+					close(13)
+					
+					open(13, file=planet_orbt_filename, access='append')
+					write(13,'(5f)') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
+                     ,horb(3,j)/horbn(j),horbn(j)
+                    close(13)
+                enddo
                 timestep = timestep + output*365.25d0
                 
              endif
