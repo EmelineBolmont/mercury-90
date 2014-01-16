@@ -10,13 +10,6 @@
 ! celestial mechanics.
 
 
-! Flags :
-! -----
-!  OPFLAG = integration mode (-2 = synchronising epochs)
-!                             -1 = integrating towards start epoch
-!                              0 = main integration, normal output
-!                              1 = main integration, full output
-
 !------------------------------------------------------------------------------
 
 
