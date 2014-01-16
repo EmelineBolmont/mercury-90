@@ -539,20 +539,26 @@ contains
                    if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.1)) then
                       k2p(j-1) = k2p_terr
                       rg2p(j-1) = rg2p_terr
-                      k2pdeltap(j-1) = k2pdeltap_terr
-                      sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                      if (tides.eq.1) then
+                         k2pdeltap(j-1) = k2pdeltap_terr
+                         sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                      endif
                    endif
                    if (jupiter(j-1).eq.2) then
                       k2p(j-1) = k2p_gg
                       rg2p(j-1) = rg2p_gg
-                      k2pdeltap(j-1) = k2pdeltap_gg
-                      sigmap(j) = dissplan(j-1)*sigma_gg
+                      if (tides.eq.1) then
+                         k2pdeltap(j-1) = k2pdeltap_gg
+                         sigmap(j) = dissplan(j-1)*sigma_gg
+                      endif
                    endif
                    if (jupiter(j-1).eq.3) then
                       k2p(j-1) = k2p_what
                       rg2p(j-1) = rg2p_what
-                      k2pdeltap(j-1) = k2pdeltap_what
-                      sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                      if (tides.eq.1) then
+                         k2pdeltap(j-1) = k2pdeltap_what
+                         sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                      endif
                    endif
                 endif
                 
