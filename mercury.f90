@@ -204,25 +204,22 @@ program mercury
   
   contains
   
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 4 May 2001
+!
+! DESCRIPTION: 
+!> @brief Reads names, masses, coordinates and velocities of all the bodies,
+!! and integration parameters for the MERCURY integrator package. 
+!! If DUMPFILE(4) exists, the routine assumes this is a continuation of
+!! an old integration, and reads all the data from the dump files instead
+!! of the input files.
 
-!      MIO_IN.FOR    (ErikSoft   4 May 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Reads names, masses, coordinates and velocities of all the bodies,
-! and integration parameters for the MERCURY integrator package. 
-! If DUMPFILE(4) exists, the routine assumes this is a continuation of
-! an old integration, and reads all the data from the dump files instead
-! of the input files.
-
-! N.B. All coordinates are with respect to the central body!
-! ===
-
-!------------------------------------------------------------------------------
-
+!> @note All coordinates are with respect to the central body!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,&
      id,epoch,ngf,opflag,ngflag)
   
@@ -838,23 +835,21 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   !------------------------------------------------------------------------------
 end subroutine mio_in
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 4 March 2001
+!
+! DESCRIPTION: 
+!> @brief Does an integration using a variable-timestep integration algorithm. The
+!! particular integrator routine is ONESTEP and the algorithm must use
+!! coordinates with respect to the central body.
 
-!      MAL_HVAR.FOR    (ErikSoft   4 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Does an integration using a variable-timestep integration algorithm. The
-! particular integrator routine is ONESTEP and the algorithm must use
-! coordinates with respect to the central body.
-
-! N.B. This routine is also called by the synchronisation routine mxx_sync,
-! ===  in which case OPFLAG = -2. Beware when making changes involving OPFLAG.
-
-!------------------------------------------------------------------------------
-
+!> @note This routine is also called by the synchronisation routine mxx_sync,
+!! in which case OPFLAG = -2. Beware when making changes involving OPFLAG.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
      id,ngf,opflag,ngflag,onestep)
   
@@ -1102,24 +1097,22 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
 end subroutine mal_hvar
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MAL_HCON.FOR    (ErikSoft   28 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Does an integration using an integrator with a constant stepsize H.
-! Input and output to this routine use coordinates XH, and velocities VH,
-! with respect to the central body, but the integration algorithm uses
-! its own internal coordinates X, and velocities V.
-
-! The programme uses the transformation routines COORD and BCOORD to change
-! to and from the internal coordinates, respectively.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 28 March 2001
+!
+! DESCRIPTION: 
+!> @brief Does an integration using an integrator with a constant stepsize H.
+!! Input and output to this routine use coordinates XH, and velocities VH,
+!! with respect to the central body, but the integration algorithm uses
+!! its own internal coordinates X, and velocities V.
+!!\n\n
+!! The programme uses the transformation routines COORD and BCOORD to change
+!! to and from the internal coordinates, respectively.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
      id,ngf,opflag,ngflag,onestep,coord,bcoord)
   
@@ -1406,26 +1399,23 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
 end subroutine mal_hcon
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Synchronizes the epochs of NBIG Big bodies (having a common epoch) and
+!! NBOD-NBIG Small bodies (possibly having differing epochs), for an 
+!! integration using MERCURY.
+!! The Small bodies are picked up in order starting with the one with epoch
+!! furthest from the time, TSTART, at which the main integration will begin
+!! producing output.
 
-!      MXX_SYNC.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Synchronizes the epochs of NBIG Big bodies (having a common epoch) and
-! NBOD-NBIG Small bodies (possibly having differing epochs), for an 
-! integration using MERCURY.
-! The Small bodies are picked up in order starting with the one with epoch
-! furthest from the time, TSTART, at which the main integration will begin
-! producing output.
-
-! N.B. The synchronization integrations use Everhart's RA15 routine.
-! ---
-
-!------------------------------------------------------------------------------
-
+! @note The synchronization integrations use Everhart's RA15 routine.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,ngf,ngflag)
 
   implicit none

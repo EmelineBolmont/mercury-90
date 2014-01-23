@@ -16,19 +16,19 @@ module ascii_conversion
   
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_C2FL.FOR    (ErikSoft  1 July 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Converts a CHARACTER*8 ASCII string into a REAL*8 variable.
-
-! N.B. X will lie in the range -1.e112 < X < 1.e112
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 1 July 1999
+!
+! DESCRIPTION: 
+!> @brief Converts a CHARACTER*8 ASCII string into a REAL*8 variable.
+!
+!> @note X will lie in the range -1.e112 < X < 1.e112
+!
+!> @return a float, conversion of the input ASCII string
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function mio_c2fl (c)
   
 
@@ -37,7 +37,7 @@ function mio_c2fl (c)
   
   ! Input/Output
   real(double_precision) :: mio_c2fl
-  character(len=8), intent(in) :: c
+  character(len=8), intent(in) :: c !< [in] a CHARACTER*8 ASCII string to be converted
   
   ! Local
   integer :: ex
@@ -55,25 +55,23 @@ function mio_c2fl (c)
   return
 end function mio_c2fl
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_C2RE.FOR    (ErikSoft  1 July 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts an ASCII string into a REAL*8 variable X, where XMIN <= X < XMAX,
-! using the new format compression:
-
-! X is assumed to be made up of NCHAR base-224 digits, each one represented
-! by a character in the ASCII string. Each digit is given by the ASCII
-! number of the character minus 32.
-! The first 32 ASCII characters (CTRL characters) are avoided, because they
-! cause problems when using some operating systems.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 1 July 1999
+!
+! DESCRIPTION: 
+!> @brief Converts an ASCII string into a REAL*8 variable X, where XMIN <= X < XMAX,
+!! using the new format compression:
+!!\n\n
+!! X is assumed to be made up of NCHAR base-224 digits, each one represented
+!! by a character in the ASCII string. Each digit is given by the ASCII
+!! number of the character minus 32.
+!! The first 32 ASCII characters (CTRL characters) are avoided, because they
+!! cause problems when using some operating systems.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function mio_c2re (c,xmin,xmax,nchar)
   
 
@@ -105,31 +103,28 @@ function mio_c2re (c,xmin,xmax,nchar)
   return
 end function mio_c2re
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_FL2C.FOR    (ErikSoft  1 July 1998)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts a (floating point) REAL*8 variable X, into a CHARACTER*8 ASCII 
-! string, using the new format compression:
-
-! X is first converted to base 224, and then each base 224 digit is converted 
-! to an ASCII character, such that 0 -> character 32, 1 -> character 33...
-! and 223 -> character 255.
-! The first 7 characters in the string are used to store the mantissa, and the
-! eighth character is used for the exponent.
-
-! ASCII characters 0 - 31 (CTRL characters) are not used, because they
-! cause problems when using some operating systems.
-
-! N.B. X must lie in the range -1.e112 < X < 1.e112
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 1 July 1998
+!
+! DESCRIPTION: 
+!> @brief Converts a (floating point) REAL*8 variable X, into a CHARACTER*8 ASCII 
+!! string, using the new format compression:
+!!\n\n
+!! X is first converted to base 224, and then each base 224 digit is converted 
+!! to an ASCII character, such that 0 -> character 32, 1 -> character 33...
+!! and 223 -> character 255.
+!! The first 7 characters in the string are used to store the mantissa, and the
+!! eighth character is used for the exponent.
+!!\n\n
+!! ASCII characters 0 - 31 (CTRL characters) are not used, because they
+!! cause problems when using some operating systems.
+!
+!> @note X must lie in the range -1.e112 < X < 1.e112
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function mio_fl2c (x)
   
 
@@ -173,26 +168,24 @@ function mio_fl2c (x)
   return
 end function mio_fl2c
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_RE2C.FOR    (ErikSoft  27 June 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts a REAL*8 variable X, where XMIN <= X < XMAX, into an ASCII string
-! of 8 characters, using the new format compression: 
-
-! X is first converted to base 224, and then each base 224 digit is converted 
-! to an ASCII character, such that 0 -> character 32, 1 -> character 33...
-! and 223 -> character 255.
-
-! ASCII characters 0 - 31 (CTRL characters) are not used, because they
-! cause problems when using some operating systems.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 27 June 1999
+!
+! DESCRIPTION: 
+!> @brief Converts a REAL*8 variable X, where XMIN <= X < XMAX, into an ASCII string
+!! of 8 characters, using the new format compression: 
+!! \n\n
+!! X is first converted to base 224, and then each base 224 digit is converted 
+!! to an ASCII character, such that 0 -> character 32, 1 -> character 33...
+!! and 223 -> character 255.
+!! \n\n
+!! ASCII characters 0 - 31 (CTRL characters) are not used, because they
+!! cause problems when using some operating systems.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function mio_re2c (x,xmin,xmax)
 
   implicit none

@@ -29,15 +29,21 @@ module algo_hybrid
   
   contains
 
-subroutine allocate_hy(nb_bodies)
-! subroutine that allocate various private variable of the module to avoid testing at each timestep
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Christophe Cossou
 !
-! Parameters :
-! nb_bodies : number of bodies, that is, the size of the arrays
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief allocate various private variable of the module to avoid testing at each timestep
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine allocate_hy(nb_bodies)
 
   implicit none
   
-  integer, intent(in) :: nb_bodies
+  integer, intent(in) :: nb_bodies !< [in] number of bodies, that is, the size of the arrays
   
   if (.not. allocated(a)) then
     allocate(a(3,nb_bodies))
@@ -56,26 +62,23 @@ subroutine allocate_hy(nb_bodies)
   
 end subroutine allocate_hy
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MDT_HY.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Integrates NBOD bodies (of which NBIG are Big) for one timestep H
-! using a second-order hybrid-symplectic integrator algorithm
-
-! DTFLAG = 0 implies first ever call to this subroutine, 
-!        = 1 implies first call since number/masses of objects changed.
-!        = 2 normal call
-
-! N.B. Input/output must be in democratic heliocentric coordinates.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Integrates NBOD bodies (of which NBIG are Big) for one timestep H
+!!\n using a second-order hybrid-symplectic integrator algorithm
+!!\n
+!!\n DTFLAG = 0 implies first ever call to this subroutine, 
+!!\n        = 1 implies first call since number/masses of objects changed.
+!!\n        = 2 normal call
+!
+! @note Input/output must be in democratic heliocentric coordinates.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,dtflag,ngflag,&
      opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo)
   
@@ -258,19 +261,17 @@ subroutine mdt_hy (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce
   return
 end subroutine mdt_hy
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MDT_HKCE.FOR    (ErikSoft   1 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Integrates NBOD bodies (of which NBIG are Big) for one timestep H under
-! the Hamiltonian H_K, including close-encounter terms.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 1 March 2001
+!
+! DESCRIPTION: 
+!> @brief Integrates NBOD bodies (of which NBIG are Big) for one timestep H under
+!! the Hamiltonian H_K, including close-encounter terms.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mdt_hkce (time,h0,hrec,tol,elost,jcen,rcen,nbod,nbig,m,x,v,s,rphy,rcrit,rce,stat,id,ngf,ngflag,&
      colflag,ce,nce,ice,jce,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,force)
   
@@ -442,19 +443,17 @@ do
   return
 end subroutine mdt_hkce
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_H2DH.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Convert coordinates with respect to the central body to democratic
-! heliocentric coordinates.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Convert coordinates with respect to the central body to democratic
+!! heliocentric coordinates.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   
 
@@ -520,19 +519,17 @@ subroutine mco_h2dh (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   return
 end subroutine mco_h2dh
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_DH2H.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts democratic heliocentric coordinates to coordinates with respect
-! to the central body.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Converts democratic heliocentric coordinates to coordinates with respect
+!! to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
 
@@ -595,21 +592,19 @@ subroutine mco_dh2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   return
 end subroutine mco_dh2h
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!     MFO_HKCE.FOR    (ErikSoft   27 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates accelerations due to the Keplerian part of the Hamiltonian 
-! of a hybrid symplectic integrator, when close encounters are taking place,
-! for a set of NBOD bodies (NBIG of which are Big). Note that Small bodies
-! do not interact with one another.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 27 February 2001
+!
+! DESCRIPTION: 
+!> @brief Calculates accelerations due to the Keplerian part of the Hamiltonian 
+!! of a hybrid symplectic integrator, when close encounters are taking place,
+!! for a set of NBOD bodies (NBIG of which are Big). Note that Small bodies
+!! do not interact with one another.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
   
   use physical_constant
@@ -709,20 +704,18 @@ subroutine mfo_hkce (time,jcen,nbod,nbig,m,x,v,spin,rcrit,a,stat,ngf,ngflag,nce,
   return
 end subroutine mfo_hkce
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!     MFO_HY.FOR    (ErikSoft   2 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates accelerations due to the Interaction part of the Hamiltonian 
-! of a hybrid symplectic integrator for a set of NBOD bodies (NBIG of which 
-! are Big), where Small bodies do not interact with one another.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates accelerations due to the Interaction part of the Hamiltonian 
+!! of a hybrid symplectic integrator for a set of NBOD bodies (NBIG of which 
+!! are Big), where Small bodies do not interact with one another.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
   
   use physical_constant
@@ -775,22 +768,20 @@ subroutine mfo_hy (jcen,nbod,nbig,m,x,rcrit,a,stat)
   return
 end subroutine mfo_hy
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!     MFO_DRCT.FOR    (ErikSoft   27 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates direct accelerations between bodies in the interaction part
-! of the Hamiltonian of a symplectic integrator that partitions close
-! encounter terms (e.g. hybrid symplectic algorithms or SyMBA).
-! The routine calculates accelerations between all pairs of bodies with
-! indices I >= I0.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 27 February 2001
+!
+! DESCRIPTION: 
+!> @brief Calculates direct accelerations between bodies in the interaction part
+!! of the Hamiltonian of a symplectic integrator that partitions close
+!! encounter terms (e.g. hybrid symplectic algorithms or SyMBA).
+!! The routine calculates accelerations between all pairs of bodies with
+!! indices I >= I0.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_drct (start_index,nbod,nbig,m,x,rcrit,a,stat)
   use physical_constant
   use mercury_constant

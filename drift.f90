@@ -92,31 +92,16 @@ subroutine drift_one(mu,x,y,z,vx,vy,vz,dt,iflg)
   return
 end subroutine drift_one    ! drift_one
 
-!*************************************************************************
-!                        DRIFT_DAN.F
-!*************************************************************************
-! This subroutine does the Danby and decides which vbles to use
-
-!             Input:
-!                 nbod          ==>  number of massive bodies (int scalar)
-!                 mass          ==>  mass of bodies (real array)
-!                 x0,y0,z0         ==>  initial position in jacobi coord 
-!                                    (real scalar)
-!                 vx0,vy0,vz0      ==>  initial position in jacobi coord 
-!                                    (real scalar)
-!                 dt0            ==>  time step
-!             Output:
-!                 x0,y0,z0         ==>  final position in jacobi coord 
-!                                       (real scalars)
-!                 vx0,vy0,vz0      ==>  final position in jacobi coord 
-!                                       (real scalars)
-!                 iflg             ==>  integer :: flag (zero if satisfactory)
-!                (non-zero if nonconvergence)
-
-! Authors:  Hal Levison & Martin Duncan  
-! Date:    2/10/93
-! Last revision: April 6/93 - MD adds dt and keeps dt0 unchanged
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Hal Levison & Martin Duncan  
+!
+!> @date 2/10/93
+!
+! DESCRIPTION: 
+!> @brief This subroutine does the Danby and decides which vbles to use
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine drift_dan(mu,x0,y0,z0,vx0,vy0,vz0,dt0,iflg)
 
   use mercury_constant
@@ -127,18 +112,18 @@ subroutine drift_dan(mu,x0,y0,z0,vx0,vy0,vz0,dt0,iflg)
 
   !...  Inputs Only: 
   real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
-  real(double_precision), intent(in) :: dt0
+  real(double_precision), intent(in) :: dt0 !< [in] time step
 
   !...  Inputs and Outputs:
-  real(double_precision), intent(inout) :: x0
-  real(double_precision), intent(inout) :: y0
-  real(double_precision), intent(inout) :: z0
-  real(double_precision), intent(inout) :: vx0
-  real(double_precision), intent(inout) :: vy0
-  real(double_precision), intent(inout) :: vz0
+  real(double_precision), intent(inout) :: x0 !< [in,out] final position in jacobi coord (real scalars)
+  real(double_precision), intent(inout) :: y0 !< [in,out] final position in jacobi coord (real scalars)
+  real(double_precision), intent(inout) :: z0 !< [in,out] final position in jacobi coord (real scalars)
+  real(double_precision), intent(inout) :: vx0 !< [in,out] final velocity in jacobi coord (real scalars)
+  real(double_precision), intent(inout) :: vy0 !< [in,out] final velocity in jacobi coord (real scalars)
+  real(double_precision), intent(inout) :: vz0 !< [in,out] final velocity in jacobi coord (real scalars)
 
   !...  Output
-  integer, intent(out) :: iflg
+  integer, intent(out) :: iflg !< [out] flag (zero if satisfactory ; non-zero if nonconvergence)
 
   !...  Internals:
   real(double_precision) :: x,y,z,vx,vy,vz,dt
@@ -235,40 +220,36 @@ subroutine drift_dan(mu,x0,y0,z0,vx0,vy0,vz0,dt0,iflg)
   return
 end subroutine drift_dan   ! drift_dan
 
-!********************************************************************#
-!                  DRIFT_KEPMD
-!********************************************************************#
-!  Subroutine for solving kepler's equation in difference form for an
-!  ellipse, given SMALL dm and SMALL eccentricity.  See DRIFT_DAN.F
-!  for the criteria.
-!  WARNING - BUILT FOR SPEED : DOES NOT CHECK HOW WELL THE ORIGINAL
-!  EQUATION IS SOLVED! (CAN DO THAT IN THE CALLING ROUTINE BY
-!  CHECKING HOW CLOSE (x - ec*s +es*(1.-c) - dm) IS TO ZERO.
-
-!  Input:
-!      dm    ==> increment in mean anomaly M (real*8 scalar)
-!      es,ec       ==> ecc. times sin and cos of E_0 (real*8 scalars)
-
-!       Output:
-!            x          ==> solution to Kepler's difference eqn (real*8 scalar)
-!            s,c        ==> sin and cosine of x (real*8 scalars)
-
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Subroutine for solving kepler's equation in difference form for an
+!! ellipse, given SMALL dm and SMALL eccentricity.  See DRIFT_DAN.F
+!! for the criteria.
+!
+!> @warning BUILT FOR SPEED : DOES NOT CHECK HOW WELL THE ORIGINAL
+!!  EQUATION IS SOLVED! (CAN DO THAT IN THE CALLING ROUTINE BY
+!!  CHECKING HOW CLOSE (x - ec*s +es*(1.-c) - dm) IS TO ZERO.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine drift_kepmd(dm,es,ec,x,s,c)
-
 
   implicit none
 
 
   !...    Inputs
-  real(double_precision), intent(in) :: dm
-  real(double_precision), intent(in) :: es
-  real(double_precision), intent(in) :: ec
+  real(double_precision), intent(in) :: dm !< [in] increment in mean anomaly M 
+  real(double_precision), intent(in) :: es !< [in] ecc. times sin of E_0
+  real(double_precision), intent(in) :: ec !< [in] ecc. times cos of E_0
 
   !...  Outputs
-  real(double_precision), intent(out) :: x
-  real(double_precision), intent(out) :: s
-  real(double_precision), intent(out) :: c
+  real(double_precision), intent(out) :: x !< [out] solution to Kepler's difference eqn
+  real(double_precision), intent(out) :: s !< [out] sin of x
+  real(double_precision), intent(out) :: c !< [out] cosine of x
 
   !...    Internals
   real(double_precision), parameter :: A0 = 39916800.d0
@@ -310,31 +291,17 @@ subroutine drift_kepmd(dm,es,ec,x,s,c)
 
   return
 end subroutine drift_kepmd
-!-----------------------------------------------------------------------------
 
-!*************************************************************************
-!                        DRIFT_KEPU.F
-!*************************************************************************
-! subroutine for solving kepler's equation using universal variables.
-
-!             Input:
-!                 dt            ==>  time step (real scalor)
-!                 r0            ==>  Distance between `Sun' and paritcle
-!                                     (real scalor)
-!                 mu            ==>  Reduced mass of system (real scalor)
-!                 alpha         ==>  energy (real scalor)
-!                 u             ==>  angular momentun  (real scalor)
-!             Output:
-!                 fp            ==>  f' from p170  
-!                                       (real scalors)
-!                 c1,c2,c3      ==>  c's from p171-172
-!                                       (real scalors)
-!                 iflg          ==>  =0 if converged; !=0 if not
-
-! Author:  Hal Levison  
-! Date:    2/3/93
-! Last revision: 2/3/93
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Hal Levison  
+!
+!> @date 2/3/93
+!
+! DESCRIPTION: 
+!> @brief subroutine for solving kepler's equation using universal variables.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine drift_kepu(dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
   use mercury_constant
@@ -343,18 +310,18 @@ subroutine drift_kepu(dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
 
   !...  Inputs: 
-  real(double_precision), intent(in) :: dt
-  real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
-  real(double_precision), intent(in) :: alpha
-  real(double_precision), intent(in) :: u
+  real(double_precision), intent(in) :: dt !< [in] time step
+  real(double_precision), intent(in) :: r0 !< [in] Distance between `Sun' and particle
+  real(double_precision), intent(in) :: mu !< [in] Reduced mass of system
+  real(double_precision), intent(in) :: alpha !< [in] energy
+  real(double_precision), intent(in) :: u !< [in] angular momentun
 
   !...  Outputs:
-  real(double_precision), intent(out) :: fp
-  real(double_precision), intent(out) :: c1
-  real(double_precision), intent(out) :: c2
-  real(double_precision), intent(out) :: c3
-  integer, intent(out) :: iflg
+  real(double_precision), intent(out) :: fp !< [out] f' from p170  
+  real(double_precision), intent(out) :: c1 !< [out] c's from p171-172
+  real(double_precision), intent(out) :: c2 !< [out] c's from p171-172
+  real(double_precision), intent(out) :: c3 !< [out] c's from p171-172
+  integer, intent(out) :: iflg !< [out] =0 if converged; !=0 if not
 
   !...  Internals:
   real(double_precision) :: s,st,fo,fn

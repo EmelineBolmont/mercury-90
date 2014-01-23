@@ -40,15 +40,21 @@ module algo_radau
   
   contains
 
-subroutine allocate_radau(nb_bodies)
-! subroutine that allocate various private variable of the module to avoid testing at each timestep
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Christophe Cossou
 !
-! Parameters :
-! nb_bodies : number of bodies, that is, the size of the arrays
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief allocate various private variable of the module to avoid testing at each timestep
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine allocate_radau(nb_bodies)
 
   implicit none
   
-  integer, intent(in) :: nb_bodies
+  integer, intent(in) :: nb_bodies !< [in] number of bodies, that is, the size of the arrays
   
   if (.not. allocated(b)) then
     allocate(b(7,3*nb_bodies))
@@ -63,35 +69,32 @@ subroutine allocate_radau(nb_bodies)
   
 end subroutine allocate_radau
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MDT_RA15.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Integrates NBOD bodies (of which NBIG are Big) for one timestep H0 using
-! Everhart's RA15 integrator algorithm. The accelerations are calculated
-! using the subroutine FORCE. The accuracy of the step is approximately 
-! determined by the tolerance parameter TOL.
-
-! Based on RADAU by E. Everhart, Physics Department, University of Denver.
-! Comments giving equation numbers refer to Everhart (1985) ``An Efficient
-! Integrator that Uses Gauss-Radau Spacings'', in The Dynamics of Comets:
-! Their Origin and Evolution, p185-202, eds. A. Carusi & G. B. Valsecchi,
-! pub Reidel. (A listing of the original subroutine is also given in this 
-! paper.)
-
-! DTFLAG = 0 implies first ever call to this subroutine, 
-!        = 1 implies first call since number/masses of objects changed.
-!        = 2 normal call
-
-! N.B. Input/output must be in coordinates with respect to the central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Integrates NBOD bodies (of which NBIG are Big) for one timestep H0 using
+!! Everhart's RA15 integrator algorithm. The accelerations are calculated
+!! using the subroutine FORCE. The accuracy of the step is approximately 
+!! determined by the tolerance parameter TOL.
+!!\n\n
+!! Based on RADAU by E. Everhart, Physics Department, University of Denver.
+!! Comments giving equation numbers refer to Everhart (1985) ``An Efficient
+!! Integrator that Uses Gauss-Radau Spacings'', in The Dynamics of Comets:
+!! Their Origin and Evolution, p185-202, eds. A. Carusi & G. B. Valsecchi,
+!! pub Reidel. (A listing of the original subroutine is also given in this 
+!! paper.)
+!!\n\n
+!! DTFLAG = 0 implies first ever call to this subroutine, 
+!!        = 1 implies first call since number/masses of objects changed.
+!!        = 2 normal call
+!
+!> @note Input/output must be in coordinates with respect to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,ngf,stat,dtflag,ngflag,nce,ice,jce,force)
   
   use physical_constant

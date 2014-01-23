@@ -35,16 +35,23 @@ module algo_mvs
   public :: mdt_mvs, mco_h2mvs, mco_mvs2h, mco_h2j, allocate_mvs
   
   contains
-  
-subroutine allocate_mvs(nb_bodies)
-! subroutine that allocate various private variable of the module to avoid testing at each timestep
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Christophe Cossou
 !
-! Parameters :
-! nb_bodies : number of bodies, that is, the size of the arrays
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief allocate various private variable of the module to avoid 
+!! testing at each timestep
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine allocate_mvs(nb_bodies)
 
   implicit none
   
-  integer, intent(in) :: nb_bodies
+  integer, intent(in) :: nb_bodies !< [in] number of bodies, that is, the size of the arrays
   
   if (.not. allocated(a)) then
     allocate(a(3,nb_bodies))
@@ -73,20 +80,18 @@ subroutine allocate_mvs(nb_bodies)
   
 end subroutine allocate_mvs
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_H2MVS.FOR    (ErikSoft   28 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Applies an inverse symplectic corrector, which converts coordinates with
-! respect to the central body to integrator coordinates for a second-order
-! mixed-variable symplectic integrator.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 28 March 2001
+!
+! DESCRIPTION: 
+!> @brief Applies an inverse symplectic corrector, which converts coordinates with
+!! respect to the central body to integrator coordinates for a second-order
+!! mixed-variable symplectic integrator.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   
   use physical_constant
@@ -221,20 +226,18 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   return
 end subroutine mco_h2mvs
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_MVS2H.FOR    (ErikSoft   28 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Applies a symplectic corrector, which converts coordinates for a second-
-! order mixed-variable symplectic integrator to ones with respect to the
-! central body.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 28 March 2001
+!
+! DESCRIPTION: 
+!> @brief Applies a symplectic corrector, which converts coordinates for a second-
+!! order mixed-variable symplectic integrator to ones with respect to the
+!! central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
   use physical_constant
@@ -369,26 +372,23 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   return
 end subroutine mco_mvs2h
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 28 March 2001
+!
+! DESCRIPTION: 
+!> @brief Integrates NBOD bodies (of which NBIG are Big) for one timestep H
+!! using a second-order mixed-variable symplectic integrator.
+!\n
+!!\n DTFLAG = 0 implies first ever call to this subroutine, 
+!!\n        = 1 implies first call since number/masses of objects changed.
+!!\n        = 2 normal call
 
-!      MDT_MVS.FOR    (ErikSoft   28 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Integrates NBOD bodies (of which NBIG are Big) for one timestep H
-! using a second-order mixed-variable symplectic integrator.
-
-! DTFLAG = 0 implies first ever call to this subroutine, 
-!        = 1 implies first call since number/masses of objects changed.
-!        = 2 normal call
-
-! N.B. Input/output must be in coordinates with respect to the central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!> @note Input/output must be in coordinates with respect to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,dtflag,ngflag,&
      opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo)
   
@@ -525,23 +525,21 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   return
 end subroutine mdt_mvs
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!     MFO_MVS.FOR    (ErikSoft   2 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates accelerations on a set of NBOD bodies (of which NBIG are Big)
-! due to gravitational perturbations by all the other bodies.
-! This routine is designed for use with a mixed-variable symplectic
-! integrator using Jacobi coordinates.
-
-! Based upon routines from Levison and Duncan's SWIFT integrator.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates accelerations on a set of NBOD bodies (of which NBIG are Big)
+!! due to gravitational perturbations by all the other bodies.
+!! This routine is designed for use with a mixed-variable symplectic
+!! integrator using Jacobi coordinates.
+!!\n\n
+!! Based upon routines from Levison and Duncan's SWIFT integrator.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   
   use physical_constant
@@ -698,22 +696,20 @@ subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   return
 end subroutine mfo_mvs
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_J2H.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts Jacobi coordinates to coordinates with respect to the central
-! body.
-
-! N.B. The Jacobi coordinates of the small bodies are assumed to be equal
-! ===  to their coordinates with respect to the central body.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Converts Jacobi coordinates to coordinates with respect to the central
+!! body.
+!
+!> @note The Jacobi coordinates of the small bodies are assumed to be equal
+!! to their coordinates with respect to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
 
@@ -803,21 +799,19 @@ subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   return
 end subroutine mco_j2h
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_H2J.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts coordinates with respect to the central body to Jacobi coordinates.
-
-! N.B. The coordinates respect to the central body for the small bodies
-! ===  are assumed to be equal to their Jacobi coordinates.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Converts coordinates with respect to the central body to Jacobi coordinates.
+!
+! @note The coordinates respect to the central body for the small bodies
+!! are assumed to be equal to their Jacobi coordinates.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
 
   implicit none

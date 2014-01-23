@@ -22,28 +22,25 @@ module algo_bs2
   
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MDT_BS2.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Integrates NBOD bodies (of which NBIG are Big) for one timestep H0
-! using the Bulirsch-Stoer method. The accelerations are calculated using the 
-! subroutine FORCE. The accuracy of the step is approximately determined 
-! by the tolerance parameter TOL.
-
-! N.B. This version only works for conservative systems (i.e. force is a
-! ===  function of position only) !!!! Hence, non-gravitational forces
-!      and post-Newtonian corrections cannot be used.
-
-! N.B. Input/output must be in coordinates with respect to the central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Integrates NBOD bodies (of which NBIG are Big) for one timestep H0
+!! using the Bulirsch-Stoer method. The accelerations are calculated using the 
+!! subroutine FORCE. The accuracy of the step is approximately determined 
+!! by the tolerance parameter TOL.
+!
+!> @note This version only works for conservative systems (i.e. force is a
+!! function of position only) !!!! Hence, non-gravitational forces
+!! and post-Newtonian corrections cannot be used.
+!
+!> @note Input/output must be in coordinates with respect to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,nce,ice,jce,force)
   use physical_constant
   use mercury_constant

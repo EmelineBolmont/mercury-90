@@ -382,20 +382,17 @@ program close
   
 end program close
 
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      get_clo_format.FOR    (ErikSoft  30 November 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! This routine gives the header of the output .clo file regarding the timestyle used.
-! The len of the header, and the output format is also returned.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 30 November 1999
+!
+! DESCRIPTION: 
+!> @brief This routine gives the header of the output .clo file regarding the timestyle used.
+!! The len of the header, and the output format is also returned.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine get_clo_format (timestyle,fout,header,lenhead)
 
   implicit none
