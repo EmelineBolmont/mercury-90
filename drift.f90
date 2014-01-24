@@ -19,35 +19,18 @@ module drift
   
   contains
 
-!------------------------------------------------------------------
-
-!*************************************************************************
-!                        DRIFT_ONE.F
-!*************************************************************************
-! This subroutine does the danby-type drift for one particle, using 
-! appropriate vbles and redoing a drift if the accuracy is too poor 
-! (as flagged by the integer iflg).
-
-!             Input:
-!                 nbod          ==>  number of massive bodies (int scalar)
-!                 mass          ==>  mass of bodies (real array)
-!                 x,y,z         ==>  initial position in jacobi coord 
-!                                    (real scalar)
-!                 vx,vy,vz      ==>  initial position in jacobi coord 
-!                                    (real scalar)
-!                 dt            ==>  time step
-!             Output:
-!                 x,y,z         ==>  final position in jacobi coord 
-!                                       (real scalars)
-!                 vx,vy,vz      ==>  final position in jacobi coord 
-!                                       (real scalars)
-!                 iflg          ==>  integer :: (zero for successful step)
-
-! Authors:  Hal Levison & Martin Duncan 
-! Date:    2/10/93
-! Last revision: 2/10/93
-
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author Hal Levison & Martin Duncan 
+!> 
+!
+!> @date 2/10/93
+!
+! DESCRIPTION: 
+!> @brief This subroutine does the danby-type drift for one particle, using 
+!! appropriate vbles and redoing a drift if the accuracy is too poor 
+!! (as flagged by the integer iflg).
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine drift_one(mu,x,y,z,vx,vy,vz,dt,iflg)
 
   use mercury_constant
@@ -56,19 +39,19 @@ subroutine drift_one(mu,x,y,z,vx,vy,vz,dt,iflg)
 
 
   !...  Inputs Only: 
-  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
-  real(double_precision), intent(in) :: dt
+  real(double_precision), intent(in) :: mu !< [in] mass of bodies
+  real(double_precision), intent(in) :: dt !< [in] time step
 
   !...  Inputs and Outputs:
-  real(double_precision), intent(inout) :: x
-  real(double_precision), intent(inout) :: y
-  real(double_precision), intent(inout) :: z
-  real(double_precision), intent(inout) :: vx
-  real(double_precision), intent(inout) :: vy
-  real(double_precision), intent(inout) :: vz
+  real(double_precision), intent(inout) :: x !< [in,out] initial position in jacobi coord
+  real(double_precision), intent(inout) :: y !< [in,out] initial position in jacobi coord
+  real(double_precision), intent(inout) :: z !< [in,out] initial position in jacobi coord
+  real(double_precision), intent(inout) :: vx !< [in,out] initial velocity in jacobi coord
+  real(double_precision), intent(inout) :: vy !< [in,out] initial velocity in jacobi coord
+  real(double_precision), intent(inout) :: vz !< [in,out] initial velocity in jacobi coord
 
   !...  Output
-  integer, intent(out) :: iflg
+  integer, intent(out) :: iflg !< [out] (zero for successful step)
 
   !...  Internals:
   integer :: i
@@ -90,7 +73,7 @@ subroutine drift_one(mu,x,y,z,vx,vy,vz,dt,iflg)
   endif
 
   return
-end subroutine drift_one    ! drift_one
+end subroutine drift_one
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !> @author 
@@ -218,7 +201,7 @@ subroutine drift_dan(mu,x0,y0,z0,vx0,vy0,vz0,dt0,iflg)
   endif
 
   return
-end subroutine drift_dan   ! drift_dan
+end subroutine drift_dan
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !> @author 
@@ -346,45 +329,34 @@ subroutine drift_kepu(dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
   endif
 
   return
-end subroutine drift_kepu    ! drift_kepu
-!----------------------------------------------------------------------
+end subroutine drift_kepu
 
-!*************************************************************************
-!                        DRIFT_KEPU_FCHK.F
-!*************************************************************************
-! Returns the value of the function f of which we are trying to find the root
-! in universal variables.
-
-!             Input:
-!                 dt            ==>  time step (real scalar)
-!                 r0            ==>  Distance between `Sun' and particle
-!                                     (real scalar)
-!                 mu            ==>  Reduced mass of system (real scalar)
-!                 alpha         ==>  Twice the binding energy (real scalar)
-!                 u             ==>  Vel. dot radial vector (real scalar)
-!                 s             ==>  Approx. root of f 
-!             Output:
-!                 f             ==>  function value ( = 0 if O.K.) (integer)
-
-! Author:  Martin Duncan  
-! Date:    March 12/93
-! Last revision: March 12/93
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Martin Duncan  
+!
+!> @date March 12/93
+!
+! DESCRIPTION: 
+!> @brief Returns the value of the function f of which we are trying to find the root
+!! in universal variables.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine drift_kepu_fchk(dt,r0,mu,alpha,u,s,f)
 
 
   implicit none
 
   !...  Inputs: 
-  real(double_precision), intent(in) :: dt
-  real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
-  real(double_precision), intent(in) :: alpha
-  real(double_precision), intent(in) :: u
-  real(double_precision), intent(in) :: s
+  real(double_precision), intent(in) :: dt !< [in] time step
+  real(double_precision), intent(in) :: r0 !< [in] Distance between `Sun' and particle
+  real(double_precision), intent(in) :: mu !< [in] Reduced mass of system
+  real(double_precision), intent(in) :: alpha !< [in] Twice the binding energy
+  real(double_precision), intent(in) :: u !< [in] Vel. dot radial vector
+  real(double_precision), intent(in) :: s !< [in] Approx. root of f
 
   !...  Outputs:
-  real(double_precision), intent(out) :: f
+  real(double_precision), intent(out) :: f !< [out] function value
 
   !...  Internals:
   real(double_precision) ::  x,c0,c1,c2,c3
@@ -400,30 +372,18 @@ subroutine drift_kepu_fchk(dt,r0,mu,alpha,u,s,f)
   f = r0*c1 + u*c2 + mu*c3 - dt
 
   return
-end subroutine drift_kepu_fchk     !   drift_kepu_fchk
-!-------------------------------------------------------------------
+end subroutine drift_kepu_fchk
 
-!*************************************************************************
-!                        DRIFT_KEPU_GUESS.F
-!*************************************************************************
-! Initial guess for solving kepler's equation using universal variables.
-
-!             Input:
-!                 dt            ==>  time step (real scalor)
-!                 r0            ==>  Distance between `Sun' and paritcle
-!                                     (real scalor)
-!                 mu            ==>  Reduced mass of system (real scalor)
-!                 alpha         ==>  energy (real scalor)
-!                 u             ==>  angular momentun  (real scalor)
-!             Output:
-!                 s             ==>  initial guess for the value of 
-!                                    universal variable
-
-! Author:  Hal Levison & Martin Duncan 
-! Date:    3/12/93
-! Last revision: April 6/93
-! Modified by JEC: 8/6/98
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Hal Levison & Martin Duncan  
+!
+!> @date 3/12/93
+!
+! DESCRIPTION: 
+!> @brief Initial guess for solving kepler's equation using universal variables.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
 
   use mercury_constant
@@ -433,14 +393,15 @@ subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
 
 
   !...  Inputs: 
-  real(double_precision), intent(in) :: dt
-  real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
-  real(double_precision), intent(in) :: alpha
-  real(double_precision), intent(in) :: u
+  real(double_precision), intent(in) :: dt !< [in] time step
+  real(double_precision), intent(in) :: r0 !< [in] Distance between `Sun' and particle
+  real(double_precision), intent(in) :: mu !< [in] Reduced mass of system
+  real(double_precision), intent(in) :: alpha !< [in] energy
+  real(double_precision), intent(in) :: u !< [in] angular momentun
 
   !...  Inputs and Outputs:
-  real(double_precision), intent(inout) :: s
+  real(double_precision), intent(inout) :: s !< [in,out] initial guess for the value of 
+!!                                    universal variable
 
   !...  Internals:
   integer :: iflg
@@ -481,35 +442,19 @@ subroutine drift_kepu_guess(dt,r0,mu,alpha,u,s)
   endif
 
   return
-end subroutine drift_kepu_guess     !   drift_kepu_guess
-!-------------------------------------------------------------------
+end subroutine drift_kepu_guess
 
-!*************************************************************************
-!                        DRIFT_KEPU_LAG.F
-!*************************************************************************
-! subroutine for solving kepler's equation in universal variables.
-! using LAGUERRE'S METHOD
-
-!             Input:
-!                 s             ==>  inital value of universal variable
-!                 dt            ==>  time step (real scalor)
-!                 r0            ==>  Distance between `Sun' and paritcle
-!                                     (real scalor)
-!                 mu            ==>  Reduced mass of system (real scalor)
-!                 alpha         ==>  energy (real scalor)
-!                 u             ==>  angular momentun  (real scalor)
-!             Output:
-!                 s             ==>  final value of universal variable
-!                 fp            ==>  f' from p170  
-!                                       (real scalors)
-!                 c1,c2,c3      ==>  c's from p171-172
-!                                       (real scalors)
-!                 iflgn          ==>  =0 if converged; !=0 if not
-
-! Author:  Hal Levison  
-! Date:    2/3/93
-! Last revision: 4/21/93
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author Hal Levison 
+!> 
+!
+!> @date 2/3/93
+!
+! DESCRIPTION: 
+!> @brief subroutine for solving kepler's equation in universal variables.
+!! using LAGUERRE'S METHOD
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine drift_kepu_lag(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
   use mercury_constant
@@ -518,21 +463,21 @@ subroutine drift_kepu_lag(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
 
   !...  Inputs: 
-  real(double_precision), intent(in) :: dt
-  real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
-  real(double_precision), intent(in) :: alpha
-  real(double_precision), intent(in) :: u
+  real(double_precision), intent(in) :: dt !< [in] time step
+  real(double_precision), intent(in) :: r0 !< [in] Distance between `Sun' and particle
+  real(double_precision), intent(in) :: mu !< [in] Reduced mass of system
+  real(double_precision), intent(in) :: alpha !< [in] energy
+  real(double_precision), intent(in) :: u !< [in] angular momentun
 
   !...  Outputs:
-  real(double_precision), intent(out) :: fp
-  real(double_precision), intent(out) :: c1
-  real(double_precision), intent(out) :: c2
-  real(double_precision), intent(out) :: c3
-  integer, intent(out) :: iflg
+  real(double_precision), intent(out) :: fp !< [out] f' from p170  
+  real(double_precision), intent(out) :: c1 !< [out] c's from p171-172
+  real(double_precision), intent(out) :: c2 !< [out] c's from p171-172
+  real(double_precision), intent(out) :: c3 !< [out] c's from p171-172
+  integer, intent(out) :: iflg !< [out] =0 if converged; !=0 if not
   
   !... Input/Output
-  real(double_precision), intent(inout) :: s
+  real(double_precision), intent(inout) :: s !< [in,out] final value of universal variable
 
   !...  Internals:
   integer :: nc,ncmax
@@ -581,36 +526,19 @@ subroutine drift_kepu_lag(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflg)
 
   return
 
-end subroutine drift_kepu_lag    !    drift_kepu_leg
-!-----------------------------------------------------------------------
+end subroutine drift_kepu_lag
 
-!*************************************************************************
-!                        DRIFT_KEPU_NEW.F
-!*************************************************************************
-! subroutine for solving kepler's equation in universal variables.
-! using NEWTON'S METHOD
-
-!             Input:
-!                 s             ==>  inital value of universal variable
-!                 dt            ==>  time step (real scalor)
-!                 r0            ==>  Distance between `Sun' and paritcle
-!                                     (real scalor)
-!                 mu            ==>  Reduced mass of system (real scalor)
-!                 alpha         ==>  energy (real scalor)
-!                 u             ==>  angular momentun  (real scalor)
-!             Output:
-!                 s             ==>  final value of universal variable
-!                 fp            ==>  f' from p170  
-!                                       (real scalors)
-!                 c1,c2,c3      ==>  c's from p171-172
-!                                       (real scalors)
-!                 iflgn          ==>  =0 if converged; !=0 if not
-
-! Author:  Hal Levison  
-! Date:    2/3/93
-! Last revision: 4/21/93
-! Modified by JEC: 31/3/98
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author Hal Levison  
+!> 
+!
+!> @date 2/3/93
+!
+! DESCRIPTION: 
+!> @brief subroutine for solving kepler's equation in universal variables.
+!! using NEWTON'S METHOD
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine drift_kepu_new(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflgn)
 
   use mercury_constant
@@ -619,21 +547,21 @@ subroutine drift_kepu_new(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflgn)
 
 
   !...  Inputs: 
-  real(double_precision), intent(in) :: dt
-  real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
-  real(double_precision), intent(in) :: alpha
-  real(double_precision), intent(in) :: u
+  real(double_precision), intent(in) :: dt !< [in] time step
+  real(double_precision), intent(in) :: r0 !< [in] Distance between `Sun' and particle
+  real(double_precision), intent(in) :: mu !< [in] Reduced mass of system
+  real(double_precision), intent(in) :: alpha !< [in] energy
+  real(double_precision), intent(in) :: u !< [in] angular momentun 
 
   !...  Outputs:
-  real(double_precision), intent(out) :: fp
-  real(double_precision), intent(out) :: c1
-  real(double_precision), intent(out) :: c2
-  real(double_precision), intent(out) :: c3
-  integer, intent(out) :: iflgn
+  real(double_precision), intent(out) :: fp !< [out] f' from p170  
+  real(double_precision), intent(out) :: c1 !< [out] c's from p171-172
+  real(double_precision), intent(out) :: c2 !< [out] c's from p171-172
+  real(double_precision), intent(out) :: c3 !< [out] c's from p171-172
+  integer, intent(out) :: iflgn !< [out] =0 if converged; !=0 if not
   
   !...  Input/Output
-  real(double_precision), intent(inout) :: s
+  real(double_precision), intent(inout) :: s !< [in,out] final value of universal variable
 
 
   !...  Internals:
@@ -674,45 +602,34 @@ subroutine drift_kepu_new(s,dt,r0,mu,alpha,u,fp,c1,c2,c3,iflgn)
   iflgn = 1
   return
 
-end subroutine drift_kepu_new  ! drift_kepu_new
-!----------------------------------------------------------------------
+end subroutine drift_kepu_new
 
-!*************************************************************************
-!                        DRIFT_KEPU_P3SOLVE.F
-!*************************************************************************
-! Returns the real root of cubic often found in solving kepler
-! problem in universal variables.
-
-!             Input:
-!                 dt            ==>  time step (real scalar)
-!                 r0            ==>  Distance between `Sun' and paritcle
-!                                     (real scalar)
-!                 mu            ==>  Reduced mass of system (real scalar)
-!                 alpha         ==>  Twice the binding energy (real scalar)
-!                 u             ==>  Vel. dot radial vector (real scalar)
-!             Output:
-!                 s             ==>  solution of cubic eqn for the  
-!                                    universal variable
-!                 iflg          ==>  success flag ( = 0 if O.K.) (integer)
-
-! Author:  Martin Duncan  
-! Date:    March 12/93
-! Last revision: March 12/93
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author Martin Duncan  
+!> 
+!
+!> @date March 12/93
+!
+! DESCRIPTION: 
+!> @brief Returns the real root of cubic often found in solving kepler
+!! problem in universal variables.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine drift_kepu_p3solve(dt,r0,mu,alpha,u,s,iflg)
 
   implicit none
 
   !...  Inputs: 
-  real(double_precision), intent(in) :: dt
-  real(double_precision), intent(in) :: r0
-  real(double_precision), intent(in) :: mu !< [in] mass (in solar masses * K2)
-  real(double_precision), intent(in) :: alpha
-  real(double_precision), intent(in) :: u
+  real(double_precision), intent(in) :: dt !< [in] time step
+  real(double_precision), intent(in) :: r0 !< [in] Distance between `Sun' and particle
+  real(double_precision), intent(in) :: mu !< [in] Reduced mass of system
+  real(double_precision), intent(in) :: alpha !< [in] Twice the binding energy
+  real(double_precision), intent(in) :: u !< [in] Vel. dot radial vector
 
   !...  Outputs:
-  integer, intent(out) :: iflg
-  real(double_precision), intent(out) :: s
+  integer, intent(out) :: iflg !< [out] success flag ( = 0 if O.K.) 
+  real(double_precision), intent(out) :: s !< [out] solution of cubic eqn for the  
+!!                                    universal variable
 
   !...  Internals:
   real(double_precision) :: denom,a0,a1,a2,q,r,sq2,sq,p1,p2
@@ -752,25 +669,19 @@ subroutine drift_kepu_p3solve(dt,r0,mu,alpha,u,s,iflg)
   endif
 
   return
-end subroutine drift_kepu_p3solve     !   drift_kepu_p3solve
-!-------------------------------------------------------------------
+end subroutine drift_kepu_p3solve
 
-!*************************************************************************
-!                        DRIFT_KEPU_STUMPFF.F
-!*************************************************************************
-! subroutine for the calculation of stumpff functions
-! see Danby p.172  equations 6.9.15
-
-!             Input:
-!                 x             ==>  argument
-!             Output:
-!                 c0,c1,c2,c3   ==>  c's from p171-172
-!                                       (real scalors)
-! Author:  Hal Levison  
-! Date:    2/3/93
-! Last revision: 2/3/93
-! Modified by JEC: 31/3/98
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author Hal Levison  
+!> 
+!
+!> @date 2/3/93
+!
+! DESCRIPTION: 
+!> @brief subroutine for the calculation of stumpff functions
+!! see Danby p.172  equations 6.9.15
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine drift_kepu_stumpff(arg,c0,c1,c2,c3)
 
   use mercury_constant
@@ -779,13 +690,13 @@ subroutine drift_kepu_stumpff(arg,c0,c1,c2,c3)
 
 
   !...  Inputs: 
-  real(double_precision), intent(in) :: arg
+  real(double_precision), intent(in) :: arg !< [in] argument
 
   !...  Outputs:
-  real(double_precision), intent(out) :: c0
-  real(double_precision), intent(out) :: c1
-  real(double_precision), intent(out) :: c2
-  real(double_precision), intent(out) :: c3
+  real(double_precision), intent(out) :: c0 !< [out] c's from p171-172
+  real(double_precision), intent(out) :: c1 !< [out] c's from p171-172
+  real(double_precision), intent(out) :: c2 !< [out] c's from p171-172
+  real(double_precision), intent(out) :: c3 !< [out] c's from p171-172
 
   !...  Internals:
   real(double_precision) :: x !< copy of argument that we can modify

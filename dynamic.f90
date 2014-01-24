@@ -156,23 +156,20 @@ subroutine mce_cent (time,h,rcen,jcen,start_index,nbod,nbig,m,x0,v0,x1,v1,nhit,j
   return
 end subroutine mce_cent
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCE_COLL.FOR    (ErikSoft   2 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Resolves a collision between two objects, using the collision model chosen
-! by the user. Also writes a message to the information file, and updates the
-! value of ELOST, the change in energy due to collisions and ejections.
-
-! N.B. All coordinates and velocities must be with respect to central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 October 2000
+!
+! DESCRIPTION: 
+!> @brief Resolves a collision between two objects, using the collision model chosen
+!! by the user. Also writes a message to the information file, and updates the
+!! value of ELOST, the change in energy due to collisions and ejections.
+!
+!> @note All coordinates and velocities must be with respect to central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfile)
   
   use physical_constant
@@ -266,26 +263,22 @@ subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s
   return
 end subroutine mce_coll
 
-
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCE_MERG.FOR    (ErikSoft   2 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% c
-! Author: John E. Chambers
-
-! Merges objects I and J inelastically to produce a single new body by 
-! conserving mass and linear momentum.
-!   If J <= NBIG, then J is a Big body
-!   If J >  NBIG, then J is a Small body
-!   If I = 0, then I is the central body
-
-! N.B. All coordinates and velocities must be with respect to central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 October 2000
+!
+! DESCRIPTION: 
+!> @brief Merges objects I and J inelastically to produce a single new body by 
+!! conserving mass and linear momentum.
+!!   If J <= NBIG, then J is a Big body
+!!   If J >  NBIG, then J is a Small body
+!!   If I = 0, then I is the central body
+!
+!> @note All coordinates and velocities must be with respect to central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   
   use physical_constant
@@ -415,19 +408,17 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   return
 end subroutine mce_merg
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MXX_ELIM.FOR    (ErikSoft   13 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Removes any objects with STAT < 0 (i.e. those that have been flagged for 
-! removal) and reindexes all the appropriate arrays for the remaining objects.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 13 February 2001
+!
+! DESCRIPTION: 
+!> @brief Removes any objects with STAT < 0 (i.e. those that have been flagged for 
+!! removal) and reindexes all the appropriate arrays for the remaining objects.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   
   use physical_constant
@@ -520,30 +511,27 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   return
 end subroutine mxx_elim
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!    MCE_SNIF.FOR    (ErikSoft   3 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Given initial and final coordinates and velocities X and V, and a timestep 
-! H, the routine estimates which objects were involved in a close encounter
-! during the timestep. The routine examines all objects with indices I >= I0.
-
-! Returns an array CE, which for each object is: 
-!                           0 if it will undergo no encounters
-!                           2 if it will pass within RCRIT of a Big body
-
-! Also returns arrays ICE and JCE, containing the indices of each pair of
-! objects estimated to have undergone an encounter.
-
-! N.B. All coordinates must be with respect to the central body!!!
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 3 October 2000
+!
+! DESCRIPTION: 
+!> @brief Given initial and final coordinates and velocities X and V, and a timestep 
+!! H, the routine estimates which objects were involved in a close encounter
+!! during the timestep. The routine examines all objects with indices I >= I0.
+!!
+!! Returns an array CE, which for each object is: 
+!!                           0 if it will undergo no encounters
+!!                           2 if it will pass within RCRIT of a Big body
+!!
+!! Also returns arrays ICE and JCE, containing the indices of each pair of
+!! objects estimated to have undergone an encounter.
+!!
+!> @note All coordinates must be with respect to the central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_snif (h,start_index,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   
   use physical_constant
@@ -657,35 +645,33 @@ subroutine mce_snif (h,start_index,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   return
 end subroutine mce_snif
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!    MCE_STAT.FOR    (ErikSoft   1 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Returns details of all close-encounter minima involving at least one Big
-! body during a timestep. The routine estimates minima using the initial
-! and final coordinates X(0),X(1) and velocities V(0),V(1) of the step, and
-! the stepsize H.
-
-!  ICLO, JCLO contain the indices of the objects
-!  DCLO is their minimum separation
-!  TCLO is the time of closest approach relative to current time
-
-! The routine also checks for collisions/near misses given the physical radii 
-! RPHYS, and returns the time THIT of the collision/near miss closest to the
-! start of the timestep, and the identities IHIT and JHIT of the objects
-! involved.
-
-!  NHIT = +1 implies a collision
-!         -1    "    a near miss
-
-! N.B. All coordinates & velocities must be with respect to the central body!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 1 March 2001
+!
+! DESCRIPTION: 
+!> @brief Returns details of all close-encounter minima involving at least one Big
+!! body during a timestep. The routine estimates minima using the initial
+!! and final coordinates X(0),X(1) and velocities V(0),V(1) of the step, and
+!! the stepsize H.
+!!\n\n
+!!  ICLO, JCLO contain the indices of the objects\n
+!!  DCLO is their minimum separation\n
+!!  TCLO is the time of closest approach relative to current time
+!!\n\n
+!! The routine also checks for collisions/near misses given the physical radii 
+!! RPHYS, and returns the time THIT of the collision/near miss closest to the
+!! start of the timestep, and the identities IHIT and JHIT of the objects
+!! involved.\n\n
+!!
+!!  NHIT = +1 implies a collision\n
+!!         -1    "    a near miss\n
+!
+!> @note All coordinates & velocities must be with respect to the central body!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
      thit,thit1,nowflag,stat,outfile)
   

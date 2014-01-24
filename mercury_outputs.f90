@@ -18,34 +18,32 @@ module mercury_outputs
 
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_CE.FOR    (ErikSoft   1 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Writes details of close encounter minima to an output file, and decides how
-! to continue the integration depending upon the close-encounter option
-! chosen by the user. Close encounter details are stored until either 100
-! have been accumulated, or a data dump is done, at which point the stored
-! encounter details are also output.
-
-! For each encounter, the routine outputs the time and distance of closest
-! approach, the identities of the objects involved, and the output
-! variables of the objects at this time. The output variables are:
-! expressed as
-!  r = the radial distance
-!  theta = polar angle
-!  phi = azimuthal angle
-!  fv = 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
-!                             kinetic energies. (Note that 0 < fv < 1).
-!  vtheta = polar angle of velocity vector
-!  vphi = azimuthal angle of the velocity vector
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 1 March 2001
+!
+! DESCRIPTION: 
+!> @brief Writes details of close encounter minima to an output file, and decides how
+!! to continue the integration depending upon the close-encounter option
+!! chosen by the user. Close encounter details are stored until either 100
+!! have been accumulated, or a data dump is done, at which point the stored
+!! encounter details are also output.
+!!\n\n
+!! For each encounter, the routine outputs the time and distance of closest
+!! approach, the identities of the objects involved, and the output
+!! variables of the objects at this time. The output variables are:
+!! expressed as
+!!\n  r = the radial distance
+!!\n  theta = polar angle
+!!\n  phi = azimuthal angle
+!!\n  fv = 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
+!!\n                             kinetic energies. (Note that 0 < fv < 1).
+!!\n  vtheta = polar angle of velocity vector
+!!\n  vphi = azimuthal angle of the velocity vector
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,nstored,ceflush)
   
   use physical_constant
@@ -169,20 +167,18 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   return
 end subroutine mio_ce
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_DUMP.FOR    (ErikSoft   21 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Writes masses, coordinates, velocities etc. of all objects, and integration
-! parameters, to dump files. Also updates a restart file containing other
-! variables used internally by MERCURY.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 21 February 2001
+!
+! DESCRIPTION: 
+!> @brief Writes masses, coordinates, velocities etc. of all objects, and integration
+!! parameters, to dump files. Also updates a restart file containing other
+!! variables used internally by MERCURY.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,ngf,epoch,opflag)
   
   use physical_constant
@@ -426,18 +422,16 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   return
 end subroutine mio_dump
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_ERR.FOR    (ErikSoft  6 December 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Writes out an error message and terminates Mercury.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 6 December 1999
+!
+! DESCRIPTION: 
+!> @brief Writes out an error message and terminates Mercury.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_err (unit,s1,ls1,s2,ls2,s3,ls3,s4,ls4)
 
   implicit none
@@ -465,19 +459,17 @@ subroutine mio_err (unit,s1,ls1,s2,ls2,s3,ls3,s4,ls4)
   
 end subroutine mio_err
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_LOG.FOR    (ErikSoft   25 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Writes a progress report to the log file (or the screen if you are running
-! Mercury interactively).
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 25 February 2001
+!
+! DESCRIPTION: 
+!> @brief Writes a progress report to the log file (or the screen if you are running
+!! Mercury interactively).
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_log (time,en,am)
   
   use physical_constant
@@ -559,7 +551,32 @@ end subroutine mio_log
 ! ===  
 
 !------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 13 February 2001
+!
+! DESCRIPTION: 
+!> @brief Writes output variables for each object to an output file. Each variable
+!! is scaled between the minimum and maximum possible values and then
+!! written in a compressed format using ASCII characters.
+!!\n The output variables are:
+!!\n  r = the radial distance
+!!\n  theta = polar angle
+!!\n  phi = azimuthal angle
+!!\n  fv = 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
+!!\n                             kinetic energies. (Note that 0 < fv < 1).
+!!\n  vtheta = polar angle of velocity vector
+!!\n  vphi = azimuthal angle of the velocity vector
+!!\n\n
+!! If this is the first output (OPFLAG = -1), or the first output since the 
+!! number of the objects or their masses have changed (OPFLAG = 1), then 
+!! the names, masses and spin components of all the objects are also output.
+!
+!> @note Each object's distance must lie between RCEN < R < RMAX
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfile)
   
   use physical_constant
@@ -698,19 +715,17 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   return
 end subroutine mio_out
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_AEI.FOR    (ErikSoft   31 January 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Creates a filename and opens a file to store aei information for an object.
-! The filename is based on the name of the object.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 31 January 2001
+!
+! DESCRIPTION: 
+!> @brief Creates a filename and opens a file to store aei information for an object.
+!! The filename is based on the name of the object.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_clo (id,unitnum,header,lenhead)
   
   use physical_constant
@@ -768,19 +783,17 @@ subroutine mio_clo (id,unitnum,header,lenhead)
   return
 end subroutine mio_clo
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_AEI.FOR    (ErikSoft   31 January 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Creates a filename and opens a file to store aei information for an object.
-! The filename is based on the name of the object.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 31 January 2001
+!
+! DESCRIPTION: 
+!> @brief Creates a filename and opens a file to store aei information for an object.
+!! The filename is based on the name of the object.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_aei (id,unitnum,header,lenhead)
   
   use physical_constant

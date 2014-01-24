@@ -22,27 +22,25 @@ module user_module
   
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_USER.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Applies an arbitrary force, defined by the user.
-
-! If using with the symplectic algorithm MAL_MVS, the force should be
-! small compared with the force from the central object.
-! If using with the conservative Bulirsch-Stoer algorithm MAL_BS2, the
-! force should not be a function of the velocities.
-
-! Code Units are in AU, days and solar mass * K2 (mass are in solar mass, but multiplied by K2 earlier in the code).
-
-! N.B. All coordinates and velocities must be with respect to central body
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Applies an arbitrary force, defined by the user.
+!!\n\n
+!! If using with the symplectic algorithm MAL_MVS, the force should be
+!! small compared with the force from the central object.
+!! If using with the conservative Bulirsch-Stoer algorithm MAL_BS2, the
+!! force should not be a function of the velocities.
+!! \n\n
+!! Code Units are in AU, days and solar mass * K2 (mass are in solar mass, but multiplied by K2 earlier in the code).
+!
+!> @note All coordinates and velocities must be with respect to central body
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acceleration)
 !  mass          = mass (in solar masses * K2)
 !  position      = coordinates (x,y,z) with respect to the central body [AU]

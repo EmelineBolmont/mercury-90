@@ -17,22 +17,19 @@ module utilities
   
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MXX_SORT.FOR    (ErikSoft 24 May 1997)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Sorts an array X, of size N, using Shell's method. Also returns an array
-! INDEX that gives the original index of every item in the sorted array X.
-
-! N.B. The maximum array size is 29523.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 24 May 1997
+!
+! DESCRIPTION: 
+!> @brief Sorts an array X, of size N, using Shell's method. Also returns an array
+!! INDEX that gives the original index of every item in the sorted array X.
+!
+!> @note The maximum array size is 29523.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mxx_sort (n,x,index)
   
 
@@ -82,23 +79,21 @@ subroutine mxx_sort (n,x,index)
   return
 end subroutine mxx_sort
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!    MCE_BOX.FOR    (ErikSoft   30 September 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Given initial and final coordinates and velocities, the routine returns
-! the X and Y coordinates of a box bounding the motion in between the
-! end points.
-
-! If the X or Y velocity changes sign, the routine performs a quadratic
-! interpolation to estimate the corresponding extreme value of X or Y.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 30 September 2000
+!
+! DESCRIPTION: 
+!> @brief Given initial and final coordinates and velocities, the routine returns
+!! the X and Y coordinates of a box bounding the motion in between the
+!! end points.
+!!\n\n
+!! If the X or Y velocity changes sign, the routine performs a quadratic
+!! interpolation to estimate the corresponding extreme value of X or Y.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_box (nbod,h,x0,v0,x1,v1,xmin,xmax,ymin,ymax)
   
   use physical_constant
@@ -150,32 +145,26 @@ subroutine mce_box (nbod,h,x0,v0,x1,v1,xmin,xmax,ymin,ymax)
   return
 end subroutine mce_box
 
-
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCE_MIN.FOR    (ErikSoft  1 December 1998)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates minimum value of a quantity D, within an interval H, given initial
-! and final values D0, D1, and their derivatives D0T, D1T, using third-order
-! (i.e. cubic) interpolation.
-
-! Also calculates the value of the independent variable T at which D is a
-! minimum, with respect to the epoch of D1.
-
-! N.B. The routine assumes that only one minimum is present in the interval H.
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 1 December 1998
+!
+! DESCRIPTION: 
+!> @brief Calculates minimum value of a quantity D, within an interval H, given initial
+!! and final values D0, D1, and their derivatives D0T, D1T, using third-order
+!! (i.e. cubic) interpolation.
+!!\n\n
+!! Also calculates the value of the independent variable T at which D is a
+!! minimum, with respect to the epoch of D1.
+!
+!> @note The routine assumes that only one minimum is present in the interval H.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_min (d0,d1,d0t,d1t,h,d2min,tmin)
-  
 
   implicit none
-
   
   ! Input/Output
   real(double_precision), intent(in) :: d0
@@ -230,30 +219,27 @@ subroutine mce_min (d0,d1,d0t,d1t,h,d2min,tmin)
   return
 end subroutine mce_min
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_JD2Y.FOR    (ErikSoft  7 July 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts from Julian day number to Julian/Gregorian Calendar dates, assuming
-! the dates are those used by the English calendar.
-
-! Algorithm taken from `Practical Astronomy with your calculator' (1988)
-! by Peter Duffett-Smith, 3rd edition, C.U.P.
-
-! Algorithm for negative Julian day numbers (Julian calendar assumed) by
-! J. E. Chambers.
-
-! N.B. The output date is with respect to the Julian Calendar on or before
-! ===  4th October 1582, and with respect to the Gregorian Calendar on or 
-!      after 15th October 1582.
-
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 7 July 1999
+!
+! DESCRIPTION: 
+!> @brief Converts from Julian day number to Julian/Gregorian Calendar dates, assuming
+!! the dates are those used by the English calendar.
+!!\n\n
+!! Algorithm taken from `Practical Astronomy with your calculator' (1988)
+!! by Peter Duffett-Smith, 3rd edition, C.U.P.
+!!\n\n
+!! Algorithm for negative Julian day numbers (Julian calendar assumed) by
+!! J. E. Chambers.
+!
+!> @note The output date is with respect to the Julian Calendar on or before
+!! 4th October 1582, and with respect to the Gregorian Calendar on or 
+!! after 15th October 1582.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_jd2y (jd0,year,month,day)
   
 
@@ -337,25 +323,20 @@ subroutine mio_jd2y (jd0,year,month,day)
   return
 end subroutine mio_jd2y
 
-
-
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_SPL.FOR    (ErikSoft  14 November 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Given a character string STRING, of length LEN bytes, the routine finds 
-! the beginnings and ends of NSUB substrings present in the original, and 
-! delimited by spaces. The positions of the extremes of each substring are 
-! returned in the array DELIMIT.
-! Substrings are those which are separated by spaces or the = symbol.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 14 November 1999
+!
+! DESCRIPTION: 
+!> @brief Given a character string STRING, of length LEN bytes, the routine finds 
+!! the beginnings and ends of NSUB substrings present in the original, and 
+!! delimited by spaces. The positions of the extremes of each substring are 
+!! returned in the array DELIMIT.\n
+!! Substrings are those which are separated by spaces or the = symbol.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_spl (length,string,nsub,delimit)
 
   implicit none
@@ -414,18 +395,16 @@ subroutine mio_spl (length,string,nsub,delimit)
   return
 end subroutine mio_spl
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      arcosh.FOR    (ErikSoft  2 March 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates inverse hyperbolic cosine of an angle X (in radians).
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 1999
+!
+! DESCRIPTION: 
+!> @brief Calculates inverse hyperbolic cosine of an angle X (in radians).
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function arcosh (x)
   
 
@@ -449,20 +428,18 @@ function arcosh (x)
   return
 end function arcosh
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_SINE.FOR    (ErikSoft  17 April 1997)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates sin and cos of an angle X (in radians).
-
-! Warning: x is modified by the routine. Without this part, outputs of mercury are different, don't ask me why.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 17 April 1997
+!
+! DESCRIPTION: 
+!> @brief Calculates sin and cos of an angle X (in radians).
+!
+!> @warning x is modified by the routine. Without this part, outputs of mercury are different, don't ask me why.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_sine (x,sx,cx)
   use physical_constant, only : PI, TWOPI
 
@@ -496,17 +473,22 @@ subroutine mco_sine (x,sx,cx)
   return
 end subroutine mco_sine
 
-subroutine getNumberOfBodies(nb_big_bodies, nb_bodies)
-! subroutine that return the number of bodies and the number of big bodies
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> C. Cossou
 !
-! Return
-! nb_bodies : the total number of bodies, including the central object
-! nb_big_bodies : the number of big bodies
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief return the number of bodies and the number of big bodies
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine getNumberOfBodies(nb_big_bodies, nb_bodies)
 
   implicit none
 
-  integer, intent(out) :: nb_bodies
-  integer, intent(out) :: nb_big_bodies
+  integer, intent(out) :: nb_bodies !< [out] total number of bodies, including the central object
+  integer, intent(out) :: nb_big_bodies !< [out] number of big bodies
   
   ! Local
   integer :: j,k,lim(2,10),nsub, error
@@ -597,8 +579,17 @@ subroutine getNumberOfBodies(nb_big_bodies, nb_bodies)
 
 end subroutine getNumberOfBodies
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> C. Cossou
+!
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief change cartesian coordinates into polar coordinates
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine get_polar_coordinates(x, y, z, radius, theta)
-! subroutine that change cartesian coordinates into polar coordinates
   use physical_constant
   
   implicit none
@@ -634,8 +625,17 @@ subroutine get_polar_coordinates(x, y, z, radius, theta)
   
 end subroutine get_polar_coordinates
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> C. Cossou
+!
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief function that calculate the mean value of a one dimensional array
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function get_mean(vector)
-! function that calculate the mean value of a one dimensional array
 
 implicit none
 
@@ -650,8 +650,17 @@ get_mean = sum(vector) / size(vector)
 
 end function get_mean
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> C. Cossou
+!
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief function that calculate the standard deviation of a set of value given as a one dimensional array
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function get_stdev(vector)
-! function that calculate the standard deviation of a set of value given as a one dimensional array
 
 implicit none
 
@@ -666,9 +675,19 @@ get_stdev = sqrt(sum((vector - get_mean(vector))**2) / size(vector))
 
 end function get_stdev
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> C. Cossou
+!
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief Return the vectoriel product of two vectors
+!! vect_product = x /\ y
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function vect_product(x, y)
-  ! Return the vectoriel product of two vectors
-  ! vect_product = x /\ y
+
   implicit none
 
   ! The function - output :
@@ -687,29 +706,29 @@ function vect_product(x, y)
 
 end function vect_product
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> C. Cossou
+!
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief the subroutine get in argument a one dimension array and 
+!! return an histogram of the number of bins specified in argument. By default the min and max for bins is the min and max of the 
+!! data set. With optional argument it should be possible easily to accept in argument the min and max for bins (with default 
+!! values) but it is not implemented yet since I have no need for this so far.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine get_histogram(datas, bin_x_values, bin_y_values) 
-! the subroutine get in argument a one dimension array and 
-! return an histogram of the number of bins specified in argument. By default the min and max for bins is the min and max of the 
-! data set. With optional argument it should be possible easily to accept in argument the min and max for bins (with default 
-! values) but it is not implemented yet since I have no need for this so far.
-!
-! Argument :
-! datas : a one dimension array that contains data to be used for the histogram
-! nb_bins : the number of bin we want for the histogram. Must fit the size of the two last argument, 
-!         that are used to store values of x and y for the histogram.
-!
-! Return : 
-! bin_x_values : The x values for the histogram. The array must be of size 'nb_bins'
-! bin_y_values : The y values for the histogram. The array must be of size 'nb_bins'
 
 implicit none
 
 ! Input
-real(double_precision), dimension(:), intent(in) :: datas
+real(double_precision), dimension(:), intent(in) :: datas !< [in] a one dimension array that contains data to be used for the histogram
 
 ! Output
-real(double_precision), dimension(:), intent(out) :: bin_x_values
-real(double_precision), dimension(:), intent(out) :: bin_y_values
+real(double_precision), dimension(:), intent(out) :: bin_x_values !< [out] The x values for the histogram. The array must be of size 'nb_bins'
+real(double_precision), dimension(:), intent(out) :: bin_y_values !< [out] The y values for the histogram. The array must be of size 'nb_bins'
 
 ! Locals
 real(double_precision) :: delta_bin, max_value, min_value

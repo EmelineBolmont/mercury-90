@@ -22,24 +22,21 @@ module forces
   
   contains
   
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_ALL.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates accelerations on a set of NBOD bodies (of which NBIG are Big)
-! due to Newtonian gravitational perturbations, post-Newtonian
-! corrections (if required), cometary non-gravitational forces (if required)
-! and user-defined forces (if required).
-
-! N.B. Input/output must be in coordinates with respect to the central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Calculates accelerations on a set of NBOD bodies (of which NBIG are Big)
+!! due to Newtonian gravitational perturbations, post-Newtonian
+!! corrections (if required), cometary non-gravitational forces (if required)
+!! and user-defined forces (if required).
+!
+!> @note Input/output must be in coordinates with respect to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
   
   use physical_constant
@@ -139,26 +136,24 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   return
 end subroutine mfo_all
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_GRAV.FOR    (ErikSoft   3 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates accelerations on a set of NBOD bodies (NBIG of which are Big)
-! due to gravitational perturbations by all the other bodies, except that
-! Small bodies do not interact with one another.
-
-! The positions and velocities are stored in arrays X, V with the format
-! (x,y,z) and (vx,vy,vz) for each object in succession. The accelerations 
-! are stored in the array A (ax,ay,az).
-
-! N.B. All coordinates and velocities must be with respect to central body!!!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 3 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates accelerations on a set of NBOD bodies (NBIG of which are Big)
+!! due to gravitational perturbations by all the other bodies, except that
+!! Small bodies do not interact with one another.\n\n
+!!
+!! The positions and velocities are stored in arrays X, V with the format
+!! (x,y,z) and (vx,vy,vz) for each object in succession. The accelerations 
+!! are stored in the array A (ax,ay,az).
+!
+!> @note All coordinates and velocities must be with respect to central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   
   use physical_constant
@@ -236,26 +231,24 @@ subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   return
 end subroutine mfo_grav
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_NGF.FOR    (ErikSoft  29 November 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates accelerations on a set of NBOD bodies due to cometary
-! non-gravitational jet forces. The positions and velocities are stored in
-! arrays X, V with the format (x,y,z) and (vx,vy,vz) for each object in
-! succession. The accelerations are stored in the array A (ax,ay,az). The
-! non-gravitational accelerations follow a force law described by Marsden
-! et al. (1973) Astron. J. 211-225, with magnitude determined by the
-! parameters NGF(1,2,3) for each object.
-
-! N.B. All coordinates and velocities must be with respect to central body!!!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 29 November 1999
+!
+! DESCRIPTION: 
+!> @brief Calculates accelerations on a set of NBOD bodies due to cometary
+!! non-gravitational jet forces. The positions and velocities are stored in
+!! arrays X, V with the format (x,y,z) and (vx,vy,vz) for each object in
+!! succession. The accelerations are stored in the array A (ax,ay,az). The
+!! non-gravitational accelerations follow a force law described by Marsden
+!! et al. (1973) Astron. J. 211-225, with magnitude determined by the
+!! parameters NGF(1,2,3) for each object.
+!
+!> @note All coordinates and velocities must be with respect to central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_ngf (nbod,x,v,a,ngf)
   
   use physical_constant
@@ -325,26 +318,22 @@ subroutine mfo_ngf (nbod,x,v,a,ngf)
   return
 end subroutine mfo_ngf
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_PN.FOR    (ErikSoft   3 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-! TODO
-! ****** To be completed at a later date ******
-
-! Calculates post-Newtonian relativistic corrective accelerations for a set
-! of NBOD bodies (NBIG of which are Big).
-
-! This routine should not be called from the symplectic algorithm MAL_MVS
-! or the conservative Bulirsch-Stoer algorithm MAL_BS2.
-
-! N.B. All coordinates and velocities must be with respect to central body!!!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 3 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates post-Newtonian relativistic corrective accelerations for a set
+!! of NBOD bodies (NBIG of which are Big).\n\n
+!!
+!! This routine should not be called from the symplectic algorithm MAL_MVS
+!! or the conservative Bulirsch-Stoer algorithm MAL_BS2.
+!
+!> @note All coordinates and velocities must be with respect to central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_pn (nbod,nbig,m,x,v,a)
   
   use physical_constant
@@ -379,26 +368,22 @@ subroutine mfo_pn (nbod,nbig,m,x,v,a)
   return
 end subroutine mfo_pn
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_PR.FOR    (ErikSoft   3 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-! TODO
-! ****** To be completed at a later date ******
-
-! Calculates radiation pressure and Poynting-Robertson drag for a set
-! of NBOD bodies (NBIG of which are Big).
-
-! This routine should not be called from the symplectic algorithm MAL_MVS
-! or the conservative Bulirsch-Stoer algorithm MAL_BS2.
-
-! N.B. All coordinates and velocities must be with respect to central body!!!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 3 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates radiation pressure and Poynting-Robertson drag for a set
+!! of NBOD bodies (NBIG of which are Big).\n\n
+!!
+!! This routine should not be called from the symplectic algorithm MAL_MVS
+!! or the conservative Bulirsch-Stoer algorithm MAL_BS2.
+!
+!> @note All coordinates and velocities must be with respect to central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   
   use physical_constant
@@ -436,22 +421,20 @@ subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   return
 end subroutine mfo_pr
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!     MFO_OBL.FOR    (ErikSoft   2 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates barycentric accelerations of NBOD bodies due to oblateness of
-! the central body. Also returns the corresponding barycentric acceleration
-! of the central body.
-
-! N.B. All coordinates must be with respect to the central body!!!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 2 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates barycentric accelerations of NBOD bodies due to oblateness of
+!! the central body. Also returns the corresponding barycentric acceleration
+!! of the central body.
+!
+!> @note All coordinates must be with respect to the central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_obl (jcen,nbod,m,x,a,acen)
   
   use physical_constant

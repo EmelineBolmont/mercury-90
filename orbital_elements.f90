@@ -16,18 +16,16 @@ module orbital_elements
   
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_X2A.FOR    (ErikSoft   4 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates an object's orbital semi-major axis given its Cartesian coords.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 4 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates an object's orbital semi-major axis given its Cartesian coords.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_x2a (gm,x,y,z,u,v,w,a,r,v2)
   
 
@@ -59,26 +57,17 @@ subroutine mco_x2a (gm,x,y,z,u,v,w,a,r,v2)
   return
 end subroutine mco_x2a
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_X2OV.FOR    (ErikSoft   20 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates output variables for an object given its coordinates and
-! velocities. The output variables are:
-!  r = the radial distance
-!  theta = polar angle
-!  phi = azimuthal angle
-!  fv = 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
-!                             kinetic energies. (Note that 0 < fv < 1).
-!  vtheta = polar angle of velocity vector
-!  vphi = azimuthal angle of the velocity vector
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 20 February 2001
+!
+! DESCRIPTION: 
+!> @brief Calculates output variables for an object given its coordinates and
+!! velocities.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_x2ov (rcen,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
   
   use physical_constant
@@ -100,12 +89,13 @@ subroutine mco_x2ov (rcen,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
   real(double_precision), intent(in) :: w
   
   ! Output
-  real(double_precision), intent(out) :: fr
-  real(double_precision), intent(out) :: theta
-  real(double_precision), intent(out) :: phi
-  real(double_precision), intent(out) :: fv
-  real(double_precision), intent(out) :: vtheta
-  real(double_precision), intent(out) :: vphi
+  real(double_precision), intent(out) :: fr !< [out] 
+  real(double_precision), intent(out) :: theta !< [out] polar angle
+  real(double_precision), intent(out) :: phi !< [out] azimuthal angle
+  real(double_precision), intent(out) :: fv !< [out] 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
+!! kinetic energies. (Note that 0 < fv < 1).
+  real(double_precision), intent(out) :: vtheta !< [out] polar angle of velocity vector
+  real(double_precision), intent(out) :: vphi !< [out] azimuthal angle of the velocity vector
   
   ! Local
   real(double_precision) :: r,v2,v1,be,ke,temp
@@ -132,26 +122,17 @@ subroutine mco_x2ov (rcen,mcen,m,x,y,z,u,v,w,fr,theta,phi,fv,vtheta,vphi)
   return
 end subroutine mco_x2ov
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_X2EL.FOR    (ErikSoft  23 January 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates Keplerian orbital elements given relative coordinates and
-! velocities, and GM = G times the sum of the masses.
-
-! The elements are: q = perihelion distance
-!                   e = eccentricity
-!                   i = inclination
-!                   p = longitude of perihelion (NOT argument of perihelion!!)
-!                   n = longitude of ascending node
-!                   l = mean anomaly (or mean longitude if e < 1.e-8)
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 23 January 2001
+!
+! DESCRIPTION: 
+!> @brief Calculates Keplerian orbital elements given relative coordinates and
+!! velocities, and GM = G times the sum of the masses.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   
   use physical_constant
@@ -170,12 +151,12 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   real(double_precision), intent(in) :: w
   
   ! Output
-  real(double_precision), intent(out) :: q
-  real(double_precision), intent(out) :: e
-  real(double_precision), intent(out) :: i
-  real(double_precision), intent(out) :: p
-  real(double_precision), intent(out) :: n
-  real(double_precision), intent(out) :: l
+  real(double_precision), intent(out) :: q !< [out] perihelion distance
+  real(double_precision), intent(out) :: e !< [out] eccentricity
+  real(double_precision), intent(out) :: i !< [out] inclination
+  real(double_precision), intent(out) :: p !< [out] longitude of perihelion (NOT argument of perihelion!!)
+  real(double_precision), intent(out) :: n !< [out] longitude of ascending node
+  real(double_precision), intent(out) :: l !< [out] mean anomaly (or mean longitude if e < 1.e-8)
   
   ! Local
   real(double_precision) :: hx,hy,hz,h2,h,v2,r,rv,s,true
@@ -263,28 +244,22 @@ subroutine mco_x2el (gm,x,y,z,u,v,w,q,e,i,p,n,l)
   return
 end subroutine mco_x2el
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_X2AE.FOR    (17 august 2011)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: C. Cossou
-
-! Calculates Keplerian orbital elements and motion properties given relative coordinates and
-! velocities, and GM = G times the sum of the masses.
-
-! The elements are: a = semi major axis (in AU)
-!                   e = eccentricity
-!                   i = inclination (in rad)
-!                   r = the orbital distance of the planet from the star [AU]
-!                   v2 = the norm of the velocity squared [AU^2/day^2]
-!                   h = the angular momentum? [I don't know where the mass is]
-!                   
-! REMARKS : the orbital parameters, especially the eccentricity and the semi major axis are not retrieved correctly when I set 
-! manually the position and the velocity (i.e only position(1) and velocity(2), the rest to 0), I don't know why.
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> C. Cossou
+!
+!> @date 17 august 2011
+!
+! DESCRIPTION: 
+!> @brief Calculates Keplerian orbital elements and motion properties given relative coordinates and
+!! velocities, and GM = G times the sum of the masses.\n\n
+!
+!> @remarks the orbital parameters, especially the eccentricity and the 
+!! semi major axis are not retrieved correctly when I set 
+!! manually the position and the velocity (i.e only position(1) 
+!! and velocity(2), the rest to 0), I don't know why.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
   
   use physical_constant
@@ -303,12 +278,12 @@ subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
   real(double_precision), intent(in) :: w
   
   ! Output
-  real(double_precision), intent(out) :: a
-  real(double_precision), intent(out) :: e
-  real(double_precision), intent(out) :: i
-  real(double_precision), intent(out) :: r
-  real(double_precision), intent(out) :: v2
-  real(double_precision), intent(out) :: h
+  real(double_precision), intent(out) :: a !< [out] semi major axis (in AU)
+  real(double_precision), intent(out) :: e !< [out] eccentricity
+  real(double_precision), intent(out) :: i !< [out] inclination (in rad)
+  real(double_precision), intent(out) :: r !< [out] the orbital distance of the planet from the star [AU]
+  real(double_precision), intent(out) :: v2 !< [out] the norm of the velocity squared [AU^2/day^2] 
+  real(double_precision), intent(out) :: h !< [out] the angular momentum? [I don't know where the mass is]
   
   ! Local
   real(double_precision) :: hx,hy,hz,h2,rv,s
@@ -376,32 +351,19 @@ subroutine mco_x2ae (gm,x,y,z,u,v,w,a,e,i,r,v2,h)
   return
 end subroutine mco_x2ae
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_EL2X.FOR    (ErikSoft  7 July 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates Cartesian coordinates and velocities given Keplerian orbital
-! elements (for elliptical, parabolic or hyperbolic orbits).
-
-! Based on a routine from Levison and Duncan's SWIFT integrator.
-
-!  gm = grav const * (central + secondary mass)
-!  q = perihelion distance
-!  e = eccentricity
-!  i = inclination                 )
-!  p = longitude of perihelion !!! )   in
-!  n = longitude of ascending node ) radians
-!  l = mean anomaly                )
-
-!  x,y,z = Cartesian positions  ( units the same as a )
-!  u,v,w =     "     velocities ( units the same as sqrt(gm/a) )
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 7 July 1999
+!
+! DESCRIPTION: 
+!> @brief Calculates Cartesian coordinates and velocities given Keplerian orbital
+!! elements (for elliptical, parabolic or hyperbolic orbits).
+!!\n\n
+!! Based on a routine from Levison and Duncan's SWIFT integrator.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   
   use physical_constant
@@ -412,19 +374,19 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   implicit none
   
   ! Input
-  real(double_precision), intent(in) :: gm
-  real(double_precision), intent(in) :: q
-  real(double_precision), intent(in) :: e
-  real(double_precision), intent(in) :: p
-  real(double_precision), intent(in) :: l
+  real(double_precision), intent(in) :: gm !< [in] gm = grav const * (central + secondary mass)
+  real(double_precision), intent(in) :: q  !< [in] q = perihelion distance
+  real(double_precision), intent(in) :: e  !< [in] e = eccentricity
+  real(double_precision), intent(in) :: p  !< [in] p = longitude of perihelion !!! 
+  real(double_precision), intent(in) :: l  !< [in] l = mean anomaly 
   
   ! Output
-  real(double_precision), intent(out) :: x
-  real(double_precision), intent(out) :: y
-  real(double_precision), intent(out) :: z
-  real(double_precision), intent(out) :: u
-  real(double_precision), intent(out) :: v
-  real(double_precision), intent(out) :: w
+  real(double_precision), intent(out) :: x !< [out] Cartesian positions  ( units the same as a )
+  real(double_precision), intent(out) :: y !< [out] Cartesian positions  ( units the same as a )
+  real(double_precision), intent(out) :: z !< [out] Cartesian positions  ( units the same as a )
+  real(double_precision), intent(out) :: u !< [out] Cartesian velocities ( units the same as sqrt(gm/a) )
+  real(double_precision), intent(out) :: v !< [out] Cartesian velocities ( units the same as sqrt(gm/a) )
+  real(double_precision), intent(out) :: w !< [out] Cartesian velocities ( units the same as sqrt(gm/a) )
   
   ! Input/Output
   real(double_precision), intent(inout) :: i
@@ -504,26 +466,16 @@ subroutine mco_el2x (gm,q,e,i,p,n,l,x,y,z,u,v,w)
   return
 end subroutine mco_el2x
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_OV2X.FOR    (ErikSoft   28 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts output variables for an object to coordinates and velocities.
-! The output variables are:
-!  r = the radial distance
-!  theta = polar angle
-!  phi = azimuthal angle
-!  fv = 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
-!                             kinetic energies. (Note that 0 < fv < 1).
-!  vtheta = polar angle of velocity vector
-!  vphi = azimuthal angle of the velocity vector
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 28 February 2001
+!
+! DESCRIPTION: 
+!> @brief Converts output variables for an object to coordinates and velocities.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_ov2x (rcen,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
   
   use physical_constant
@@ -534,14 +486,15 @@ subroutine mco_ov2x (rcen,mcen,m,fr,theta,phi,fv,vtheta,vphi,x,y,z,u,v,w)
   
   ! Input
   real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
-  real(double_precision), intent(in) :: mcen
+  real(double_precision), intent(in) :: mcen !< [in] 
   real(double_precision), intent(in) :: m !< [in] mass (in solar masses * K2)
-  real(double_precision), intent(in) :: fr
-  real(double_precision), intent(in) :: theta
-  real(double_precision), intent(in) :: phi
-  real(double_precision), intent(in) :: fv
-  real(double_precision), intent(in) :: vtheta
-  real(double_precision), intent(in) :: vphi
+  real(double_precision), intent(in) :: fr !< [in] 
+  real(double_precision), intent(in) :: theta !< [in] polar angle
+  real(double_precision), intent(in) :: phi !< [in] 
+  real(double_precision), intent(in) :: fv !< [in] 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
+!! kinetic energies. (Note that 0 < fv < 1).
+  real(double_precision), intent(in) :: vtheta !< [in] polar angle of velocity vector
+  real(double_precision), intent(in) :: vphi !< [in] azimuthal angle of the velocity vector
   
   ! Output
   real(double_precision), intent(out) :: x

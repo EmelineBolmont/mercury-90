@@ -577,20 +577,18 @@ program element
 
 end program element
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      get_aei_format.FOR    (ErikSoft   31 January 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Makes an output format list and file header for the orbital-element files
-! created by M_ELEM3.FOR
-! Also identifies which orbital elements will be output for each object.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 31 January 2001
+!
+! DESCRIPTION: 
+!> @brief Makes an output format list and file header for the orbital-element files
+!! created by M_ELEM3.FOR\n
+!! Also identifies which orbital elements will be output for each object.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
 
   use physical_constant
