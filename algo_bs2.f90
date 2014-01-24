@@ -1,44 +1,46 @@
+!******************************************************************************
+! MODULE: algo_bs2
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that gather various functions about the BS2 algorithm.\n\n
+!! The Bulirsch-Stoer algorithms are described in W.H.Press et al. (1992)
+!! ``Numerical Recipes in Fortran'', pub. Cambridge.
+!
+!******************************************************************************
+
 module algo_bs2
 
-!*************************************************************
-!** Modules that gather various functions about the BS2
-!** algorithm.
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
 
   private
 
-  real(double_precision), parameter :: SHRINK=.55d0
-  real(double_precision), parameter :: GROW=1.3d0
+  real(double_precision), parameter :: SHRINK=.55d0 !< Multiplication factor in case we have to decrease the timestep
+  real(double_precision), parameter :: GROW=1.3d0 !< Multiplication factor in case we can increase the timestep
   
   public :: mdt_bs2
   
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MDT_BS2.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Integrates NBOD bodies (of which NBIG are Big) for one timestep H0
-! using the Bulirsch-Stoer method. The accelerations are calculated using the 
-! subroutine FORCE. The accuracy of the step is approximately determined 
-! by the tolerance parameter TOL.
-
-! N.B. This version only works for conservative systems (i.e. force is a
-! ===  function of position only) !!!! Hence, non-gravitational forces
-!      and post-Newtonian corrections cannot be used.
-
-! N.B. Input/output must be in coordinates with respect to the central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Integrates NBOD bodies (of which NBIG are Big) for one timestep H0
+!! using the Bulirsch-Stoer method. The accelerations are calculated using the 
+!! subroutine FORCE. The accuracy of the step is approximately determined 
+!! by the tolerance parameter TOL.
+!
+!> @note This version only works for conservative systems (i.e. force is a
+!! function of position only) !!!! Hence, non-gravitational forces
+!! and post-Newtonian corrections cannot be used.
+!
+!> @note Input/output must be in coordinates with respect to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf,stat,dtflag,ngflag,nce,ice,jce,force)
   use physical_constant
   use mercury_constant
@@ -47,15 +49,34 @@ subroutine mdt_bs2 (time,h0,hdid,tol,jcen,nbod,nbig,mass,x0,v0,s,rphys,rcrit,ngf
   implicit none
   
   ! Input/Output
-  integer,intent(in) :: nbod, nbig, stat(nbod), dtflag, ngflag
-  integer,intent(in) :: nce,ice(nce),jce(nce)
-  real(double_precision),intent(in) :: time,tol,jcen(3),mass(nbod)
-  real(double_precision),intent(in) :: s(3,nbod),ngf(4,nbod),rphys(nbod),rcrit(nbod)
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
+  integer, intent(in) :: dtflag
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  integer, intent(in) :: nce
+  integer, intent(in) :: ice(nce)
+  integer, intent(in) :: jce(nce)
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: mass(nbod)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  real(double_precision), intent(in) :: rphys(nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
   
   real(double_precision), intent(out) :: hdid
-  real(double_precision), intent(out) :: x0(3,nbod),v0(3,nbod)
+  real(double_precision), intent(out) :: x0(3,nbod)
+  real(double_precision), intent(out) :: v0(3,nbod)
   
-  real(double_precision), intent(inout) :: h0
+  real(double_precision), intent(inout) :: h0 !< [in,out] initial integration timestep (days)
   
   external force
   

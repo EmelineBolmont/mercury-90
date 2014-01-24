@@ -1,11 +1,16 @@
+!******************************************************************************
+! MODULE: system_properties
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that compute various properties of the system like
+!! the total energy and angular momentum, jacobi constants, 
+!! hill radii, if there are ejections and so on.
+!
+!******************************************************************************
+
 module system_properties
 
-!*************************************************************
-!** Modules that compute various properties of the system like
-!** the total energy and angular momentum, jocobi constants, 
-!** hill radii, if there are ejections and so on.
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
   use mercury_globals
 
@@ -15,29 +20,27 @@ module system_properties
   
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCE_HILL.FOR    (ErikSoft   4 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates the Hill radii for all objects given their masses, M,
-! coordinates, X, and velocities, V; plus the mass of the central body, M(1)
-! Where HILL = a * (m/3*m(1))^(1/3)
-
-! If the orbit is hyperbolic or parabolic, the Hill radius is calculated using:
-!       HILL = r * (m/3*m(1))^(1/3)
-! where R is the current distance from the central body.
-
-! The routine also gives the semi-major axis, A, of each object's orbit.
-
-! N.B. Designed to use heliocentric coordinates, but should be adequate using
-! ===  barycentric coordinates.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 4 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates the Hill radii for all objects given their masses, M,
+!! coordinates, X, and velocities, V; plus the mass of the central body, M(1)
+!! Where HILL = a * (m/3*m(1))^(1/3)
+!!\n\n
+!! If the orbit is hyperbolic or parabolic, the Hill radius is calculated using:
+!!\n       HILL = r * (m/3*m(1))^(1/3)
+!! where R is the current distance from the central body.
+!!\n\n
+!! The routine also gives the semi-major axis, A, of each object's orbit.
+!
+!> @note Designed to use heliocentric coordinates, but should be adequate using
+!! barycentric coordinates.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_hill (nbod,m,x,v,hill,a)
   
   use physical_constant
@@ -47,9 +50,12 @@ subroutine mce_hill (nbod,m,x,v,hill,a)
   implicit none
   
   ! Input/Output
-  integer,intent(in) :: nbod
-  real(double_precision),intent(in) :: m(nbod),x(3,nbod),v(3,nbod)
-  real(double_precision),intent(out) :: hill(nbod),a(nbod)
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(out) :: hill(nbod)
+  real(double_precision), intent(out) :: a(nbod)
   
   ! Local
   integer :: j
@@ -70,29 +76,27 @@ subroutine mce_hill (nbod,m,x,v,hill,a)
   return
 end subroutine mce_hill
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCE_INIT.FOR    (ErikSoft   28 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates close-approach limits RCE (in AU) and physical radii RPHYS
-! (in AU) for all objects, given their masses M, coordinates X, velocities
-! V, densities RHO, and close-approach limits RCEH (in Hill radii).
-
-! Also calculates the changeover distance RCRIT, used by the hybrid
-! symplectic integrator. RCRIT is defined to be the larger of N1*HILL and
-! N2*H*VMAX, where HILL is the Hill radius, H is the timestep, VMAX is the
-! largest expected velocity of any body, and N1, N2 are parameters (see
-! section 4.2 of Chambers 1999, Monthly Notices, vol 304, p793-799).
-
-! N.B. Designed to use heliocentric coordinates, but should be adequate using
-! ===  barycentric coordinates.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 28 February 2001
+!
+! DESCRIPTION: 
+!> @brief Calculates close-approach limits RCE (in AU) and physical radii RPHYS
+!! (in AU) for all objects, given their masses M, coordinates X, velocities
+!! V, densities RHO, and close-approach limits RCEH (in Hill radii).
+!!\n\n
+!! Also calculates the changeover distance RCRIT, used by the hybrid
+!! symplectic integrator. RCRIT is defined to be the larger of N1*HILL and
+!! N2*H*VMAX, where HILL is the Hill radius, H is the timestep, VMAX is the
+!! largest expected velocity of any body, and N1, N2 are parameters (see
+!! section 4.2 of Chambers 1999, Monthly Notices, vol 304, p793-799).
+!
+!> @note Designed to use heliocentric coordinates, but should be adequate using
+!! barycentric coordinates.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcrit,id,outfile,rcritflag)
   
   use physical_constant
@@ -105,13 +109,25 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   real(double_precision), parameter :: N2=.4d0
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig,rcritflag
-  real(double_precision),intent(in) :: m(nbod),x(3,nbod),v(3,nbod),rho(nbod),rceh(nbod),jcen(3),s(3,nbod)
-  real(double_precision),intent(in) :: h,rcen,cefac
-  character(len=8),intent(in) :: id(nbod)
-  character(len=80),intent(in) :: outfile
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: rcritflag
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: rho(nbod) !< [in] physical density (g/cm^3)
+  real(double_precision), intent(in) :: rceh(nbod) !< [in] close-encounter limit (Hill radii)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
+  real(double_precision), intent(in) :: cefac
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
+  character(len=80), intent(in) :: outfile
   
-  real(double_precision), intent(out) :: rce(nbod),rphys(nbod),rcrit(nbod)
+  real(double_precision), intent(out) :: rce(nbod)
+  real(double_precision), intent(out) :: rphys(nbod)
+  real(double_precision), intent(out) :: rcrit(nbod)
 
   
   ! Local
@@ -168,7 +184,7 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   end do
   
   ! Write compressed output to file
-  open (22, file=outfile, status='old', access='append', iostat=error)
+  open (22, file=outfile, status='old', position='append', iostat=error)
   if (error /= 0) then
      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
      stop
@@ -184,22 +200,20 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   return
 end subroutine mce_init
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!     MXX_EN.FOR    (ErikSoft   21 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates the total energy and angular-momentum for a system of objects
-! with masses M, coordinates X, velocities V and spin angular momenta S.
-
-! N.B. All coordinates and velocities must be with respect to the central
-! ===  body.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 21 February 2001
+!
+! DESCRIPTION: 
+!> @brief Calculates the total energy and angular-momentum for a system of objects
+!! with masses M, coordinates X, velocities V and spin angular momenta S.
+!
+!> @note All coordinates and velocities must be with respect to the central
+!! body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   
   use physical_constant
@@ -209,9 +223,16 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig
-  real(double_precision),intent(in) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod)
-  real(double_precision),intent(out) :: e,l2 ! energy and angular momentum
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
+  
+  real(double_precision), intent(out) :: e ! energy
+  real(double_precision), intent(out) :: l2 ! angular momentum
   
   ! Local
   integer :: j,k,iflag,itmp(8)
@@ -290,23 +311,20 @@ subroutine mxx_en  (jcen,nbod,nbig,m,xh,vh,s,e,l2)
   return  
 end subroutine mxx_en
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!     MXX_JAC.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates the Jacobi constant for massless particles. This assumes that
-! there are only 2 massive bodies (including the central body) moving on
-! circular orbits.
-
-! N.B. All coordinates and velocities must be heliocentric!
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Calculates the Jacobi constant for massless particles. This assumes that
+!! there are only 2 massive bodies (including the central body) moving on
+!! circular orbits.
+!
+!> @note All coordinates and velocities must be heliocentric!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
   
   use physical_constant
@@ -316,10 +334,14 @@ subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig
-  real(double_precision),intent(in) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod)
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
   
-  real(double_precision),intent(out) :: jac(nbod)
+  real(double_precision), intent(out) :: jac(nbod)
   
   ! Local
   integer :: j,itmp(8),iflag
@@ -353,28 +375,24 @@ subroutine mxx_jac (jcen,nbod,nbig,m,xh,vh,jac)
   return
 end subroutine mxx_jac
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MXX_EJEC.FOR    (ErikSoft   2 November 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates the distance from the central body of each object with index
-! I >= I0. If this distance exceeds RMAX, the object is flagged for ejection 
-! (STAT set to -3). If any object is to be ejected, EJFLAG = 1 on exit,
-! otherwise EJFLAG = 0.
-
-! Also updates the values of EN(3) and AM(3)---the change in energy and
-! angular momentum due to collisions and ejections.
-
-
-! N.B. All coordinates must be with respect to the central body!
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 November 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates the distance from the central body of each object with index
+!! I >= I0. If this distance exceeds RMAX, the object is flagged for ejection 
+!! (STAT set to -3). If any object is to be ejected, EJFLAG = 1 on exit,
+!! otherwise EJFLAG = 0.\n\n
+!!
+!! Also updates the values of EN(3) and AM(3)---the change in energy and
+!! angular momentum due to collisions and ejections.
+!
+!> @note All coordinates must be with respect to the central body!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile)
   
   use physical_constant
@@ -384,18 +402,26 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   implicit none
 
   
-  ! Input/Output
-  integer,intent(in) :: i0, nbod, nbig
+  ! Input
+  integer, intent(in) :: i0, nbod, nbig
 
-  real(double_precision),intent(in) :: time, jcen(3)
-  real(double_precision),intent(in) :: x(3,nbod), v(3,nbod)
-  character(len=80),intent(in) :: outfile
-  character(len=8),intent(in) :: id(nbod)
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  character(len=80), intent(in) :: outfile
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
-  real(double_precision), intent(out) :: en(3), am(3)
-  integer, intent(out) :: ejflag, stat(nbod)
+  ! Output
+  real(double_precision), intent(out) :: en(3) !< [out] (initial energy, current energy, energy change due to collision and ejection) of the system
+  real(double_precision), intent(out) :: am(3) !< [out] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
+  integer, intent(out) :: ejflag
+  integer, intent(out) :: stat(nbod) !< [out] status (0 => alive, <>0 => to be removed)
   
-  real(double_precision),intent(inout) :: m(nbod), s(3,nbod)
+  ! Input/Output
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
+  real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
 
   ! Local
   integer :: j,j0, year, month
@@ -430,7 +456,7 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
         s(3,j) = 0.d0
         
         ! Write message to information file
-        open  (23,file=outfile,status='old',access='append',iostat=error)
+        open  (23,file=outfile,status='old',position='append',iostat=error)
         if (error /= 0) then
            write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
            stop
@@ -468,30 +494,44 @@ subroutine mxx_ejec (time,en,am,jcen,i0,nbod,nbig,m,x,v,s,stat,id,ejflag,outfile
   return
 end subroutine mxx_ejec
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_B2H.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts barycentric coordinates to coordinates with respect to the central
-! body.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Converts barycentric coordinates to coordinates with respect to the central
+!! body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
 
   implicit none
 
   
-  ! Input/Output
-  integer,intent(in) :: nbod,nbig,ngflag
-  real(double_precision),intent(in) :: time,h
-  real(double_precision),intent(in) :: jcen(3),m(nbod),x(3,nbod),v(3,nbod),ngf(4,nbod)
-  real(double_precision),intent(out) :: xh(3,nbod),vh(3,nbod)
+  ! Input
+  integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer,intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  real(double_precision),intent(in) :: time !< [in] current epoch (days)
+  real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision),intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision),intent(in) :: x(3,nbod)
+  real(double_precision),intent(in) :: v(3,nbod)
+  real(double_precision),intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  
+  ! Output
+  real(double_precision),intent(out) :: xh(3,nbod) !< [out] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision),intent(out) :: vh(3,nbod) !< [out] velocities (vx,vy,vz) with respect to the central body (AU/day)
   
   ! Local
   integer :: j
@@ -512,19 +552,17 @@ subroutine mco_b2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   return
 end subroutine mco_b2h
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_H2B.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts coordinates with respect to the central body to barycentric
-! coordinates.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Converts coordinates with respect to the central body to barycentric
+!! coordinates.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_h2b (jcen,nbod,nbig,h,m,xh,vh,x,v)
   
 
@@ -532,10 +570,15 @@ subroutine mco_h2b (jcen,nbod,nbig,h,m,xh,vh,x,v)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig
-  real(double_precision),intent(in) :: h,jcen(3)
-  real(double_precision),intent(in) :: m(nbod),xh(3,nbod),vh(3,nbod)
-  real(double_precision),intent(out) :: x(3,nbod),v(3,nbod)
+  integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision),intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision),intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision),intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
+  real(double_precision),intent(out) :: x(3,nbod)
+  real(double_precision),intent(out) :: v(3,nbod)
   
   ! Local
   integer :: j
@@ -585,19 +628,17 @@ subroutine mco_h2b (jcen,nbod,nbig,h,m,xh,vh,x,v)
   return
 end subroutine mco_h2b
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_H2CB.FOR    (ErikSoft   2 November 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Convert coordinates with respect to the central body to close-binary
-! coordinates.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 November 2000
+!
+! DESCRIPTION: 
+!> @brief Convert coordinates with respect to the central body to close-binary
+!! coordinates.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_h2cb (jcen,nbod,nbig,h,m,xh,vh,x,v)
   
 
@@ -605,10 +646,16 @@ subroutine mco_h2cb (jcen,nbod,nbig,h,m,xh,vh,x,v)
 
   
   ! Input/Output
-  integer,intent(in) :: nbod,nbig
-  real(double_precision),intent(in) :: jcen(3),h
-  real(double_precision),intent(in) :: m(nbod),xh(3,nbod),vh(3,nbod)
-  real(double_precision),intent(out) :: x(3,nbod),v(3,nbod)
+  integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  real(double_precision),intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision),intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision),intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
+  
+  real(double_precision),intent(out) :: x(3,nbod)
+  real(double_precision),intent(out) :: v(3,nbod)
   
   ! Local
   integer :: j
@@ -657,29 +704,43 @@ subroutine mco_h2cb (jcen,nbod,nbig,h,m,xh,vh,x,v)
   return
 end subroutine mco_h2cb
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_IDEN.FOR    (ErikSoft   2 November 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Fake subroutine that simulate a change of coordinate system. In fact, 
-! it only duplicate the existing coordinates. So it's the identity. 
-! It is used to test the program with a fake algorithm (I think)
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 November 2000
+!
+! DESCRIPTION: 
+!> @brief Fake subroutine that simulate a change of coordinate system. In fact, 
+!! it only duplicate the existing coordinates. So it's the identity. 
+!! It is used to test the program with a fake algorithm (I think)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag)
   implicit none
 
   
-  ! Input/Output
-  integer,intent(in) :: nbod,nbig,ngflag
-  real(double_precision),intent(in) :: time,jcen(3),h,m(nbod),x_in(3,nbod),v_in(3,nbod),ngf(4,nbod)
+  ! Input
+  integer,intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer,intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer,intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  real(double_precision),intent(in) :: time !< [in] current epoch (days)
+  real(double_precision),intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision),intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision),intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision),intent(in) :: x_in(3,nbod)
+  real(double_precision),intent(in) :: v_in(3,nbod)
+  real(double_precision),intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
 
-  real(double_precision), intent(out) ::x_out(3,nbod),v_out(3,nbod)
+  ! Output
+  real(double_precision), intent(out) :: x_out(3,nbod)
+  real(double_precision), intent(out) :: v_out(3,nbod)
   
   ! Local
   integer :: j
@@ -700,22 +761,20 @@ subroutine mco_iden (time,jcen,nbod,nbig,h,m,x_in,v_in,x_out,v_out,ngf,ngflag)
   return
 end subroutine mco_iden
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCE_SPIN.FOR    (ErikSoft  2 December 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates the spin rate (in rotations per day) for a fluid body given
-! its mass, spin angular momentum and density. The routine assumes the
-! body is a MacClaurin ellipsoid, whose axis ratio is defined by the
-! quantity SS = SQRT(A^2/C^2 - 1), where A and C are the
-! major and minor axes.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 December 1999
+!
+! DESCRIPTION: 
+!> @brief Calculates the spin rate (in rotations per day) for a fluid body given
+!! its mass, spin angular momentum and density. The routine assumes the
+!! body is a MacClaurin ellipsoid, whose axis ratio is defined by the
+!! quantity SS = SQRT(A^2/C^2 - 1), where A and C are the
+!! major and minor axes.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_spin (g,mass,spin,rho,rote)
   
   use physical_constant
@@ -725,8 +784,12 @@ subroutine mce_spin (g,mass,spin,rho,rote)
 
   
   ! Input/Output
-  real(double_precision),intent(in) :: g,mass,spin,rho
-  real(double_precision),intent(out) :: rote ! spin rate (in rotations per day)
+  real(double_precision),intent(in) :: g
+  real(double_precision),intent(in) :: mass !< [in] mass (in solar masses * K2)
+  real(double_precision),intent(in) :: spin !< [in] spin angular momentum (solar masses AU^2/day)
+  real(double_precision),intent(in) :: rho !< [in] physical density (g/cm^3)
+  
+  real(double_precision),intent(out) :: rote !< [out] spin rate (in rotations per day)
   
   ! Local
   integer :: k
@@ -755,17 +818,17 @@ subroutine mce_spin (g,mass,spin,rho,rote)
   return
 end subroutine mce_spin
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      M_SFUNC.FOR     (ErikSoft  14 November 1998)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Calculates Z = [ (3 + S^2)arctan(S) - 3S ] / S^3 and its derivative DZ,
-! for S > 0.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 14 November 1998
+!
+! DESCRIPTION: 
+!> @brief Calculates Z = [ (3 + S^2)arctan(S) - 3S ] / S^3 and its derivative DZ,
+!! for S > 0.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine m_sfunc (s,z,dz)
   
 
@@ -774,7 +837,8 @@ subroutine m_sfunc (s,z,dz)
   
   ! Input/Output
   real(double_precision),intent(in) :: s
-  real(double_precision),intent(out) :: z, dz
+  real(double_precision),intent(out) :: z
+  real(double_precision),intent(out) :: dz
   
   ! Local
   real(double_precision) :: s2,s4,s6,s8,a

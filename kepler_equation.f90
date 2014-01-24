@@ -1,39 +1,46 @@
+!******************************************************************************
+! MODULE: kepler_equation
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that solve the kepler equation
+!
+!******************************************************************************
+
 module kepler_equation
 
-!*************************************************************
-!** Modules that solve the kepler equation
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
 
   implicit none
   
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_KEP.FOR    (ErikSoft  7 July 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Solves Kepler's equation for eccentricities less than one.
-! Algorithm from A. Nijenhuis (1991) Cel. Mech. Dyn. Astron. 51, 319-330.
-
-!  e = eccentricity
-!  l = mean anomaly      (radians)
-!  u = eccentric anomaly (   "   )
-
-!------------------------------------------------------------------------------
-
+   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   !> @author 
+   !> John E. Chambers
+   !
+   !> @date 7 July 1999
+   !
+   ! DESCRIPTION: 
+   !> @brief Solves Kepler's equation for eccentricities less than one.
+   !! Algorithm from A. Nijenhuis (1991) Cel. Mech. Dyn. Astron. 51, 319-330.
+   !!\n\n
+   !!  e = eccentricity\n
+   !!  l = mean anomaly      (radians)\n
+   !!  u = eccentric anomaly (   "   )\n
+   !
+   !> @return mco_kep blablabla
+   !
+   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function mco_kep (e,oldl)
 
   implicit none
 
   
   ! Input/Outout
-  real(double_precision) :: oldl,e,mco_kep
+  real(double_precision), intent(in) :: oldl
+  real(double_precision), intent(in) :: e
+  real(double_precision) :: mco_kep
   
   ! Local
   real(double_precision) :: l,pi,twopi,piby2,u1,u2,ome,sign
@@ -163,25 +170,21 @@ function mco_kep (e,oldl)
   return
 end function mco_kep
 
-!***********************************************************************
-!!                    ORBEL_FLON.F
-!***********************************************************************
-!*     PURPOSE:  Solves Kepler's eqn. for hyperbola using hybrid approach.  
-!*
-!*             Input:
-!*                           e ==> eccentricity (real scalar)
-!*                        capn ==> hyperbola mean anomaly. (real scalar)
-!*             Returns:
-!*                  orbel_flon ==>  eccentric anomaly. (real scalar)
-!*
-!*     ALGORITHM: Uses power series for N in terms of F and Newton,s method
-!*     REMARKS: ONLY GOOD FOR LOW VALUES OF N (N < 0.636*e -0.6)
-!*     AUTHOR: M. Duncan 
-!*     DATE WRITTEN: May 26, 1992.
-!*     REVISIONS: 
-!***********************************************************************
-
-real*8 function orbel_flon(e,capn)
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> M. Duncan 
+!
+!> @date May 26, 1992
+!
+! DESCRIPTION: 
+!> @brief Solves Kepler's eqn. for hyperbola using hybrid approach. \n\n
+!!
+!!ALGORITHM: Uses power series for N in terms of F and Newton,s method
+!
+!> @warning REMARKS: ONLY GOOD FOR LOW VALUES OF N (N < 0.636*e -0.6)
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+function orbel_flon(e,capn0)
 
   use mercury_constant
 
@@ -189,9 +192,14 @@ real*8 function orbel_flon(e,capn)
 
 
   !...  Inputs Only: 
-  real(double_precision) :: e,capn
+  real(double_precision), intent(in) :: e !< [in] 
+  real(double_precision), intent(in) :: capn0 !< [in] 
+  
+  ! Output
+  real(double_precision) :: orbel_flon !< [out] 
 
   !...  Internals:
+  real(double_precision) :: capn !< copy of the input capn0 that is not modified
   integer :: iflag,i
   real(double_precision) :: a,b,sq,biga,bigb
   real(double_precision) :: x,x2
@@ -216,7 +224,9 @@ real*8 function orbel_flon(e,capn)
   !----
   !...  Executable code 
 
-
+  ! We copy the input parameter to be able to modify it.
+  capn = capn0
+  
   ! Function to solve "Kepler's eqn" for F (here called
   ! x) for given e and CAPN. Only good for smallish CAPN 
 
@@ -254,7 +264,6 @@ real*8 function orbel_flon(e,capn)
      dx = -f/fp
      !    write(6,*) 'i,dx,x,f : '
      !    write(6,432) i,dx,x,f
-432  format(1x,i3,3(2x,1p1e22.15))
      orbel_flon = x + dx
      !   If we have converged here there's no point in going on
      if(abs(dx) .le. TINY) go to 100
@@ -280,28 +289,22 @@ real*8 function orbel_flon(e,capn)
   endif
 
   return
-end function orbel_flon     ! orbel_flon
+end function orbel_flon
 
-!***********************************************************************
-!                    ORBEL_FGET.F
-!***********************************************************************
-!*     PURPOSE:  Solves Kepler's eqn. for hyperbola using hybrid approach.  
-!*
-!*             Input:
-!*                           e ==> eccentricity. (real scalar)
-!*                        capn ==> hyperbola mean anomaly. (real scalar)
-!*             Returns:
-!*                  orbel_fget ==>  eccentric anomaly. (real scalar)
-!*
-!*     ALGORITHM: Based on pp. 70-72 of Fitzpatrick's book "Principles of
-!*           Cel. Mech. ".  Quartic convergence from Danby's book.
-!*     REMARKS: 
-!*     AUTHOR: M. Duncan 
-!*     DATE WRITTEN: May 11, 1992.
-!*     REVISIONS: 2/26/93 hfl
-!*     Modified by JEC
-!***********************************************************************
-real*8 function orbel_fget(e,capn)
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> M. Duncan 
+!
+!> @date May 11, 1992.
+!
+! DESCRIPTION: 
+!> @brief Solves Kepler's eqn. for hyperbola using hybrid approach. 
+!!\n\n
+!!ALGORITHM: Based on pp. 70-72 of Fitzpatrick's book "Principles of
+!!\n           Cel. Mech. ".  Quartic convergence from Danby's book.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+function orbel_fget(e,capn)
 
   use mercury_constant
 
@@ -309,7 +312,11 @@ real*8 function orbel_fget(e,capn)
 
 
   !...  Inputs Only: 
-  real(double_precision) :: e,capn
+  real(double_precision), intent(in) :: e !< [in] eccentricity
+  real(double_precision), intent(in) :: capn !< [in] hyperbola mean anomaly
+  
+  ! Output
+  real(double_precision) :: orbel_fget !< [out] eccentric anomaly
 
   !...  Internals:
   integer :: i,IMAX
@@ -356,31 +363,22 @@ real*8 function orbel_fget(e,capn)
 
   write(6,*) 'FGET : RETURNING WITHOUT COMPLETE CONVERGENCE' 
   return
-end function orbel_fget   ! orbel_fget
+end function orbel_fget
 
-!------------------------------------------------------------------
-
-!***********************************************************************
-!                    ORBEL_FHYBRID.F
-!***********************************************************************
-!*     PURPOSE:  Solves Kepler's eqn. for hyperbola using hybrid approach.  
-!*
-!*             Input:
-!*                           e ==> eccentricity. (real scalar)
-!*                           n ==> hyperbola mean anomaly. (real scalar)
-!*             Returns:
-!*               orbel_fhybrid ==>  eccentric anomaly. (real scalar)
-!*
-!*     ALGORITHM: For abs(N) < 0.636*ecc -0.6 , use FLON 
-!*           For larger N, uses FGET
-!*     REMARKS: 
-!*     AUTHOR: M. Duncan 
-!*     DATE WRITTEN: May 26,1992.
-!*     REVISIONS: 
-!*     REVISIONS: 2/26/93 hfl
-!***********************************************************************
-
-real*8 function orbel_fhybrid(e,n)
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> M. Duncan 
+!
+!> @date May 26,1992.
+!
+! DESCRIPTION: 
+!> @brief Solves Kepler's eqn. for hyperbola using hybrid approach. \n\n
+!!
+!! ALGORITHM: For abs(N) < 0.636*ecc -0.6 , use FLON 
+!!\n           For larger N, uses FGET
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+function orbel_fhybrid(e,n)
 
   use mercury_constant
 
@@ -388,8 +386,12 @@ real*8 function orbel_fhybrid(e,n)
 
 
   !...  Inputs Only: 
-  real(double_precision) :: e,n
-
+  real(double_precision), intent(in) :: e !< [in] eccentricity
+  real(double_precision), intent(in) :: n !< [in] hyperbola mean anomaly
+  
+  ! Output
+  real(double_precision) :: orbel_fhybrid !< [out] eccentric anomaly
+  
   !...  Internals:
   real(double_precision) :: abn
 
@@ -406,31 +408,23 @@ real*8 function orbel_fhybrid(e,n)
   endif
 
   return
-end function orbel_fhybrid  ! orbel_fhybrid
-!-------------------------------------------------------------------
-
-
-
-!***********************************************************************
-!!                    ORBEL_ZGET.F
-!***********************************************************************
-!*     PURPOSE:  Solves the equivalent of Kepler's eqn. for a parabola 
-!*          given Q (Fitz. notation.)
-!*
-!*             Input:
-!*                           q ==>  parabola mean anomaly. (real scalar)
-!*             Returns:
-!*                  orbel_zget ==>  eccentric anomaly. (real scalar)
-!*
-!*     ALGORITHM: p. 70-72 of Fitzpatrick's book "Princ. of Cel. Mech."
-!*     REMARKS: For a parabola we can solve analytically.
-!*     AUTHOR: M. Duncan 
-!*     DATE WRITTEN: May 11, 1992.
-!*     REVISIONS: May 27 - corrected it for negative Q and use power
-!*        series for small Q.
-!***********************************************************************
-
-real*8 function orbel_zget(q)
+end function orbel_fhybrid
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> M. Duncan 
+!
+!> @date May 11, 1992
+!
+! DESCRIPTION: 
+!> @brief Solves the equivalent of Kepler's eqn. for a parabola 
+!! given Q (Fitz. notation.)\n\n
+!!
+!!ALGORITHM: p. 70-72 of Fitzpatrick's book "Princ. of Cel. Mech."
+!
+!> @remarks For a parabola we can solve analytically.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+function orbel_zget(q0)
 
   use mercury_constant
 
@@ -438,14 +432,22 @@ real*8 function orbel_zget(q)
 
 
   !...  Inputs Only: 
-  real(double_precision) :: q
+  real(double_precision), intent(in) :: q0 !< [in] parabola mean anomaly
+  
+  ! Output
+  real(double_precision) :: orbel_zget !< [out] eccentric anomaly
 
   !...  Internals:
+  real(double_precision) :: q !< copy of q0 to modify it without propagating the modified value
   integer :: iflag
   real(double_precision) :: x,tmp
 
+
   !----
   !...  Executable code 
+
+  ! We copy the input parameter to be able to modify it.
+  q = q0
 
   iflag = 0
   if(q.lt.0.d0) then

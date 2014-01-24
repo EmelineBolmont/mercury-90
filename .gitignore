@@ -5,7 +5,6 @@ close
 mercury
 element
 test_disk
-migration_map
 *.in
 *.out
 git_infos.f90
@@ -19,3 +18,8 @@ interesting_disks
 *.bak
 *~
 *.pdf
+*.tmp
+html/
+latex/
+migration_map
+*.dSYM

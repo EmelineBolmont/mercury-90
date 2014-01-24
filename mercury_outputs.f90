@@ -1,10 +1,14 @@
+!******************************************************************************
+! MODULE: mercury_outputs
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that write files, wether they are outputs files, or errors
+!
+!******************************************************************************
+
 module mercury_outputs
 
-!*************************************************************
-!** Modules that write files, wheter they are outputs files, or errors
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
   use mercury_globals
   
@@ -14,34 +18,32 @@ module mercury_outputs
 
   contains
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_CE.FOR    (ErikSoft   1 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Writes details of close encounter minima to an output file, and decides how
-! to continue the integration depending upon the close-encounter option
-! chosen by the user. Close encounter details are stored until either 100
-! have been accumulated, or a data dump is done, at which point the stored
-! encounter details are also output.
-
-! For each encounter, the routine outputs the time and distance of closest
-! approach, the identities of the objects involved, and the output
-! variables of the objects at this time. The output variables are:
-! expressed as
-!  r = the radial distance
-!  theta = polar angle
-!  phi = azimuthal angle
-!  fv = 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
-!                             kinetic energies. (Note that 0 < fv < 1).
-!  vtheta = polar angle of velocity vector
-!  vphi = azimuthal angle of the velocity vector
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 1 March 2001
+!
+! DESCRIPTION: 
+!> @brief Writes details of close encounter minima to an output file, and decides how
+!! to continue the integration depending upon the close-encounter option
+!! chosen by the user. Close encounter details are stored until either 100
+!! have been accumulated, or a data dump is done, at which point the stored
+!! encounter details are also output.
+!!\n\n
+!! For each encounter, the routine outputs the time and distance of closest
+!! approach, the identities of the objects involved, and the output
+!! variables of the objects at this time. The output variables are:
+!! expressed as
+!!\n  r = the radial distance
+!!\n  theta = polar angle
+!!\n  phi = azimuthal angle
+!!\n  fv = 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
+!!\n                             kinetic energies. (Note that 0 < fv < 1).
+!!\n  vtheta = polar angle of velocity vector
+!!\n  vphi = azimuthal angle of the velocity vector
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dclo,ixvclo,jxvclo,nstored,ceflush)
   
   use physical_constant
@@ -54,11 +56,23 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),stopflag
-  integer :: nclo,iclo(nclo),jclo(nclo),nstored,ceflush
-  real(double_precision) :: time,rcen,m(nbod),tclo(nclo),dclo(nclo)
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
+  integer, intent(out) :: stopflag
+  
+  integer, intent(in) :: nclo
+  integer, intent(in) :: iclo(nclo)
+  integer, intent(in) :: jclo(nclo)
+  integer, intent(inout) :: nstored
+  integer, intent(in) :: ceflush
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: tclo(nclo)
+  real(double_precision), intent(in) :: dclo(nclo)
   real(double_precision) :: ixvclo(6,nclo),jxvclo(6,nclo)
-  character(len=8) :: id(nbod)
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   ! Local
   integer :: k,year,month
@@ -104,7 +118,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   
   ! If required, output the stored close encounter details
   if ((nstored.ge.CMAX*2).or.(ceflush.eq.0)) then
-     open (22, file=outfile(2), status='old', access='append',iostat=error)
+     open (22, file=outfile(2), status='old', position='append',iostat=error)
      if (error /= 0) then
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(2))
         stop
@@ -119,7 +133,7 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   ! If new encounter minima have occurred, decide whether to stop integration
   stopflag = 0
   if ((opt(1).eq.1).and.(nclo.gt.0)) then
-     open (23, file=outfile(3), status='old', access='append',iostat=error)
+     open (23, file=outfile(3), status='old', position='append',iostat=error)
      if (error /= 0) then
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile(3))
         stop
@@ -153,20 +167,18 @@ subroutine mio_ce (time,rcen,nbod,nbig,m,stat,id,nclo,iclo,jclo,stopflag,tclo,dc
   return
 end subroutine mio_ce
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_DUMP.FOR    (ErikSoft   21 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Writes masses, coordinates, velocities etc. of all objects, and integration
-! parameters, to dump files. Also updates a restart file containing other
-! variables used internally by MERCURY.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 21 February 2001
+!
+! DESCRIPTION: 
+!> @brief Writes masses, coordinates, velocities etc. of all objects, and integration
+!! parameters, to dump files. Also updates a restart file containing other
+!! variables used internally by MERCURY.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,stat,id,ngf,epoch,opflag)
   
   use physical_constant
@@ -176,11 +188,35 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),opflag,ndump,nfun
-  real(double_precision) :: time,h0,tol,en(3),am(3)
-  real(double_precision) :: jcen(3),rcen,cefac,m(nbod),x(3,nbod),v(3,nbod)
-  real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod),epoch(nbod)
-  character(len=8) :: id(nbod)
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
+  integer, intent(in) :: opflag !< [in] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
+  integer, intent(in) :: ndump
+  integer, intent(in) :: nfun
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
+  real(double_precision), intent(in) :: en(3) !< [in] (initial energy, current energy, energy change due to collision and ejection) of the system
+  real(double_precision), intent(in) :: am(3) !< [in] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
+  real(double_precision), intent(in) :: cefac
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(in) :: rho(nbod) !< [in] physical density (g/cm^3)
+  real(double_precision), intent(in) :: rceh(nbod) !< [in] close-encounter limit (Hill radii)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  real(double_precision), intent(in) :: epoch(nbod) !< [in] epoch of orbit (days)
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
   
   ! Local
   integer :: idp,i,j,k,len,j1,j2
@@ -382,34 +418,35 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   
   !------------------------------------------------------------------------------
   
-311 format (1x,a8,1x,a1,1p,e22.15,2(1x,e11.5))
 312 format (1p,3(1x,e22.15),1x,i8)
-313 format (1p,1x,e22.15,0p,2x,a)
-314 format (1x,a8,1x,a1,1p,e22.15,4(1x,e12.5),1x,e22.15,2(1x,e11.5))
   return
 end subroutine mio_dump
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_ERR.FOR    (ErikSoft  6 December 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Writes out an error message and terminates Mercury.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 6 December 1999
+!
+! DESCRIPTION: 
+!> @brief Writes out an error message and terminates Mercury.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_err (unit,s1,ls1,s2,ls2,s3,ls3,s4,ls4)
 
   implicit none
 
   
   ! Input/Output
-  integer :: unit,ls1,ls2,ls3,ls4
-  character(len=80) :: s1,s2
-  character(len=*) :: s3,s4
+  integer, intent(in) :: unit
+  integer, intent(in) :: ls1
+  integer, intent(in) :: ls2
+  integer, intent(in) :: ls3
+  integer, intent(in) :: ls4
+  character(len=80), intent(in) :: s1
+  character(len=80), intent(in) :: s2
+  character(len=*), intent(in) :: s3
+  character(len=*), intent(in) :: s4
   
   !------------------------------------------------------------------------------
   
@@ -422,19 +459,17 @@ subroutine mio_err (unit,s1,ls1,s2,ls2,s3,ls3,s4,ls4)
   
 end subroutine mio_err
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_LOG.FOR    (ErikSoft   25 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Writes a progress report to the log file (or the screen if you are running
-! Mercury interactively).
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 25 February 2001
+!
+! DESCRIPTION: 
+!> @brief Writes a progress report to the log file (or the screen if you are running
+!! Mercury interactively).
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_log (time,en,am)
   
   use physical_constant
@@ -444,8 +479,11 @@ subroutine mio_log (time,en,am)
   implicit none
 
   
-  ! Input/Output
-  real(double_precision) :: time, en(3), am(3)
+  ! Input
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: en(3) !< [in] (initial energy, current energy, energy change due to collision and ejection) of the system
+  real(double_precision), intent(in) :: am(3) !< [in] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
   
   ! Local
   integer :: year, month
@@ -513,7 +551,32 @@ end subroutine mio_log
 ! ===  
 
 !------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 13 February 2001
+!
+! DESCRIPTION: 
+!> @brief Writes output variables for each object to an output file. Each variable
+!! is scaled between the minimum and maximum possible values and then
+!! written in a compressed format using ASCII characters.
+!!\n The output variables are:
+!!\n  r = the radial distance
+!!\n  theta = polar angle
+!!\n  phi = azimuthal angle
+!!\n  fv = 1 / [1 + 2(ke/be)^2], where be and ke are the object's binding and
+!!\n                             kinetic energies. (Note that 0 < fv < 1).
+!!\n  vtheta = polar angle of velocity vector
+!!\n  vphi = azimuthal angle of the velocity vector
+!!\n\n
+!! If this is the first output (OPFLAG = -1), or the first output since the 
+!! number of the objects or their masses have changed (OPFLAG = 1), then 
+!! the names, masses and spin components of all the objects are also output.
+!
+!> @note Each object's distance must lie between RCEN < R < RMAX
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfile)
   
   use physical_constant
@@ -524,12 +587,26 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   implicit none
 
   
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(in) :: rho(nbod) !< [in] physical density (g/cm^3)
+  character(len=80), intent(in) :: outfile
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
+  
   ! Input/Output
-  integer :: nbod, nbig, stat(nbod), opflag
-  real(double_precision) :: time,jcen(3),rcen,m(nbod),xh(3,nbod),vh(3,nbod)
-  real(double_precision) :: s(3,nbod),rho(nbod)
-  character(len=80) :: outfile
-  character(len=8) :: id(nbod)
+  integer, intent(inout) :: opflag !< [in,out] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
   
   ! Local
   integer :: k, len, nchar
@@ -557,7 +634,7 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   if (len.ge.10) write (fout(3:4),'(i2)') len
   
   ! Open the orbital-elements output file
-  open (21, file=outfile, status='old', access='append', iostat=error)
+  open (21, file=outfile, status='old', position='append', iostat=error)
   if (error /= 0) then
      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
      stop
@@ -638,19 +715,17 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   return
 end subroutine mio_out
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_AEI.FOR    (ErikSoft   31 January 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Creates a filename and opens a file to store aei information for an object.
-! The filename is based on the name of the object.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 31 January 2001
+!
+! DESCRIPTION: 
+!> @brief Creates a filename and opens a file to store aei information for an object.
+!! The filename is based on the name of the object.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_clo (id,unitnum,header,lenhead)
   
   use physical_constant
@@ -661,10 +736,13 @@ subroutine mio_clo (id,unitnum,header,lenhead)
 
   
   ! Input/Output
-  integer :: unitnum,lenhead
+  integer, intent(in) :: unitnum
+  integer, intent(in) :: lenhead
+  character(len=8), intent(in) :: id !< [in] name of the object (8 characters)
+  character(len=250), intent(in) :: header
+  
+  ! Parameter
   character(len=4),parameter :: extn = ".clo"
-  character(len=8) :: id
-  character(len=250) :: header
   
   ! Local
   integer :: j,k,itmp,nsub,lim(2,4)
@@ -695,7 +773,6 @@ subroutine mio_clo (id,unitnum,header,lenhead)
   inquire (file=filename, exist=test)
   if (test) then
      write (*,'(/,3a)') mem(121)(1:lmem(121)),mem(87)(1:lmem(87)),filename(1:80)
-     unitnum = -1
   else
      open (unitnum, file=filename, status='new')
      write (unitnum, '(/,30x,a8,//,a)') id,header(1:lenhead)
@@ -706,19 +783,17 @@ subroutine mio_clo (id,unitnum,header,lenhead)
   return
 end subroutine mio_clo
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MIO_AEI.FOR    (ErikSoft   31 January 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Creates a filename and opens a file to store aei information for an object.
-! The filename is based on the name of the object.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 31 January 2001
+!
+! DESCRIPTION: 
+!> @brief Creates a filename and opens a file to store aei information for an object.
+!! The filename is based on the name of the object.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_aei (id,unitnum,header,lenhead)
   
   use physical_constant
@@ -729,11 +804,14 @@ subroutine mio_aei (id,unitnum,header,lenhead)
 
   
   ! Input/Output
-  integer :: unitnum,lenhead
-  character(len=4),parameter :: extn = ".aei"
-  character(len=8) :: id
-  character(len=250) :: header
+  integer, intent(in) :: unitnum
+  integer, intent(in) :: lenhead
+  character(len=8), intent(in) :: id !< [in] name of the object (8 characters)
+  character(len=250), intent(in) :: header
   
+  ! Parameter
+  character(len=4),parameter :: extn = ".aei"
+
   ! Local
   integer :: j,k,itmp,nsub,lim(2,4)
   logical test
@@ -762,7 +840,6 @@ subroutine mio_aei (id,unitnum,header,lenhead)
   inquire (file=filename, exist=test)
   if (test) then
      write (*,'(/,3a)') mem(121)(1:lmem(121)),mem(87)(1:lmem(87)),filename(1:80)
-     unitnum = -1
   else
      open (unitnum, file=filename, status='new')
      write (unitnum, '(/,30x,a8,//,a)') id,header(1:lenhead)

@@ -49,7 +49,11 @@ program element
   character(len=2) :: c2
   
   ! fake variables to be able to use mco_iden
-  integer :: ngflag
+  integer :: ngflag !< do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
   real(double_precision), dimension(1,1) :: ngf
   
   integer :: error ! to store error when we allocate
@@ -573,20 +577,18 @@ program element
 
 end program element
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      get_aei_format.FOR    (ErikSoft   31 January 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Makes an output format list and file header for the orbital-element files
-! created by M_ELEM3.FOR
-! Also identifies which orbital elements will be output for each object.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 31 January 2001
+!
+! DESCRIPTION: 
+!> @brief Makes an output format list and file header for the orbital-element files
+!! created by M_ELEM3.FOR\n
+!! Also identifies which orbital elements will be output for each object.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
 
   use physical_constant
@@ -596,9 +598,16 @@ subroutine get_aei_format (string,timestyle,nel,iel,fout,header,lenhead)
   implicit none
 
 
-  ! Input/Output
-  integer :: timestyle,nel,iel(22),lenhead
-  character(len=250) :: string,header,fout
+  ! Input
+  integer, intent(in) :: timestyle
+  character(len=250), intent(in) :: string
+  
+  ! Output
+  integer, intent(out) :: nel
+  integer, intent(out) :: iel(22)
+  integer, intent(out) :: lenhead
+  character(len=250), intent(out) :: header
+  character(len=250), intent(out) :: fout
 
   ! Local
   integer :: i,j,pos,nsub,lim(2,20),formflag,lenfout,f1,f2,itmp

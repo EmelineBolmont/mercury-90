@@ -1,11 +1,17 @@
+!******************************************************************************
+! MODULE: algo_radau
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that gather various functions about the RADAU algorithm.\n\n
+!! RADAU is described in E.Everhart (1985) in ``The Dynamics of Comets:
+!! Their Origin and Evolution'' p185-202, eds. A.Carusi & G.B.Valsecchi,
+!! pub. Reidel.
+!
+!******************************************************************************
+
 module algo_radau
 
-!*************************************************************
-!** Modules that gather various functions about the RADAU
-!** algorithm.
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
 
   implicit none
@@ -34,15 +40,21 @@ module algo_radau
   
   contains
 
-subroutine allocate_radau(nb_bodies)
-! subroutine that allocate various private variable of the module to avoid testing at each timestep
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Christophe Cossou
 !
-! Parameters :
-! nb_bodies : number of bodies, that is, the size of the arrays
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief allocate various private variable of the module to avoid testing at each timestep
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine allocate_radau(nb_bodies)
 
   implicit none
   
-  integer, intent(in) :: nb_bodies
+  integer, intent(in) :: nb_bodies !< [in] number of bodies, that is, the size of the arrays
   
   if (.not. allocated(b)) then
     allocate(b(7,3*nb_bodies))
@@ -57,35 +69,32 @@ subroutine allocate_radau(nb_bodies)
   
 end subroutine allocate_radau
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MDT_RA15.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Integrates NBOD bodies (of which NBIG are Big) for one timestep H0 using
-! Everhart's RA15 integrator algorithm. The accelerations are calculated
-! using the subroutine FORCE. The accuracy of the step is approximately 
-! determined by the tolerance parameter TOL.
-
-! Based on RADAU by E. Everhart, Physics Department, University of Denver.
-! Comments giving equation numbers refer to Everhart (1985) ``An Efficient
-! Integrator that Uses Gauss-Radau Spacings'', in The Dynamics of Comets:
-! Their Origin and Evolution, p185-202, eds. A. Carusi & G. B. Valsecchi,
-! pub Reidel. (A listing of the original subroutine is also given in this 
-! paper.)
-
-! DTFLAG = 0 implies first ever call to this subroutine, 
-!        = 1 implies first call since number/masses of objects changed.
-!        = 2 normal call
-
-! N.B. Input/output must be in coordinates with respect to the central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Integrates NBOD bodies (of which NBIG are Big) for one timestep H0 using
+!! Everhart's RA15 integrator algorithm. The accelerations are calculated
+!! using the subroutine FORCE. The accuracy of the step is approximately 
+!! determined by the tolerance parameter TOL.
+!!\n\n
+!! Based on RADAU by E. Everhart, Physics Department, University of Denver.
+!! Comments giving equation numbers refer to Everhart (1985) ``An Efficient
+!! Integrator that Uses Gauss-Radau Spacings'', in The Dynamics of Comets:
+!! Their Origin and Evolution, p185-202, eds. A. Carusi & G. B. Valsecchi,
+!! pub Reidel. (A listing of the original subroutine is also given in this 
+!! paper.)
+!!\n\n
+!! DTFLAG = 0 implies first ever call to this subroutine, 
+!!        = 1 implies first call since number/masses of objects changed.
+!!        = 2 normal call
+!
+!> @note Input/output must be in coordinates with respect to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,ngf,stat,dtflag,ngflag,nce,ice,jce,force)
   
   use physical_constant
@@ -96,11 +105,34 @@ subroutine mdt_ra15 (time,t,tdid,tol,jcen,nbod,nbig,mass,x1,v1,spin,rphys,rcrit,
 
   
   ! Input/Output
-  integer :: nbod,nbig,dtflag,ngflag,stat(nbod)
-  integer :: nce,ice(nce),jce(nce)
-  real(double_precision) :: time,t,tdid,tol,jcen(3),mass(nbod)
-  real(double_precision) :: x1(3*nbod),v1(3*nbod),spin(3*nbod)
-  real(double_precision) :: ngf(4,nbod),rphys(nbod),rcrit(nbod)
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(inout) :: dtflag
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
+  integer, intent(in) :: nce
+  integer, intent(in) :: ice(nce)
+  integer, intent(in) :: jce(nce)
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(inout) :: t
+  real(double_precision), intent(out) :: tdid
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: mass(nbod) !< [in] mass (in solar masses * K2)
+  
+  real(double_precision), intent(inout) :: x1(3*nbod)
+  real(double_precision), intent(inout) :: v1(3*nbod)
+  real(double_precision), intent(in) :: spin(3*nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  real(double_precision), intent(in) :: rphys(nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
+  
   external force
   
   ! Local

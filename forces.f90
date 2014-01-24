@@ -1,10 +1,14 @@
+!******************************************************************************
+! MODULE: forces
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that contains all common forces
+!
+!******************************************************************************
+
 module forces
 
-!*************************************************************
-!** Modules that contains all common forces
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
   use mercury_globals
 
@@ -18,24 +22,21 @@ module forces
   
   contains
   
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_ALL.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates accelerations on a set of NBOD bodies (of which NBIG are Big)
-! due to Newtonian gravitational perturbations, post-Newtonian
-! corrections (if required), cometary non-gravitational forces (if required)
-! and user-defined forces (if required).
-
-! N.B. Input/output must be in coordinates with respect to the central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Calculates accelerations on a set of NBOD bodies (of which NBIG are Big)
+!! due to Newtonian gravitational perturbations, post-Newtonian
+!! corrections (if required), cometary non-gravitational forces (if required)
+!! and user-defined forces (if required).
+!
+!> @note Input/output must be in coordinates with respect to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,jce)
   
   use physical_constant
@@ -45,10 +46,31 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod,nbig,ngflag,stat(nbod),nce,ice(nce),jce(nce)
-  real(double_precision) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod),s(3,nbod)
-  real(double_precision) :: a(3,nbod),ngf(4,nbod),rcrit(nbod)
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
+  integer, intent(in) :: nce
+  integer, intent(in) :: ice(nce)
+  integer, intent(in) :: jce(nce)
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: s(3,nbod) !< [in] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  real(double_precision), intent(in) :: rcrit(nbod)
+  
+  ! Output
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: j
@@ -114,26 +136,24 @@ subroutine mfo_all (time,jcen,nbod,nbig,m,x,v,s,rcrit,a,stat,ngf,ngflag,nce,ice,
   return
 end subroutine mfo_all
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_GRAV.FOR    (ErikSoft   3 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates accelerations on a set of NBOD bodies (NBIG of which are Big)
-! due to gravitational perturbations by all the other bodies, except that
-! Small bodies do not interact with one another.
-
-! The positions and velocities are stored in arrays X, V with the format
-! (x,y,z) and (vx,vy,vz) for each object in succession. The accelerations 
-! are stored in the array A (ax,ay,az).
-
-! N.B. All coordinates and velocities must be with respect to central body!!!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 3 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates accelerations on a set of NBOD bodies (NBIG of which are Big)
+!! due to gravitational perturbations by all the other bodies, except that
+!! Small bodies do not interact with one another.\n\n
+!!
+!! The positions and velocities are stored in arrays X, V with the format
+!! (x,y,z) and (vx,vy,vz) for each object in succession. The accelerations 
+!! are stored in the array A (ax,ay,az).
+!
+!> @note All coordinates and velocities must be with respect to central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   
   use physical_constant
@@ -142,9 +162,16 @@ subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod, nbig, stat(nbod)
-  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), a(3,nbod)
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  
+  ! Output
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: i, j
@@ -204,26 +231,24 @@ subroutine mfo_grav (nbod,nbig,m,x,v,a,stat)
   return
 end subroutine mfo_grav
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_NGF.FOR    (ErikSoft  29 November 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates accelerations on a set of NBOD bodies due to cometary
-! non-gravitational jet forces. The positions and velocities are stored in
-! arrays X, V with the format (x,y,z) and (vx,vy,vz) for each object in
-! succession. The accelerations are stored in the array A (ax,ay,az). The
-! non-gravitational accelerations follow a force law described by Marsden
-! et al. (1973) Astron. J. 211-225, with magnitude determined by the
-! parameters NGF(1,2,3) for each object.
-
-! N.B. All coordinates and velocities must be with respect to central body!!!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 29 November 1999
+!
+! DESCRIPTION: 
+!> @brief Calculates accelerations on a set of NBOD bodies due to cometary
+!! non-gravitational jet forces. The positions and velocities are stored in
+!! arrays X, V with the format (x,y,z) and (vx,vy,vz) for each object in
+!! succession. The accelerations are stored in the array A (ax,ay,az). The
+!! non-gravitational accelerations follow a force law described by Marsden
+!! et al. (1973) Astron. J. 211-225, with magnitude determined by the
+!! parameters NGF(1,2,3) for each object.
+!
+!> @note All coordinates and velocities must be with respect to central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_ngf (nbod,x,v,a,ngf)
   
   use physical_constant
@@ -232,9 +257,16 @@ subroutine mfo_ngf (nbod,x,v,a,ngf)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod
-  real(double_precision) :: x(3,nbod), v(3,nbod), a(3,nbod), ngf(4,nbod)
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  
+  ! Output
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: j
@@ -286,26 +318,22 @@ subroutine mfo_ngf (nbod,x,v,a,ngf)
   return
 end subroutine mfo_ngf
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_PN.FOR    (ErikSoft   3 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-! TODO
-! ****** To be completed at a later date ******
-
-! Calculates post-Newtonian relativistic corrective accelerations for a set
-! of NBOD bodies (NBIG of which are Big).
-
-! This routine should not be called from the symplectic algorithm MAL_MVS
-! or the conservative Bulirsch-Stoer algorithm MAL_BS2.
-
-! N.B. All coordinates and velocities must be with respect to central body!!!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 3 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates post-Newtonian relativistic corrective accelerations for a set
+!! of NBOD bodies (NBIG of which are Big).\n\n
+!!
+!! This routine should not be called from the symplectic algorithm MAL_MVS
+!! or the conservative Bulirsch-Stoer algorithm MAL_BS2.
+!
+!> @note All coordinates and velocities must be with respect to central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_pn (nbod,nbig,m,x,v,a)
   
   use physical_constant
@@ -314,9 +342,15 @@ subroutine mfo_pn (nbod,nbig,m,x,v,a)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod, nbig
-  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), a(3,nbod)
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  
+  ! Output
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: j
@@ -334,26 +368,22 @@ subroutine mfo_pn (nbod,nbig,m,x,v,a)
   return
 end subroutine mfo_pn
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MFO_PR.FOR    (ErikSoft   3 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-! TODO
-! ****** To be completed at a later date ******
-
-! Calculates radiation pressure and Poynting-Robertson drag for a set
-! of NBOD bodies (NBIG of which are Big).
-
-! This routine should not be called from the symplectic algorithm MAL_MVS
-! or the conservative Bulirsch-Stoer algorithm MAL_BS2.
-
-! N.B. All coordinates and velocities must be with respect to central body!!!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 3 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates radiation pressure and Poynting-Robertson drag for a set
+!! of NBOD bodies (NBIG of which are Big).\n\n
+!!
+!! This routine should not be called from the symplectic algorithm MAL_MVS
+!! or the conservative Bulirsch-Stoer algorithm MAL_BS2.
+!
+!> @note All coordinates and velocities must be with respect to central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   
   use physical_constant
@@ -362,9 +392,18 @@ subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod, nbig
-  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), a(3,nbod), ngf(4,nbod)
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  
+  ! Output
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: j
@@ -382,22 +421,20 @@ subroutine mfo_pr (nbod,nbig,m,x,v,a,ngf)
   return
 end subroutine mfo_pr
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!     MFO_OBL.FOR    (ErikSoft   2 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates barycentric accelerations of NBOD bodies due to oblateness of
-! the central body. Also returns the corresponding barycentric acceleration
-! of the central body.
-
-! N.B. All coordinates must be with respect to the central body!!!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 2 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates barycentric accelerations of NBOD bodies due to oblateness of
+!! the central body. Also returns the corresponding barycentric acceleration
+!! of the central body.
+!
+!> @note All coordinates must be with respect to the central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_obl (jcen,nbod,m,x,a,acen)
   
   use physical_constant
@@ -406,9 +443,15 @@ subroutine mfo_obl (jcen,nbod,m,x,a,acen)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod
-  real(double_precision) :: jcen(3), m(nbod), x(3,nbod), a(3,nbod), acen(3)
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  
+  ! Output
+  real(double_precision), intent(out) :: acen(3)
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: i

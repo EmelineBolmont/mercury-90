@@ -1,11 +1,15 @@
+!******************************************************************************
+! MODULE: dynamic
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that compute various dynamic behaviour such as 
+!! collision, close encounter, close approach to central body
+!
+!******************************************************************************
+
 module dynamic
 
-!*************************************************************
-!** Modules that compute various dynamic behaviour such as 
-!** collision, close encounter, close approach to central body
-!**
-!** Version 1.0 - june 2011
-!*************************************************************
   use types_numeriques
   use utilities
   use mercury_globals
@@ -13,38 +17,57 @@ module dynamic
   implicit none
   
   contains
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!    MCE_CENT.FOR    (ErikSoft   4 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Checks all objects with index I >= I0, to see if they have had a collision
-! with the central body in a time interval H, when given the initial and 
-! final coordinates and velocities. The routine uses cubic interpolation
-! to estimate the minimum separations.
-
-! N.B. All coordinates & velocities must be with respect to the central body!
-! ===
-!------------------------------------------------------------------------------
-
-subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,dhit,ngf,ngflag)
+   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   !> @author 
+   !> John E. Chambers
+   !
+   !> @date 4 March 2001
+   !
+   ! DESCRIPTION: 
+   !> @brief Checks all objects with index I >= I0, to see if they have had a collision
+   !! with the central body in a time interval H, when given the initial and 
+   !! final coordinates and velocities. The routine uses cubic interpolation
+   !! to estimate the minimum separations.
+   !
+   !> @attention All coordinates & velocities must be with respect to the central body!
+   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine mce_cent (time,h,rcen,jcen,start_index,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,dhit,ngf,ngflag)
   
   use physical_constant
   use mercury_constant
 
   implicit none
-
   
-  ! Input/Output
-  integer :: i0, nbod, nbig, nhit, jhit(CMAX), ngflag
-  real(double_precision) :: time,h,rcen,jcen(3),m(nbod),x0(3,nbod),v0(3,nbod)
-  real(double_precision) :: x1(3,nbod),v1(3,nbod),thit(CMAX),dhit(CMAX),ngf(4,nbod)
+  ! Input
+  integer, intent(in) :: start_index
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x0(3,nbod)
+  real(double_precision), intent(in) :: v0(3,nbod)
+  real(double_precision), intent(in) :: x1(3,nbod)
+  real(double_precision), intent(in) :: v1(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  
+  ! Output
+  integer, intent(out) :: nhit
+  integer, intent(out) :: jhit(CMAX)
+  real(double_precision), intent(out) :: thit(CMAX)
+  real(double_precision), intent(out) :: dhit(CMAX)
   
   ! Local
+  integer :: i0 !< starting index for checking close encounters, mainly equal to start_index
   integer :: j
   real(double_precision) :: rcen2,a,q,u0,uhit,m0,mhit,mm,r0,mcen
   real(double_precision) :: hx,hy,hz,h2,p,rr0,rr1,rv0,rv1,temp,e,v2
@@ -52,7 +75,11 @@ subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,
   
   !------------------------------------------------------------------------------
   
-  if (i0.le.0) i0 = 2
+  if (start_index.le.0) then
+    i0 = 2
+  else
+    i0 = start_index
+  endif
   nhit = 0
   rcen2 = rcen * rcen
   mcen = m(1)
@@ -129,24 +156,21 @@ subroutine mce_cent (time,h,rcen,jcen,i0,nbod,nbig,m,x0,v0,x1,v1,nhit,jhit,thit,
   return
 end subroutine mce_cent
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCE_COLL.FOR    (ErikSoft   2 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Resolves a collision between two objects, using the collision model chosen
-! by the user. Also writes a message to the information file, and updates the
-! value of ELOST, the change in energy due to collisions and ejections.
-
-! N.B. All coordinates and velocities must be with respect to central body.
-! ===
-
-!------------------------------------------------------------------------------
-
-subroutine mce_coll (time,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfile)
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 October 2000
+!
+! DESCRIPTION: 
+!> @brief Resolves a collision between two objects, using the collision model chosen
+!! by the user. Also writes a message to the information file, and updates the
+!! value of ELOST, the change in energy due to collisions and ejections.
+!
+!> @note All coordinates and velocities must be with respect to central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine mce_coll (time,elost,jcen,planet_id_1,planet_id_2,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfile)
   
   use physical_constant
   use mercury_constant
@@ -155,13 +179,26 @@ subroutine mce_coll (time,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfi
 
   
   ! Input/Output
-  integer :: i,j,nbod,nbig,stat(nbod)
-  real(double_precision) :: time,elost,jcen(3)
-  real(double_precision) :: m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),rphys(nbod)
-  character(len=80) :: outfile
-  character(len=8) :: id(nbod)
+  integer, intent(in) :: planet_id_1
+  integer, intent(in) :: planet_id_2
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
+  real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
+  real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(in) :: rphys(nbod)
+  character(len=80), intent(in) :: outfile
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
+  
+  real(double_precision), intent(inout) :: elost
   
   ! Local
+  integer :: i
+  integer :: j
   integer :: year,month,itmp, error
   real(double_precision) :: t1
   character(len=38) :: flost,fcol
@@ -171,16 +208,18 @@ subroutine mce_coll (time,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfi
   
   ! If two bodies collided, check that the less massive one is removed
   ! (unless the more massive one is a Small body)
-  if (i.ne.0) then
-     if (m(j).gt.m(i).and.j.le.nbig) then
-        itmp = i
-        i = j
-        j = itmp
+  if (planet_id_1.ne.0) then
+     if (m(planet_id_2).gt.m(planet_id_1).and.planet_id_2.le.nbig) then
+        i = planet_id_2
+        j = planet_id_1
+     else
+        i = planet_id_1
+        j = planet_id_2
      end if
   end if
   
   ! Write message to info file (I=0 implies collision with the central body)
-  open (23, file=outfile, status='old', access='append', iostat=error)
+  open (23, file=outfile, status='old', position='append', iostat=error)
   if (error /= 0) then
      write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
      stop
@@ -224,26 +263,22 @@ subroutine mce_coll (time,elost,jcen,i,j,nbod,nbig,m,xh,vh,s,rphys,stat,id,outfi
   return
 end subroutine mce_coll
 
-
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCE_MERG.FOR    (ErikSoft   2 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% c
-! Author: John E. Chambers
-
-! Merges objects I and J inelastically to produce a single new body by 
-! conserving mass and linear momentum.
-!   If J <= NBIG, then J is a Big body
-!   If J >  NBIG, then J is a Small body
-!   If I = 0, then I is the central body
-
-! N.B. All coordinates and velocities must be with respect to central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 October 2000
+!
+! DESCRIPTION: 
+!> @brief Merges objects I and J inelastically to produce a single new body by 
+!! conserving mass and linear momentum.
+!!   If J <= NBIG, then J is a Big body
+!!   If J >  NBIG, then J is a Small body
+!!   If I = 0, then I is the central body
+!
+!> @note All coordinates and velocities must be with respect to central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   
   use physical_constant
@@ -253,9 +288,20 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   implicit none
 
   
-  ! Input/Output
-  integer :: i, j, nbod, nbig, stat(nbod)
-  real(double_precision) :: jcen(3),m(nbod),xh(3,nbod),vh(3,nbod),s(3,nbod),elost
+  ! Input
+  integer, intent(in) :: i
+  integer, intent(in) :: j
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  
+  ! Output
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
+  real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
+  real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(inout) :: elost
   
   ! Local
   integer :: k
@@ -362,33 +408,44 @@ subroutine mce_merg (jcen,i,j,nbod,nbig,m,xh,vh,s,stat,elost)
   return
 end subroutine mce_merg
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MXX_ELIM.FOR    (ErikSoft   13 February 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Removes any objects with STAT < 0 (i.e. those that have been flagged for 
-! removal) and reindexes all the appropriate arrays for the remaining objects.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 13 February 2001
+!
+! DESCRIPTION: 
+!> @brief Removes any objects with STAT < 0 (i.e. those that have been flagged for 
+!! removal) and reindexes all the appropriate arrays for the remaining objects.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   
   use physical_constant
   use mercury_constant
 
   implicit none
-
+  
+  ! Input
+  real(double_precision), intent(in) :: rcrit(nbod)
+  character(len=80), intent(in) :: outfile
   
   ! Input/Output
-  integer :: nbod, nbig, nelim, stat(nbod)
-  real(double_precision) :: m(nbod), x(3,nbod), v(3,nbod), s(3,nbod)
-  real(double_precision) :: rho(nbod), rceh(nbod), rcrit(nbod), ngf(4,nbod)
-  character(len=8) :: id(nbod)
-  character(len=80) :: outfile
+  integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
+  integer, intent(inout) :: nbig !< [in,out] current number of big bodies (ones that perturb everything else)
+  integer, intent(inout) :: nelim
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
+  real(double_precision), intent(inout) :: x(3,nbod)
+  real(double_precision), intent(inout) :: v(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
+  real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
+  real(double_precision), intent(inout) :: ngf(4,nbod) !< [in,out] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  
+  character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   
   ! Local
   integer :: j, k, l, nbigelim, elim(nb_bodies_initial+1)
@@ -439,7 +496,7 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   
   ! If no massive bodies remain, stop the integration
   if (nbig.lt.1) then
-     open (23,file=outfile,status='old',access='append',iostat=error)
+     open (23,file=outfile,status='old',position='append',iostat=error)
      if (error /= 0) then
         write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
         stop
@@ -454,31 +511,28 @@ subroutine mxx_elim (nbod,nbig,m,x,v,s,rho,rceh,rcrit,ngf,stat,id,outfile,nelim)
   return
 end subroutine mxx_elim
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!    MCE_SNIF.FOR    (ErikSoft   3 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Given initial and final coordinates and velocities X and V, and a timestep 
-! H, the routine estimates which objects were involved in a close encounter
-! during the timestep. The routine examines all objects with indices I >= I0.
-
-! Returns an array CE, which for each object is: 
-!                           0 if it will undergo no encounters
-!                           2 if it will pass within RCRIT of a Big body
-
-! Also returns arrays ICE and JCE, containing the indices of each pair of
-! objects estimated to have undergone an encounter.
-
-! N.B. All coordinates must be with respect to the central body!!!
-! ===
-
-!------------------------------------------------------------------------------
-
-subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 3 October 2000
+!
+! DESCRIPTION: 
+!> @brief Given initial and final coordinates and velocities X and V, and a timestep 
+!! H, the routine estimates which objects were involved in a close encounter
+!! during the timestep. The routine examines all objects with indices I >= I0.
+!!
+!! Returns an array CE, which for each object is: 
+!!                           0 if it will undergo no encounters
+!!                           2 if it will pass within RCRIT of a Big body
+!!
+!! Also returns arrays ICE and JCE, containing the indices of each pair of
+!! objects estimated to have undergone an encounter.
+!!
+!> @note All coordinates must be with respect to the central body!!!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine mce_snif (h,start_index,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   
   use physical_constant
   use mercury_constant
@@ -486,14 +540,25 @@ subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   implicit none
 
   
-  ! Input/Output
-  integer :: i0
-  integer, intent(in) :: nbod,nbig
-  real(double_precision) :: x0(3,nbod),v0(3,nbod),x1(3,nbod),v1(3,nbod),h,rcrit(nbod)
+  ! Input
+  integer, intent(in) :: start_index
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  real(double_precision), intent(in) :: x0(3,nbod)
+  real(double_precision), intent(in) :: v0(3,nbod)
+  real(double_precision), intent(in) :: x1(3,nbod)
+  real(double_precision), intent(in) :: v1(3,nbod)
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision), intent(in) :: rcrit(nbod)
   
-  integer, intent(out) :: ce(nbod),nce,ice(CMAX),jce(CMAX)
+  ! Output
+  integer, intent(out) :: ce(nbod) !< [out] close encounter status
+  integer, intent(out) :: nce
+  integer, intent(out) :: ice(CMAX)
+  integer, intent(out) :: jce(CMAX)
   
   ! Local
+  integer :: i0 !< starting index for checking close encounters, mainly equal to start_index
   integer :: i,j
   real(double_precision) :: d0,d1,d0t,d1t,d2min,temp,tmin,rc,rc2
   real(double_precision) :: dx0,dy0,dz0,du0,dv0,dw0,dx1,dy1,dz1,du1,dv1,dw1
@@ -501,7 +566,12 @@ subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   
   !------------------------------------------------------------------------------
   
-  if (i0.le.0) i0 = 2
+  if (start_index.le.0) then
+    i0 = 2
+  else
+    i0 = start_index
+  endif
+  
   nce = 0
   do j = 2, nbod
      ce(j) = 0
@@ -575,35 +645,33 @@ subroutine mce_snif (h,i0,nbod,nbig,x0,v0,x1,v1,rcrit,ce,nce,ice,jce)
   return
 end subroutine mce_snif
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!    MCE_STAT.FOR    (ErikSoft   1 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Returns details of all close-encounter minima involving at least one Big
-! body during a timestep. The routine estimates minima using the initial
-! and final coordinates X(0),X(1) and velocities V(0),V(1) of the step, and
-! the stepsize H.
-
-!  ICLO, JCLO contain the indices of the objects
-!  DCLO is their minimum separation
-!  TCLO is the time of closest approach relative to current time
-
-! The routine also checks for collisions/near misses given the physical radii 
-! RPHYS, and returns the time THIT of the collision/near miss closest to the
-! start of the timestep, and the identities IHIT and JHIT of the objects
-! involved.
-
-!  NHIT = +1 implies a collision
-!         -1    "    a near miss
-
-! N.B. All coordinates & velocities must be with respect to the central body!
-! ===
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author John E. Chambers
+!> 
+!
+!> @date 1 March 2001
+!
+! DESCRIPTION: 
+!> @brief Returns details of all close-encounter minima involving at least one Big
+!! body during a timestep. The routine estimates minima using the initial
+!! and final coordinates X(0),X(1) and velocities V(0),V(1) of the step, and
+!! the stepsize H.
+!!\n\n
+!!  ICLO, JCLO contain the indices of the objects\n
+!!  DCLO is their minimum separation\n
+!!  TCLO is the time of closest approach relative to current time
+!!\n\n
+!! The routine also checks for collisions/near misses given the physical radii 
+!! RPHYS, and returns the time THIT of the collision/near miss closest to the
+!! start of the timestep, and the identities IHIT and JHIT of the objects
+!! involved.\n\n
+!!
+!!  NHIT = +1 implies a collision\n
+!!         -1    "    a near miss\n
+!
+!> @note All coordinates & velocities must be with respect to the central body!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo,nhit,ihit,jhit,chit,dhit,&
      thit,thit1,nowflag,stat,outfile)
   
@@ -614,14 +682,39 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
 
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),nowflag
-  integer :: nclo,iclo(CMAX),jclo(CMAX)
-  integer :: nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
-  real(double_precision) :: time,h,rcen,m(nbod),x0(3,nbod),v0(3,nbod)
-  real(double_precision) :: x1(3,nbod),v1(3,nbod),rce(nbod),rphys(nbod)
-  real(double_precision) :: dclo(CMAX),tclo(CMAX),thit(CMAX),dhit(CMAX),thit1
-  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character(len=80) :: outfile
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
+  integer, intent(out) :: nowflag
+  
+  integer, intent(out) :: nclo
+  integer, intent(out) :: iclo(CMAX)
+  integer, intent(out) :: jclo(CMAX)
+  
+  integer, intent(out) :: nhit
+  integer, intent(out) :: ihit(CMAX)
+  integer, intent(out) :: jhit(CMAX)
+  integer, intent(out) :: chit(CMAX)
+  
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x0(3,nbod)
+  real(double_precision), intent(in) :: v0(3,nbod)
+  
+  real(double_precision), intent(in) :: x1(3,nbod)
+  real(double_precision), intent(in) :: v1(3,nbod)
+  real(double_precision), intent(in) :: rce(nbod)
+  real(double_precision), intent(in) :: rphys(nbod)
+  real(double_precision), intent(out) :: dclo(CMAX)
+  real(double_precision), intent(out) :: tclo(CMAX)
+  real(double_precision), intent(out) :: thit(CMAX)
+  real(double_precision), intent(out) :: dhit(CMAX)
+  real(double_precision), intent(out) :: thit1
+  real(double_precision), intent(out) :: ixvclo(6,CMAX)
+  real(double_precision), intent(out) :: jxvclo(6,CMAX)
+  character(len=80), intent(in) :: outfile
   
   ! Local
   integer :: i,j, error
@@ -692,7 +785,7 @@ subroutine mce_stat (time,h,rcen,nbod,nbig,m,x0,v0,x1,v1,rce,rphys,nclo,iclo,jcl
                ! print *, 'clo', time, nclo, i, j
               !end if
               if (nclo.gt.CMAX) then
-                 open (23,file=outfile,status='old',access='append',iostat=error)
+                 open (23,file=outfile,status='old',position='append',iostat=error)
                  if (error /= 0) then
                     write (*,'(/,2a)') " ERROR: Programme terminated. Unable to open ",trim(outfile)
                     stop

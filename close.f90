@@ -382,32 +382,29 @@ program close
   
 end program close
 
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      get_clo_format.FOR    (ErikSoft  30 November 1999)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! This routine gives the header of the output .clo file regarding the timestyle used.
-! The len of the header, and the output format is also returned.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 30 November 1999
+!
+! DESCRIPTION: 
+!> @brief This routine gives the header of the output .clo file regarding the timestyle used.
+!! The len of the header, and the output format is also returned.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine get_clo_format (timestyle,fout,header,lenhead)
 
   implicit none
 
   
   ! Input
-  integer,intent(in) :: timestyle
+  integer, intent(in) :: timestyle
   
   ! Output
-  integer,intent(out) :: lenhead ! length of the header
-  character(len=250), intent(out) :: fout,& ! The output format for the .clo file
-                                     header ! The header of the .clo file
+  integer, intent(out) :: lenhead ! length of the header
+  character(len=250), intent(out) :: fout ! The output format for the .clo file
+  character(len=250), intent(out) :: header ! The header of the .clo file
   
   !------------------------------------------------------------------------------
   

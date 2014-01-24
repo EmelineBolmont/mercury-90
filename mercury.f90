@@ -9,103 +9,6 @@
 ! Mercury is a general-purpose N-body integration package for problems in
 ! celestial mechanics.
 
-!------------------------------------------------------------------------------
-! This package contains some subroutines taken from the Swift integration 
-! package by H.F.Levison and M.J.Duncan (1994) Icarus, vol 108, pp18.
-! Routines taken from Swift have names beginning with `drift' or `orbel'.
-
-! The standard symplectic (MVS) algorithm is described in J.Widsom and
-! M.Holman (1991) Astronomical Journal, vol 102, pp1528.
-
-! The hybrid symplectic algorithm is described in J.E.Chambers (1999)
-! Monthly Notices of the RAS, vol 304, pp793.
-
-! RADAU is described in E.Everhart (1985) in ``The Dynamics of Comets:
-! Their Origin and Evolution'' p185-202, eds. A.Carusi & G.B.Valsecchi,
-! pub. Reidel.
-
-! The Bulirsch-Stoer algorithms are described in W.H.Press et al. (1992)
-! ``Numerical Recipes in Fortran'', pub. Cambridge.
-!------------------------------------------------------------------------------
-
-! Variables:
-! ---------
-!  M      = mass (in solar masses)
-!  XH     = coordinates (x,y,z) with respect to the central body (AU)
-!  VH     = velocities (vx,vy,vz) with respect to the central body (AU/day)
-!  S      = spin angular momentum (solar masses AU^2/day)
-!  RHO    = physical density (g/cm^3)
-!  RCEH   = close-encounter limit (Hill radii)
-!  STAT   = status (0 => alive, <>0 => to be removed)
-!  ID     = name of the object (8 characters)
-!  CE     = close encounter status
-!  NGF    = (1-3) cometary non-gravitational (jet) force parameters
-!   "     =  (4)  beta parameter for radiation pressure and P-R drag
-!  EPOCH  = epoch of orbit (days)
-!  NBOD  = current number of bodies (INCLUDING the central object)
-!  NBIG  =    "       "    " big bodies (ones that perturb everything else)
-!  TIME  = current epoch (days)
-!  TOUT  = time of next output evaluation
-!  TDUMP = time of next data dump
-!  TFUN  = time of next periodic effect (e.g. next check for ejections)
-!  H     = current integration timestep (days)
-!  EN(1) = initial energy of the system
-!  " (2) = current    "    "  "    "
-!  " (3) = energy change due to collisions, ejections etc.
-!  AM(1,2,3) = as above but for angular momentum
-
-! Integration Parameters :
-! ----------------------
-!  ALGOR = 1  ->  Mixed-variable symplectic
-!          2  ->  Bulirsch-Stoer integrator
-!          3  ->         "           "      (conservative systems only)
-!          4  ->  RA15 `radau' integrator
-!          10 ->  Hybrid MVS/BS (democratic-heliocentric coords)
-!          11 ->  Close-binary hybrid (close-binary coords)
-!          12 ->  Wide-binary hybrid (wide-binary coords)
-
-! TSTART = epoch of first required output (days)
-! TSTOP  =   "      final required output ( "  )
-! DTOUT  = data output interval           ( "  )
-! DTDUMP = data-dump interval             ( "  )
-! DTFUN  = interval for other periodic effects (e.g. check for ejections)
-!  H0    = initial integration timestep (days)
-!  TOL   = Integrator tolerance parameter (approx. error per timestep)
-!  RMAX  = heliocentric distance at which objects are considered ejected (AU)
-!  RCEN  = radius of central body (AU)
-!  JCEN(1,2,3) = J2,J4,J6 for central body (units of RCEN^i for Ji)
-
-! Options:
-!  OPT(1) = close-encounter option (0=stop after an encounter, 1=continue)
-!  OPT(2) = collision option (0=no collisions, 1=merge, 2=merge+fragment)
-!  OPT(3) = time style (0=days 1=Greg.date 2/3=days/years w/respect to start)
-!  OPT(4) = o/p precision (1,2,3 = 4,9,15 significant figures)
-!  OPT(5) = < Not used at present >
-!  OPT(6) = < Not used at present >
-!  OPT(7) = apply post-Newtonian correction? (0=no, 1=yes)
-!  OPT(8) = apply user-defined force routine mfo_user? (0=no, 1=yes)
-
-! File variables :
-! --------------
-!  OUTFILE  (1) = osculating coordinates/velocities and masses
-!     "     (2) = close encounter details
-!     "     (3) = information file
-!  DUMPFILE (1) = Big-body data
-!     "     (2) = Small-body data
-!     "     (3) = integration parameters
-!     "     (4) = restart file
-
-! Flags :
-! -----
-!  NGFLAG = do any bodies experience non-grav. forces?
-!                            ( 0 = no non-grav forces)
-!                              1 = cometary jets only
-!                              2 = radiation pressure/P-R drag only
-!                              3 = both
-!  OPFLAG = integration mode (-2 = synchronising epochs)
-!                             -1 = integrating towards start epoch
-!                              0 = main integration, normal output
-!                              1 = main integration, full output
 
 !------------------------------------------------------------------------------
 
@@ -301,25 +204,22 @@ program mercury
   
   contains
   
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 4 May 2001
+!
+! DESCRIPTION: 
+!> @brief Reads names, masses, coordinates and velocities of all the bodies,
+!! and integration parameters for the MERCURY integrator package. 
+!! If DUMPFILE(4) exists, the routine assumes this is a continuation of
+!! an old integration, and reads all the data from the dump files instead
+!! of the input files.
 
-!      MIO_IN.FOR    (ErikSoft   4 May 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Reads names, masses, coordinates and velocities of all the bodies,
-! and integration parameters for the MERCURY integrator package. 
-! If DUMPFILE(4) exists, the routine assumes this is a continuation of
-! an old integration, and reads all the data from the dump files instead
-! of the input files.
-
-! N.B. All coordinates are with respect to the central body!
-! ===
-
-!------------------------------------------------------------------------------
-
+!> @note All coordinates are with respect to the central body!
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,s,rho,rceh,&
      id,epoch,ngf,opflag,ngflag)
   
@@ -328,13 +228,40 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod,nbig,opflag,ngflag
-  integer :: ndump,nfun
-  real(double_precision) :: time,h0,tol,rcen,jcen(3)
-  real(double_precision) :: en(3),am(3),m(nb_bodies_initial),x(3,nb_bodies_initial),v(3,nb_bodies_initial),s(3,nb_bodies_initial)
-  real(double_precision) :: rho(nb_bodies_initial),rceh(nb_bodies_initial),epoch(nb_bodies_initial),ngf(4,nb_bodies_initial),cefac
-  character(len=8) :: id(nb_bodies_initial)
+  ! Output
+  integer, intent(out) :: nbod !< [out] current number of bodies (INCLUDING the central object)
+  integer, intent(out) :: nbig !< [out] current number of big bodies (ones that perturb everything else)
+  integer, intent(out) :: opflag !< [out] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
+  integer, intent(out) :: ngflag !< [out] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  integer, intent(out) :: ndump
+  integer, intent(out) :: nfun
+  real(double_precision), intent(out) :: time !< [out] current epoch (days)
+  real(double_precision), intent(out) :: h0 !< [out] initial integration timestep (days)
+  real(double_precision), intent(out) :: tol !< [out] Integrator tolerance parameter (approx. error per timestep)
+  real(double_precision), intent(out) :: rcen !< [out] radius of central body (AU)
+  real(double_precision), intent(out) :: jcen(3) !< [out] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(out) :: en(3) !< [out] (initial energy, current energy, energy change due to collision and ejection) of the system
+  real(double_precision), intent(out) :: am(3) !< [out] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
+  real(double_precision), intent(out) :: m(nb_bodies_initial) !< [out] mass (in solar masses * K2)
+  real(double_precision), intent(out) :: x(3,nb_bodies_initial)
+  real(double_precision), intent(out) :: v(3,nb_bodies_initial)
+  real(double_precision), intent(out) :: s(3,nb_bodies_initial) !< [out] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(out) :: rho(nb_bodies_initial) !< [out] physical density (g/cm^3)
+  real(double_precision), intent(out) :: rceh(nb_bodies_initial) !< [out] close-encounter limit (Hill radii)
+  real(double_precision), intent(out) :: epoch(nb_bodies_initial) !< [out] epoch of orbit (days)
+  real(double_precision), intent(out) :: ngf(4,nb_bodies_initial) !< [out] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  real(double_precision), intent(out) :: cefac
+  character(len=8), intent(out) :: id(nb_bodies_initial) !< [out] name of the object (8 characters)
   
   ! Local
   integer :: j,k,itmp,jtmp,informat,lim(2,10),nsub,year,month,lineno
@@ -908,23 +835,21 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   !------------------------------------------------------------------------------
 end subroutine mio_in
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 4 March 2001
+!
+! DESCRIPTION: 
+!> @brief Does an integration using a variable-timestep integration algorithm. The
+!! particular integrator routine is ONESTEP and the algorithm must use
+!! coordinates with respect to the central body.
 
-!      MAL_HVAR.FOR    (ErikSoft   4 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Does an integration using a variable-timestep integration algorithm. The
-! particular integrator routine is ONESTEP and the algorithm must use
-! coordinates with respect to the central body.
-
-! N.B. This routine is also called by the synchronisation routine mxx_sync,
-! ===  in which case OPFLAG = -2. Beware when making changes involving OPFLAG.
-
-!------------------------------------------------------------------------------
-
+!> @note This routine is also called by the synchronisation routine mxx_sync,
+!! in which case OPFLAG = -2. Beware when making changes involving OPFLAG.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
      id,ngf,opflag,ngflag,onestep)
   
@@ -933,12 +858,43 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   implicit none
 
   
+  ! Input
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  integer, intent(in) :: ndump
+  integer, intent(in) :: nfun
+  real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
+  real(double_precision), intent(in) :: cefac
+  
+  
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),opflag,ngflag,ndump,nfun
-  real(double_precision) :: time,h0,tol,jcen(3),rcen
-  real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
-  real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
-  character(len=8) :: id(nbod)
+  integer, intent(inout) :: opflag !< [in,out] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
+  integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
+  integer, intent(inout) :: nbig !< [in,out] current number of big bodies (ones that perturb everything else)
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
+  real(double_precision), intent(inout) :: time !< [in,out] current epoch (days)
+  real(double_precision), intent(inout) :: en(3) !< [in,out] (initial energy, current energy, energy change due to collision and ejection) of the system
+  real(double_precision), intent(inout) :: am(3) !< [in,out] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
+  real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
+  real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
+  real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
+  real(double_precision), intent(inout) :: ngf(4,nbod) !< [in,out] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   
   ! Local
   integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
@@ -1141,24 +1097,22 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
 end subroutine mal_hvar
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MAL_HCON.FOR    (ErikSoft   28 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Does an integration using an integrator with a constant stepsize H.
-! Input and output to this routine use coordinates XH, and velocities VH,
-! with respect to the central body, but the integration algorithm uses
-! its own internal coordinates X, and velocities V.
-
-! The programme uses the transformation routines COORD and BCOORD to change
-! to and from the internal coordinates, respectively.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 28 March 2001
+!
+! DESCRIPTION: 
+!> @brief Does an integration using an integrator with a constant stepsize H.
+!! Input and output to this routine use coordinates XH, and velocities VH,
+!! with respect to the central body, but the integration algorithm uses
+!! its own internal coordinates X, and velocities V.
+!!\n\n
+!! The programme uses the transformation routines COORD and BCOORD to change
+!! to and from the internal coordinates, respectively.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh,vh,s,rho,rceh,stat,&
      id,ngf,opflag,ngflag,onestep,coord,bcoord)
   
@@ -1166,14 +1120,42 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
 
   implicit none
 
+  ! Input
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  integer, intent(in) :: ndump
+  integer, intent(in) :: nfun
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
+  real(double_precision), intent(in) :: cefac
   
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),opflag,ngflag
-  integer :: ndump,nfun
-  real(double_precision) :: time,h0,tol,jcen(3),rcen
-  real(double_precision) :: en(3),am(3),cefac,m(nbod),xh(3,nbod),vh(3,nbod)
-  real(double_precision) :: s(3,nbod),rho(nbod),rceh(nbod),ngf(4,nbod)
-  character(len=8) :: id(nbod)
+  integer, intent(inout) :: nbod !< [in,out] current number of bodies (INCLUDING the central object)
+  integer, intent(inout) :: nbig !< [in,out] current number of big bodies (ones that perturb everything else)
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
+  integer, intent(inout) :: opflag !< [in,out] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
+  real(double_precision), intent(inout) :: time !< [in,out] current epoch (days)
+  real(double_precision), intent(inout) :: h0 !< [in,out] initial integration timestep (days)
+  real(double_precision), intent(inout) :: en(3) !< [in,out] (initial energy, current energy, energy change due to collision and ejection) of the system
+  real(double_precision), intent(inout) :: am(3) !< [in,out] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
+  real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
+  real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
+  real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
+  real(double_precision), intent(inout) :: ngf(4,nbod) !< [in,out] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   
   ! Local
   integer :: i,j,k,n,itmp,nclo,nhit,jhit(CMAX),iclo(CMAX),jclo(CMAX)
@@ -1417,36 +1399,54 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   
 end subroutine mal_hcon
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Synchronizes the epochs of NBIG Big bodies (having a common epoch) and
+!! NBOD-NBIG Small bodies (possibly having differing epochs), for an 
+!! integration using MERCURY.
+!! The Small bodies are picked up in order starting with the one with epoch
+!! furthest from the time, TSTART, at which the main integration will begin
+!! producing output.
 
-!      MXX_SYNC.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Synchronizes the epochs of NBIG Big bodies (having a common epoch) and
-! NBOD-NBIG Small bodies (possibly having differing epochs), for an 
-! integration using MERCURY.
-! The Small bodies are picked up in order starting with the one with epoch
-! furthest from the time, TSTART, at which the main integration will begin
-! producing output.
-
-! N.B. The synchronization integrations use Everhart's RA15 routine.
-! ---
-
-!------------------------------------------------------------------------------
-
+! @note The synchronization integrations use Everhart's RA15 routine.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mxx_sync (time,h0,tol,jcen,nbod,nbig,m,x,v,s,rho,rceh,stat,id,epoch,ngf,ngflag)
 
   implicit none
 
   
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  
   ! Input/Output
-  integer :: nbod,nbig,ngflag,stat(nbod)
-  real(double_precision) :: time,h0,tol,jcen(3),m(nbod),x(3,nbod),v(3,nbod)
-  real(double_precision) :: s(3,nbod),rceh(nbod),rho(nbod),epoch(nbod),ngf(4,nbod)
-  character(len=8) :: id(nbod)
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
+  real(double_precision), intent(inout) :: time !< [in,out] current epoch (days)
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
+  real(double_precision), intent(inout) :: x(3,nbod)
+  real(double_precision), intent(inout) :: v(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(inout) :: rceh(nbod) !< [in,out] close-encounter limit (Hill radii)
+  real(double_precision), intent(inout) :: rho(nbod) !< [in,out] physical density (g/cm^3)
+  real(double_precision), intent(inout) :: epoch(nbod) !< [in,out] epoch of orbit (days)
+  character(len=8), intent(inout) :: id(nbod) !< [in,out] name of the object (8 characters)
   
   ! Local
   integer :: j,k,l,nsml,nsofar,indx(nb_bodies_initial),itemp,jtemp(nb_bodies_initial)

@@ -1,3 +1,15 @@
+!******************************************************************************
+! MODULE: algo_mvs
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Modules that gather various functions about the mvs
+!! algorithm.\n\n
+!! The standard symplectic (MVS) algorithm is described in J.Widsom and
+!! M.Holman (1991) Astronomical Journal, vol 102, pp1528.
+!
+!******************************************************************************
+
 module algo_mvs
 
 !*************************************************************
@@ -23,16 +35,23 @@ module algo_mvs
   public :: mdt_mvs, mco_h2mvs, mco_mvs2h, mco_h2j, allocate_mvs
   
   contains
-  
-subroutine allocate_mvs(nb_bodies)
-! subroutine that allocate various private variable of the module to avoid testing at each timestep
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Christophe Cossou
 !
-! Parameters :
-! nb_bodies : number of bodies, that is, the size of the arrays
+!> @date 2011
+!
+! DESCRIPTION: 
+!> @brief allocate various private variable of the module to avoid 
+!! testing at each timestep
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine allocate_mvs(nb_bodies)
 
   implicit none
   
-  integer, intent(in) :: nb_bodies
+  integer, intent(in) :: nb_bodies !< [in] number of bodies, that is, the size of the arrays
   
   if (.not. allocated(a)) then
     allocate(a(3,nb_bodies))
@@ -61,20 +80,18 @@ subroutine allocate_mvs(nb_bodies)
   
 end subroutine allocate_mvs
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_H2MVS.FOR    (ErikSoft   28 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Applies an inverse symplectic corrector, which converts coordinates with
-! respect to the central body to integrator coordinates for a second-order
-! mixed-variable symplectic integrator.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 28 March 2001
+!
+! DESCRIPTION: 
+!> @brief Applies an inverse symplectic corrector, which converts coordinates with
+!! respect to the central body to integrator coordinates for a second-order
+!! mixed-variable symplectic integrator.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   
   use physical_constant
@@ -84,10 +101,28 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   implicit none
 
   
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: xh(3,nbod) !< [in] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(in) :: vh(3,nbod) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  
   ! Input/Output
-  integer :: nbod,nbig,ngflag
-  real(double_precision) :: time,jcen(3),h,m(nbod),xh(3,nbod),vh(3,nbod),x(3,nbod)
-  real(double_precision) :: v(3,nbod),ngf(4,nbod)
+  real(double_precision), intent(inout) :: x(3,nbod)
+  real(double_precision), intent(inout) :: v(3,nbod)
   
   ! Local
   integer :: j,k,iflag,stat(nb_bodies_initial)
@@ -191,20 +226,18 @@ subroutine mco_h2mvs (time,jcen,nbod,nbig,h,m,xh,vh,x,v,ngf,ngflag)
   return
 end subroutine mco_h2mvs
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_MVS2H.FOR    (ErikSoft   28 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Applies a symplectic corrector, which converts coordinates for a second-
-! order mixed-variable symplectic integrator to ones with respect to the
-! central body.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 28 March 2001
+!
+! DESCRIPTION: 
+!> @brief Applies a symplectic corrector, which converts coordinates for a second-
+!! order mixed-variable symplectic integrator to ones with respect to the
+!! central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
   use physical_constant
@@ -214,10 +247,27 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod,nbig,ngflag
-  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  
+   ! Input/Output
+  real(double_precision), intent(inout) :: xh(3,nbod) !< [in,out] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(inout) :: vh(3,nbod) !< [in,out] velocities (vx,vy,vz) with respect to the central body (AU/day)
   
   ! Local
   integer :: j,k,iflag,stat(nb_bodies_initial)
@@ -322,26 +372,23 @@ subroutine mco_mvs2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   return
 end subroutine mco_mvs2h
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 28 March 2001
+!
+! DESCRIPTION: 
+!> @brief Integrates NBOD bodies (of which NBIG are Big) for one timestep H
+!! using a second-order mixed-variable symplectic integrator.
+!\n
+!!\n DTFLAG = 0 implies first ever call to this subroutine, 
+!!\n        = 1 implies first call since number/masses of objects changed.
+!!\n        = 2 normal call
 
-!      MDT_MVS.FOR    (ErikSoft   28 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Integrates NBOD bodies (of which NBIG are Big) for one timestep H
-! using a second-order mixed-variable symplectic integrator.
-
-! DTFLAG = 0 implies first ever call to this subroutine, 
-!        = 1 implies first call since number/masses of objects changed.
-!        = 2 normal call
-
-! N.B. Input/output must be in coordinates with respect to the central body.
-! ===
-
-!------------------------------------------------------------------------------
-
+!> @note Input/output must be in coordinates with respect to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rce,stat,id,ngf,dtflag,ngflag,&
      opflag,colflag,nclo,iclo,jclo,dclo,tclo,ixvclo,jxvclo)
   
@@ -353,14 +400,51 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   implicit none
 
   
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  integer, intent(in) :: opflag !< [in] integration mode (-2 = synchronising epochs)
+!!\n                             -1 = integrating towards start epoch
+!!\n                              0 = main integration, normal output
+!!\n                              1 = main integration, full output
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: h0 !< [in] initial integration timestep (days)
+  real(double_precision), intent(in) :: tol !< [in] Integrator tolerance parameter (approx. error per timestep)
+  real(double_precision), intent(in) :: am(3) !< [in] (initial angular momentum, current angular momentum, 
+  !! angular momentum change due to collision and ejection) of the system
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: rcen !< [in] radius of central body (AU)
+  real(double_precision), intent(in) :: rphys(nbod)
+  real(double_precision), intent(in) :: rce(nbod)
+  real(double_precision), intent(in) :: rcrit(nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  character(len=8), intent(in) :: id(nbod) !< [in] name of the object (8 characters)
+  
+  ! Output
+  integer, intent(out) :: colflag
+  integer, intent(out) :: nclo
+  integer, intent(out) :: iclo(CMAX)
+  integer, intent(out) :: jclo(CMAX)
+  real(double_precision), intent(out) :: tclo(CMAX)
+  real(double_precision), intent(out) :: dclo(CMAX)
+  real(double_precision), intent(out) :: ixvclo(6,CMAX)
+  real(double_precision), intent(out) :: jxvclo(6,CMAX)
+  
   ! Input/Output
-  integer :: nbod,nbig,stat(nbod),dtflag,ngflag,opflag
-  integer :: colflag,nclo,iclo(CMAX),jclo(CMAX)
-  real(double_precision) :: time,h0,tol,en(3),am(3),jcen(3),rcen
-  real(double_precision) :: m(nbod),x(3,nbod),v(3,nbod),s(3,nbod),rphys(nbod)
-  real(double_precision) :: rce(nbod),rcrit(nbod),ngf(4,nbod),tclo(CMAX),dclo(CMAX)
-  real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX)
-  character(len=8), dimension(nbod) :: id
+  integer, intent(inout) :: stat(nbod) !< [in,out] status (0 => alive, <>0 => to be removed)
+  integer, intent(inout) :: dtflag
+  real(double_precision), intent(inout) :: m(nbod) !< [in,out] mass (in solar masses * K2)
+  real(double_precision), intent(inout) :: x(3,nbod)
+  real(double_precision), intent(inout) :: v(3,nbod)
+  real(double_precision), intent(inout) :: s(3,nbod) !< [in,out] spin angular momentum (solar masses AU^2/day)
+  real(double_precision), intent(inout) :: en(3) !< [in,out] (initial energy, current energy, energy change due to collision and ejection) of the system
   
   ! Local
   integer :: j,iflag,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX),nowflag
@@ -441,23 +525,21 @@ subroutine mdt_mvs (time,h0,tol,en,am,jcen,rcen,nbod,nbig,m,x,v,s,rphys,rcrit,rc
   return
 end subroutine mdt_mvs
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!     MFO_MVS.FOR    (ErikSoft   2 October 2000)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Calculates accelerations on a set of NBOD bodies (of which NBIG are Big)
-! due to gravitational perturbations by all the other bodies.
-! This routine is designed for use with a mixed-variable symplectic
-! integrator using Jacobi coordinates.
-
-! Based upon routines from Levison and Duncan's SWIFT integrator.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 October 2000
+!
+! DESCRIPTION: 
+!> @brief Calculates accelerations on a set of NBOD bodies (of which NBIG are Big)
+!! due to gravitational perturbations by all the other bodies.
+!! This routine is designed for use with a mixed-variable symplectic
+!! integrator using Jacobi coordinates.
+!!\n\n
+!! Based upon routines from Levison and Duncan's SWIFT integrator.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   
   use physical_constant
@@ -467,9 +549,17 @@ subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod, nbig, stat(nbod)
-  real(double_precision) :: jcen(3), m(nbod), x(3,nbod), xj(3,nbod), a(3,nbod)
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: stat(nbod) !< [in] status (0 => alive, <>0 => to be removed)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: xj(3,nbod)
+  
+  ! Output
+  real(double_precision), intent(out) :: a(3,nbod)
   
   ! Local
   integer :: i,j,k,k1
@@ -606,32 +696,47 @@ subroutine mfo_mvs (jcen,nbod,nbig,m,x,xj,a,stat)
   return
 end subroutine mfo_mvs
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_J2H.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts Jacobi coordinates to coordinates with respect to the central
-! body.
-
-! N.B. The Jacobi coordinates of the small bodies are assumed to be equal
-! ===  to their coordinates with respect to the central body.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Converts Jacobi coordinates to coordinates with respect to the central
+!! body.
+!
+!> @note The Jacobi coordinates of the small bodies are assumed to be equal
+!! to their coordinates with respect to the central body.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   
 
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod,nbig,ngflag
-  real(double_precision) :: time,jcen(3),h,m(nbod),x(3,nbod),v(3,nbod),xh(3,nbod)
-  real(double_precision) :: vh(3,nbod),ngf(4,nbod)
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  integer, intent(in) :: ngflag !< [in] do any bodies experience non-grav. forces?
+!!\n                            ( 0 = no non-grav forces)
+!!\n                              1 = cometary jets only
+!!\n                              2 = radiation pressure/P-R drag only
+!!\n                              3 = both
+  real(double_precision), intent(in) :: time !< [in] current epoch (days)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: x(3,nbod)
+  real(double_precision), intent(in) :: v(3,nbod)
+  real(double_precision), intent(in) :: ngf(4,nbod) !< [in] non gravitational forces parameters
+  !! \n(1-3) cometary non-gravitational (jet) force parameters
+  !! \n(4)  beta parameter for radiation pressure and P-R drag
+  
+  ! Output
+  real(double_precision), intent(out) :: xh(3,nbod) !< [out] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(out) :: vh(3,nbod) !< [out] velocities (vx,vy,vz) with respect to the central body (AU/day)
   
   ! Local
   integer :: j
@@ -694,30 +799,36 @@ subroutine mco_j2h (time,jcen,nbod,nbig,h,m,x,v,xh,vh,ngf,ngflag)
   return
 end subroutine mco_j2h
 
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-!      MCO_H2J.FOR    (ErikSoft   2 March 2001)
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-! Author: John E. Chambers
-
-! Converts coordinates with respect to the central body to Jacobi coordinates.
-
-! N.B. The coordinates respect to the central body for the small bodies
-! ===  are assumed to be equal to their Jacobi coordinates.
-
-!------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Converts coordinates with respect to the central body to Jacobi coordinates.
+!
+! @note The coordinates respect to the central body for the small bodies
+!! are assumed to be equal to their Jacobi coordinates.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine mco_h2j (jcen,nbod,nbig,h,m,xh,vh,x,v)
 
   implicit none
 
   
-  ! Input/Output
-  integer :: nbod,nbig
-  real(double_precision) :: jcen(3),h,m(nbig),xh(3,nbig),vh(3,nbig),x(3,nbig)
-  real(double_precision) :: v(3,nbig)
+  ! Input
+  integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+  integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+  real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+  real(double_precision), intent(in) :: h !< [in] current integration timestep (days)
+  real(double_precision), intent(in) :: m(nbig) !< [in] mass (in solar masses * K2)
+  real(double_precision), intent(in) :: xh(3,nbig) !< [in] coordinates (x,y,z) with respect to the central body (AU)
+  real(double_precision), intent(in) :: vh(3,nbig) !< [in] velocities (vx,vy,vz) with respect to the central body (AU/day)
+  
+  ! Output
+  real(double_precision), intent(out) :: x(3,nbig)
+  real(double_precision), intent(out) :: v(3,nbig)
   
   ! Local
   integer :: j
