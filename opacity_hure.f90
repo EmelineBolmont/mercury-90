@@ -1,3 +1,12 @@
+!******************************************************************************
+! MODULE: opacity_hure
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief All that you probably need for implementing opacities from (Huré, 2000)
+!
+!******************************************************************************
+
 module opacity_hure
   use types_numeriques
   use physical_constant

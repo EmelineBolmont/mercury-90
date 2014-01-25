@@ -1,12 +1,15 @@
+!******************************************************************************
+! MODULE: turbulence
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief contains routines useful for turbulences
+!
+!> @warning You must call once the subroutine "init_turbulence", in the global code or whatever
+!
+!******************************************************************************
+
 module turbulence
-
-!*************************************************************
-!** Modules that contains routines useful for turbulences
-!**
-!** Version 1.0 - mai 2012
-!*************************************************************
-
-! WARNING : You must call once the subroutine "init_turbulence", in the global code or whatever
 
   use types_numeriques
   use physical_constant
