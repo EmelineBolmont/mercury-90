@@ -183,7 +183,6 @@ contains
     if ((tides.eq.1).or.(rot_flat.eq.1)) then 
        ! Charge host body data 
        ! + initial condition on host body spin, radius
-
        if (brown_dwarf.eq.1) then 
           if (flagrg2.eq.0) then    
              sigmast = sigma_BD
@@ -493,7 +492,6 @@ contains
              flagrg2 = 1
           endif
        endif
-
     endif
 
     !~       ! Calculation of r(j), powers of r(j), 
@@ -501,7 +499,6 @@ contains
     !~       ! theta_point x er = trueanom (cf textbook)
     !~       ! Distances in AU, velocities in AU/day, horb in AU^2/day
     do j=2,ntid+1
-
        r2(j) = xh(1,j)*xh(1,j)+xh(2,j)*xh(2,j)+xh(3,j)*xh(3,j)
        r(j)  = sqrt(r2(j))
        r5(j) = r2(j)*r2(j)*r(j)
@@ -516,9 +513,7 @@ contains
        horb(2,j)  = (xh(3,j)*vh(1,j)-xh(1,j)*vh(3,j))
        horb(3,j)  = (xh(1,j)*vh(2,j)-xh(2,j)*vh(1,j))    
        horbn(j) = sqrt(horb(1,j)*horb(1,j)+horb(2,j)*horb(2,j)+horb(3,j)*horb(3,j))
-
     end do
-
 
     !~       ! Initialization of many things concerning planets
     if (ispin.eq.0) then 
@@ -627,7 +622,6 @@ contains
                 spin(3,7) = rot_crashp6(3) !day-1
              endif
           endif
-
        endif
     endif
 
@@ -897,33 +891,8 @@ contains
           enddo
        endif
 
-       ! Write stuff
-       if ((tides.eq.1).or.(rot_flat.eq.1)) then          
-          if (time.ge.timestep) then
-             open(13, file="spins.out", access="append")
-             write(13,'(8(" ", es15.9e2))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
-             close(13)
-
-             do j=2,ntid+1
-                write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
-                write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
-                open(13, file=planet_spin_filename, access='append')
-                write(13,'(6(" ", es15.9e2))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
-                close(13)
-
-                open(13, file=planet_orbt_filename, access='append')
-                write(13,'(5(" ", es15.9e2))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
-                     ,horb(3,j)/horbn(j),horbn(j)
-                close(13)
-             enddo
-             timestep = timestep + output*365.25d0
-
-          endif
-       endif
-
        !****************************************************************
        !******************** final accelerations ***********************
-
        ! We add acceleration due to tides and GR
        do j=2,ntid+1 
           if (tides.eq.1) then 
@@ -959,6 +928,28 @@ contains
           a(3,j) = tides*a1(3,j)+GenRel*a2(3,j)+rot_flat*a3(3,j)
        end do
     endif
+    
+    ! Write stuff
+    if ((tides.eq.1).or.(rot_flat.eq.1)) then          
+       if (time.ge.timestep) then
+          open(13, file="spins.out", access="append")
+          write(13,'(8(" ", es15.9e2))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
+          close(13)
+          do j=2,ntid+1
+             write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
+             write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
+             open(13, file=planet_spin_filename, access='append')
+             write(13,'(6(" ", es15.9e2))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+             close(13)
+             open(13, file=planet_orbt_filename, access='append')
+             write(13,'(5(" ", es15.9e2))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
+                  ,horb(3,j)/horbn(j),horbn(j)
+             close(13)
+          enddo
+          timestep = timestep + output*365.25d0
+       endif
+    endif    
+
     flagbug = flagbug+1
     ispin=1
 
