@@ -10,11 +10,11 @@ import numpy as np
 import pylab as pl
 import autiwa
 import sys # to get access to arguments of the script
-#~ import shutil, os
 import os
 from constants import MT, MS
 import mercury
 import mercury_utilities
+from matplotlib.lines import Line2D
 from matplotlib.ticker import FormatStrFormatter
 import glob
 
@@ -25,22 +25,34 @@ import glob
 scriptFolder = os.path.dirname(os.path.realpath(__file__)) # the folder in which the module is. 
 binaryPath = os.path.join(scriptFolder, os.path.pardir)
 
-NOM_FICHIER_PLOT = "water_content"
-OUTPUT_EXTENSION = "pdf"
+FRAME_PREFIX = "frame_water_"
+OUTPUT_FOLDER = "movie"
+#~ NOM_FICHIER_PLOT = "water_content"
+OUTPUT_EXTENSION = "png"
+NB_FRAMES = 2
+
+WATER_LIMITS = np.array([0.05, 0.1, 0.2]) # N elements
+WATER_COLORS = np.array(['#000000', '#ff0000', '#ffa500', '#0000ff']) # N+1 elements, the last one for all remaning values
+
 
 ###############################################
 ## Beginning of the program
 ###############################################
 
 # We get arguments from the script
+isLog = False
 
 #~ pdb.set_trace()
 isProblem = False
 problem_message = "AIM : Display in a m = f(a) diagram, the most massive planets and their evolution in m=f(a)" + "\n" + \
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
+" * amax=1. : the farthest location in the disk that will be displayed (in AU)" + "\n" + \
+" * mmax=1. : The maximum mass displayed (Earths)" + "\n" + \
+" * alog : Display distances in log scale" + "\n" + \
 " * tmax=1e6 : the end of the output [years]" + "\n" + \
 " * tmin=1e3 : the beginning of the output [years]" + "\n" + \
+" * frames=1 : the number of frames you want" + "\n" + \
 " * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
 " * help : display a little help message on HOW to use various options"
 
@@ -59,6 +71,16 @@ for arg in sys.argv[1:]:
     t_max = float(value)
   elif (key == 'ext'):
     OUTPUT_EXTENSION = value
+  elif (key == 'frames'):
+    NB_FRAMES = int(value)
+  elif (key == 'alog'):
+    isLog = True
+    if (value != None):
+      print(value_message % (key, key, value))
+  elif (key == 'amax'):
+    a_max = float(value)
+  elif (key == 'mmax'):
+    m_max = float(value)
   elif (key == 'help'):
     isProblem = True
     if (value != None):
@@ -71,27 +93,16 @@ if isProblem:
   print(problem_message)
   exit()
 
+if not(os.path.exists(OUTPUT_FOLDER)):
+  os.mkdir(OUTPUT_FOLDER)
+
 def get_water_color(mass_ratio):
   """From the mass ratio between water mass and total mass, return a color, 
   gradient from totally dry color and totally wet color
   """
   
-  #~ DRY_COLOR = (255., 0., 0.) # red
-  #~ WET_COLOR = (0., 0., 255.) # blue
-  #~ 
-  #~ RGB_COLOR = [int(DRY_COLOR[j] + mass_ratio*(WET_COLOR[j]-DRY_COLOR[j])) for j in range(3)]
-  #~ HEX_COLOR = "#"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB_COLOR])
-  
-  if (mass_ratio < 0.05):
-    HEX_COLOR = '#000000' # black
-  elif (mass_ratio < 0.1):
-    HEX_COLOR = '#ff0000' # red
-  elif (mass_ratio < 0.2):
-    HEX_COLOR = '#ffa500' # orange
-  elif (mass_ratio < 0.3):
-    HEX_COLOR = '#000000' # yellow
-  else:
-    HEX_COLOR = '#0000ff' # blue
+  index = WATER_LIMITS.searchsorted(mass_ratio)
+  HEX_COLOR = WATER_COLORS[index]
   
   return HEX_COLOR
 
@@ -140,17 +151,36 @@ for filename in aei_files:
 water_content = []
 for (ai,mi) in zip(a,m):
   if (ai[0] < 2.5):
-    water_mass = 0.
+    water_mass = 0. * mi
   elif (ai[0] < 5.):
     water_mass = 0.05 * mi
   else:
     water_mass = 0.5 * mi
+
+  
   water_content.append(water_mass)
 
 # For each planet name, we make a dictionnary to know the corresponding planet index
 planet_index = {}
 for (index, name) in enumerate(planet_name):
   planet_index[name] = index
+
+
+if not('a_max' in locals()):
+  a1 = [ai[0] for ai in a]
+  a2 = [ai[-1] for ai in a]
+  a1.extend(a2)
+  a_max = max(a1) # We get the biggest Semi-major axis of the simulation (either at the beginning or the end of the simulation)
+
+if not('m_max' in locals()):
+  m_max = max([mi[-1] for mi in m]) # We get the biggest mass of the simulation
+
+m_min = 0
+
+if isLog:
+  a_min = 0.01
+else:
+  a_min = 0
 
 # We get the array of reference time, i.e, one of the longuest list of time available in the list of planets. 
 len_t = [len(ti) for ti in t]
@@ -211,26 +241,108 @@ for line in lines:
     
     # Starting index to modify the remaining planet water content
     tstart_index = len(t[lost_index])
-    new_water_mass = water_content[remaining_index][tstart_index -1] + water_content[lost_index][tstart_index - 1]
+    try:
+      new_water_mass = water_content[remaining_index][tstart_index -1] + water_content[lost_index][tstart_index - 1]
+    except:
+      pdb.set_trace()
+    
+    if (type(new_water_mass) == float):
+      new_water_mass = np.array([new_water_mass])
     
     # We set the new water content right after the collision time for the remaining planet
     water_content[remaining_index][tstart_index:] = new_water_mass
 
+# on trace les plots
+autiwa.lancer_commande("rm %s/%s*" % (OUTPUT_FOLDER, FRAME_PREFIX)) # We delete the previous frames
+
+delta_t_min = (t_max - t_min) / (float(NB_FRAMES -1.))
+# Number of timestep between each frame
+# real number to be as close as possible from the real value, and do not encounter rounding problems. 
+# The conversion to an integer is done at the very end.
+ts_per_frame = delta_t_min / delta_t 
+
+if (ts_per_frame < 1):
+  ts_per_frame = 1
+  NB_FRAMES = id_max - id_min +1
+
+
+distance_format = FormatStrFormatter("%.3g")
+MAX_LENGTH = len(str(NB_FRAMES)) # The maximum number of characters needed to display
+
 plot = plot_AM.plot
 
-id_time = id_max
+# We prepare the timeline
+# Might work only if a_min and m_min are equal to 0
+timeline_width = 0.7 # total width of the plot is "1"
+timeline_height = 1.05 # total height of the plot is "1"
+timetick_length = 0.02 # The semi-length of the extremal ticks of the timeline, in units of the total height of the plot
 
-min_mass = min([min(mi) for mi in m]) # earth mass
-markersize_prefactor = 4 / (min_mass**0.33)
-for planet in range(nb_planets):
-  try:
-    water_mass_ratio = water_content[planet][id_time] / m[planet][id_time]
-    plot(a[planet][id_time], m[planet][id_time], 'o', color='#000000', 
-         markersize=max(int(markersize_prefactor * (m[planet][id_time])**0.33),markersize_prefactor), 
-         markeredgecolor=get_water_color(water_mass_ratio), markeredgewidth=4)
-  except:  
-    pass
+timeline_start = Line2D([0., 0.], [timeline_height - timetick_length, timeline_height + timetick_length], 
+                        clip_on=False, color="#000000", linewidth=3, transform=plot_AM.transAxes)
+timeline_stop = Line2D([timeline_width, timeline_width], [timeline_height - timetick_length, timeline_height + timetick_length], 
+                        clip_on=False, color="#000000", linewidth=3, transform=plot_AM.transAxes)
 
-pl.show()
 
-pdb.set_trace()
+t_frame = -1.
+for frame_i in range(NB_FRAMES):
+  id_time = id_min + int(frame_i * ts_per_frame)
+  t_frame = t_min + int(frame_i * ts_per_frame) * delta_t
+  
+  percentage = (frame_i) / float(NB_FRAMES - 1)
+  sys.stdout.write("%3.0f%% frame %*d : T = %#.2e years\r" % (percentage * 100., MAX_LENGTH, frame_i, t_frame))
+  sys.stdout.flush()
+  
+  plot_AM.clear()
+  
+  plot_AM.fill([0, 0.004, 0.004, 0, 0], [0, 0, m_max, m_max, 0], color='yellow')
+  
+  min_mass = min([min(mi) for mi in m]) # earth mass
+  markersize_prefactor = 4 / (min_mass**0.33)
+  for planet in range(nb_planets):
+    try:
+      water_mass_ratio = water_content[planet][id_time] / m[planet][id_time]
+      plot(a[planet][id_time], m[planet][id_time], 'o', color='#000000', 
+           markersize=max(int(markersize_prefactor * (m[planet][id_time])**0.33),markersize_prefactor), 
+           markeredgecolor=get_water_color(water_mass_ratio), markeredgewidth=4)
+    except:  
+      pass
+  
+  plot_AM.text(timeline_width, timeline_height, " %.0f %s" % (t_frame / time_conversion, unit_time), 
+                   horizontalalignment='left', verticalalignment='center', 
+                   size=15, transform=plot_AM.transAxes)
+  
+  plot_AM.add_line(timeline_start)
+  plot_AM.add_line(timeline_stop)
+  
+  timeline = Line2D([0., percentage * (timeline_width-0.01)], [timeline_height, timeline_height], 
+                    marker=">", markevery=(1,1), color="#000000", linewidth=3, markersize=10, 
+                    clip_on=False, transform=plot_AM.transAxes)
+  plot_AM.add_line(timeline)
+  
+  plot_AM.set_xlabel("Distance [AU]")
+  plot_AM.set_ylabel("Mass [Earths]")
+  
+  # We add legend for colors linked to water abundance
+  for (limit, color_i) in zip(WATER_LIMITS, WATER_COLORS):
+    plot_AM.fill(0., 0., color=color_i, label="Water < %.0f%%" % (limit*100.))
+  plot_AM.fill(0., 0., color=WATER_COLORS[-1], label="Water > %.0f%%" % (limit*100.))
+  
+  #~ plot_AM.axis('tight')
+  plot_AM.set_ylim(m_min, m_max)
+  plot_AM.set_xlim(a_min, a_max)
+  plot_AM.grid(True)
+  plot_AM.legend()
+  
+  if isLog:
+    plot_AM.set_xscale("log")
+  plot_AM.xaxis.set_major_formatter(distance_format)
+  
+
+  nom_fichier_plot = "%s%0*d" % (FRAME_PREFIX, MAX_LENGTH, frame_i)  
+  fig.savefig(os.path.join(OUTPUT_FOLDER, "%s.%s" % (nom_fichier_plot, OUTPUT_EXTENSION)), format=OUTPUT_EXTENSION)
+  
+sys.stdout.write("Movie Completed. Total number of frames : %d\n" % NB_FRAMES)
+sys.stdout.flush()
+
+if (NB_FRAMES<3):
+  pl.show()
