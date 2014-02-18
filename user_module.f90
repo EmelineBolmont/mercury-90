@@ -68,7 +68,7 @@ contains
     real(double_precision) :: dt,tstop,tmp,tmp1,tmp2,sigmast,Cpi,Csi
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
-    real(double_precision), dimension(3,nbig+1) :: a1,a2,a3,xh,vh
+    real(double_precision), dimension(3,nbig+1) :: a1,a2,a3,xh,vh,xh_bf,vh_bf
     real(double_precision), dimension(3,nbig+1) :: horb,trueanom
     real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la
     real(double_precision), dimension(3,nbig+1) :: Nts,Ntp,Nrs,Nrp,Ns,Np
@@ -101,7 +101,8 @@ contains
     save trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
     save timedM,radiusdM
     save timeJup,radiusJup,k2Jup,rg2Jup,spinJup
-
+    
+    save xh_bf,vh_bf
     save sigmast,k2s
     save flagrg2,flagtime,ispin,flagbug
     save timestep,nptmss
@@ -809,6 +810,10 @@ contains
                   *2.0d0*(2.0d0-tintin(j))*vrad(j)*vv(j)
           endif
        enddo
+       
+       ! **************************************************************
+       ! **************************************************************
+       ! Runge Kutta integration 
        do j=2,ntid+1  
           if (tides.eq.1) then
              ! Calculation of tidal torque !Msun.AU^2.day-2
@@ -899,6 +904,7 @@ contains
           enddo
        endif
 
+
        !****************************************************************
        !******************** final accelerations ***********************
        ! We add acceleration due to tides and GR
@@ -934,6 +940,12 @@ contains
           a(1,j) = tides*a1(1,j)+GenRel*a2(1,j)+rot_flat*a3(1,j)
           a(2,j) = tides*a1(2,j)+GenRel*a2(2,j)+rot_flat*a3(2,j)
           a(3,j) = tides*a1(3,j)+GenRel*a2(3,j)+rot_flat*a3(3,j)
+          xh_bf(1,j) = xh(1,j)
+          xh_bf(2,j) = xh(2,j)
+          xh_bf(3,j) = xh(3,j)
+          vh_bf(1,j) = vh(1,j)
+          vh_bf(2,j) = vh(2,j)
+          vh_bf(3,j) = vh(3,j)
        end do
     endif
     
@@ -957,7 +969,13 @@ contains
           timestep = timestep + output*365.25d0
        endif
     endif    
+    
+    
 
+    
+    
+    
+    
     flagbug = flagbug+1
     ispin=1
 
@@ -1008,7 +1026,26 @@ contains
 
     return
   end subroutine conversion_dh2h
+ 
+
   
+  subroutine rad_power (xhx,xhy,xhz,r_2,r,r_5,r_7,r_8)
+
+    implicit none
+
+    ! Input/Output
+    real(double_precision),intent(in) :: xhx,xhy,xhz
+    real(double_precision), intent(out) :: r_2,r,r_5,r_7,r_8
+    !------------------------------------------------------------------------------
+    r_2 = xhx*xhx+xhy*xhy+xhz*xhz
+    r   = sqrt(r_2)
+    r_5 = r_2*r_2*r
+    r_7 = r_2*r_2*r_2*r
+    r_8 = r_2*r_2*r_2*r_2
+    !------------------------------------------------------------------------------
+    return
+  end subroutine rad_power
+   
   subroutine r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspin)
 
     implicit none
