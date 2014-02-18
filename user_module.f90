@@ -62,6 +62,9 @@ contains
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: timestep!=3.6525d5!3.65d5 !4.56d6 !
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
+    real(double_precision) :: Ftidr,Ftidop,Ftidos,rscalspins,rscalspinp
+    real(double_precision) :: normspin_2s,normspin_2p,Frot_r,Frot_op,Frot_os
+    
     real(double_precision) :: dt,tstop,tmp,tmp1,tmp2,sigmast,Cpi,Csi
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
@@ -741,24 +744,25 @@ contains
        do j=2,ntid+1
           if ((tides.eq.1).or.(rot_flat.eq.1)) then 
              ! (r scalar spin)
-             rscalws(j) =(xh(1,j)*spin(1,1)+xh(2,j)*spin(2,1)+xh(3,j)*spin(3,1))
-             rscalwp(j) =(xh(1,j)*spin(1,j)+xh(2,j)*spin(2,j)+xh(3,j)*spin(3,j))
+             call r_scal_spin (xh(1,j),xh(2,j),xh(3,j),spin(1,1),spin(2,1),spin(3,1),rscalspins)
+             rscalws(j) = rscalspins
+             call r_scal_spin (xh(1,j),xh(2,j),xh(3,j),spin(1,j),spin(2,j),spin(3,j),rscalspinp)
+             rscalwp(j) = rscalspinp
           endif
           if (tides.eq.1) then 
              ! ****************** tidal force *********************
              ! Ftr in Msun.AU.day-2
              ! Ftso and Ftpo in Msun.AU.day-1
              ! K2 = G in AU^3.Msun-1.day-2
-             tmp  = K2*K2
-             tmp1 = m(1)*m(1)
-             tmp2 = m(j)*m(j)
-             Ftr(j) = -3.0d0/(r7(j)*K2) &
-                  *(tmp2*Rsth5*k2s+tmp1*Rp5(j)*dissplan(j-1)*k2p(j-1)) & 
-                  - 13.5d0*vrad(j)/(r8(j)*tmp) &
-                  *(tmp2*Rsth10*dissstar*sigmast &
-                  +tmp1*Rp10(j)*sigmap(j))           
-             Ftso(j) = 4.5d0*tmp2*Rsth10*dissstar*sigmast/(tmp*r7(j))
-             Ftpo(j) = 4.5d0*tmp1*Rp10(j)*sigmap(j)/(tmp*r7(j))
+
+             call F_tides_rad (nbod,m,r7(j),r8(j),vrad(j),Rsth5,Rsth10,k2s,dissstar,sigmast &
+                  ,Rp5(j),Rp10(j),k2p(j-1),dissplan(j-1),sigmap(j),j,Ftidr) 
+             Ftr(j) =  Ftidr      
+             call F_tides_ortho_star (nbod,m,Rsth10,dissstar,sigmast,r7(j),j,Ftidos)
+             Ftso(j) = Ftidos
+             call F_tides_ortho_plan (nbod,m,Rp10(j),sigmap(j),r7(j),j,Ftidop)
+             Ftpo(j) = Ftidop 
+
           endif
           if (tides.eq.0) then 
              Ftr(j)  = 0.0d0
@@ -773,17 +777,21 @@ contains
              ! Froto in Msun.AU.day-1
      
              ! Square of the norm of the spin
-             normspin2(1) = spin(1,1)*spin(1,1)+spin(2,1)*spin(2,1)+spin(3,1)*spin(3,1)
-             normspin2(j) = spin(1,j)*spin(1,j)+spin(2,j)*spin(2,j)+spin(3,j)*spin(3,j)
-     
-             Cpi = m(1)*k2p(j-1)*normspin2(j)*Rp5(j)/(6.d0*K2)
-             Csi = m(j)*k2s*normspin2(1)*Rsth5/(6.d0*K2)
-     
-             Frotr(j) = -3.d0/r5(j)*(Csi+Cpi) &
-                  + 15.d0/r7(j)*(Csi*rscalws(j)*rscalws(j)/normspin2(1) &
-                  +Cpi*rscalwp(j)*rscalwp(j)/normspin2(j))
-             Frotos(j) = -6.d0*Csi*rscalws(j)/(normspin2(1)*r5(j))
-             Frotop(j) = -6.d0*Cpi*rscalwp(j)/(normspin2(j)*r5(j))
+             call norm_spin_2 (spin(1,1),spin(2,1),spin(3,1),normspin_2s)
+             normspin2(1) = normspin_2s
+             call norm_spin_2 (spin(1,j),spin(2,j),spin(3,j),normspin_2p)
+             normspin2(j) = normspin_2p
+             
+             call F_rot_rad (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin,r5(j),r7(j) &
+                  ,Rsth5,k2s,Rp5(j),k2p(j-1),j,Frot_r)
+             Frotr(j) = Frot_r
+             call F_rot_ortho_p (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin(1,j),spin(2,j),spin(3,j) &
+                  ,r5(j),Rp5(j),k2p(j-1),j,Frot_op)
+             Frotop(j) = Frot_op
+             call F_rot_ortho_s (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin(1,1),spin(2,1),spin(3,1) &
+                  ,r5(j),Rsth5,k2s,j,Frot_os)
+             Frotos(j) = Frot_os
+
           endif
           if (rot_flat.eq.0) then 
              Frotr(j)  = 0.0d0
@@ -958,9 +966,7 @@ contains
 
   subroutine conversion_dh2h (nbod,nbig,m,x,v,xh,vh)
 
-
     implicit none
-
 
     ! Input/Output
     integer,intent(in) :: nbod,nbig
@@ -1002,5 +1008,203 @@ contains
 
     return
   end subroutine conversion_dh2h
+  
+  subroutine r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspin)
 
+    implicit none
+
+    ! Input/Output
+    real(double_precision),intent(in) :: xhx,xhy,xhz
+    real(double_precision),intent(in) :: spinx,spiny,spinz
+
+    real(double_precision), intent(out) :: rscalspin
+
+    ! Local
+    ! none
+
+    !------------------------------------------------------------------------------
+    rscalspin = xhx*spinx+xhy*spiny+xhz*spinz
+    !------------------------------------------------------------------------------
+
+    return
+  end subroutine r_scal_spin
+  
+  subroutine norm_spin_2 (spinx,spiny,spinz,normspin_2)
+
+    implicit none
+
+    ! Input/Output
+    real(double_precision),intent(in) :: spinx,spiny,spinz
+
+    real(double_precision), intent(out) :: normspin_2
+
+    ! Local
+    ! none
+
+    !------------------------------------------------------------------------------
+    normspin_2 = spinx*spinx+spiny*spiny+spinz*spinz
+    !------------------------------------------------------------------------------
+
+    return
+  end subroutine norm_spin_2
+  
+  subroutine F_tides_rad (nbod,m,r_7,r_8,vrad_p,R_star5,R_star10,k2_star,diss_star,sigma_star &
+       ,R_plan5,R_plan10,k2_plan,diss_plan,sigma_plan,j,Ftidr)
+
+    implicit none
+
+    ! Input/Output
+    integer,intent(in) :: nbod,j
+    real(double_precision),intent(in) :: r_7,r_8,vrad_p
+    real(double_precision),intent(in) :: R_star5,R_star10,k2_star,diss_star,sigma_star
+    real(double_precision),intent(in) :: R_plan5,R_plan10,k2_plan,diss_plan,sigma_plan
+    real(double_precision),intent(in) :: m(nbod)
+    
+    real(double_precision), intent(out) :: Ftidr
+
+    ! Local
+!~     integer :: j
+    real(double_precision) :: tmp,tmp1,tmp2,K2
+
+    !------------------------------------------------------------------------------
+    tmp  = K2*K2
+    tmp1 = m(1)*m(1)
+    tmp2 = m(j)*m(j)
+    Ftidr =  -3.0d0/(r_7*K2) &
+              *(tmp2*R_star5*k2_star+tmp1*R_plan5*diss_plan*k2_plan) & 
+              - 13.5d0*vrad_p/(r_8*tmp) &
+              *(tmp2*R_star10*diss_star*sigma_star &
+              +tmp1*R_plan10*sigma_plan)              
+    !------------------------------------------------------------------------------
+    return
+  end subroutine F_tides_rad
+  
+  subroutine F_tides_ortho_star (nbod,m,R_star10,diss_star,sigma_star,r_7,j,Ftidos)
+  
+  implicit none
+
+    ! Input/Output
+    integer,intent(in) :: nbod,j
+    real(double_precision),intent(in) :: r_7
+    real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
+    real(double_precision),intent(in) :: m(nbod)
+    
+    real(double_precision), intent(out) :: Ftidos
+
+    ! Local
+    real(double_precision) :: K2
+
+    !------------------------------------------------------------------------------
+    Ftidos = 4.5d0*m(j)*m(j)*R_star10*diss_star*sigma_star/(K2*K2*r_7)
+    !------------------------------------------------------------------------------
+    return
+  end subroutine F_tides_ortho_star 
+    
+  subroutine F_tides_ortho_plan (nbod,m,R_plan10,sigma_plan,r_7,j,Ftidop)
+  
+  implicit none
+
+    ! Input/Output
+    integer,intent(in) :: nbod,j
+    real(double_precision),intent(in) :: r_7
+    real(double_precision),intent(in) :: R_plan10,sigma_plan
+    real(double_precision),intent(in) :: m(nbod)
+    
+    real(double_precision), intent(out) :: Ftidop
+
+    ! Local
+    real(double_precision) :: K2
+
+    !------------------------------------------------------------------------------
+    Ftidop = 4.5d0*m(j)*m(j)*R_plan10*sigma_plan/(K2*K2*r_7)
+    !------------------------------------------------------------------------------
+    return
+  end subroutine F_tides_ortho_plan   
+  
+  subroutine F_rot_rad (nbod,m,xhx,xhy,xhz,spin,r_5,r_7,R_star5,k2_star,R_plan5,k2_plan,j,Frot_r)
+
+    implicit none
+
+    ! Input/Output
+    integer,intent(in) :: nbod,j
+    real(double_precision),intent(in) :: r_5,r_7
+    real(double_precision),intent(in) :: R_star5,k2_star,R_plan5,k2_plan
+    real(double_precision),intent(in) :: xhx,xhy,xhz
+    real(double_precision),intent(in) :: spin(3,10)
+    real(double_precision),intent(in) :: m(nbod)
+    
+    real(double_precision), intent(out) :: Frot_r
+
+    ! Local
+    real(double_precision) :: Cpi,Csi,K2,rscalspinp,rscalspins
+    real(double_precision) :: normspin_2p,normspin_2s
+
+    !------------------------------------------------------------------------------
+    call r_scal_spin (xhx,xhy,xhz,spin(1,j),spin(2,j),spin(3,j),rscalspinp)
+    call r_scal_spin (xhx,xhy,xhz,spin(1,1),spin(2,1),spin(3,1),rscalspins)
+    call norm_spin_2 (spin(1,j),spin(2,j),spin(3,j),normspin_2p)
+    call norm_spin_2 (spin(1,1),spin(2,1),spin(3,1),normspin_2s)
+    
+    Cpi = m(1)*k2_plan*normspin_2p*R_plan5/(6.d0*K2)
+    Csi = m(j)*k2_star*normspin_2s*R_star5/(6.d0*K2)
+    
+    Frot_r = -3.d0/r_5*(Csi+Cpi) &
+         + 15.d0/r_7*(Csi*rscalspins*rscalspins/normspin_2s &
+         +Cpi*rscalspinp*rscalspinp/normspin_2p)    
+    !------------------------------------------------------------------------------
+    return
+  end subroutine F_rot_rad
+  
+  subroutine F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,r_5,R_star5,k2_star,j,Frot_os)
+
+    implicit none
+
+    ! Input/Output
+    integer,intent(in) :: nbod,j
+    real(double_precision),intent(in) :: r_5,R_star5,k2_star
+    real(double_precision),intent(in) :: xhx,xhy,xhz
+    real(double_precision),intent(in) :: spinx,spiny,spinz
+    real(double_precision),intent(in) :: m(nbod)
+    
+    real(double_precision), intent(out) :: Frot_os
+
+    ! Local
+    real(double_precision) :: Cpi,Csi,K2,rscalspins,normspin_2s
+
+    !------------------------------------------------------------------------------
+    call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspins)
+    call norm_spin_2 (spinx,spiny,spinz,normspin_2s)
+    Csi = m(j)*k2_star*normspin_2s*R_star5/(6.d0*K2)
+    Frot_os =  -6.d0*Csi*rscalspins/(normspin_2s*r_5)  
+    !------------------------------------------------------------------------------
+    return
+  end subroutine F_rot_ortho_s
+  
+  subroutine F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,r_5,R_plan5,k2_plan,j,Frot_op)
+
+    implicit none
+
+    ! Input/Output
+    integer,intent(in) :: nbod,j
+    real(double_precision),intent(in) :: r_5,R_plan5,k2_plan
+    real(double_precision),intent(in) :: xhx,xhy,xhz
+    real(double_precision),intent(in) :: spinx,spiny,spinz
+    real(double_precision),intent(in) :: m(nbod)
+    
+    real(double_precision), intent(out) :: Frot_op
+
+    ! Local
+    real(double_precision) :: Cpi,Csi,K2,rscalspinp,normspin_2p
+
+    !------------------------------------------------------------------------------
+    call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspinp)
+    call norm_spin_2 (spinx,spiny,spinz,normspin_2p)
+    Cpi = m(1)*k2_plan*normspin_2p*R_plan5/(6.d0*K2)
+    Frot_op =  -6.d0*Cpi*rscalspinp/(normspin_2p*r_5)  
+    !------------------------------------------------------------------------------
+    return
+  end subroutine F_rot_ortho_p
+  
+  
+  
 end module user_module
