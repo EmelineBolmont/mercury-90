@@ -64,15 +64,15 @@ contains
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
     real(double_precision) :: Ftidr,Ftidop,Ftidos,rscalspins,rscalspinp
     real(double_precision) :: normspin_2s,normspin_2p,Frot_r,Frot_op,Frot_os
-    
+    real(double_precision) :: rr,r_2,r_4,r_5,r_7,r_8
     real(double_precision) :: dt,tstop,tmp,tmp1,tmp2,sigmast,Cpi,Csi
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
-    real(double_precision), dimension(3,nbig+1) :: a1,a2,a3,xh,vh,xh_bf,vh_bf
+    real(double_precision), dimension(3,nbig+1) :: a1,a2,a3,xh,vh
     real(double_precision), dimension(3,nbig+1) :: horb,trueanom
     real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la
     real(double_precision), dimension(3,nbig+1) :: Nts,Ntp,Nrs,Nrp,Ns,Np
-    real(double_precision), dimension(3,10) :: spin
+    real(double_precision), dimension(3,10) :: spin,xh_bf,vh_bf
     real(double_precision), dimension(10) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
     real(double_precision), dimension(10) :: rscalws,rscalwp,normspin2
     ! don't use after collision
@@ -503,11 +503,14 @@ contains
     !~       ! theta_point x er = trueanom (cf textbook)
     !~       ! Distances in AU, velocities in AU/day, horb in AU^2/day
     do j=2,ntid+1
-       r2(j) = xh(1,j)*xh(1,j)+xh(2,j)*xh(2,j)+xh(3,j)*xh(3,j)
-       r(j)  = sqrt(r2(j))
-       r5(j) = r2(j)*r2(j)*r(j)
-       r8(j) = r2(j)*r2(j)*r2(j)*r2(j)
-       r7(j) = r2(j)*r2(j)*r2(j)*r(j) 
+    
+       call rad_power (xh(1,j),xh(2,j),xh(3,j),r_2,rr,r_4,r_5,r_7,r_8)
+       r2(j) = r_2
+       r4(j) = r_4
+       r(j)  = rr
+       r5(j) = r_5
+       r8(j) = r_7
+       r7(j) = r_8
        v2(j) = vh(1,j)*vh(1,j)+vh(2,j)*vh(2,j)+vh(3,j)*vh(3,j)
        vv(j) = sqrt(v2(j))         
        ! Radial velocity
@@ -1029,19 +1032,20 @@ contains
  
 
   
-  subroutine rad_power (xhx,xhy,xhz,r_2,r,r_5,r_7,r_8)
+  subroutine rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
 
     implicit none
 
     ! Input/Output
     real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision), intent(out) :: r_2,r,r_5,r_7,r_8
+    real(double_precision), intent(out) :: r_2,rr,r_4,r_5,r_7,r_8
     !------------------------------------------------------------------------------
     r_2 = xhx*xhx+xhy*xhy+xhz*xhz
-    r   = sqrt(r_2)
-    r_5 = r_2*r_2*r
-    r_7 = r_2*r_2*r_2*r
-    r_8 = r_2*r_2*r_2*r_2
+    rr  = sqrt(r_2)
+    r_4 = r_2*r_2
+    r_5 = r_4*rr
+    r_7 = r_4*r_2*rr
+    r_8 = r_4*r_4
     !------------------------------------------------------------------------------
     return
   end subroutine rad_power
