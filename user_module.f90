@@ -482,7 +482,11 @@ contains
           Rsth   = radius_star*rsun
           Rst    = Rsth
           Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+          Rst_5  = Rsth5
+          Rst0_5 = Rsth5
           Rsth10 = Rsth5*Rsth5
+          Rst_10 = Rsth10
+          Rst0_10= Rsth10
           if (flagrg2.eq.0) then
              Pst = Period_st
              k2s   = k2st_what
