@@ -589,8 +589,7 @@ contains
                    spin(3,j) = spinp0*cos(oblp(j-1)+ia(j)) 
                 endif
              enddo
-          end if
-          if (crash.eq.1) then
+          else
              spin(1,1) = rot_crash(1) !day-1
              spin(2,1) = rot_crash(2) !day-1
              spin(3,1) = rot_crash(3) !day-1
