@@ -164,12 +164,6 @@ contains
        a3(2,j) = 0.d0
        a3(3,j) = 0.d0
        if (ispin.eq.0) then
-          xh_bf(1,j) = xh(1,j)
-          xh_bf(2,j) = xh(2,j)
-          xh_bf(3,j) = xh(3,j)
-          vh_bf(1,j) = vh(1,j)
-          vh_bf(2,j) = vh(2,j)
-          vh_bf(3,j) = vh(3,j)
           qq = 0.d0
           ee = 0.d0
           pp = 0.d0
@@ -200,7 +194,17 @@ contains
 
     ! Following calculations in heliocentric coordinates   
     call conversion_dh2h(nbod,nbig,m,x,v,xh,vh)    
-
+    if (ispin.eq.0) then
+       do j=2,ntid+1
+          xh_bf(1,j) = xh(1,j)
+          xh_bf(2,j) = xh(2,j)
+          xh_bf(3,j) = xh(3,j)
+          vh_bf(1,j) = vh(1,j)
+          vh_bf(2,j) = vh(2,j)
+          vh_bf(3,j) = vh(3,j)
+       enddo
+    endif      
+          
     if ((tides.eq.1).or.(rot_flat.eq.1)) then 
        ! Charge host body data 
        ! + initial condition on host body spin, radius
