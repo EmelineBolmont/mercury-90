@@ -1216,16 +1216,16 @@ contains
     if ((tides.eq.1).or.(rot_flat.eq.1)) then          
        if (time.ge.timestep) then
           open(13, file="spins.out", access="append")
-          write(13,'(8(" ", es15.9e2))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
+          write(13,'(8("  ", es16.9e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
           close(13)
           do j=2,ntid+1
              write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
              write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
              open(13, file=planet_spin_filename, access='append')
-             write(13,'(6(" ", es15.9e2))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+             write(13,'(6("  ", es16.9e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
              close(13)
              open(13, file=planet_orbt_filename, access='append')
-             write(13,'(5(" ", es15.9e2))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
+             write(13,'(5("  ", es16.9e3))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
                   ,horb(3,j)/horbn(j),horbn(j)
              close(13)
           enddo
