@@ -1143,9 +1143,9 @@ contains
              endif
              if (rot_flat.eq.1) then 
                 call Torque_rot_p (nbod,m,xh_int(1,j),xh_int(2,j),xh_int(3,j) &
-                     ,spin_bf(1,j)+k_rk_3x/2.d0 &
-                     ,spin_bf(2,j)+k_rk_3y/2.d0 &
-                     ,spin_bf(3,j)+k_rk_3z/2.d0 &
+                     ,spin_bf(1,j)+k_rk_3x &
+                     ,spin_bf(2,j)+k_rk_3y &
+                     ,spin_bf(3,j)+k_rk_3z &
                      ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
