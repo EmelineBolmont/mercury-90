@@ -164,6 +164,12 @@ contains
        a3(2,j) = 0.d0
        a3(3,j) = 0.d0
        if (ispin.eq.0) then
+          xh_bf(1,j) = xh(1,j)
+          xh_bf(2,j) = xh(2,j)
+          xh_bf(3,j) = xh(3,j)
+          vh_bf(1,j) = vh(1,j)
+          vh_bf(2,j) = vh(2,j)
+          vh_bf(3,j) = vh(3,j)
           qq = 0.d0
           ee = 0.d0
           pp = 0.d0
@@ -224,8 +230,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
-             endif
-             if ((m(1).le.0.0121*K2).and.(m(1).ge.0.0119*K2)) then
+             else if ((m(1).le.0.0121*K2).and.(m(1).ge.0.0119*K2)) then
                 iPs0 = 2
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -238,8 +243,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
-             endif
-             if ((m(1).le.0.0151*K2).and.(m(1).ge.0.0149*K2)) then
+             else if ((m(1).le.0.0151*K2).and.(m(1).ge.0.0149*K2)) then
                 iPs0 = 3
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -252,8 +256,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
-             endif
-             if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then
+             else if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then
                 iPs0 = 4
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -266,8 +269,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
-             endif
-             if ((m(1).le.0.0301*K2).and.(m(1).ge.0.0299*K2)) then
+             else if ((m(1).le.0.0301*K2).and.(m(1).ge.0.0299*K2)) then
                 iPs0 = 5
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -280,8 +282,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
-             endif
-             if ((m(1).le.0.0401*K2).and.(m(1).ge.0.0399*K2)) then
+             else if ((m(1).le.0.0401*K2).and.(m(1).ge.0.0399*K2)) then
                 iPs0 = 6
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -294,8 +295,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)  
                 end do
-             endif
-             if ((m(1).le.0.0501*K2).and.(m(1).ge.0.0499*K2)) then
+             else if ((m(1).le.0.0501*K2).and.(m(1).ge.0.0499*K2)) then
                 iPs0 = 7
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -308,8 +308,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
-             endif
-             if ((m(1).le.0.0601*K2).and.(m(1).ge.0.0599*K2)) then
+             else if ((m(1).le.0.0601*K2).and.(m(1).ge.0.0599*K2)) then
                 iPs0 = 8
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -322,8 +321,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
-             endif
-             if ((m(1).le.0.0701*K2).and.(m(1).ge.0.0699*K2)) then
+             else if ((m(1).le.0.0701*K2).and.(m(1).ge.0.0699*K2)) then
                 iPs0 = 9
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -336,8 +334,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
-             endif
-             if ((m(1).le.0.0721*K2).and.(m(1).ge.0.0719*K2)) then
+             else if ((m(1).le.0.0721*K2).and.(m(1).ge.0.0719*K2)) then
                 iPs0 = 10
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -350,8 +347,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
-             endif
-             if ((m(1).le.0.0751*K2).and.(m(1).ge.0.0749*K2)) then
+             else if ((m(1).le.0.0751*K2).and.(m(1).ge.0.0749*K2)) then
                 iPs0 = 11
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -364,8 +360,7 @@ contains
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
-             endif
-             if ((m(1).le.0.0801*K2).and.(m(1).ge.0.0799*K2)) then
+             else if ((m(1).le.0.0801*K2).and.(m(1).ge.0.0799*K2)) then
                 iPs0 = 12
                 k2s  = k2st(iPs0)
                 Pst0 = Ps0(iPs0)
@@ -386,8 +381,7 @@ contains
                 spin(1,1) = 0.d0
                 spin(2,1) = 0.d0
                 spin(3,1) = spin0
-             endif
-             if (crash.eq.1) then
+             else
                 spin(1,1) = rot_crash(1) 
                 spin(2,1) = rot_crash(2) 
                 spin(3,1) = rot_crash(3) 
@@ -412,8 +406,7 @@ contains
                 spin(1,1) = 0.d0
                 spin(2,1) = 0.d0
                 spin(3,1) = spin0
-             end if
-             if (crash.eq.1) then
+             else
                 spin(1,1) = rot_crash(1)
                 spin(2,1) = rot_crash(2)
                 spin(3,1) = rot_crash(3)
@@ -439,8 +432,7 @@ contains
                 spin(1,1) = 0.d0
                 spin(2,1) = 0.d0
                 spin(3,1) = spin0
-             end if
-             if (crash.eq.1) then
+             else
                 spin(1,1) = rot_crash(1) !day-1
                 spin(2,1) = rot_crash(2) !day-1
                 spin(3,1) = rot_crash(3) !day-1
@@ -469,8 +461,7 @@ contains
                 spin(1,1) = 0.d0
                 spin(2,1) = 0.d0
                 spin(3,1) = spin0
-             end if
-             if (crash.eq.1) then
+             else
                 spin(1,1) = rot_crash(1)
                 spin(2,1) = rot_crash(2)
                 spin(3,1) = rot_crash(3)
@@ -498,8 +489,7 @@ contains
                 spin(1,1) = 0.d0
                 spin(2,1) = 0.d0
                 spin(3,1) = spin0
-             end if
-             if (crash.eq.1) then
+             else
                 spin(1,1) = rot_crash(1) !day-1
                 spin(2,1) = rot_crash(2) !day-1
                 spin(3,1) = rot_crash(3) !day-1
@@ -650,8 +640,7 @@ contains
              call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-dt,rg2s0)
              call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s)
              call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-dt*0.5d0,rg2sh)
-          endif
-          if (crash.eq.1) then
+          else
              if (ispin.eq.0) then 
                 call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-dt,Rstb0)
                 Rst0    = Rsun * Rstb0
@@ -687,8 +676,7 @@ contains
              Rsth   = Rsun * Rstbh
              Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
              Rsth10 = Rsth5*Rsth5
-          endif
-          if (crash.eq.1) then
+          else
              if (ispin.eq.0) then 
                 call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash-dt,Rstb0)
                 Rst0    = Rsun * Rstb0
@@ -721,8 +709,7 @@ contains
              Rsth   = minau * Rstbh
              Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
              Rsth10 = Rsth5*Rsth5
-          endif
-          if (crash.eq.1) then
+          else
              if (ispin.eq.0) then 
                 call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash-dt,Rstb0)
                 Rst0    = minau * Rstb0
@@ -759,8 +746,7 @@ contains
              call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s)
              call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-dt*0.5d0,rg2sh)
              call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time-dt*0.5d0,k2s)
-          endif
-          if (crash.eq.1) then
+          else
              if (ispin.eq.0) then 
                 call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-dt,Rstb0)
                 Rst0    = minau * Rstb0
