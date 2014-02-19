@@ -781,27 +781,28 @@ contains
        ! **************************************************************
        
        if ((tides.eq.1).or.(rot_flat.eq.1)) then       
-       
-          ! interpolation of value of x at time-dt/2 
-          call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-               ,(/xh_bf2(1,j),xh_bf(1,j),xh(1,j)/),time-dt*0.5d0,xintermediate)
-          xh_int(1,j) = xintermediate
-          call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-               ,(/xh_bf2(2,j),xh_bf(2,j),xh(2,j)/),time-dt*0.5d0,xintermediate)
-          xh_int(2,j) = xintermediate
-          call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-               ,(/xh_bf2(3,j),xh_bf(3,j),xh(3,j)/),time-dt*0.5d0,xintermediate)
-          xh_int(3,j) = xintermediate
-          ! interpolation of value of v at time-dt/2 
-          call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-               ,(/vh_bf2(1,j),vh_bf(1,j),vh(1,j)/),time-dt*0.5d0,xintermediate)
-          vh_int(1,j) = xintermediate
-          call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-               ,(/vh_bf2(2,j),vh_bf(2,j),vh(2,j)/),time-dt*0.5d0,xintermediate)
-          vh_int(2,j) = xintermediate
-          call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-               ,(/vh_bf2(3,j),vh_bf(3,j),vh(3,j)/),time-dt*0.5d0,xintermediate)
-          vh_int(3,j) = xintermediate
+          do j=2,ntid+1
+             ! interpolation of value of x at time-dt/2 
+             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                  ,(/xh_bf2(1,j),xh_bf(1,j),xh(1,j)/),time-dt*0.5d0,xintermediate)
+             xh_int(1,j) = xintermediate
+             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                  ,(/xh_bf2(2,j),xh_bf(2,j),xh(2,j)/),time-dt*0.5d0,xintermediate)
+             xh_int(2,j) = xintermediate
+             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                  ,(/xh_bf2(3,j),xh_bf(3,j),xh(3,j)/),time-dt*0.5d0,xintermediate)
+             xh_int(3,j) = xintermediate
+             ! interpolation of value of v at time-dt/2 
+             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                  ,(/vh_bf2(1,j),vh_bf(1,j),vh(1,j)/),time-dt*0.5d0,xintermediate)
+             vh_int(1,j) = xintermediate
+             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                  ,(/vh_bf2(2,j),vh_bf(2,j),vh(2,j)/),time-dt*0.5d0,xintermediate)
+             vh_int(2,j) = xintermediate
+             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                  ,(/vh_bf2(3,j),vh_bf(3,j),vh(3,j)/),time-dt*0.5d0,xintermediate)
+             vh_int(3,j) = xintermediate
+          enddo   
        
           ! **************************************************************
           ! STAR spin evolution
