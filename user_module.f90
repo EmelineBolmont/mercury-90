@@ -1398,6 +1398,7 @@ contains
        ,R_star5,R_star10,k2_star,diss_star,sigma_star &
        ,R_plan5,R_plan10,k2_plan,diss_plan,sigma_plan,j,Ftidr)
 
+    use physical_constant
     implicit none
 
     ! Input/Output
@@ -1411,7 +1412,7 @@ contains
 
     ! Local
 !~     integer :: j
-    real(double_precision) :: tmp,tmp1,tmp2,K2
+    real(double_precision) :: tmp,tmp1,tmp2
     real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
 
     !------------------------------------------------------------------------------
@@ -1431,6 +1432,7 @@ contains
   
   subroutine F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10,diss_star,sigma_star,j,Ftidos)
   
+  use physical_constant
   implicit none
 
     ! Input/Output
@@ -1442,7 +1444,7 @@ contains
     real(double_precision), intent(out) :: Ftidos
 
     ! Local
-    real(double_precision) :: K2,r_2,rr,r_4,r_5,r_7,r_8
+    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
 
     !------------------------------------------------------------------------------
     call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
@@ -1453,6 +1455,7 @@ contains
     
   subroutine F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
   
+  use physical_constant
   implicit none
 
     ! Input/Output
@@ -1464,7 +1467,7 @@ contains
     real(double_precision), intent(out) :: Ftidop
 
     ! Local
-    real(double_precision) :: K2,r_2,rr,r_4,r_5,r_7,r_8
+    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
 
     !------------------------------------------------------------------------------
     call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
@@ -1488,7 +1491,7 @@ contains
     real(double_precision), intent(out) :: N_tid_px,N_tid_py,N_tid_pz
 
     ! Local
-    real(double_precision) :: K2,r_2,rr,r_4,r_5,r_7,r_8,rscalspin,Ftidop
+    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,rscalspin,Ftidop
 
     !------------------------------------------------------------------------------
     call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
@@ -1516,7 +1519,7 @@ contains
     real(double_precision), intent(out) :: N_tid_sx,N_tid_sy,N_tid_sz
 
     ! Local
-    real(double_precision) :: K2,r_2,rr,r_4,r_5,r_7,r_8,rscalspin,Ftidos
+    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,rscalspin,Ftidos
 
     !------------------------------------------------------------------------------
     call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
@@ -1532,6 +1535,7 @@ contains
   subroutine acc_tides (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin,R_star5,R_star10,k2_star,diss_star,sigma_star &
        ,R_plan5,R_plan10,k2_plan,diss_plan,sigma_plan,j,acc_tid_x,acc_tid_y,acc_tid_z)
 
+    use physical_constant
     implicit none
 
     ! Input/Output
@@ -1545,7 +1549,7 @@ contains
 
     ! Local
 !~     integer :: j
-    real(double_precision) :: tmp,tmp1,K2,r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+    real(double_precision) :: tmp,tmp1,r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
     real(double_precision) :: Ftidr,Ftidos,Ftidop
 
     !------------------------------------------------------------------------------
@@ -1585,6 +1589,7 @@ contains
   
   subroutine F_rot_rad (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan,j,Frot_r)
 
+    use physical_constant
     implicit none
 
     ! Input/Output
@@ -1597,7 +1602,7 @@ contains
     real(double_precision), intent(out) :: Frot_r
 
     ! Local
-    real(double_precision) :: Cpi,Csi,K2,rscalspinp,rscalspins
+    real(double_precision) :: Cpi,Csi,rscalspinp,rscalspins
     real(double_precision) :: normspin_2p,normspin_2s,r_2,rr,r_4,r_5,r_7,r_8
 
     !------------------------------------------------------------------------------
@@ -1619,6 +1624,7 @@ contains
   
   subroutine F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_star5,k2_star,j,Frot_os)
 
+    use physical_constant
     implicit none
 
     ! Input/Output
@@ -1631,7 +1637,7 @@ contains
     real(double_precision), intent(out) :: Frot_os
 
     ! Local
-    real(double_precision) :: Cpi,Csi,K2,rscalspins,normspin_2s,r_2,rr,r_4,r_5,r_7,r_8
+    real(double_precision) :: Cpi,Csi,rscalspins,normspin_2s,r_2,rr,r_4,r_5,r_7,r_8
 
     !------------------------------------------------------------------------------
     call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
@@ -1645,6 +1651,7 @@ contains
   
   subroutine F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_plan5,k2_plan,j,Frot_op)
 
+    use physical_constant
     implicit none
 
     ! Input/Output
@@ -1657,7 +1664,7 @@ contains
     real(double_precision), intent(out) :: Frot_op
 
     ! Local
-    real(double_precision) :: Cpi,Csi,K2,rscalspinp,normspin_2p,r_2,rr,r_4,r_5,r_7,r_8
+    real(double_precision) :: Cpi,Csi,rscalspinp,normspin_2p,r_2,rr,r_4,r_5,r_7,r_8
 
     !------------------------------------------------------------------------------
     call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
@@ -1684,7 +1691,7 @@ contains
     real(double_precision), intent(out) :: N_rot_px,N_rot_py,N_rot_pz
 
     ! Local
-    real(double_precision) :: K2,Frot_op
+    real(double_precision) :: Frot_op
 
     !------------------------------------------------------------------------------
     call F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_plan5,k2_plan,j,Frot_op)               
@@ -1710,7 +1717,7 @@ contains
     real(double_precision), intent(out) :: N_rot_sx,N_rot_sy,N_rot_sz
 
     ! Local
-    real(double_precision) :: K2,Frot_os
+    real(double_precision) :: Frot_os
 
     !------------------------------------------------------------------------------
     call F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_star5,k2_star,j,Frot_os)               
@@ -1724,6 +1731,7 @@ contains
   subroutine acc_rotation (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan &
        ,j,acc_rot_x,acc_rot_y,acc_rot_z)
 
+    use physical_constant
     implicit none
 
     ! Input/Output
@@ -1737,7 +1745,7 @@ contains
 
     ! Local
 !~     integer :: j
-    real(double_precision) :: tmp,K2
+    real(double_precision) :: tmp
     real(double_precision) :: Frot_r,Frot_os,Frot_op
 
     !------------------------------------------------------------------------------
