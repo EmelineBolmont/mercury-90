@@ -115,12 +115,11 @@ module tides_constant_GR
   real(double_precision), parameter :: C2 = 1.731444830225d2
   
   ! Runge Kutta parameters
-  real(double_precision), parameter, dimension(5) :: aa = (/1.d0/5.d0,3.d0/1.d1,3.d0/5.d0 &
-                                                             ,1.d0,7.d0/8.d0/)
-  real(double_precision), parameter :: bb2 = 1.d0/5.d0
-  real(double_precision), parameter, dimension(2) :: bb3 = (/3.d0/4.d1,9.d0/4.d1/)
-  real(double_precision), parameter, dimension(3) :: bb4 = (/3.d0/1.d1,-9.d0/1.d1,6.d0/5.d0/)
-  real(double_precision), parameter, dimension(4) :: bb5 = (/-1.1d0/5.4d0,5.d0/2.d0,-7.d0/2.7d0 &
+  real(double_precision), parameter, dimension(5) :: aa = (/0.2d0,0.3d0,0.6d0,1.d0,0.875d0/)
+  real(double_precision), parameter :: bb2 = 0.2d0
+  real(double_precision), parameter, dimension(2) :: bb3 = (/7.5d-2,2.25d-1/)
+  real(double_precision), parameter, dimension(3) :: bb4 = (/0.3d0,-0.9d0,1.2d0/)
+  real(double_precision), parameter, dimension(4) :: bb5 = (/-1.1d0/5.4d0,2.5d0,-7.d0/2.7d0 &
                                                              ,3.5d0/2.7d0/)
   real(double_precision), parameter, dimension(5) :: bb6 = (/1.631d0/5.5296d1,1.75d0/5.12d0 &
                                                               ,5.75d0/1.3824d2 &

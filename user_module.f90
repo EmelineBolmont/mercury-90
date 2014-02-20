@@ -54,7 +54,7 @@ contains
     !real(double_precision),intent(inout) entrée sortie pour spin
 
     ! Local
-    integer :: j, error, nptmss, iPs0
+    integer :: j,kk, error, nptmss, iPs0
     integer :: flagrg2=0
     integer :: flagtime=0
     integer :: ispin=0
@@ -68,12 +68,11 @@ contains
     real(double_precision) :: rr,r_2,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
     real(double_precision) :: N_tid_px,N_tid_py,N_tid_pz,N_tid_sx,N_tid_sy,N_tid_sz
     real(double_precision) :: N_rot_px,N_rot_py,N_rot_pz,N_rot_sx,N_rot_sy,N_rot_sz
-    real(double_precision) :: k_rk_1x,k_rk_1y,k_rk_1z
-    real(double_precision) :: k_rk_2x,k_rk_2y,k_rk_2z
-    real(double_precision) :: k_rk_3x,k_rk_3y,k_rk_3z
-    real(double_precision) :: k_rk_4x,k_rk_4y,k_rk_4z
+    real(double_precision) :: k_rk_1x,k_rk_2x,k_rk_3x,k_rk_4x,k_rk_5x,k_rk_6x
+    real(double_precision) :: k_rk_1y,k_rk_2y,k_rk_3y,k_rk_4y,k_rk_5y,k_rk_6y
+    real(double_precision) :: k_rk_1z,k_rk_2z,k_rk_3z,k_rk_4z,k_rk_5z,k_rk_6z
     real(double_precision) :: xintermediate
-    real(double_precision) :: dt,tstop,tmp,tmp1,tmp2,sigmast
+    real(double_precision) :: dt,hdt,tstop,tmp,tmp1,tmp2,sigmast
     real(double_precision), dimension(2) :: bobo
     real(double_precision), dimension(3) :: totftides
     real(double_precision), dimension(3,nbig+1) :: a1,a2,a3,xh,vh
@@ -81,7 +80,11 @@ contains
     real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la
     real(double_precision), dimension(3,nbig+1) :: Nts,Ntp,Nrs,Nrp,Ns,Np
     real(double_precision), dimension(3,10) :: spin,spin_bf,xh_bf,vh_bf,xh_bf2,vh_bf2
-    real(double_precision), dimension(3,10) :: xh_int,vh_int
+    real(double_precision), dimension(3,nbig+1) :: xh_1_rk2,vh_1_rk2,xh_2_rk2,vh_2_rk2
+    real(double_precision), dimension(3,nbig+1) :: xh_1_rk3,vh_1_rk3,xh_2_rk3,vh_2_rk3
+    real(double_precision), dimension(3,nbig+1) :: xh_1_rk4,vh_1_rk4,xh_2_rk4,vh_2_rk4
+    real(double_precision), dimension(3,nbig+1) :: xh_1_rk5,vh_1_rk5,xh_2_rk5,vh_2_rk5
+    real(double_precision), dimension(3,nbig+1) :: xh_1_rk6,vh_1_rk6,xh_2_rk6,vh_2_rk6
     real(double_precision), dimension(10) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
     real(double_precision), dimension(10) :: rscalws,rscalwp,normspin2
     ! don't use after collision
@@ -117,7 +120,7 @@ contains
     save sigmast,k2s
     save flagrg2,flagtime,ispin,flagbug
     save timestep,nptmss,Rst0,Rst0_5,Rst0_10
-    save spin_bf,dt
+    save spin_bf,dt,hdt
     save Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
 
     !------------------------------------------------------------------------------
@@ -189,6 +192,7 @@ contains
        bobo = get_initial_timestep()
        tstop = bobo(1)
        dt = bobo(2)
+       hdt = 0.5d0*dt
        flagtime = flagtime+1
     endif
 
@@ -785,32 +789,83 @@ contains
        
        if ((tides.eq.1).or.(rot_flat.eq.1)) then       
           do j=2,ntid+1
-             ! interpolation of value of x at time-dt/2 
-             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                  ,(/xh_bf2(1,j),xh_bf(1,j),xh(1,j)/),time-dt*0.5d0,xintermediate)
-             xh_int(1,j) = xintermediate
-             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                  ,(/xh_bf2(2,j),xh_bf(2,j),xh(2,j)/),time-dt*0.5d0,xintermediate)
-             xh_int(2,j) = xintermediate
-             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                  ,(/xh_bf2(3,j),xh_bf(3,j),xh(3,j)/),time-dt*0.5d0,xintermediate)
-             xh_int(3,j) = xintermediate
-             ! interpolation of value of v at time-dt/2 
-             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                  ,(/vh_bf2(1,j),vh_bf(1,j),vh(1,j)/),time-dt*0.5d0,xintermediate)
-             vh_int(1,j) = xintermediate
-             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                  ,(/vh_bf2(2,j),vh_bf(2,j),vh(2,j)/),time-dt*0.5d0,xintermediate)
-             vh_int(2,j) = xintermediate
-             call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                  ,(/vh_bf2(3,j),vh_bf(3,j),vh(3,j)/),time-dt*0.5d0,xintermediate)
-             vh_int(3,j) = xintermediate
+             do kk=1,3
+!~                 ! interpolation of value of x at time-dt/2 
+!~                 call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+!~                      ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-dt*0.5d0,xintermediate)
+!~                 xh_int(kk,j) = xintermediate
+!~                 ! interpolation of value of v at time-dt/2 
+!~                 call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+!~                      ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-dt*0.5d0,xintermediate)
+!~                 vh_int(kk,j) = xintermediate
+                ! Interpolation for Runge-Kutta steps on first half of timestep
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(1))*dt*0.5d0,xintermediate)
+                xh_1_rk2(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(1))*dt*0.5d0,xintermediate)
+                vh_1_rk2(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(2))*dt*0.5d0,xintermediate)
+                xh_1_rk3(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(2))*dt*0.5d0,xintermediate)
+                vh_1_rk3(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(3))*dt*0.5d0,xintermediate)
+                xh_1_rk4(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(3))*dt*0.5d0,xintermediate)
+                vh_1_rk4(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-dt*0.5d0,xintermediate)
+                xh_1_rk5(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-dt*0.5d0,xintermediate)
+                vh_1_rk5(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(5))*dt*0.5d0,xintermediate)
+                xh_1_rk6(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(5))*dt*0.5d0,xintermediate)
+                vh_1_rk6(kk,j) = xintermediate
+                ! Interpolation for Runge-Kutta steps on second half of timestep
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(1))*dt*0.5d0,xintermediate)
+                xh_2_rk2(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(1))*dt*0.5d0,xintermediate)
+                vh_2_rk2(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(2))*dt*0.5d0,xintermediate)
+                xh_2_rk3(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(2))*dt*0.5d0,xintermediate)
+                vh_2_rk3(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(3))*dt*0.5d0,xintermediate)
+                xh_2_rk4(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(3))*dt*0.5d0,xintermediate)
+                vh_2_rk4(kk,j) = xintermediate
+                xh_2_rk5(kk,j) = xh(kk,j)
+                vh_2_rk5(kk,j) = vh(kk,j)
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(5))*dt*0.5d0,xintermediate)
+                xh_2_rk6(kk,j) = xintermediate
+                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(5))*dt*0.5d0,xintermediate)
+                vh_2_rk6(kk,j) = xintermediate
+             enddo
+
+             
           enddo   
        
           ! **************************************************************
           ! STAR spin evolution
           ! **************************************************************
 
+          ! First half of timestep
           ! Torque at last time step t=time-dt
           ! Calculation of Runge-kutta factor k1
           do j=2,ntid+1 
@@ -847,31 +902,31 @@ contains
              totftides(3) = totftides(3) + tmp*Ns(3,j)
           end do   
           if (Rscst.eq.1) then 
-             tmp = - dt/(rg2s*Rst*Rst)
+             tmp = - hdt/(rg2s*Rst*Rst)
              k_rk_1x = tmp*totftides(1)
              k_rk_1y = tmp*totftides(2)
              k_rk_1z = tmp*totftides(3)           
           else if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
-             tmp = - dt/(rg2s*Rst0*Rst0)
+             tmp = - hdt/(rg2s*Rst0*Rst0)
              k_rk_1x = tmp*totftides(1)
              k_rk_1y = tmp*totftides(2)
              k_rk_1z = tmp*totftides(3)
           else if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
-             tmp = - dt/(rg2s0*Rst0*Rst0)
+             tmp = - hdt/(rg2s0*Rst0*Rst0)
              k_rk_1x = tmp*totftides(1)
              k_rk_1y = tmp*totftides(2)
              k_rk_1z = tmp*totftides(3)
           endif
           
-          ! Torque at t=time-dt/2 
+          ! Torque at t=time-hdt*(2-a(2)) 
           ! Calculation of Runge-kutta factor k2
           do j=2,ntid+1 
              if (tides.eq.1) then
-                call Torque_tides_s (nbod,m,xh_int(1,j),xh_int(2,j),xh_int(3,j) &
-                     ,vh_int(1,j),vh_int(2,j),vh_int(3,j) &
-                     ,spin_bf(1,1) + k_rk_1x/2.0d0 &
-                     ,spin_bf(2,1) + k_rk_1y/2.0d0 &
-                     ,spin_bf(3,1) + k_rk_1z/2.0d0 &
+                call Torque_tides_s (nbod,m,xh_1_rk2(1,j),xh_1_rk2(2,j),xh_1_rk2(3,j) &
+                     ,vh_1_rk2(1,j),vh_1_rk2(2,j),vh_1_rk2(3,j) &
+                     ,spin_bf(1,1) + bb2*k_rk_1x &
+                     ,spin_bf(2,1) + bb2*k_rk_1y &
+                     ,spin_bf(3,1) + bb2*k_rk_1z &
                      ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
              else
                 N_tid_sx = 0.0d0
@@ -879,10 +934,10 @@ contains
                 N_tid_sz = 0.0d0
              endif
              if (rot_flat.eq.1) then 
-                call Torque_rot_s (nbod,m,xh_int(1,j),xh_int(2,j),xh_int(3,j) &
-                     ,spin_bf(1,1) + k_rk_1x/2.0d0 &
-                     ,spin_bf(2,1) + k_rk_1y/2.0d0 &
-                     ,spin_bf(3,1) + k_rk_1z/2.0d0 &
+                call Torque_rot_s (nbod,m,xh_1_rk2(1,j),xh_1_rk2(2,j),xh_1_rk2(3,j) &
+                     ,spin_bf(1,1) + bb2*k_rk_1x &
+                     ,spin_bf(2,1) + bb2*k_rk_1y &
+                     ,spin_bf(3,1) + bb2*k_rk_1z &
                      ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
              else
                 N_rot_sx = 0.0d0
@@ -903,31 +958,31 @@ contains
              totftides(3) = totftides(3) + tmp*Ns(3,j)
           end do   
           if (Rscst.eq.1) then 
-             tmp = - dt/(rg2s*Rst*Rst)
+             tmp = - hdt/(rg2s*Rst*Rst)
              k_rk_2x = tmp*totftides(1)
              k_rk_2y = tmp*totftides(2)
              k_rk_2z = tmp*totftides(3)           
           else if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
-             tmp = - dt/(rg2s*Rsth*Rsth)
+             tmp = - hdt/(rg2s*Rsth*Rsth)
              k_rk_2x = tmp*totftides(1)
              k_rk_2y = tmp*totftides(2)
              k_rk_2z = tmp*totftides(3)
           else if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
-             tmp = - dt/(rg2sh*Rsth*Rsth)
+             tmp = - hdt/(rg2sh*Rsth*Rsth)
              k_rk_2x = tmp*totftides(1)
              k_rk_2y = tmp*totftides(2)
              k_rk_2z = tmp*totftides(3)
           endif
           
-          ! Torque at t=time-dt/2 
+          ! Torque at t=time-hdt*(2-a(3)) 
           ! Calculation of Runge-kutta factor k3
           do j=2,ntid+1 
              if (tides.eq.1) then
-                call Torque_tides_s (nbod,m,xh_int(1,j),xh_int(2,j),xh_int(3,j) &
-                     ,vh_int(1,j),vh_int(2,j),vh_int(3,j) &
-                     ,spin_bf(1,1) + k_rk_2x/2.0d0 &
-                     ,spin_bf(2,1) + k_rk_2y/2.0d0 &
-                     ,spin_bf(3,1) + k_rk_2z/2.0d0 &
+                call Torque_tides_s (nbod,m,xh_1_rk3(1,j),xh_1_rk3(2,j),xh_1_rk3(3,j) &
+                     ,vh_1_rk3(1,j),vh_1_rk3(2,j),vh_1_rk3(3,j) &
+                     ,spin_bf(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
+                     ,spin_bf(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
+                     ,spin_bf(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
                      ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
              else
                 N_tid_sx = 0.0d0
@@ -935,10 +990,10 @@ contains
                 N_tid_sz = 0.0d0
              endif
              if (rot_flat.eq.1) then 
-                call Torque_rot_s (nbod,m,xh_int(1,j),xh_int(2,j),xh_int(3,j) &
-                     ,spin_bf(1,1) + k_rk_2x/2.0d0 &
-                     ,spin_bf(2,1) + k_rk_2y/2.0d0 &
-                     ,spin_bf(3,1) + k_rk_2z/2.0d0 &
+                call Torque_rot_s (nbod,m,xh_1_rk3(1,j),xh_1_rk3(2,j),xh_1_rk3(3,j) &
+                     ,spin_bf(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
+                     ,spin_bf(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
+                     ,spin_bf(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
                      ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
              else
                 N_rot_sx = 0.0d0
@@ -959,31 +1014,31 @@ contains
              totftides(3) = totftides(3) + tmp*Ns(3,j)
           end do   
           if (Rscst.eq.1) then 
-             tmp = - dt/(rg2s*Rst*Rst)
+             tmp = - hdt/(rg2s*Rst*Rst)
              k_rk_3x = tmp*totftides(1)
              k_rk_3y = tmp*totftides(2)
              k_rk_3z = tmp*totftides(3)           
           else if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
-             tmp = - dt/(rg2s*Rsth*Rsth)
+             tmp = - hdt/(rg2s*Rsth*Rsth)
              k_rk_3x = tmp*totftides(1)
              k_rk_3y = tmp*totftides(2)
              k_rk_3z = tmp*totftides(3)
           else if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
-             tmp = - dt/(rg2sh*Rsth*Rsth)
+             tmp = - hdt/(rg2sh*Rsth*Rsth)
              k_rk_3x = tmp*totftides(1)
              k_rk_3y = tmp*totftides(2)
              k_rk_3z = tmp*totftides(3)
           endif
           
-          ! Torque at t=time 
+          ! Torque at t=time-hdt*(2-a(4)) 
           ! Calculation of Runge-kutta factor k4
           do j=2,ntid+1 
              if (tides.eq.1) then
-                call Torque_tides_s (nbod,m,xh(1,j),xh(2,j),xh(3,j) &
-                     ,vh(1,j),vh(2,j),vh(3,j) &
-                     ,spin_bf(1,1) + k_rk_3x &
-                     ,spin_bf(2,1) + k_rk_3y &
-                     ,spin_bf(3,1) + k_rk_3z &
+                call Torque_tides_s (nbod,m,xh_1_rk4(1,j),xh_1_rk4(2,j),xh_1_rk4(3,j) &
+                     ,vh_1_rk4(1,j),vh_1_rk4(2,j),vh_1_rk4(3,j) &
+                     ,spin_bf(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
+                     ,spin_bf(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
+                     ,spin_bf(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
                      ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
              else
                 N_tid_sx = 0.0d0
@@ -991,10 +1046,10 @@ contains
                 N_tid_sz = 0.0d0
              endif
              if (rot_flat.eq.1) then 
-                call Torque_rot_s (nbod,m,xh(1,j),xh(2,j),xh(3,j) &
-                     ,spin_bf(1,1) + k_rk_3x &
-                     ,spin_bf(2,1) + k_rk_3y &
-                     ,spin_bf(3,1) + k_rk_3z &
+                call Torque_rot_s (nbod,m,xh_1_rk4(1,j),xh_1_rk4(2,j),xh_1_rk4(3,j) &
+                     ,spin_bf(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
+                     ,spin_bf(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
+                     ,spin_bf(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
                      ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
              else
                 N_rot_sx = 0.0d0
@@ -1015,26 +1070,142 @@ contains
              totftides(3) = totftides(3) + tmp*Ns(3,j)
           end do   
           if (Rscst.eq.1) then 
-             tmp = - dt/(rg2s*Rst*Rst)
+             tmp = - hdt/(rg2s*Rst*Rst)
              k_rk_4x = tmp*totftides(1)
              k_rk_4y = tmp*totftides(2)
              k_rk_4z = tmp*totftides(3)           
           else if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
-             tmp = - dt/(rg2s*Rst*Rst)
+             tmp = - hdt/(rg2s*Rst*Rst)
              k_rk_4x = tmp*totftides(1)
              k_rk_4y = tmp*totftides(2)
              k_rk_4z = tmp*totftides(3)
           else if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
-             tmp = - dt/(rg2s*Rst*Rst)
+             tmp = - hdt/(rg2s*Rst*Rst)
              k_rk_4x = tmp*totftides(1)
              k_rk_4y = tmp*totftides(2)
              k_rk_4z = tmp*totftides(3)
           endif
           
-          ! Integration
-          spin(1,1) = spin_bf(1,1) + k_rk_1x/6.d0 + k_rk_2x/3.d0 + k_rk_3x/3.d0 + k_rk_4x/6.d0
-          spin(2,1) = spin_bf(2,1) + k_rk_1y/6.d0 + k_rk_2y/3.d0 + k_rk_3y/3.d0 + k_rk_4y/6.d0
-          spin(3,1) = spin_bf(3,1) + k_rk_1z/6.d0 + k_rk_2z/3.d0 + k_rk_3z/3.d0 + k_rk_4z/6.d0
+          ! Torque at t=time-hdt*(2-a(5)) 
+          ! Calculation of Runge-kutta factor k5
+          do j=2,ntid+1 
+             if (tides.eq.1) then
+                call Torque_tides_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
+                     ,vh_1_rk5(1,j),vh_1_rk5(2,j),vh_1_rk5(3,j) &
+                     ,spin_bf(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
+                     ,spin_bf(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
+                     ,spin_bf(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
+                     ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+             else
+                N_tid_sx = 0.0d0
+                N_tid_sy = 0.0d0
+                N_tid_sz = 0.0d0
+             endif
+             if (rot_flat.eq.1) then 
+                call Torque_rot_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
+                     ,spin_bf(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
+                     ,spin_bf(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
+                     ,spin_bf(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
+                     ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+             else
+                N_rot_sx = 0.0d0
+                N_rot_sy = 0.0d0
+                N_rot_sz = 0.0d0
+             endif    
+             Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+             Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+             Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+          enddo
+          totftides(1) = 0.d0
+          totftides(2) = 0.d0
+          totftides(3) = 0.d0
+          do j=2,ntid+1 
+             tmp = K2/(m(1)+m(j))
+             totftides(1) = totftides(1) + tmp*Ns(1,j)
+             totftides(2) = totftides(2) + tmp*Ns(2,j)
+             totftides(3) = totftides(3) + tmp*Ns(3,j)
+          end do   
+          if (Rscst.eq.1) then 
+             tmp = - hdt/(rg2s*Rst*Rst)
+             k_rk_5x = tmp*totftides(1)
+             k_rk_5y = tmp*totftides(2)
+             k_rk_5z = tmp*totftides(3)           
+          else if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
+             tmp = - hdt/(rg2s*Rst*Rst)
+             k_rk_5x = tmp*totftides(1)
+             k_rk_5y = tmp*totftides(2)
+             k_rk_5z = tmp*totftides(3)
+          else if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
+             tmp = - hdt/(rg2s*Rst*Rst)
+             k_rk_5x = tmp*totftides(1)
+             k_rk_5y = tmp*totftides(2)
+             k_rk_5z = tmp*totftides(3)
+          endif
+          
+          ! Torque at t=time-hdt*(2-a(6)) 
+          ! Calculation of Runge-kutta factor k6
+          do j=2,ntid+1 
+             if (tides.eq.1) then
+                call Torque_tides_s (nbod,m,xh_1_rk6(1,j),xh_1_rk6(2,j),xh_1_rk6(3,j) &
+                     ,vh_1_rk6(1,j),vh_1_rk6(2,j),vh_1_rk6(3,j) &
+                     ,spin_bf(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
+                     ,spin_bf(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
+                     ,spin_bf(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                     ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+             else
+                N_tid_sx = 0.0d0
+                N_tid_sy = 0.0d0
+                N_tid_sz = 0.0d0
+             endif
+             if (rot_flat.eq.1) then 
+                call Torque_rot_s (nbod,m,xh_1_rk6(1,j),xh_1_rk6(2,j),xh_1_rk6(3,j) &
+                     ,spin_bf(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
+                     ,spin_bf(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
+                     ,spin_bf(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                     ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+             else
+                N_rot_sx = 0.0d0
+                N_rot_sy = 0.0d0
+                N_rot_sz = 0.0d0
+             endif    
+             Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+             Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+             Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+          enddo
+          totftides(1) = 0.d0
+          totftides(2) = 0.d0
+          totftides(3) = 0.d0
+          do j=2,ntid+1 
+             tmp = K2/(m(1)+m(j))
+             totftides(1) = totftides(1) + tmp*Ns(1,j)
+             totftides(2) = totftides(2) + tmp*Ns(2,j)
+             totftides(3) = totftides(3) + tmp*Ns(3,j)
+          end do   
+          if (Rscst.eq.1) then 
+             tmp = - hdt/(rg2s*Rst*Rst)
+             k_rk_6x = tmp*totftides(1)
+             k_rk_6y = tmp*totftides(2)
+             k_rk_6z = tmp*totftides(3)           
+          else if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1)) then
+             tmp = - hdt/(rg2s*Rst*Rst)
+             k_rk_6x = tmp*totftides(1)
+             k_rk_6y = tmp*totftides(2)
+             k_rk_6z = tmp*totftides(3)
+          else if ((brown_dwarf.eq.1).or.(Jupiter_host.eq.1)) then 
+             tmp = - hdt/(rg2s*Rst*Rst)
+             k_rk_6x = tmp*totftides(1)
+             k_rk_6y = tmp*totftides(2)
+             k_rk_6z = tmp*totftides(3)
+          endif
+          
+          ! Integration on first half timestep
+          spin(1,1) = spin_bf(1,1) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
+          spin(2,1) = spin_bf(2,1) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
+          spin(3,1) = spin_bf(3,1) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
+          
+          
+          
+          
           
   
           ! **************************************************************
