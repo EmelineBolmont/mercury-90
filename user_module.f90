@@ -1470,7 +1470,7 @@ contains
 
     !------------------------------------------------------------------------------
     call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    Ftidop = 4.5d0*m(j)*m(j)*R_plan10*sigma_plan/(K2*K2*r_7)
+    Ftidop = 4.5d0*m(1)*m(1)*R_plan10*sigma_plan/(K2*K2*r_7)
     !------------------------------------------------------------------------------
     return
   end subroutine F_tides_ortho_plan   
