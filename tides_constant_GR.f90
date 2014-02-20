@@ -108,11 +108,26 @@ module tides_constant_GR
   ! Some stuff, constants mainly
   real(double_precision), parameter :: rsun = 4.67920694d-3
   real(double_precision), parameter :: rearth = 4.25874677d-5
-  real(double_precision), parameter :: m2earth = (1.9891d6/5.9794)
+  real(double_precision), parameter :: m2earth = (1.9891d6/5.9794d0)
   ! meter in AU
   real(double_precision), parameter :: minau = 6.68458d-12
   ! Speed of light
   real(double_precision), parameter :: C2 = 1.731444830225d2
+  
+  ! Runge Kutta parameters
+  real(double_precision), parameter, dimension(5) :: aa = (/1.d0/5.d0,3.d0/1.d1,3.d0/5.d0 &
+                                                             ,1.d0,7.d0/8.d0/)
+  real(double_precision), parameter :: bb2 = 1.d0/5.d0
+  real(double_precision), parameter, dimension(2) :: bb3 = (/3.d0/4.d1,9.d0/4.d1/)
+  real(double_precision), parameter, dimension(3) :: bb4 = (/3.d0/1.d1,-9.d0/1.d1,6.d0/5.d0/)
+  real(double_precision), parameter, dimension(4) :: bb5 = (/-1.1d0/5.4d0,5.d0/2.d0,-7.d0/2.7d0 &
+                                                             ,3.5d0/2.7d0/)
+  real(double_precision), parameter, dimension(5) :: bb6 = (/1.631d0/5.5296d1,1.75d0/5.12d0 &
+                                                              ,5.75d0/1.3824d2 &
+                                                              ,4.4275d0/1.10592d1,2.53d0/4.096d1/)
+  real(double_precision), parameter, dimension(6) :: cc = (/3.7d0/3.78d1,0.d0,2.5d0/6.21d0 &
+                                                              ,1.25d0/5.94d0 &
+                                                              ,0.d0,5.12d0/1.771d1/)                                                 
 
 contains 
 
