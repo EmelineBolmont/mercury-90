@@ -900,7 +900,7 @@ subroutine mal_hvar (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer :: i,j,k,n,itmp,nhit,ihit(CMAX),jhit(CMAX),chit(CMAX)
   integer :: dtflag,ejflag,nowflag,stopflag,nstored,ce(nb_bodies_initial)
   integer :: nclo,iclo(CMAX),jclo(CMAX),nce,ice(CMAX),jce(CMAX)
-  real(double_precision) :: tmp0,h,hdid,tout,tdump,tfun,tlog,tsmall
+  real(double_precision) :: tmp0,h,hdid,tout,tfun,tlog,tsmall
   real(double_precision) :: thit(CMAX),dhit(CMAX),thit1,x0(3,nb_bodies_initial),v0(3,nb_bodies_initial)
   real(double_precision) :: rce(nb_bodies_initial),rphys(nb_bodies_initial),rcrit(nb_bodies_initial),a(nb_bodies_initial)
   real(double_precision) :: dclo(CMAX),tclo(CMAX),epoch(nb_bodies_initial)
@@ -1162,7 +1162,7 @@ subroutine mal_hcon (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,xh
   integer :: dtflag,ejflag,stopflag,colflag,nstored
   real(double_precision) :: x(3,nb_bodies_initial),v(3,nb_bodies_initial),xh0(3,nb_bodies_initial),vh0(3,nb_bodies_initial)
   real(double_precision) :: rce(nb_bodies_initial),rphys(nb_bodies_initial),rcrit(nb_bodies_initial),epoch(nb_bodies_initial)
-  real(double_precision) :: hby2,tout,tmp0,tdump,tfun,tlog
+  real(double_precision) :: hby2,tout,tmp0,tfun,tlog
   real(double_precision) :: dclo(CMAX),tclo(CMAX),dhit(CMAX),thit(CMAX)
   real(double_precision) :: ixvclo(6,CMAX),jxvclo(6,CMAX),a(nb_bodies_initial)
   external onestep,coord,bcoord
