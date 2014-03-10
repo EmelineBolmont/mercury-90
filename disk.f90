@@ -861,6 +861,94 @@ subroutine write_disk_properties()
   
 end subroutine write_disk_properties
 
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Christophe Cossou
+!
+!> @date 7 march 2014
+!
+! DESCRIPTION: 
+!> @brief write informations usefull to restart a simulation. 
+!! The routine need access to tdump and dtdump that are mercury variables for 
+!! times. 
+!! We need to synchronize the writing of output to avoid any problems with that.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine write_restart_disk()
+
+open(12, file='restart_disk.dmp')
+
+write(12,*) '! For dissipation, we store the next dissipation timestep be need to make'
+write(12,*) 'next_dissipation_step = ', next_dissipation_step
+write(12,*) '! For turbulence, we need to store informations about this.'
+write(12,*) '! TODO'
+
+
+close(12)
+
+end subroutine write_restart_disk
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Christophe Cossou
+!
+!> @date 7 march 2014
+!
+! DESCRIPTION: 
+!> @brief Read informations about a restarting simulation, to continue it
+!! with a straightforward process.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+subroutine read_restart_disk()
+
+  implicit none
+  
+  character(len=80) :: line
+  character(len=1), parameter :: comment_character = '!' ! character that will indicate that the rest of the line is a comment
+  integer :: comment_position ! the index of the comment character on the line. If zero, there is none on the current string
+  integer :: error ! to store the state of a read instruction
+  integer :: boolean ! integer value used to define a logical value (a bit complicated to define directly a boolean)
+  
+  logical :: isParameter, isDefined
+  character(len=80) :: identificator, value
+  !------------------------------------------------------------------------------
+  
+  inquire(file='restart_disk.dmp', exist=isDefined)
+  if (isDefined) then
+  
+    open(10, file='restart_disk.dmp', status='old')
+    
+    do
+      read(10, '(a80)', iostat=error) line
+      if (error /= 0) exit
+        
+      ! We get only what is on the left of an eventual comment parameter
+        comment_position = index(line, comment_character)
+      
+      ! If there are comments on the current line, we get rid of them
+      if (comment_position.ne.0) then
+        line = line(1:comment_position - 1)
+      end if
+      
+      call get_parameter_value(line, isParameter, identificator, value)
+        
+      if (isParameter) then
+        select case(identificator)
+        case('next_dissipation_step')
+          read(value, *) next_dissipation_step
+
+        case default
+          write(*,*) 'Warning: An unknown parameter has been found in restart_disk.dmp'
+          write(*,*) "identificator='", trim(identificator), "' ; value(s)='", trim(value),"'"
+        end select
+      end if
+    end do
+    close(10)
+  endif
+
+end subroutine read_restart_disk
+
 subroutine get_planet_properties(stellar_mass, mass, position, velocity, p_prop)
 
 ! subroutine that return numerous properties of the planet and its environment given its mass, position and velocity
@@ -1379,7 +1467,7 @@ subroutine init_globals(stellar_mass, time)
     
     ! All files will already be created by mercury, even if it is not a restart, 
     ! so we need to check disk.out instead, that will be created at the end of init_globals()
-    inquire(file='disk.out', exist=isDefined)
+    inquire(file='restart_disk.dmp', exist=isDefined)
     
     ! If we continue an integration, we do special treatments to get good dissipation of the disk and so on, 
     ! assuming that the past integration time was from 0 to the current 'time'
@@ -1391,6 +1479,7 @@ subroutine init_globals(stellar_mass, time)
       call initial_density_profile()
       IS_MANUAL_SURFACE_DENSITY = temp_manual
       
+      call read_restart_disk()
       
     end if
     
@@ -2242,12 +2331,12 @@ end subroutine initial_density_profile
   
   end subroutine exponential_decay_density_profile
   
-  subroutine dissipate_disk(time, next_dissipation_step)
+  subroutine dissipate_disk(time, next_step)
   
   implicit none
   
   real(double_precision), intent(in) :: time ! The absolute time, in days, at which the dissipation is done
-  real(double_precision), intent(out) :: next_dissipation_step ! the next absolute time at which we must dissipate the disk (in days)
+  real(double_precision), intent(out) :: next_step ! the next absolute time at which we must dissipate the disk (in days)
   
   ! Locals
   real(double_precision) :: sigma, sigma_index
@@ -2258,7 +2347,7 @@ end subroutine initial_density_profile
     case(2) ! exponential decay
       ! we want 10% variation : timestep = - tau * ln(0.9)
       dissipation_timestep = 0.1 * TAU_DISSIPATION * 365.25d0
-      next_dissipation_step = time + dissipation_timestep
+      next_step = time + dissipation_timestep
       
       call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
     
@@ -2269,7 +2358,7 @@ end subroutine initial_density_profile
       
       ! we want 10% variation : timestep = - tau * ln(0.9)
       dissipation_timestep = 0.1 * TAU_DISSIPATION * 365.25d0
-      next_dissipation_step = time + dissipation_timestep
+      next_step = time + dissipation_timestep
       
       call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
     case default

@@ -13,6 +13,7 @@ module user_module
 
   use types_numeriques
   use physical_constant
+  use mercury_globals
   use disk ! contains all the subroutines that describe the behaviour of the disk
 
   implicit none
@@ -109,7 +110,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision), dimension(3) :: eccentricity_acceleration
   real(double_precision), dimension(3) :: turbulence_acceleration
   real(double_precision) :: inclination_acceleration_z
-  real(double_precision), save :: next_dissipation_step = -1.d0 ! next time at which we will compute the thermal properties of the disk?
   
   !------------------------------------------------------------------------------
   ! Setup
@@ -134,12 +134,19 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
         ! we get the temperature profile.
         call calculate_temperature_profile(stellar_mass=mass(1))
         
-        ! we store in a .dat file the temperature profile
-        call store_temperature_profile(filename='temperature_profile.dat')
-        call store_density_profile(filename='surface_density_profile.dat')
-        call store_scaleheight_profile(stellar_mass=mass(1))
+
       end if
     end if
+    
+    ! Do the data dump
+    if (abs(time-tdump).ge.abs(dtdump)) then
+      call write_restart_disk()
+    
+      ! we store in a .dat file the temperature profile
+      call store_temperature_profile(filename='temperature_profile.dat')
+      call store_density_profile(filename='surface_density_profile.dat')
+      call store_scaleheight_profile(stellar_mass=mass(1))
+    endif
     !------------------------------------------------------------------------------
   
     do planet=2,n_bodies
@@ -314,7 +321,6 @@ write(12,'(a)') '____________________________________'
 close(12)
 
 end subroutine debug_infos
-
 
 end module user_module
   
