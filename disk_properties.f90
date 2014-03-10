@@ -45,6 +45,7 @@ module disk_properties
   real(double_precision) :: TAU_DISSIPATION = 1.d6 ! the characteristic time for the exponential decay of the surface density (in years) (dissipation_type=2)
   
   
+  logical :: dissipation_switch = .false. !< If True, then the code has already switched from the first to the second dissipation regime
   real(double_precision) :: DISSIPATION_TIME_SWITCH = 2d6 ! (years) the time at which we switch from viscous to photoevaporation exponential decrease (dissipatio_type=3)
   real(double_precision) :: TAU_VISCOUS = 1.d7 ! (years) the characteristic time for the viscous exponential decay
   real(double_precision) :: TAU_PHOTOEVAP = 3.d4 ! (years) the characteristic time for the photoevaporation exponential decay

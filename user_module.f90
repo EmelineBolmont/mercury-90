@@ -139,7 +139,9 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     end if
     
     ! Do the data dump
-    if (abs(time-tdump).ge.abs(dtdump)) then
+    ! tdump and dtdump are created by mercury that already did the dumping and modified tdump. 
+    ! Thus, the only ways to know that a dump was done is to check if tdump is equal to the local time.
+    if (time.eq.tdump) then
       call write_restart_disk()
     
       ! we store in a .dat file the temperature profile
