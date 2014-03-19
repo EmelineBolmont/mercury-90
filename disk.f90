@@ -2368,8 +2368,9 @@ end subroutine initial_density_profile
       if (.not.(dissipation_switch).and.(next_step/365.25).gt.DISSIPATION_TIME_SWITCH) then
       
         ! First we dissipate with the first exponential, the rest of the time allocated to the first regime.
+        dissipation_timestep = DISSIPATION_TIME_SWITCH * 365.25d0 - (time - next_step)
         next_step = DISSIPATION_TIME_SWITCH * 365.25d0
-        dissipation_timestep = next_step - time
+        
         call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
         
         ! We switch to the new regime so that the next step is done with the new regime
