@@ -881,6 +881,7 @@ open(12, file='restart_disk.dmp')
 
 write(12,*) '! For dissipation, we store the next dissipation timestep be need to make'
 write(12,'(a,f18.4)') 'next_dissipation_step = ', next_dissipation_step
+write(12,'(a,f18.4)') 'current_dissip_time = ', current_dissip_time
 write(12,*) '! For turbulence, we need to store informations about this.'
 write(12,*) '! TODO'
 
@@ -937,6 +938,9 @@ subroutine read_restart_disk()
         select case(identificator)
         case('next_dissipation_step')
           read(value, *) next_dissipation_step
+          
+        case('current_dissip_time')
+          read(value, *) current_dissip_time
 
         case default
           write(*,*) 'Warning: An unknown parameter has been found in restart_disk.dmp'
@@ -1464,6 +1468,21 @@ subroutine init_globals(stellar_mass, time)
     SCALEHEIGHT_PREFACTOR = sqrt(1.3806503d0/(1.67262158d0 * MEAN_MOLECULAR_WEIGHT) * 1.d4) * DAY / (AU * 1.d-2) 
     
     call initial_density_profile()
+    
+    ! We initialize timestep for dissipation if needed, without any restart here.
+    if (DISSIPATION_TYPE.ne.0) then
+      current_dissip_time = time
+      next_dissipation_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
+      
+      if (DISSIPATION_TYPE.eq.3) then
+        if ((next_dissipation_step/365.25).gt.DISSIPATION_TIME_SWITCH) then
+      
+          ! First we dissipate with the first exponential, the rest of the time allocated to the first regime.
+          next_dissipation_step = DISSIPATION_TIME_SWITCH * 365.25d0
+          
+        endif
+      endif
+    endif
     
     ! All files will already be created by mercury, even if it is not a restart, 
     ! so we need to check disk.out instead, that will be created at the end of init_globals()
@@ -2354,34 +2373,38 @@ end subroutine initial_density_profile
   select case(DISSIPATION_TYPE)
     case(2) ! exponential decay
       ! we want 10% variation : timestep = - tau * ln(0.9)
-      dissipation_timestep = 0.1 * TAU_DISSIPATION * 365.25d0
-      next_step = time + dissipation_timestep
+      dissipation_timestep = next_step - current_dissip_time
       
       call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
+      
+      current_dissip_time = next_dissipation_step
+      next_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
     
     case(3) ! both (slow then fast decay)
       
       ! we want 10% variation : timestep = - tau * ln(0.9)
-      dissipation_timestep = 0.1 * TAU_DISSIPATION * 365.25d0
-      next_step = time + dissipation_timestep
+      dissipation_timestep = next_step - current_dissip_time
       
-      if (.not.(dissipation_switch).and.(next_step/365.25).gt.DISSIPATION_TIME_SWITCH) then
+      if (.not.(dissipation_switch).and.(next_step/365.25).ge.DISSIPATION_TIME_SWITCH) then
       
         ! First we dissipate with the first exponential, the rest of the time allocated to the first regime.
-        dissipation_timestep = DISSIPATION_TIME_SWITCH * 365.25d0 - (time - next_step)
-        next_step = DISSIPATION_TIME_SWITCH * 365.25d0
+        dissipation_timestep = next_step - current_dissip_time
         
         call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
         
         ! We switch to the new regime so that the next step is done with the new regime
         TAU_DISSIPATION = TAU_PHOTOEVAP
-        dissipation_timestep = 0.1 * TAU_DISSIPATION * 365.25d0
+        current_dissip_time = next_dissipation_step
+        next_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
         
         ! We do not do this anymore once this is done.
         dissipation_switch = .true.
         
       else
         call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
+        
+        current_dissip_time = next_dissipation_step
+        next_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
       endif
       
       

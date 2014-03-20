@@ -42,6 +42,7 @@ module disk_properties
   
   integer :: DISSIPATION_TYPE = 0 ! integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile. 3 for mixed dissipation, both viscously and with photoevaporation, with two timescales
   real(double_precision) :: next_dissipation_step = -1.d0 !< next time at which we will compute the thermal properties of the disk?
+  real(double_precision) :: current_dissip_time = -1.d0 !< current time for the dissipation. This time correspond to the actual surface density profile stored.
   real(double_precision) :: TAU_DISSIPATION = 1.d6 ! the characteristic time for the exponential decay of the surface density (in years) (dissipation_type=2)
   
   
