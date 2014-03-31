@@ -880,6 +880,7 @@ subroutine write_restart_disk()
 open(12, file='restart_disk.dmp')
 
 write(12,*) '! For dissipation, we store the next dissipation timestep be need to make'
+write(12,'(a,l)') 'disk_effect = ', disk_effect
 write(12,'(a,f18.4)') 'next_dissipation_step = ', next_dissipation_step
 write(12,'(a,f18.4)') 'current_dissip_time = ', current_dissip_time
 write(12,*) '! For turbulence, we need to store informations about this.'
@@ -941,6 +942,9 @@ subroutine read_restart_disk()
           
         case('current_dissip_time')
           read(value, *) current_dissip_time
+          
+        case('disk_effect')
+          read(value, *) disk_effect
 
         case default
           write(*,*) 'Warning: An unknown parameter has been found in restart_disk.dmp'
@@ -1499,6 +1503,11 @@ subroutine init_globals(stellar_mass, time)
       IS_MANUAL_SURFACE_DENSITY = temp_manual
       
       call read_restart_disk()
+      
+      ! When the surface density is too low, we suppress the dissipation of the disk.
+      if (maxval(surface_density_profile(1:NB_SAMPLE_PROFILES)).lt.(GROUND_SURFACE_DENSITY*SIGMA_CGS2NUM)) then
+        disk_effect = .false.
+      end if
       
       ! If needed, we switch directly to the second regime of the specific dissipation type.
       if (DISSIPATION_TYPE.eq.3) then
