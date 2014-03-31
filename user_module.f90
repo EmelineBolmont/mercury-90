@@ -118,10 +118,24 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     acceleration(1:3,planet) = 0.d0
   end do
   
+  call init_globals(stellar_mass=mass(1), time=time)
+
+  
+  ! Do the data dump
+  ! tdump and dtdump are created by mercury that already did the dumping and modified tdump. 
+  ! Thus, the only ways to know that a dump was done is to check if tdump is equal to the local time.
+  if (time.eq.tdump) then
+    call write_restart_disk()
+  
+    ! we store in a .dat file the temperature profile
+    call store_temperature_profile(filename='temperature_profile.dat')
+    call store_density_profile(filename='surface_density_profile.dat')
+    call store_scaleheight_profile(stellar_mass=mass(1))
+  endif
+  
   ! By default, there is disk effects. Be carefull, init_globals is only treated if there is disk effects, 
   ! to increase the speed when the disk is no present anymore.
   if (disk_effect) then
-    call init_globals(stellar_mass=mass(1), time=time)
     
     !------------------------------------------------------------------------------
     ! If it's time (depending on the timestep we want between each calculation of the disk properties)
@@ -138,17 +152,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
       end if
     end if
     
-    ! Do the data dump
-    ! tdump and dtdump are created by mercury that already did the dumping and modified tdump. 
-    ! Thus, the only ways to know that a dump was done is to check if tdump is equal to the local time.
-    if (time.eq.tdump) then
-      call write_restart_disk()
-    
-      ! we store in a .dat file the temperature profile
-      call store_temperature_profile(filename='temperature_profile.dat')
-      call store_density_profile(filename='surface_density_profile.dat')
-      call store_scaleheight_profile(stellar_mass=mass(1))
-    endif
     !------------------------------------------------------------------------------
   
     do planet=2,n_bodies

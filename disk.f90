@@ -884,9 +884,9 @@ implicit none
 
 open(12, file='restart_disk.dmp')
 write(12,*) '! tdump = ', tdump, ' days'
-write(12,*) '! tdump = ', tdump/365.25, ' years'
+write(12,'(a,es15.8e2,a)') ' ! tdump = ', tdump/365.25, ' years'
 write(12,*) '! For dissipation, we store the next dissipation timestep be need to make'
-write(12,'(a,l)') 'disk_effect = ', disk_effect
+write(12,'(a,l1)') 'disk_effect = ', disk_effect
 write(12,'(a,f18.4)') 'next_dissipation_step = ', next_dissipation_step
 write(12,'(a,f18.4)') 'current_dissip_time = ', current_dissip_time
 write(12,*) '! For turbulence, we need to store informations about this.'
