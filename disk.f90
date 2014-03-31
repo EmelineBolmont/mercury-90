@@ -877,8 +877,14 @@ end subroutine write_disk_properties
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 subroutine write_restart_disk()
 
-open(12, file='restart_disk.dmp')
+use mercury_globals
 
+implicit none
+
+
+open(12, file='restart_disk.dmp')
+write(12,*) '! tdump = ', tdump, ' days'
+write(12,*) '! tdump = ', tdump/365.25, ' years'
 write(12,*) '! For dissipation, we store the next dissipation timestep be need to make'
 write(12,'(a,l)') 'disk_effect = ', disk_effect
 write(12,'(a,f18.4)') 'next_dissipation_step = ', next_dissipation_step
