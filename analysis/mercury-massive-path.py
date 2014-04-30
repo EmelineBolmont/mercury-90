@@ -40,11 +40,16 @@ COLOR_EJECTED = '909090'
 isProblem = False
 isDisk = True
 isLogX = False
+isLogY = False
+
 problem_message = "AIM : Display in a m = f(a) diagram, the most massive planets and their evolution in m=f(a)" + "\n" + \
 "The script can take various arguments :" + "\n" + \
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * nodisk : avoid torque diagram display" + "\n" + \
-" * log : display distances in log" + "\n" + \
+" * log : Semi-major axis (x-axis) will be displayed in log" + "\n" + \
+" * mlog : Masses (y-axis) will be displayed in log" + "\n" + \
+" * mmax=5 : minimum mass for the plot [Earth mass]" + "\n" + \
+" * mmin=1 : maximum mass for the plot [Earth mass]" + "\n" + \
 " * massive=%d : the number of most massive planets to be tracked" % MAX_COLORED + "\n" + \
 " * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
 " * help : display a little help message on HOW to use various options"
@@ -68,6 +73,14 @@ for arg in sys.argv[1:]:
     isLogX = True
     if (value != None):
       print(value_message % (key, key, value))
+  elif (key == 'mlog'):
+    isLogY = True
+    if (value != None):
+      print(value_message % (key, key, value))
+  elif (key == 'mmin'):
+    mmin = float(value)
+  elif (key == 'mmax'):
+    mmax = float(value)
   elif (key == 'massive'):
     MAX_COLORED = int(value)
   elif (key == 'help'):
@@ -253,10 +266,13 @@ for line in reversed(lines):
 #######################################
 
 if isLogX:
-  plot = plot_AM.semilogx
-  
   plot_AM.xaxis.grid(True, which='minor', color='#888888', linestyle='-')
-
+  
+  if isLogY:
+    plot_AM.yaxis.grid(True, which='minor', color='#888888', linestyle='-')
+    plot = plot_AM.loglog
+  else:
+    plot = plot_AM.semilogx
 else:
   plot = plot_AM.plot
 
@@ -287,7 +303,17 @@ if (isDisk and (len(contours_a) > 0)):
 distance_format = FormatStrFormatter("%.3g")
 plot_AM.xaxis.set_major_formatter(distance_format)
 
-plot_AM.legend()
+mass_format = FormatStrFormatter("%.3g")
+plot_AM.yaxis.set_major_formatter(mass_format)
+
+plot_AM.autoscale(axis='y', tight=True)
+if ('mmin' in locals()):
+  plot_AM.set_ylim(ymin=mmin)
+
+if ('mmax' in locals()):
+  plot_AM.set_ylim(ymax=mmax)
+
+plot_AM.legend(loc="lower left")
 fig.savefig("%s.%s" % (NOM_FICHIER_PLOT, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
 pl.show()

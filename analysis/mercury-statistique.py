@@ -147,6 +147,10 @@ problem_message = "AIM : Display statistical properties of one meta-simulation (
 "(no spaces between the key and the values, only separated by '=')" + "\n" + \
 " * nodisk : to avoid torque diagram display" + "\n" + \
 " * noplot : to skip plotting statistics, then the script will only serve to check some properties and do 'prints'" + "\n" + \
+" * amax=5 : minimum distance for the plot [AU]" + "\n" + \
+" * amin=1 : maximum distance for the plot [AU]" + "\n" + \
+" * mmax=5 : minimum mass for the plot [Earth mass]" + "\n" + \
+" * mmin=1 : maximum mass for the plot [Earth mass]" + "\n" + \
 " * stat :  to create a global 'element.out' file that contain all the surviving planets" + "\n" + \
 " * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
 " * help : display a little help message on HOW to use various options"
@@ -161,6 +165,14 @@ for arg in sys.argv[1:]:
     value = None
   if (key == 'ext'):
     OUTPUT_EXTENSION = value
+  elif (key == 'mmin'):
+    mmin = float(value)
+  elif (key == 'mmax'):
+    mmax = float(value)
+  elif (key == 'amin'):
+    amin = float(value)
+  elif (key == 'amax'):
+    amax = float(value)
   elif (key == 'nodisk'):
     isDisk = False
     if (value != None):
@@ -483,6 +495,19 @@ if (isDisk and (len(contours_a) > 0)):
     m_fct_a.fill(c_a, c_m, facecolor="#ff0000", alpha=0.3, edgecolor='#000000')
 
 m_fct_a.plot(most_massive_a, most_massive, 'ro', markersize=5, label="Most Massive")
+
+m_fct_a.autoscale(axis='y', tight=True)
+if ('mmin' in locals()):
+  m_fct_a.set_ylim(ymin=mmin)
+
+if ('mmax' in locals()):
+  m_fct_a.set_ylim(ymax=mmax)
+
+if ('amin' in locals()):
+  m_fct_a.set_xlim(xmin=amin)
+
+if ('amax' in locals()):
+  m_fct_a.set_xlim(xmax=amax)
 
 hist_res.hist(period_ratio, bins=np.linspace(0.45, 2.1, 200))
 
