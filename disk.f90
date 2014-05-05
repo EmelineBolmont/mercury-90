@@ -1693,17 +1693,18 @@ subroutine initial_density_profile()
         y2 = manual_surface_profile(closest_low_id + 1)
 
         surface_density_profile(i) = SIGMA_CGS2NUM * (y2 + (y1 - y2) * (distance_sample(i) - x2) / (x1 - x2))
-        surface_density_index(i) = - (log(y2) - log(y1)) / (log(x2) - log(x1))
       else if (distance_sample(i) .lt. radius(1)) then
         surface_density_profile(i) = SIGMA_CGS2NUM * manual_surface_profile(1)
-        surface_density_index(i) = - (log(manual_surface_profile(2)) - log(manual_surface_profile(1))) &
-                                  / (log(radius(2)) - log(radius(1)))
       else if (distance_sample(i) .ge. radius(nb_values)) then
         surface_density_profile(i) = SIGMA_CGS2NUM * manual_surface_profile(nb_values)
-        surface_density_index(i) = - (log(manual_surface_profile(nb_values)) - log(manual_surface_profile(nb_values-1))) &
-                                  / (log(radius(nb_values)) - log(radius(nb_values-1)))
       end if
     end do
+    
+    do i=1, NB_SAMPLE_PROFILES-1
+      surface_density_index(i) = - (log(surface_density_profile(i+1)) - log(surface_density_profile(i))) &
+                                   / (log(distance_sample(i+1)) - log(distance_sample(i)))
+    end do
+    surface_density_index(NB_SAMPLE_PROFILES) = surface_density_index(NB_SAMPLE_PROFILES-1)
 
   else
     do i=1,NB_SAMPLE_PROFILES
