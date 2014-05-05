@@ -663,7 +663,10 @@ program test_disk
       
       
       ! we get the new dissipated surface density profile. For that goal, we dissipate as many times as needed to reach the required time for the next frame.
-      call dissipate_disk(time(k), next_dissipation_step)
+      call dissipate_disk(old_step=current_dissipation_time , current_dissip_time=time(k), & ! Inputs
+                    next_step=next_dissipation_step) ! Outputs
+      
+      current_dissipation_time = time(k)
       
       
       ! we expand the 'time' array if the limit is reached
@@ -680,6 +683,10 @@ program test_disk
       end if
       
       write(*,purcent_format) time(k)/(365.25d0 * 1e6), t_max / 1e6, k
+      
+      if (.not.disk_effect) then
+        next_dissipation_step = t_max * 365.d0
+      end if
       
       time(k+1) = next_dissipation_step ! days
       
@@ -1964,7 +1971,10 @@ program test_disk
       ! we get the new dissipated surface density profile. For that goal, we dissipate as many times as needed to reach the required time for the next frame.
       
       if (DISSIPATION_TYPE.ne.0) then
-        call dissipate_disk(time(k), next_dissipation_step)
+        call dissipate_disk(old_step=current_dissipation_time , current_dissip_time=time(k), & ! Inputs
+                    next_step=next_dissipation_step) ! Outputs
+      
+       current_dissipation_time = time(k)
       end if
       
       if (.not.disk_effect) then
@@ -2175,7 +2185,10 @@ program test_disk
       open(11, file=filename_torque)
       
       ! we get the new dissipated surface density profile. For that goal, we dissipate as many times as needed to reach the required time for the next frame.
-      call dissipate_disk(time(k), next_dissipation_step)
+      call dissipate_disk(old_step=current_dissipation_time , current_dissip_time=time(k), & ! Inputs
+                    next_step=next_dissipation_step) ! Outputs
+      
+     current_dissipation_time = time(k)
       
       if (k.eq.time_size) then
         ! If the limit of the array is reach, we copy the values in a temporary array, allocate with a double size, et paste the 

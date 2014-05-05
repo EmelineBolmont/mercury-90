@@ -6,6 +6,8 @@ from make import *
 
 import git_infos
 
+LOG_NAME = 'compilation.log'
+
 # Parameters
 debug = False
 gdb = False
@@ -65,6 +67,11 @@ sourceFile.setCompilingOptions("-O3 -march=native -pipe -finit-real=nan")
 # pour tester les bornes des tableaux : -fbounds-check (il faut ensuite faire tourner le programme, des tests sont effectués au cours de l'exécution)
 
 sources_filename = lister("*.f90")
+
+# Before compiling, we delete the previous compilation log. Indeed, we need to append the several warnings in the same file
+# But we do not want to have infos of the previous compilation in it.
+if os.path.isfile(LOG_NAME):
+  os.remove(LOG_NAME)
 
 # We create the binaries
 make_binaries(sources_filename, ["mercury.f90", "element.f90", "close.f90"], debug=debug, gdb=gdb, profiling=profiling)

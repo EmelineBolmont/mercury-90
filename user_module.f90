@@ -139,11 +139,15 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     
     !------------------------------------------------------------------------------
     ! If it's time (depending on the timestep we want between each calculation of the disk properties)
-    ! The first 'next_dissipation_step' is set to '-1' to force the calculation for the first timestep. In fact, the first timestep will be done fornothing, but we need this in order to have a clean code.
+    ! The first 'next_dissipation_time' is set in init_globals()
     if (DISSIPATION_TYPE.ne.0) then
-      if (time.gt.next_dissipation_step) then
+      if (time.gt.next_dissipation_time) then
         ! we get the density profile.
-        call dissipate_disk(time, next_dissipation_step)
+        call dissipate_disk(old_step=current_dissipation_time , current_dissip_time=time, & ! Inputs
+                            next_step=next_dissipation_time) ! Outputs
+        
+        ! We actualize the old dissipation time (in days)
+        current_dissipation_time = time
         
         ! we get the temperature profile.
         call calculate_temperature_profile(stellar_mass=mass(1))

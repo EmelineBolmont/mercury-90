@@ -885,10 +885,12 @@ implicit none
 open(12, file='restart_disk.dmp')
 write(12,*) '! tdump = ', tdump, ' days'
 write(12,'(a,es15.8e2,a)') ' ! tdump = ', tdump/365.25, ' years'
-write(12,*) '! For dissipation, we store the next dissipation timestep be need to make'
 write(12,'(a,l1)') 'disk_effect = ', disk_effect
-write(12,'(a,f18.4)') 'next_dissipation_step = ', next_dissipation_step
-write(12,'(a,f18.4)') 'current_dissip_time = ', current_dissip_time
+write(12,*) '! For dissipation, we store the next dissipation timestep be need to make'
+write(12,*) "! If 0, the code hasn't switched. If 1, the current step is the last slow step. If 2, the switching was done."
+write(12,'(a,i1)') 'dissipation_switch = ', dissipation_switch
+write(12,'(a,f18.4)') 'current_dissipation_time = ', current_dissipation_time
+write(12,'(a,f18.4)') 'next_dissipation_time = ', next_dissipation_time
 write(12,*) '! For turbulence, we need to store informations about this.'
 write(12,*) '! TODO'
 
@@ -943,11 +945,14 @@ subroutine read_restart_disk()
         
       if (isParameter) then
         select case(identificator)
-        case('next_dissipation_step')
-          read(value, *) next_dissipation_step
+        case('next_dissipation_time')
+          read(value, *) next_dissipation_time
           
-        case('current_dissip_time')
-          read(value, *) current_dissip_time
+        case('current_dissipation_time')
+          read(value, *) current_dissipation_time
+          
+        case('dissipation_switch')
+          read(value, *) dissipation_switch
           
         case('disk_effect')
           read(value, *) disk_effect
@@ -1481,14 +1486,14 @@ subroutine init_globals(stellar_mass, time)
     
     ! We initialize timestep for dissipation if needed, without any restart here.
     if (DISSIPATION_TYPE.ne.0) then
-      current_dissip_time = time
-      next_dissipation_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
+      current_dissipation_time = time
+      next_dissipation_time = current_dissipation_time + 0.1 * TAU_DISSIPATION * 365.25d0
       
       if (DISSIPATION_TYPE.eq.3) then
-        if ((next_dissipation_step/365.25).gt.DISSIPATION_TIME_SWITCH) then
+        if ((next_dissipation_time/365.25).gt.DISSIPATION_TIME_SWITCH) then
       
-          ! First we dissipate with the first exponential, the rest of the time allocated to the first regime.
-          next_dissipation_step = DISSIPATION_TIME_SWITCH * 365.25d0
+          ! We prepare the last slow timestep
+          next_dissipation_time = DISSIPATION_TIME_SWITCH * 365.25d0
           
         endif
       endif
@@ -1517,8 +1522,7 @@ subroutine init_globals(stellar_mass, time)
       
       ! If needed, we switch directly to the second regime of the specific dissipation type.
       if (DISSIPATION_TYPE.eq.3) then
-        if ((next_dissipation_step/365.25).gt.DISSIPATION_TIME_SWITCH) then
-          dissipation_switch = .true.
+        if (dissipation_switch.eq.2) then
           TAU_DISSIPATION = TAU_PHOTOEVAP
         endif
       endif
@@ -2371,57 +2375,89 @@ end subroutine initial_density_profile
     end do
   
   end subroutine exponential_decay_density_profile
-  
-  subroutine dissipate_disk(current_dissip_time, next_step)
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> C. Cossou
+!
+!> @date 5 may 2014
+!
+! DESCRIPTION: 
+!> @brief Dissipate the disk from 'old_step' to 'current_dissip_time'. Dissipation that will be valid up
+!! to 'next_step' where the disk properties regarding dissipation will be actualized
+!!\n
+!> @warning timestep for dissipation are made so that we have 10% variations 
+!! of the surface density profile between each timestep
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+  subroutine dissipate_disk(old_step, current_dissip_time, next_step)
   
   implicit none
   
-  real(double_precision), intent(in) :: current_dissip_time ! The absolute time, in days, at which the dissipation is done
-  real(double_precision), intent(out) :: next_step ! the next absolute time at which we must dissipate the disk (in days)
+  real(double_precision), intent(in) :: old_step !<[in] The absolute time, in days, at which the dissipation was previously done 
+  !! (the time of validity of the current disk state)
+  real(double_precision), intent(in) :: current_dissip_time !<[in] The absolute time, in days, at which the dissipation is done
+  real(double_precision), intent(out) :: next_step !<[out] the next absolute time at which we must dissipate the disk (in days)
   
   ! Locals
   real(double_precision) :: sigma, sigma_index
   real(double_precision) :: dissipation_timestep ! the timestep between two computation of the disk [in days]
   
   !------------------------------------------------------------------------------
-  
+
   select case(DISSIPATION_TYPE)
     case(2) ! exponential decay
       ! we want 10% variation : timestep = - tau * ln(0.9)
-      dissipation_timestep = next_step - current_dissip_time
+      dissipation_timestep = current_dissip_time - old_step
       
       
       call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
       
-      next_step = next_step + 0.1 * TAU_DISSIPATION * 365.25d0
+      next_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
     
     case(3) ! both (slow then fast decay)
-      
-      ! we want 10% variation : timestep = - tau * ln(0.9)
-      dissipation_timestep = next_step - current_dissip_time
-      
-      if (.not.(dissipation_switch).and.(next_step/365.25).ge.DISSIPATION_TIME_SWITCH) then
-      
-        ! First we dissipate with the first exponential, the rest of the time allocated to the first regime.
-        dissipation_timestep = next_step - current_dissip_time
+      ! If switching isn't done yet, there is three specific cases that must be treated manually. 
+      !! I)   We must find if the next_step is above the switching time if switching isn't done yet. 
+      !!      If so, then we must create a manual step of slow dissipation
+      !!      that we come right at the dissipation time
+      !! II)  We must find that the current step we're about to do is the last slow dissipation one. Then after the dissipation, we 
+      !!      change the dissipation timescale and generate a correct next_step value
+      !! III) We must know switching was done, and simply dissipate without doing further tests
+      if (dissipation_switch.eq.0) then ! Slow dissipation, before the switch
+        if ((next_step/365.25).ge.DISSIPATION_TIME_SWITCH) then ! the next step (future call) will be the last one in slow dissipation
+          next_step = DISSIPATION_TIME_SWITCH
+          dissipation_switch = 1
+        endif
         
+        dissipation_timestep = current_dissip_time - old_step
         call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
         
-        ! We switch to the new regime so that the next step is done with the new regime
+        next_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
+        
+        
+      else if (dissipation_switch.eq.1) then ! Last dissipation timestep (manual one) of the first slope. current_dissip_time must be equal to DISSIPATION_TIME_SWITCH
+        !! the next timestep will be the first in the second slope regime.
+        dissipation_timestep = current_dissip_time - old_step
+      
+        call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
+      
         TAU_DISSIPATION = TAU_PHOTOEVAP
-        next_step = next_step + 0.1 * TAU_DISSIPATION * 365.25d0
-        
-        ! We do not do this anymore once this is done.
-        dissipation_switch = .true.
-        
-      else
+      
+        ! In case the next step exceed the switch time.
+        next_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
+        dissipation_switch = 2
+      else if (dissipation_switch.eq.2) then ! Second slope of the two exponential decay dissipation type
+      
+        dissipation_timestep = current_dissip_time - old_step
         call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
         
-        next_step = next_step + 0.1 * TAU_DISSIPATION * 365.25d0
+        next_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
+      
+      else
+        write(error_unit,'(a)') 'Error in user_module, subroutine dissipate_disk'
+        write(error_unit,'(a)') 'Unknown case in the two timescale exponential decay. '
+        call exit(3)
       endif
-      
-      
-      
       
     case default
         write (error_unit,*) 'The dissipation_type="', DISSIPATION_TYPE,'" cannot be found.'
