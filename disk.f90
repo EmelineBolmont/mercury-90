@@ -2372,11 +2372,11 @@ end subroutine initial_density_profile
   
   end subroutine exponential_decay_density_profile
   
-  subroutine dissipate_disk(time, next_step)
+  subroutine dissipate_disk(current_dissip_time, next_step)
   
   implicit none
   
-  real(double_precision), intent(in) :: time ! The absolute time, in days, at which the dissipation is done
+  real(double_precision), intent(in) :: current_dissip_time ! The absolute time, in days, at which the dissipation is done
   real(double_precision), intent(out) :: next_step ! the next absolute time at which we must dissipate the disk (in days)
   
   ! Locals
@@ -2390,10 +2390,10 @@ end subroutine initial_density_profile
       ! we want 10% variation : timestep = - tau * ln(0.9)
       dissipation_timestep = next_step - current_dissip_time
       
+      
       call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
       
-      current_dissip_time = next_dissipation_step
-      next_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
+      next_step = next_step + 0.1 * TAU_DISSIPATION * 365.25d0
     
     case(3) ! both (slow then fast decay)
       
@@ -2409,8 +2409,7 @@ end subroutine initial_density_profile
         
         ! We switch to the new regime so that the next step is done with the new regime
         TAU_DISSIPATION = TAU_PHOTOEVAP
-        current_dissip_time = next_dissipation_step
-        next_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
+        next_step = next_step + 0.1 * TAU_DISSIPATION * 365.25d0
         
         ! We do not do this anymore once this is done.
         dissipation_switch = .true.
@@ -2418,8 +2417,7 @@ end subroutine initial_density_profile
       else
         call exponential_decay_density_profile(dissipation_timestep, TAU_DISSIPATION * 365.25d0)
         
-        current_dissip_time = next_dissipation_step
-        next_step = current_dissip_time + 0.1 * TAU_DISSIPATION * 365.25d0
+        next_step = next_step + 0.1 * TAU_DISSIPATION * 365.25d0
       endif
       
       
