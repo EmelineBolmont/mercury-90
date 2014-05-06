@@ -2089,6 +2089,7 @@ program test_disk
     real(double_precision) :: ecc_corot ! prefactor that turns out the corotation torque if the eccentricity is too high (Bitsch & Kley, 2010)
     real(double_precision) :: position(3), velocity(3)
     type(PlanetProperties) :: p_prop
+    real(double_precision) :: gm ! total mass, times G [Solar mass *K2]
     
     real(double_precision) :: temp_min, temp_max, density_min, density_max, torque_min, torque_max
     character(len=80) :: filename_torque, filename_density, filename_temperature, filename_contour
@@ -2225,7 +2226,7 @@ program test_disk
         
         do j=1,nb_mass
           mass(j) = (mass_min + mass_step * (j - 1.d0)) * K2
-          
+          gm = stellar_mass + mass(j)
           ! We generate cartesian coordinate for the given mass and Semi-major axis
           velocity(2) = sqrt((stellar_mass + mass(j)) / position(1))
           
@@ -2233,6 +2234,16 @@ program test_disk
           call get_planet_properties(stellar_mass=stellar_mass, & ! Input
            mass=mass(j), position=position(1:3), velocity=velocity(1:3),& ! Input
            p_prop=p_prop) ! Output
+           
+          ! Forcing some values because we wan semi_major_axis to be EXACTLY what we want
+          p_prop%semi_major_axis = a(i)
+          call get_temperature(radius=p_prop%semi_major_axis, & ! Input
+                       temperature=p_prop%temperature, temperature_index=p_prop%temperature_index, chi=p_prop%chi, & ! Output
+                       nu=p_prop%nu) ! Output
+          p_prop%omega = sqrt(gm / (p_prop%semi_major_axis**3)) ! [day-1]
+          p_prop%scaleheight = get_scaleheight(temperature=p_prop%temperature, angular_speed=p_prop%omega)
+          p_prop%aspect_ratio = p_prop%scaleheight / p_prop%semi_major_axis
+           
           call get_torques(stellar_mass, mass(j), p_prop, corotation_torque, lindblad_torque, torque_ref, ecc_corot)
           
           total_torque(i,j) = lindblad_torque + corotation_torque        
