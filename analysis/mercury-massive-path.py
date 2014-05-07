@@ -50,6 +50,8 @@ problem_message = "AIM : Display in a m = f(a) diagram, the most massive planets
 " * mlog : Masses (y-axis) will be displayed in log" + "\n" + \
 " * mmax=5 : minimum mass for the plot [Earth mass]" + "\n" + \
 " * mmin=1 : maximum mass for the plot [Earth mass]" + "\n" + \
+" * amax=5 : minimum distance for the plot [AU]" + "\n" + \
+" * amin=1 : maximum distance for the plot [AU]" + "\n" + \
 " * massive=%d : the number of most massive planets to be tracked" % MAX_COLORED + "\n" + \
 " * ext=%s : The extension for the output files" % OUTPUT_EXTENSION + "\n" + \
 " * help : display a little help message on HOW to use various options"
@@ -81,6 +83,10 @@ for arg in sys.argv[1:]:
     mmin = float(value)
   elif (key == 'mmax'):
     mmax = float(value)
+  elif (key == 'amin'):
+    amin = float(value)
+  elif (key == 'amax'):
+    amax = float(value)
   elif (key == 'massive'):
     MAX_COLORED = int(value)
   elif (key == 'help'):
@@ -312,6 +318,12 @@ if ('mmin' in locals()):
 
 if ('mmax' in locals()):
   plot_AM.set_ylim(ymax=mmax)
+  
+if ('amin' in locals()):
+  plot_AM.set_xlim(xmin=amin)
+
+if ('amax' in locals()):
+  plot_AM.set_xlim(xmax=amax)
 
 plot_AM.legend(loc="lower left")
 fig.savefig("%s.%s" % (NOM_FICHIER_PLOT, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
