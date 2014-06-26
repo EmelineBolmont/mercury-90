@@ -83,6 +83,7 @@ program test_disk
     
     ! Physical values and plots
     call study_opacity_profile()
+    call study_opacity_types()
     call study_viscosity(stellar_mass=stellar_mass)
     call study_torques_fixed_a(stellar_mass=stellar_mass)
     call study_torques_fixed_m(stellar_mass=stellar_mass)
@@ -1064,7 +1065,59 @@ program test_disk
   
   end subroutine study_thermal_diffusivity_profile
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> Christophe Cossou
+!
+!> @date 6 june 2014
+!
+! DESCRIPTION: 
+!> @brief Write the opacity profile of the current disk, using the defined 
+!! opacity type. Will take the temperature and density of the disk, then get
+!! the corresponding opacity.
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
   subroutine study_opacity_profile
+  ! subroutine that store in a '.dat' file the opacity profile of the disk
+  
+  ! Global parameters
+  ! NB_SAMPLE_PROFILES : number of points for the sample of radius of the temperature profile
+  ! temperature_profile : values of the temperature in K for each value of the 'a' sample
+  
+  implicit none
+  
+  
+  real(double_precision) :: num_to_phys_opacity = MSUN / AU**3
+  real(double_precision) :: opacity ! opacity in CGS
+  
+  integer :: j ! for loops
+  
+  ! We open the file where we want to write the outputs
+  open(10, file='unitary_tests/opacity_profile.dat', status='replace')
+  write(10,'(a)') '# a in AU            ;    opacity '
+
+  do j=1,NB_SAMPLE_PROFILES
+    opacity = get_opacity(temperature_profile(j), surface_density_profile(j)) * num_to_phys_opacity
+    write(10,*) distance_sample(j), opacity
+  end do
+  
+  close(10)
+  
+  open(10, file="unitary_tests/opacity_profile.gnuplot")
+  write(10,*) "set terminal pdfcairo enhanced"
+  write(10,*) "set output 'opacity_profile.pdf'"
+  write(10,*) 'set xlabel "Distance [AU]"'
+  write(10,*) 'set ylabel "Opacity {/Symbol k} [cm^2/g]"'
+  write(10,*) 'set logscale x'
+  write(10,*) 'set logscale y'
+  write(10,*) 'set grid'
+  write(10,*) "plot 'opacity_profile.dat' using 1:2 with lines notitle"
+  
+  close(10)
+  
+  end subroutine study_opacity_profile
+
+  subroutine study_opacity_types
   ! subroutine that test the function 'get_opacity'
   
   ! Return:
@@ -1151,7 +1204,7 @@ program test_disk
     
     close(11)
     
-  end subroutine study_opacity_profile
+  end subroutine study_opacity_types
 
   subroutine study_torques_fixed_a(stellar_mass)
   ! subroutine that test the function 'get_corotation_torque'
