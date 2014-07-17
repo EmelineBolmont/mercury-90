@@ -1087,7 +1087,7 @@ program test_disk
   implicit none
   
   
-  real(double_precision) :: num_to_phys_opacity = MSUN / AU**3
+  real(double_precision) :: num_to_phys_opacity = AU**2 / MSUN
   real(double_precision) :: opacity ! opacity in CGS
   
   integer :: j ! for loops
