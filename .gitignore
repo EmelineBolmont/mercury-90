@@ -16,6 +16,7 @@ parameter_study
 *~
 *.pdf
 *.tmp
+*.dmp
 html/
 latex/
 migration_map

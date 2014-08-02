@@ -13,11 +13,16 @@ import difflib # To compare two strings
 import subprocess # To launch various process, get outputs et errors, returnCode and so on.
 import pdb # To debug
 import glob # to get list of file through a given pattern
+from mercury import * # In order to create a simulation via python
 
 NEW_TEST = "example_simulation"
 PREVIOUS_TEST = "old_simulation"
 REVISION = "HEAD"
 PROGRAM_NAME = "mercury"
+
+OUTPUT_FILENAMES = ["xv.out"]
+CLOSE_FILENAMES = ["ce.out"]
+ASCII_FILES = ["info.out", "big.dmp", "small.dmp", "param.dmp", "restart.dmp", "big.tmp", "small.tmp", "param.tmp", "restart.tmp"]
 
 # Parameters
 force_source = False # To force the compilation of every module
@@ -233,6 +238,78 @@ def compare2Binaries(ori_files, new_files):
   
   return 0
 
+def initialising_input_objects(algorithm):
+  """Generation of base simulation.
+  Create the objects, then generate the corresponding input files
+  in the current working directory.
+  """
+  mercury = BodyCart("big",name="MERCURY", x=-3.83966017419175965E-01, y=-1.76865300855700736E-01, z=2.07959213998758705E-02,
+  vx=5.96286238644834141E-03, vy=-2.43281292146216750E-02, vz=-2.53463209848734695E-03, m=1.66013679527193009E-07,
+  r=20.0e0, d=5.43)
+  venus = BodyCart("big",name="VENUS", x=6.33469157915745540E-01, y=3.49855234102151691E-01, z=-3.17853172088953667E-02,
+  vx=-9.84258038001823571E-03, vy=1.76183746921837227E-02, vz=8.08822351013463794E-04, m=2.44783833966454430E-06,
+  r=20.0e0, d=5.24)
+  earthmoo = BodyCart("big", name="EARTHMOO", x=2.42093942183383037E-01, y=-9.87467766698604366E-01, z=-4.54276292555233496E-06,
+  vx=1.64294055023289365E-02, vy=4.03200725816140870E-03, vz=1.13609607260006795E-08, m=3.04043264264672381E-06,
+  r=20.0e0, d=5.52)
+  mars = BodyCart("big", name="MARS", x=2.51831018120174499E-01, y=1.52598983115984788E+00, z=2.57781137811807781E-02,
+  vx=-1.32744166042475433E-02, vy=3.46582959610421387E-03, vz=3.98930013246952611E-04, m=3.22715144505386530E-07,
+  r=20.0e0, d=3.94)
+  jupiter = BodyCart("big", name="JUPITER", x=4.84143144246472090E+00, y=-1.16032004402742839E+00, z=-1.03622044471123109E-01,
+  vx=1.66007664274403694E-03, vy=7.69901118419740425E-03, vz=-6.90460016972063023E-05, m=9.54791938424326609E-04,
+  r=3.0e0, d=1.33)
+  saturn = BodyCart("big", name="SATURN", x=8.34336671824457987E+00, y=4.12479856412430479E+00, z=-4.03523417114321381E-01,
+  vx=-2.76742510726862411E-03, vy=4.99852801234917238E-03, vz=2.30417297573763929E-05, m=2.85885980666130812E-04,
+  r=3.0e0, d=0.70)
+  uranus = BodyCart("big", name="URANUS", x=1.28943695621391310E+01, y=-1.51111514016986312E+01, z=-2.23307578892655734E-01,
+  vx=2.96460137564761618E-03, vy=2.37847173959480950E-03, vz=-2.96589568540237556E-05, m=4.36624404335156298E-05,
+  r=3.0e0, d=1.30)
+  neptune = BodyCart("big", name="NEPTUNE", x=1.53796971148509165E+01, y=-2.59193146099879641E+01, z=1.79258772950371181E-01,
+  vx=2.68067772490389322E-03, vy=1.62824170038242295E-03, vz=-9.51592254519715870E-05, m=5.15138902046611451E-05,
+  r=3.0e0, d=1.76)
+  pluto = BodyCart("big", name="PLUTO", x=-1.15095623952731607E+01, y=-2.70779438829451422E+01, z=6.22871533567077229E+00,
+  vx=2.97220056963797431E-03, vy=-1.69820233395912967E-03, vz=-6.76798264809371094E-04, m=7.39644970414201173E-09,
+  r=3.0e0, d=1.1)
+  
+  apollo = BodyAst("small", name="APOLLO", a=1.4710345, e=.5600245, I=6.35621, 
+  g=285.63908, n=35.92313, M=15.77656, ep=2450400.5)
+  jason = BodyAst("small", name="JASON", a=2.2157309, e=.7644575, I=4.84834, 
+  g=336.49610, n=169.94137, M=293.37226, ep=2450400.5)
+  khufu = BodyAst("small", name="KHUFU", a=0.9894948, e=.4685310, I=9.91298, 
+  g=54.85927, n=152.64772, M=66.69818, ep=2450600.5)
+  minos = BodyAst("small", name="MINOS", a=1.1513383, e=.4127106, I=3.93863, 
+  g=239.50170, n=344.85893, M=8.93445, ep=2450400.5)
+  orpheus = BodyAst("small", name="ORPHEUS", a=1.2091305, e=.3226805, I=2.68180, 
+  g=301.55128, n=189.79654, M=28.31467, ep=2450400.5)
+  toutatis = BodyAst("small", name="TOUTATIS", a=2.5119660, e=.6335854, I=0.46976, 
+  g=274.82273, n=128.20968, M=50.00728, ep=2450600.5)
+  
+  solarSystem = PlanetarySystem(bodies=[mercury, venus, earthmoo, mars, jupiter, saturn, uranus, 
+  neptune, pluto, apollo, jason, khufu, minos, orpheus, toutatis], m_star=1.0, epoch=2451000.5)
+  
+  bigin = Big(solarSystem)
+  bigin.write()
+  
+  smallin = Small(solarSystem)
+  smallin.write()
+  
+  elementin = Element(format_sortie=" a8.5 e8.6 i8.4 g8.4 n8.4 l8.4 m13e ", coord="Cen", 
+  output_interval=365.2e1, time_format="years", relative_time="yes")
+  elementin.write()
+  
+  closein = Close(time_format="years", relative_time="yes")
+  closein.write()
+  
+  paramin = Param(algorithme=algorithm, start_time=2451179.5, stop_time=2462502.5, output_interval=365.25e0, 
+  h=8, accuracy=1.e-12, stop_integration="no", collisions="no", fragmentation="no", 
+  time_format="years", relative_time="no", output_precision="medium", relativity="no", 
+  user_force="no", ejection_distance=100, radius_star=0.005, central_mass=1.0, 
+  J2=0, J4=0, J6=0, changeover=3., data_dump=500, periodic_effect=100)
+  paramin.write()
+  
+  Files().write()
+  Message().write()
+
 ##################
 # Outputs of various binaries and tests to compare with the actual ones. 
 # Theses outputs are those of the original version of mercury, that is, mercury6_2.for
@@ -289,99 +366,72 @@ if force_source:
   
   os.chdir("..")
 
-if force_simulation:
-  os.chdir(PREVIOUS_TEST)
-  # Copy of simulation files
-  copy_files = "cp ../%s/* ." % NEW_TEST
-  print(copy_files)
-  run(copy_files)
-  
-  # We run the simulation
-  print("##########################################")
-  sys.stdout.write("Running old binaries ...\r")
-  sys.stdout.flush()
-  (naut_or_stdout, naut_or_stderr, returnCode) = run("./%s" % PROGRAM_NAME)
-  print("Running old binaries ...ok")
-  print("##########################################")
+for algo in ["BS", "BS2", "MVS", "RADAU", "HYBRID"]:
+		
+	print("##########################################")
+	sys.stdout.write("Running new binaries with %s ...\r" % algo)
+	sys.stdout.flush()
+	os.chdir(NEW_TEST)
 
-  # Go back in parent directory (containing the current code and test script)
-  os.chdir("..")
-else:
-  print("Skipping running original Nautilus, output already exists")
+	clean() # Suppress previous temporary files
 
-print("##########################################")
-sys.stdout.write("Running new binaries ...\r")
-sys.stdout.flush()
-os.chdir(NEW_TEST)
+	initialising_input_objects(algorithm=algo)
 
-(naut_new_stdout, naut_new_stderr, returnCode) = run("../%s" % PROGRAM_NAME)
+	(merc_new__stdout, merc_new__stderr, returnCode) = run("../%s" % PROGRAM_NAME)
 
-OUTPUT_FILENAMES = ["xv.out"]
-CLOSE_FILENAMES = ["ce.out"]
+	# list are sorted to ensure we compare the right files between actual and original outputs
+	OUTPUT_FILENAMES.sort()
+	CLOSE_FILENAMES.sort()
 
-# list are sorted to ensure we compare the right files between actual and original outputs
-OUTPUT_FILENAMES.sort()
-CLOSE_FILENAMES.sort()
+	os.chdir("..")
+	print("Running new binaries with %s ...ok" % algo)
 
-os.chdir("..")
-print("Running new binaries ...ok")
-print("##########################################")
+	# We run the old version simulation
+	print("##########################################")
+	os.chdir(PREVIOUS_TEST)
+	# Copy of simulation files
+	copy_files = "cp ../%s/* ." % NEW_TEST
+	print(copy_files)
+	run(copy_files)
 
-if not(force_simulation):
-  # To prevent finding differences in the standard output and error when the old simulation is not re-generated here
-  naut_or_stdout = naut_new_stdout
-  naut_or_stderr = naut_new_stderr  
+	clean() # Suppress previous temporary files
+	sys.stdout.write("Running old binaries with %s ...\r" % algo)
+	sys.stdout.flush()
+	(merc_or_stdout, merc_or_stderr, returnCode) = run("./%s" % PROGRAM_NAME)
+	print("Running old binaries with %s ...ok" % algo)
+	print("##########################################")
 
-os.chdir(PREVIOUS_TEST)
-OUTPUT_FILENAMES_OLD = ["xv.out"]
-CLOSE_FILENAMES_OLD = ["ce.out"]
+	# Go back in parent directory (containing the current code and test script)
+	os.chdir("..")
 
-# list are sorted to ensure we compare the right files between actual and original outputs
-OUTPUT_FILENAMES_OLD.sort()
-CLOSE_FILENAMES_OLD.sort()
+	# We make the comparison
 
-os.chdir("..")
+	diff = ASCIICompare(merc_or_stdout, merc_new__stdout)
+	if (diff != None):
+	  print("\nTest of mercury")
+	  print("\tFor the Output of mercury")
+	  print diff
 
-print("##########################################")
+	# We create names including the folder in which they are
+	CLOSE_FILENAMES_NEW = [os.path.join(NEW_TEST, filename) for filename in CLOSE_FILENAMES]
+	OUTPUT_FILENAMES_NEW = [os.path.join(NEW_TEST, filename) for filename in OUTPUT_FILENAMES]
 
-# We make the comparison
+	# We create names including the folder in which they are
+	CLOSE_FILENAMES_OLD = [os.path.join(PREVIOUS_TEST, filename) for filename in CLOSE_FILENAMES]
+	OUTPUT_FILENAMES_OLD = [os.path.join(PREVIOUS_TEST, filename) for filename in OUTPUT_FILENAMES]
 
-if (len(OUTPUT_FILENAMES_OLD) != len(OUTPUT_FILENAMES)):
-  print("Error: number of abundances files is different")
-  print("Old: %s" % OUTPUT_FILENAMES_OLD)
-  print("Actual: %s" % OUTPUT_FILENAMES)
+	print("comparing outputs:")
+	compare2Binaries(OUTPUT_FILENAMES_OLD, OUTPUT_FILENAMES_NEW)
 
-if (len(CLOSE_FILENAMES_OLD) != len(CLOSE_FILENAMES)):
-  print("Error: number of rates files is different")
-  print("Old: %s" % CLOSE_FILENAMES_OLD)
-  print("Actual: %s" % CLOSE_FILENAMES)
+	print("comparing close encounters:")
+	compare2Binaries(CLOSE_FILENAMES_OLD, CLOSE_FILENAMES_NEW)
 
-diff = ASCIICompare(naut_or_stdout, naut_new_stdout)
-if (diff != None):
-  print("\nTest of nautilus")
-  print("\tFor the Output of nautilus")
-  print diff
 
-# We create names including the folder in which they are
-CLOSE_FILENAMES = [os.path.join(NEW_TEST, filename) for filename in CLOSE_FILENAMES]
-OUTPUT_FILENAMES = [os.path.join(NEW_TEST, filename) for filename in OUTPUT_FILENAMES]
+	# We include the folder name because we are in the parent folder.
+	ASCII_OLD = [os.path.join(PREVIOUS_TEST, filename) for filename in ASCII_FILES]
+	ASCII_NEW = [os.path.join(NEW_TEST, filename) for filename in ASCII_FILES]
 
-# We create names including the folder in which they are
-CLOSE_FILENAMES_OLD = [os.path.join(PREVIOUS_TEST, filename) for filename in CLOSE_FILENAMES_OLD]
-OUTPUT_FILENAMES_OLD = [os.path.join(PREVIOUS_TEST, filename) for filename in OUTPUT_FILENAMES_OLD]
-
-print("comparing outputs:")
-compare2Binaries(OUTPUT_FILENAMES_OLD, OUTPUT_FILENAMES)
-
-print("comparing close encounters:")
-compare2Binaries(CLOSE_FILENAMES_OLD, CLOSE_FILENAMES)
-
-ASCII_FILES = ['info.out']
-
-# We include the folder name because we are in the parent folder.
-ASCII_OLD = [os.path.join(PREVIOUS_TEST, filename) for filename in ASCII_FILES]
-ASCII_NEW = [os.path.join(NEW_TEST, filename) for filename in ASCII_FILES]
-
-#~ pdb.set_trace()
-print("comparing info.out")
-compare2files(ASCII_OLD, ASCII_NEW)
+	#~ pdb.set_trace()
+	print("comparing ASCII files (info.out,...)")
+	compare2files(ASCII_OLD, ASCII_NEW)
+	print("##########################################")
