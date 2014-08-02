@@ -680,7 +680,6 @@ subroutine write_disk_properties()
   write(10,'(a)') '------------------------------------'
   write(10,'(a,a)') 'branch = ', branch
   write(10,'(a,a)') 'commit = ', commit
-  write(10,'(a,a)') 'tags = ', tags
   write(10,'(a)') modifs
   write(10,'(a,f3.1,a,f5.2,a)') 'With h=', timestep, ' days, the simulation will be accurate for r > ', distance_accuracy, ' AU'
   write(10,'(a)') '------------------------------------'
