@@ -21,3 +21,4 @@ html/
 latex/
 migration_map
 *.dSYM
+git_infos.f90
