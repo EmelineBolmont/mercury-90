@@ -41,9 +41,12 @@ module disk_properties
   real(double_precision) :: DISK_ALBEDO = 0.5d0
   
   integer :: DISSIPATION_TYPE = 0 ! integer to tell if there is dissipation of the disk or not. 0 for no dissipation, 1 for viscous dissipation and 2 for exponential decay of the initial profile. 3 for mixed dissipation, both viscously and with photoevaporation, with two timescales
+  real(double_precision) :: next_dissipation_time = -1.d0 !< next time at which we will compute the thermal properties of the disk?
+  real(double_precision) :: current_dissipation_time = -1.d0 !< current time for the dissipation. This time correspond to the actual surface density profile stored.
   real(double_precision) :: TAU_DISSIPATION = 1.d6 ! the characteristic time for the exponential decay of the surface density (in years) (dissipation_type=2)
   
   
+  integer :: dissipation_switch = 0 !< If 0, the code hasn't switched. If 1, the current step is the last slow step. If 2, the switching was done.
   real(double_precision) :: DISSIPATION_TIME_SWITCH = 2d6 ! (years) the time at which we switch from viscous to photoevaporation exponential decrease (dissipatio_type=3)
   real(double_precision) :: TAU_VISCOUS = 1.d7 ! (years) the characteristic time for the viscous exponential decay
   real(double_precision) :: TAU_PHOTOEVAP = 3.d4 ! (years) the characteristic time for the photoevaporation exponential decay

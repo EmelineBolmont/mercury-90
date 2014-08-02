@@ -309,7 +309,7 @@ end subroutine write_torquein
     integer :: k, nb_disks
     real(double_precision), dimension(:), allocatable :: time
     character(len=80) :: contour_name
-    real(double_precision) :: integration_time, delta_dissip, current_time, next_time
+    real(double_precision) :: integration_time, delta_dissip, current_time, next_time, old_time
     
     ! Small number, to be just after the last point and ensure to have a good rendering of the map (else, the last point in often missing)
     real(double_precision), parameter :: range_shift = 1.d-7
@@ -542,7 +542,10 @@ end subroutine write_torquein
           ! We dissipate while the next time of dissipation is lower than the absolute time of the next k-time
           current_time = time(k)
           do while (next_time.lt.(time(k)+delta_dissip)) 
-            call dissipate_disk(current_time, next_time) ! Input=current_time ; Output=next_time
+            call dissipate_disk(old_step=current_dissipation_time , current_dissip_time=current_time, & ! Inputs
+                    next_step=next_time) ! Outputs
+            
+            old_time = current_time
             current_time = next_time
           end do
           ! we get the temperature profile.

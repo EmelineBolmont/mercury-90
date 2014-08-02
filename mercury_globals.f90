@@ -50,6 +50,7 @@ module mercury_globals
   
   real(double_precision) :: tstart !< epoch of first required output (days)
   real(double_precision) :: tstop !< epoch final required output (days)
+  real(double_precision) :: tdump !< time of next data dump (days)
   
   real(double_precision) :: dtout !< data output interval           (days)
   real(double_precision) :: dtdump !< data-dump interval             (days)

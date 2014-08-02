@@ -204,13 +204,13 @@ else:
 
 if (t_max > 1e6):
   unit_time = "Million years"
-  time_convertion = 1e6
+  time_conversion = 1e6
 elif (t_max > 1e3):
   unit_time = " 000 years"
-  time_convertion = 1e3
+  time_conversion = 1e3
 else:
   unit_time = "years"
-  time_convertion = 1.
+  time_conversion = 1.
   
 if isDisk:
   if not(os.path.isfile("total_torque.gnuplot")):
@@ -349,7 +349,7 @@ for frame_i in range(NB_FRAMES):
       pass
       #~ # The planet has been ejected  
 
-  plot_orbits.text(timeline_width, timeline_height, " %.0f %s" % (t_frame / time_convertion, unit_time), 
+  plot_orbits.text(timeline_width, timeline_height, " %.0f %s" % (t_frame / time_conversion, unit_time), 
                    horizontalalignment='left', verticalalignment='center', 
                    size=15, transform=plot_orbits.transAxes)
   

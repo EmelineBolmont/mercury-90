@@ -10,6 +10,8 @@ import sys # to be able to retrieve arguments of the script
 ## Beginning of the program
 ###############################################
 
+LOG_NAME = 'compilation.log'
+
 filename = "test_disk.f90"
 force = False # To force the compilation of every module
 isOptimize = False
@@ -55,6 +57,12 @@ if force:
 sourceFile.setCompilator("gfortran")
 
 sources_filename = lister("*.f90")
+
+# Before compiling, we delete the previous compilation log. Indeed, we need to append the several warnings in the same file
+# But we do not want to have infos of the previous compilation in it.
+if os.path.isfile(LOG_NAME):
+  os.remove(LOG_NAME)
+
 if isOptimize:
   sourceFile.setCompilingOptions("-O3 -march=native -pipe -finit-real=nan")
   # We create the binaries

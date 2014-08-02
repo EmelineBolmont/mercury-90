@@ -498,6 +498,8 @@ def clean(exts):
 #############################################
 
 
+LOG_NAME = 'compilation.log'
+
 # Parameters
 debug = False
 isTest = False
@@ -612,6 +614,11 @@ if force:
   clean(["o", "mod"])
 
 
+
+# Before compiling, we delete the previous compilation log. Indeed, we need to append the several warnings in the same file
+# But we do not want to have infos of the previous compilation in it.
+if os.path.isfile(LOG_NAME):
+  os.remove(LOG_NAME)
 
 # Before compiling, we delete the previous compilation log. Indeed, we need to append the several warnings in the same file
 # But we do not want to have infos of the previous compilation in it.

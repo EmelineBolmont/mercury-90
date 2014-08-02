@@ -13,6 +13,7 @@ module user_module
 
   use types_numeriques
   use physical_constant
+  use mercury_globals
   use disk ! contains all the subroutines that describe the behaviour of the disk
 
   implicit none
@@ -109,7 +110,6 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
   real(double_precision), dimension(3) :: eccentricity_acceleration
   real(double_precision), dimension(3) :: turbulence_acceleration
   real(double_precision) :: inclination_acceleration_z
-  real(double_precision), save :: next_dissipation_step = -1.d0 ! next time at which we will compute the thermal properties of the disk?
   
   !------------------------------------------------------------------------------
   ! Setup
@@ -118,28 +118,44 @@ subroutine mfo_user (time,jcen,n_bodies,n_big_bodies,mass,position,velocity,acce
     acceleration(1:3,planet) = 0.d0
   end do
   
+  call init_globals(stellar_mass=mass(1), time=time)
+
+  
+  ! Do the data dump
+  ! tdump and dtdump are created by mercury that already did the dumping and modified tdump. 
+  ! Thus, the only ways to know that a dump was done is to check if tdump is equal to the local time.
+  if (time.eq.tdump) then
+    call write_restart_disk()
+  
+    ! we store in a .dat file the temperature profile
+    call store_temperature_profile(filename='temperature_profile.dat')
+    call store_density_profile(filename='surface_density_profile.dat')
+    call store_scaleheight_profile(stellar_mass=mass(1))
+  endif
+  
   ! By default, there is disk effects. Be carefull, init_globals is only treated if there is disk effects, 
   ! to increase the speed when the disk is no present anymore.
   if (disk_effect) then
-    call init_globals(stellar_mass=mass(1), time=time)
     
     !------------------------------------------------------------------------------
     ! If it's time (depending on the timestep we want between each calculation of the disk properties)
-    ! The first 'next_dissipation_step' is set to '-1' to force the calculation for the first timestep. In fact, the first timestep will be done fornothing, but we need this in order to have a clean code.
+    ! The first 'next_dissipation_time' is set in init_globals()
     if (DISSIPATION_TYPE.ne.0) then
-      if (time.gt.next_dissipation_step) then
+      if (time.gt.next_dissipation_time) then
         ! we get the density profile.
-        call dissipate_disk(time, next_dissipation_step)
+        call dissipate_disk(old_step=current_dissipation_time , current_dissip_time=time, & ! Inputs
+                            next_step=next_dissipation_time) ! Outputs
+        
+        ! We actualize the old dissipation time (in days)
+        current_dissipation_time = time
         
         ! we get the temperature profile.
         call calculate_temperature_profile(stellar_mass=mass(1))
         
-        ! we store in a .dat file the temperature profile
-        call store_temperature_profile(filename='temperature_profile.dat')
-        call store_density_profile(filename='surface_density_profile.dat')
-        call store_scaleheight_profile(stellar_mass=mass(1))
+
       end if
     end if
+    
     !------------------------------------------------------------------------------
   
     do planet=2,n_bodies
@@ -314,7 +330,6 @@ write(12,'(a)') '____________________________________'
 close(12)
 
 end subroutine debug_infos
-
 
 end module user_module
   
