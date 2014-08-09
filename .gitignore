@@ -9,7 +9,6 @@ test_disk
 *.out
 git_infos.f90
 dissipation
-simu_test
 *.dat
 unitary_tests
 interesting_disks
@@ -19,7 +18,10 @@ interesting_disks
 *~
 *.pdf
 *.tmp
+*.dmp
 html/
 latex/
 migration_map
 *.dSYM
+git_infos.f90
+old_simulation
