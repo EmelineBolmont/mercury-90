@@ -7,7 +7,6 @@
 alias mercury="$mercury/mercury"
 alias element="$mercury/element"
 alias close="$mercury/close"
-alias migration_map="$mercury/migration_map"
 
 # Python scripts will be available in any folder
 export PATH=$PATH:$mercury/analysis:.
