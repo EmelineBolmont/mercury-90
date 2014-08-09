@@ -14,9 +14,6 @@ from fractions import Fraction
 import sys
 import pdb
 
-# TODO
-# _ 
-
 ###################
 ## Configuration ##
 ###################
@@ -38,16 +35,19 @@ uncertainty = 0.01 * float(UNCERTAINTY)
 
 isProblem = False
 isElement = False
-problem_message = "AIM : Search for possible resonance between planets. By default 2, but can search for resonances for a whole mercury system" + "\n" + \
-"The script can take various arguments :" + "\n" + \
-"(no spaces between the key and the values, only separated by '=')" + "\n" + \
-" * ratio=1.3 : the period ratio we want to investigate" + "\n" + \
-" * uncertainty=%.0f : (percentage) the tolerance over the period ratio in %" % UNCERTAINTY + "\n" + \
-" * element : to get possible resonances for every planet in an element.out file" + "\n" + \
-" * help : to get this message" + "\n" + \
-"\nExample: find_resonances.py ratio=1.2"
+problem_message = """The script can take various arguments :
+(no spaces between the key and the values, only separated by '=')
+ * ratio=1.2 (the period ratio we want to investigate)
+ * uncertainty=5 (the tolerance over the period ratio in %% ; the default is %i%%)
+ * element (to get possible resonances for every planet in an element.out file
+ * help (to get this message)
+ 
+Example: 
+> mercury-find-resonances.py ratio=1.2""" % UNCERTAINTY
+
 
 value_message = "/!\ Warning: %s does not need any value, but you defined '%s=%s' ; value ignored."
+
 
 # We get arguments from the script
 for arg in sys.argv[1:]:
