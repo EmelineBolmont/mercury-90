@@ -29,28 +29,38 @@ force_source = False # To force the compilation of every module
 force_simulation = False # To force generation of simulation outputs for the "old" version of the code
 
 isProblem = False
-problem_message = """Script that run a mercury simulation and test if the outputs and binaries have correct behaviour.
-The goal is to compare with a given version of the code, either an old one, the previous or current one.
-By default, we take the current version of the code (the first time) and compare with the non committed modifications. 
-but one can force the change of reference version by using the "rev=xxx" option. Without changing the code, 
-one can force the comparison with a different simulation (the one in "example_simulation" will be copied in the other folder)
-by using the "force" option.
+problem_message = """Script that run a mercury simulation and test if the outputs and binaries have 
+correct behaviour. The goal is to compare with a given version of the code, 
+either an old one, the previous or current one. By default, we take the 
+current version of the code (the first time) and compare with the non 
+committed modifications. but one can force the change of reference version by 
+using the "rev=xxx" option. Without changing the code, one can force the 
+comparison with a different simulation (the one in "example_simulation" will be 
+copied in the other folder) by using the "force" option.
 
 The script can take various arguments :
 (no spaces between the key and the values, only separated by '=')
  * help : display a little help message on HOW to use various options
- * force : To force generation of outputs for the 'old' program (after copying simulation files from the example)
- * actual : To force copying HEAD simulation, compyling it, then generating simulation outputs
+ * force : To force generation of outputs for the 'old' program (after copying
+           simulation files from the example)
+ * actual : To force copying HEAD simulation, compyling it, then generating 
+            simulation outputs
  * faq : Display possible problems that might occurs during comparison
- * rev=%s : (previous, actual, current) are possible. Else, every Git ID syntax is OK.
-the reference revision for the comparison with actual code
+ * rev=%s : (previous, actual, current) are possible. Else, every 
+            Git ID syntax is OK. The reference revision for the 
+            comparison with actual code
 
  Example : 
 (examples are ordered. From the more common, to the more drastic.)
- compare_simulations.py #only generate new outputs, do nothing for the old one
- compare_simulations.py force # copy inputs in old folder, then generate outputs for both binaries
- compare_simulations.py actual # compile HEAD, copy inputs in old folder, then generate outputs for for both binaries
- compare_simulations.py rev=cdabb998 # compile the given revision, copy input in old folder then generate outputs for both binaries""" % REVISION
+> compare_simulations.py #only generate new outputs, do nothing 
+                         for the old one
+> compare_simulations.py force # copy inputs in old folder, then 
+                               generate outputs for both binaries
+> compare_simulations.py actual # compile HEAD, copy inputs in old folder,
+                                then generate outputs for for both binaries
+> compare_simulations.py rev=cdabb998 # compile the given revision, copy input 
+                                      in old folder then generate outputs 
+                                      for both binaries""" % REVISION
 
 isFAQ = False
 faq_message = """* If you have differences, ensure that all 

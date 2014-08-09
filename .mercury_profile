@@ -1,0 +1,87 @@
+# File containing commands to be added to the Bash profile. 
+# The script configure_mercury.py will do this, or the uninstallation. 
+
+# the $mercury command is defined directly in the .bash_profile by configure_mercury.py
+
+# Aliases for programs
+alias mercury="$mercury/mercury"
+alias element="$mercury/element"
+alias close="$mercury/close"
+alias migration_map="$mercury/migration_map"
+
+# Python scripts will be available in any folder
+export PATH=$PATH:$mercury/analysis:.
+
+# Python modules will be available in any folder
+PYTHONPATH=$PYTHONPATH:$mercury/python_modules
+export PYTHONPATH
+
+git_branch_name_prompt() {
+    # Only do this if the current directory is a git repository
+    if git status 2>/dev/null 1>/dev/null ; then
+        # We keep only the first line, then the last word is our branch
+        git_status_output=$(git status 2> /dev/null|head -1) || return
+
+        branch_name() {
+        # We get the last word with grep
+            echo "$git_status_output"|grep -oE '[^ ]+$' 
+        }
+    
+    
+        echo "($(branch_name))"
+    fi
+}
+
+git_branch_colour_prompt() {
+    # Only do this if the current directory is a git repository
+    if git status 2>/dev/null 1>/dev/null ; then
+        git_status_output=$(git status 2> /dev/null) || return
+
+        find_pattern_in_status() {
+            local pattern="$1"
+            [[ "$git_status_output" =~ ${pattern} ]]
+        }
+
+        is_clean() {
+            local clean_fr='(rien à valider, la copie de travail est propre)'
+            local clean_en='(working directory clean)'
+            find_pattern_in_status "($clean_fr|$clean_en)"
+        }
+
+        is_local_changes() {
+            local added_fr='Modifications qui seront validées :'
+            local not_added_fr='Modifications qui ne seront pas validées :'
+            local added_en='# Changes to be committed'
+            local not_added_en='# Changes not staged for commit'
+            find_pattern_in_status "($added_fr|$not_added_fr|$added_en|$not_added_en)"
+        }
+
+        is_untracked() {
+            local untracked_fr='Fichiers non suivis:'
+            local untracked_en='# Untracked files'
+            find_pattern_in_status "($untracked_fr|$untracked_en)"
+        }
+
+        # local bold="\033[1m"
+        local no_colour="\033[0m"
+        local red="\033[31m"
+        local green="\033[32m"
+        local yellow="\033[33m"
+        local branch_colour=""
+
+        if is_untracked
+        then
+            branch_colour=$red
+        elif is_local_changes
+        then
+            branch_colour=$yellow
+        elif is_clean
+        then
+            branch_colour=$green
+        fi
+
+        echo -e "$branch_colour"
+    fi
+}
+
+PS1="\h.\u:\[\033[35m\]\W\[\033[0m\]\[\$(git_branch_colour_prompt)\]\$(git_branch_name_prompt)\[\033[0m\]\$ "
