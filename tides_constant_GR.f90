@@ -71,10 +71,9 @@ module tides_constant_GR
   real(double_precision), parameter :: sigma_what = 2.006*3.845764d4 !-60+64
   real(double_precision), parameter :: rg2_what = 2.0d-1
   real(double_precision), parameter :: k2st_what = 0.307d0 
-  ! For R=cst, or dM or Suns
-  real(double_precision), parameter :: Period_st   = 8.0d0    !day
   real(double_precision), parameter :: radius_star = 0.943 !Rsun
- 
+  ! For R=cst, or dM or Suns
+  real(double_precision), parameter :: Period_st   = 8.0d0    !day 
   
   !*********************************************************************
   !*********************************************************************
