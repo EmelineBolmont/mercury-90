@@ -1,14 +1,11 @@
-cat *.sh.o* |grep "Date" -v>spin.dat
-#cat spin.dat |grep "s" >spins.dat
-#cat spin.dat |grep "p1" >spinp1.dat
-#cat spin.dat |grep "h1" >horb1.dat
-#cat spin.dat |grep "p2" >spinp2.dat
-#cat spin.dat |grep "h2" >horb2.dat
-#cat spin.dat |grep "p3" >spinp3.dat
-#cat spin.dat |grep "h3" >horb3.dat
-#cat spin.dat |grep "p4" >spinp4.dat
-#cat spin.dat |grep "h4" >horb4.dat
-#cat spin.dat |grep "p5" >spinp5.dat
-#cat spin.dat |grep "h5" >horb5.dat
-#cat spin.dat |grep "p6" >spinp6.dat
-#cat spin.dat |grep "h6" >horb6.dat
+#/bin/sh
+#$ -cwd
+
+rm *aei
+for ((i=1 ; i<=2 ; i++))
+do 
+cp spinp$i.out spinp$i.dat 
+cp horb$i.out horb$i.dat 
+cp spins.out spins.dat 
+done
+./element
