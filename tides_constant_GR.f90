@@ -77,7 +77,7 @@ module tides_constant_GR
   
   !*********************************************************************
   !*********************************************************************
-  ! No Need to chang stuff from here
+  ! No Need to change stuff from here
   ! Radius of gyration and love number for dM 
   real(double_precision), parameter :: rg2_dM = 2.0d-1
   real(double_precision), parameter :: k2st_dM = 0.307d0 
@@ -101,7 +101,7 @@ module tides_constant_GR
   real(double_precision), parameter :: sigma_Sun = 4.992*3.845764d-2 !-66+64
   ! If planet not terrestrial, dissipation factor Hot Gas Giant
   real(double_precision), parameter :: sigma_gg = 2.006*3.845764d4
-  ! k2delta_t for Jupiter: 2-3d-2 s, here in day
+  ! k2delta_t for Jupiter: 2-3d-2 s, here in day (Leconte)
   real(double_precision), parameter :: k2delta_jup = 2.893519d-7
   
   ! Some stuff, constants mainly
