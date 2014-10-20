@@ -222,7 +222,7 @@ subroutine write_simus_properties()
   write(10,*) ''
   if (tides.eq.1) then
      write(10,'(a,i1)') 'Number of planets tidally evolving =',ntid
-     do j = 1, ntid
+     do j = 2, ntid+1
         write(10,'(a,i1)') 'PLANET',j
         if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.1)) then
            write(10,'(a,f12.5,a,f12.5)') 'k2p =',k2p_terr,', rg2p =',rg2p_terr
