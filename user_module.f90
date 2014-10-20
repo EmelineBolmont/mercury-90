@@ -218,13 +218,12 @@ contains
              sigmast = sigma_BD
              ! Radius of BD's gyration data
              open(1,file='rg2BD.dat')
-             nptmss = 0
              do nptmss=1,37
                 read(1,*,iostat=error)trg2(nptmss),rg1(nptmss),rg2(nptmss), &
                      rg3(nptmss),rg4(nptmss),rg5(nptmss),rg6(nptmss),rg7(nptmss), &
                      rg8(nptmss),rg9(nptmss),rg10(nptmss),rg11(nptmss),rg12(nptmss)
              end do
-
+             
              ! If BD's mass is equal to one of these values, charge radius... 
              if ((m(1).le.0.0101*K2).and.(m(1).ge.0.0099*K2)) then
                 iPs0 = 1
@@ -234,11 +233,11 @@ contains
                    rg2st(j) = rg1(j)
                 enddo
                 open(1,file='mass_10.0000.dat')
-                nptmss = 0
                 do nptmss = 1,715
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0121*K2).and.(m(1).ge.0.0119*K2)) then
                 iPs0 = 2
                 k2s  = k2st(iPs0)
@@ -247,11 +246,11 @@ contains
                    rg2st(j) = rg2(j)
                 enddo
                 open(1,file='mass_12.0000.dat')
-                nptmss = 0
                 do nptmss=1,720
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0151*K2).and.(m(1).ge.0.0149*K2)) then
                 iPs0 = 3
                 k2s  = k2st(iPs0)
@@ -260,11 +259,11 @@ contains
                    rg2st(j) = rg3(j)
                 enddo
                 open(1,file='mass_15.0000.dat')
-                nptmss = 0
                 do nptmss=1,856
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then
                 iPs0 = 4
                 k2s  = k2st(iPs0)
@@ -273,11 +272,11 @@ contains
                    rg2st(j) = rg4(j)
                 enddo
                 open(1,file='mass_20.0000.dat')
-                nptmss = 0
                 do nptmss =1,864
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0301*K2).and.(m(1).ge.0.0299*K2)) then
                 iPs0 = 5
                 k2s  = k2st(iPs0)
@@ -286,11 +285,11 @@ contains
                    rg2st(j) = rg5(j)
                 enddo
                 open(1,file='mass_30.0000.dat')
-                nptmss = 0
                 do nptmss=1,878
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0401*K2).and.(m(1).ge.0.0399*K2)) then
                 iPs0 = 6
                 k2s  = k2st(iPs0)
@@ -299,11 +298,11 @@ contains
                    rg2st(j) = rg6(j)
                 enddo
                 open(1,file='mass_40.0000.dat')
-                nptmss = 0
                 do nptmss = 1,886
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)  
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0501*K2).and.(m(1).ge.0.0499*K2)) then
                 iPs0 = 7
                 k2s  = k2st(iPs0)
@@ -312,11 +311,11 @@ contains
                    rg2st(j) = rg7(j)
                 enddo
                 open(1,file='mass_50.0000.dat')
-                nptmss = 0
                 do nptmss=1,891
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0601*K2).and.(m(1).ge.0.0599*K2)) then
                 iPs0 = 8
                 k2s  = k2st(iPs0)
@@ -325,11 +324,11 @@ contains
                    rg2st(j) = rg8(j)
                 enddo
                 open(1,file='mass_60.0000.dat')
-                nptmss = 0
                 do nptmss=1,1663
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0701*K2).and.(m(1).ge.0.0699*K2)) then
                 iPs0 = 9
                 k2s  = k2st(iPs0)
@@ -338,11 +337,11 @@ contains
                    rg2st(j) = rg9(j)
                 enddo
                 open(1,file='mass_70.0000.dat')
-                nptmss = 0
                 do nptmss =1,3585
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0721*K2).and.(m(1).ge.0.0719*K2)) then
                 iPs0 = 10
                 k2s  = k2st(iPs0)
@@ -351,11 +350,11 @@ contains
                    rg2st(j) = rg10(j)
                 enddo
                 open(1,file='mass_72.0000.dat')
-                nptmss = 0
                 do nptmss =1,3721
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0751*K2).and.(m(1).ge.0.0749*K2)) then
                 iPs0 = 11
                 k2s  = k2st(iPs0)
@@ -364,11 +363,11 @@ contains
                    rg2st(j) = rg11(j)
                 enddo
                 open(1,file='mass_75.0000.dat')
-                nptmss = 0
                 do nptmss =1,3903
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              else if ((m(1).le.0.0801*K2).and.(m(1).ge.0.0799*K2)) then
                 iPs0 = 12
                 k2s  = k2st(iPs0)
@@ -377,11 +376,11 @@ contains
                    rg2st(j) = rg12(j)
                 enddo
                 open(1,file='mass_80.0000.dat')
-                nptmss = 0
                 do nptmss =1,4161
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
                 end do
+                nptmss = nptmss - 1
              endif
 
              ! Initialization of stellar spin (day-1)
@@ -403,11 +402,10 @@ contains
           if (flagrg2.eq.0) then
              ! Charge file of radius of Mdwarf 
              open(1,file='01Msun.dat')
-             nptmss = 0
              do nptmss = 1,1065
                 read(1,*,iostat=error)timedM(nptmss),radiusdM(nptmss)
              end do
-
+             nptmss = nptmss - 1
              if (crash.eq.0) then
                 Pst = Period_st
                 ! Initialization of stellar spin (day-1)
@@ -430,10 +428,10 @@ contains
           if (flagrg2.eq.0) then 
              ! Charge file of radius of Mdwarf 
              open(1,file='SRad_Spli_M-1_0000.dat')
-             nptmss = 0
              do nptmss = 1,2003
                 read(1,*,iostat=error)timestar(nptmss),radiusstar(nptmss),d2radiusstar(nptmss)
              end do
+             nptmss = nptmss - 1
              ! Initialization Sun-like star spin (day-1)
              if (crash.eq.0) then
                 Pst = Period_st
@@ -455,11 +453,11 @@ contains
           if (flagrg2.eq.0) then 
              ! Charge file of radius of Jupiter 
              open(1,file='Jupiter.dat')
-             nptmss = 0
              do nptmss = 1,4755
                 read(1,*,iostat=error) timeJup(nptmss),radiusJup(nptmss) &
                      ,k2Jup(nptmss),rg2Jup(nptmss),spinJup(nptmss)
              end do
+             nptmss = nptmss - 1
              if (crash.eq.0) then
                 call spline_b_val(nptmss,timeJup*365.25-t_init,radiusJup,time,Rstb0)
                 Rst0    =  minau * Rstb0
