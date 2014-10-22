@@ -5,6 +5,7 @@ close
 mercury
 element
 test_disk
+torque_diagram
 *.in
 *.out
 git_infos.f90
