@@ -54,12 +54,11 @@ contains
     !real(double_precision),intent(inout) entrée sortie pour spin
 
     ! Local
-    integer :: j,kk, error, iPs0
+    integer :: j,kk, error, iPs0, nptmss
     integer :: flagrg2=0
     integer :: flagtime=0
     integer :: ispin=0
     integer :: iwrite=0
-    integer(KIND=8) :: nptmss
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: timestep!=3.6525d5!3.65d5 !4.56d6 !
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
@@ -2288,7 +2287,7 @@ contains
     integer,intent(in) :: nbod,j
     real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
     real(double_precision),intent(in) :: R_star5,R_star10,k2_star,diss_star,sigma_star
-    real(double_precision),intent(in) :: R_plan5,R_plan10,k2_plan,diss_plan,sigma_plan
+    real(double_precision),intent(in) :: R_plan5,R_plan10,k2_plan,sigma_plan
     real(double_precision),intent(in) :: m(nbod),spin(3,10)
     
     real(double_precision), intent(out) :: acc_tid_x,acc_tid_y,acc_tid_z
@@ -2302,7 +2301,7 @@ contains
     
     call F_tides_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
        ,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2_plan,diss_plan,sigma_plan,j,Ftidr)
+       ,R_plan5,R_plan10,k2_plan,sigma_plan,j,Ftidr)
     call F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10,diss_star,sigma_star,j,Ftidos)
     call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
     call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
