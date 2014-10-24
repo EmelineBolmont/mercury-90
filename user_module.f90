@@ -1920,7 +1920,7 @@ contains
           if (tides.eq.1) then 
              call acc_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
                   ,Rsth5,Rsth10,k2s,dissstar,sigmast &
-                  ,Rp5(j),Rp10(j),k2p(j-1),dissplan(j-1),sigmap(j) &
+                  ,Rp5(j),Rp10(j),k2p(j-1),sigmap(j) &
                   ,j,acc_tid_x,acc_tid_y,acc_tid_z)
              a1(1,j) = acc_tid_x
              a1(2,j) = acc_tid_y
@@ -2142,7 +2142,7 @@ contains
   
   subroutine F_tides_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
        ,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2_plan,diss_plan,sigma_plan,j,Ftidr)
+       ,R_plan5,R_plan10,k2_plan,sigma_plan,j,Ftidr)
 
     use physical_constant
     implicit none
@@ -2151,7 +2151,7 @@ contains
     integer,intent(in) :: nbod,j
     real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
     real(double_precision),intent(in) :: R_star5,R_star10,k2_star,diss_star,sigma_star
-    real(double_precision),intent(in) :: R_plan5,R_plan10,k2_plan,diss_plan,sigma_plan
+    real(double_precision),intent(in) :: R_plan5,R_plan10,k2_plan,sigma_plan
     real(double_precision),intent(in) :: m(nbod)
     
     real(double_precision), intent(out) :: Ftidr
@@ -2168,7 +2168,7 @@ contains
     tmp1 = m(1)*m(1)
     tmp2 = m(j)*m(j)
     Ftidr =  -3.0d0/(r_7*K2) &
-              *(tmp2*R_star5*k2_star+tmp1*R_plan5*diss_plan*k2_plan) & 
+              *(tmp2*R_star5*k2_star+tmp1*R_plan5*k2_plan) & 
               - 13.5d0*v_rad/(r_8*tmp) &
               *(tmp2*R_star10*diss_star*sigma_star &
               +tmp1*R_plan10*sigma_plan)              
@@ -2279,7 +2279,7 @@ contains
   end subroutine Torque_tides_s 
   
   subroutine acc_tides (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2_plan,diss_plan,sigma_plan,j,acc_tid_x,acc_tid_y,acc_tid_z)
+       ,R_plan5,R_plan10,k2_plan,sigma_plan,j,acc_tid_x,acc_tid_y,acc_tid_z)
 
     use physical_constant
     implicit none
