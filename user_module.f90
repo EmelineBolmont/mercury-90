@@ -1,11 +1,16 @@
+!******************************************************************************
+! MODULE: user_module
+!******************************************************************************
+!
+! DESCRIPTION: 
+!> @brief Module that contain user defined function. This module can call other module and subroutine. 
+!! The only public routine is mfo_user, that return an acceleration that 
+!! mimic a random force that depend on what the user want to model.
+!
+!******************************************************************************
+
 module user_module
 
-  !*************************************************************
-  !** modules that contains user defined modules. 
-  !** Only mfo_user will be public.
-  !**
-  !** Version 1.0 - june 2011
-  !*************************************************************
   use types_numeriques
 
   implicit none
@@ -14,29 +19,34 @@ module user_module
 
   public :: mfo_user
 
-contains
+  contains
 
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  !      MFO_USER.FOR    (ErikSoft   2 March 2001)
-
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  ! Author: John E. Chambers
-
-  ! Applies an arbitrary force, defined by the user.
-
-  ! If using with the symplectic algorithm MAL_MVS, the force should be
-  ! small compared with the force from the central object.
-  ! If using with the conservative Bulirsch-Stoer algorithm MAL_BS2, the
-  ! force should not be a function of the velocities.
-
-  ! N.B. All coordinates and velocities must be with respect to central body
-  ! mercury gives x,v in democratic heliocentric !
-  ! ===
-  !------------------------------------------------------------------------------
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!> @author 
+!> John E. Chambers
+!
+!> @date 2 March 2001
+!
+! DESCRIPTION: 
+!> @brief Applies an arbitrary force, defined by the user.
+!!\n\n
+!! If using with the symplectic algorithm MAL_MVS, the force should be
+!! small compared with the force from the central object.
+!! If using with the conservative Bulirsch-Stoer algorithm MAL_BS2, the
+!! force should not be a function of the velocities.
+!! \n\n
+!! Code Units are in AU, days and solar mass * K2 (mass are in solar mass, but multiplied by K2 earlier in the code).
+!
+!> @note All coordinates and velocities must be with respect to central body
+!
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
   subroutine mfo_user (time,jcen,nbod,nbig,m,x,v,a)
+!  m             = mass (in solar masses * K2)
+!  x             = coordinates (x,y,z) with respect to the central body [AU]
+!  v             = velocities (vx,vy,vz) with respect to the central body [AU/day]
+!  nbod          = current number of bodies (INCLUDING the central object)
+!  nbig          =    "       "    " big bodies (ones that perturb everything else)
+!  time          = current epoch [days]
 
     use physical_constant
     use mercury_constant  
@@ -46,12 +56,20 @@ contains
 
     implicit none
 
-
-    ! Input/Output
-    integer, intent(in) :: nbod, nbig
-    real(double_precision),intent(in) :: time,jcen(3),m(nbod),x(3,nbod),v(3,nbod)
+    ! Input
+    integer, intent(in) :: nbod !< [in] current number of bodies (1: star; 2-nbig: big bodies; nbig+1-nbod: small bodies)
+    integer, intent(in) :: nbig !< [in] current number of big bodies (ones that perturb everything else)
+    real(double_precision), intent(in) :: time !< [in] current epoch (days)
+    real(double_precision), intent(in) :: jcen(3) !< [in] J2,J4,J6 for central body (units of RCEN^i for Ji)
+    real(double_precision), intent(in) :: m(nbod) !< [in] mass (in solar masses * K2)
+    real(double_precision), intent(in) :: x(3,nbod)
+    real(double_precision), intent(in) :: v(3,nbod)
+    
+    ! Output
     real(double_precision),intent(out) :: a(3,nbod)
-    !real(double_precision),intent(inout) entrée sortie pour spin
+    
+    !------------------------------------------------------------------------------ 
+    !------Local-------
 
     ! Local
     integer :: j,kk, error, iPs0, nptmss
@@ -1725,9 +1743,9 @@ contains
              k_rk_6z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
              
              ! Integration for first half of timestep
-             spin(1,j) = spin_bf(1,j) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
-             spin(2,j) = spin_bf(2,j) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
-             spin(3,j) = spin_bf(3,j) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
+         spin(1,j) = spin_bf(1,j) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
+         spin(2,j) = spin_bf(2,j) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
+         spin(3,j) = spin_bf(3,j) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
              
              ! *********************************************
              ! Integration on second half timestep
