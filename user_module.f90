@@ -119,6 +119,8 @@ module user_module
     real(double_precision) :: Rst0,Rst0_5,Rst0_10,Rstb0
     real(double_precision) :: rg2s,rg2sh,rg2s0,k2s
     
+    real(double_precision), dimension(nbig+1) :: dEdt
+    
     real(double_precision), parameter, dimension(12) :: Ps0 = (/8.d0,13.d0,19.d0,24.d0,30.d0,36.d0,41.d0, &
          47.d0,53.d0,58.d0,64.d0,70.d0/)
     real(double_precision), parameter, dimension(12) :: k2st = (/0.379d0,0.378d0,0.376d0,0.369d0, &
@@ -126,6 +128,7 @@ module user_module
 
     character(len=80) :: planet_spin_filename
     character(len=80) :: planet_orbt_filename
+    character(len=80) :: planet_dEdt_filename
 
     ! Data 
     save timestar,radiusstar,d2radiusstar
@@ -1942,6 +1945,11 @@ module user_module
              a1(1,j) = acc_tid_x
              a1(2,j) = acc_tid_y
              a1(3,j) = acc_tid_z
+             call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+                  ,Rsth5,Rsth10,k2s,dissstar,sigmast &
+                  ,Rp5(j),Rp10(j),k2p(j-1),sigmap(j) &
+                  ,j,tmp)
+             dEdt(j) = tmp
           else
              a1(1,j) = 0.0d0
              a1(2,j) = 0.0d0
@@ -1985,12 +1993,16 @@ module user_module
           do j=2,ntid+1
              write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
              write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
+             write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
              open(13, file=planet_spin_filename, access='append')
              write(13,'(6("  ", es19.9e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
              close(13)
              open(13, file=planet_orbt_filename, access='append')
              write(13,'(5("  ", es19.9e3))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
                   ,horb(3,j)/horbn(j),horbn(j)
+             close(13)
+             open(13, file=planet_dEdt_filename, access='append')
+             write(13,'(4("  ", es19.9e3))') time/365.25d0,dEdt(j)
              close(13)
           enddo
           timestep = timestep + output*365.25d0
