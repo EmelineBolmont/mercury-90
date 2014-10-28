@@ -2341,6 +2341,39 @@ module user_module
     return
   end subroutine acc_tides
   
+  ! Instantaneous energy loss dE/dt due to tides
+  ! 
+  subroutine dEdt_tides (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin,R_star5,R_star10,k2_star,diss_star,sigma_star &
+       ,R_plan5,R_plan10,k2_plan,sigma_plan,j,dEdt)
+
+    use physical_constant
+    implicit none
+
+    ! Input/Output
+    integer,intent(in) :: nbod,j
+    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+    real(double_precision),intent(in) :: R_star5,R_star10,k2_star,diss_star,sigma_star
+    real(double_precision),intent(in) :: R_plan5,R_plan10,k2_plan,sigma_plan
+    real(double_precision),intent(in) :: m(nbod),spin(3,10)
+    
+    real(double_precision), intent(out) :: dEdt
+
+    ! Local
+!~     integer :: j
+    real(double_precision) :: tmp1,acc_tid_x,acc_tid_y,acc_tid_z
+
+    !------------------------------------------------------------------------------
+    
+    call acc_tides (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin,R_star5,R_star10,k2_star,diss_star,sigma_star &
+       ,R_plan5,R_plan10,k2_plan,sigma_plan,j,acc_tid_x,acc_tid_y,acc_tid_z)
+
+    tmp1 = m(j)/K2
+    dEdt = tmp1*(acc_tid_x*vhx+acc_tid_y*vhy+acc_tid_z*vhz)
+         
+    !------------------------------------------------------------------------------
+    return
+  end subroutine dEdt_tides
+  
   !********************************************
   !************** ROTATION ********************
   !********************************************
