@@ -1946,9 +1946,7 @@ module user_module
              a1(2,j) = acc_tid_y
              a1(3,j) = acc_tid_z
              call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
-                  ,Rsth5,Rsth10,k2s,dissstar,sigmast &
-                  ,Rp5(j),Rp10(j),k2p(j-1),sigmap(j) &
-                  ,j,tmp)
+                  ,Rp10(j),sigmap(j),j,tmp)
              dEdt(j) = tmp
           else
              a1(1,j) = 0.0d0
@@ -2169,6 +2167,75 @@ module user_module
   ! Ftidos and Ftidop in Msun.AU.day-1
   ! K2 = G in AU^3.Msun-1.day-2
   
+  ! Conservative part of the radial tidal force
+  subroutine F_tides_rad_cons (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
+       ,R_star5,k2_star &
+       ,R_plan5,k2_plan,j,Ftidr_cons)
+
+    use physical_constant
+    implicit none
+
+    ! Input/Output
+    integer,intent(in) :: nbod,j
+    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+    real(double_precision),intent(in) :: R_star5,k2_star
+    real(double_precision),intent(in) :: R_plan5,k2_plan
+    real(double_precision),intent(in) :: m(nbod)
+    
+    real(double_precision), intent(out) :: Ftidr_cons
+
+    ! Local
+!~     integer :: j
+    real(double_precision) :: tmp1,tmp2
+    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
+
+    !------------------------------------------------------------------------------
+    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+    tmp1 = m(1)*m(1)
+    tmp2 = m(j)*m(j)
+    Ftidr_cons =  -3.0d0/(r_7*K2) &
+              *(tmp2*R_star5*k2_star+tmp1*R_plan5*k2_plan)
+                          
+    !------------------------------------------------------------------------------
+    return
+  end subroutine F_tides_rad_cons
+  
+  ! Dissipative part of the radial tidal force
+  subroutine F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
+       ,R_star10,diss_star,sigma_star &
+       ,R_plan10,sigma_plan,j,Ftidr_diss)
+
+    use physical_constant
+    implicit none
+
+    ! Input/Output
+    integer,intent(in) :: nbod,j
+    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+    real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
+    real(double_precision),intent(in) :: R_plan10,sigma_plan
+    real(double_precision),intent(in) :: m(nbod)
+    
+    real(double_precision), intent(out) :: Ftidr_diss
+
+    ! Local
+!~     integer :: j
+    real(double_precision) :: tmp,tmp1,tmp2
+    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+
+    !------------------------------------------------------------------------------
+    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+    call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
+    tmp  = K2*K2
+    tmp1 = m(1)*m(1)
+    tmp2 = m(j)*m(j)
+    Ftidr_diss =  - 13.5d0*v_rad/(r_8*tmp) &
+              *(tmp2*R_star10*diss_star*sigma_star &
+              +tmp1*R_plan10*sigma_plan)              
+    !------------------------------------------------------------------------------
+    return
+  end subroutine F_tides_rad_diss
+  
+  ! Sum of the dissipative and conservative part of the radial force
   subroutine F_tides_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
        ,R_star5,R_star10,k2_star,diss_star,sigma_star &
        ,R_plan5,R_plan10,k2_plan,sigma_plan,j,Ftidr)
@@ -2187,20 +2254,17 @@ module user_module
 
     ! Local
 !~     integer :: j
-    real(double_precision) :: tmp,tmp1,tmp2
-    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+    real(double_precision) :: Ftidr_cons,Ftidr_diss
 
     !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
-    tmp  = K2*K2
-    tmp1 = m(1)*m(1)
-    tmp2 = m(j)*m(j)
-    Ftidr =  -3.0d0/(r_7*K2) &
-              *(tmp2*R_star5*k2_star+tmp1*R_plan5*k2_plan) & 
-              - 13.5d0*v_rad/(r_8*tmp) &
-              *(tmp2*R_star10*diss_star*sigma_star &
-              +tmp1*R_plan10*sigma_plan)              
+    call F_tides_rad_cons (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
+       ,R_star5,k2_star &
+       ,R_plan5,k2_plan,j,Ftidr_cons)
+    call F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
+       ,R_star10,diss_star,sigma_star &
+       ,R_plan10,sigma_plan,j,Ftidr_diss)
+
+    Ftidr = Ftidr_cons + Ftidr_diss            
     !------------------------------------------------------------------------------
     return
   end subroutine F_tides_rad
@@ -2354,9 +2418,9 @@ module user_module
   end subroutine acc_tides
   
   ! Instantaneous energy loss dE/dt due to tides
-  ! 
-  subroutine dEdt_tides (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2_plan,sigma_plan,j,dEdt)
+  ! in Msun.AU^2.day^(-3)
+  subroutine dEdt_tides (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin &
+       ,R_plan10,sigma_plan,j,dEdt)
 
     use physical_constant
     implicit none
@@ -2364,23 +2428,32 @@ module user_module
     ! Input/Output
     integer,intent(in) :: nbod,j
     real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: R_star5,R_star10,k2_star,diss_star,sigma_star
-    real(double_precision),intent(in) :: R_plan5,R_plan10,k2_plan,sigma_plan
+    real(double_precision),intent(in) :: R_plan10,sigma_plan
     real(double_precision),intent(in) :: m(nbod),spin(3,10)
     
     real(double_precision), intent(out) :: dEdt
 
     ! Local
 !~     integer :: j
-    real(double_precision) :: tmp1,acc_tid_x,acc_tid_y,acc_tid_z
+    real(double_precision) :: tmp,tmp1
+    real(double_precision) :: Ftidr_diss,Ftidop
+	real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
 
     !------------------------------------------------------------------------------
+    call F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
+       ,0.0d0,0.0d0,0.0d0 &
+       ,R_plan10,sigma_plan,j,Ftidr_diss)
+    call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
+    call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
+    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
     
-    call acc_tides (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2_plan,sigma_plan,j,acc_tid_x,acc_tid_y,acc_tid_z)
+    tmp = Ftidop/rr
+    tmp1 = 1.d0/rr*(Ftidr_diss + tmp*v_rad)
 
-    tmp1 = m(j)/K2
-    dEdt = tmp1*(acc_tid_x*vhx+acc_tid_y*vhy+acc_tid_z*vhz)
+    dEdt = tmp1*(xhx*vhx+xhy*vhy+xhz*vhz) &
+			+ tmp*((spin(2,j)*xhz-spin(3,j)*xhy-vhx)*vhx &
+				  +(spin(3,j)*xhx-spin(1,j)*xhz-vhy)*vhy &
+				  +(spin(1,j)*xhy-spin(2,j)*xhx-vhz)*vhz)
          
     !------------------------------------------------------------------------------
     return
