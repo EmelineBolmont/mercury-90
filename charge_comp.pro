@@ -52,6 +52,7 @@ if n_tid ge 1 then begin
    horbp  = dblarr(n_tid,n_elements(toto1))
    Rp     = dblarr(n_tid,n_elements(toto1)) 
    rg2p   = dblarr(n_tid,n_elements(toto1))
+   dEdt   = dblarr(n_tid,n_elements(toto1))
    
    for i=0,n_tid-1 do begin 
       filenamep = 'spinp'+strtrim(i+1,2)+'.out'
@@ -65,6 +66,12 @@ if n_tid ge 1 then begin
       readcol,filenameh,toto1,horb1x,horb1y,horb1z,horb1,format='F,F,F,F,F'
       horbx(i,*) = horb1x & horby(i,*) = horb1y & horbz(i,*) = horb1z  
       horbp(i,*) = horb1
+      
+      filenamee = 'dEdt'+strtrim(i+1,2)+'.out'
+      print,filenamee
+      readcol,filenamee,toto1,tmp,format='F,F'
+      dEdt(i,*) = tmp*6.90125d37 ;conversation from Msun.AU^2.day^-3 to W
+      
    endfor
 endif 
    
@@ -250,6 +257,7 @@ if n_tid ge 1 then begin
    
    ; Tidal flux
    tidalflux = dblarr(n_tid,n_elements(horb1x))
+   inst_tidalflux = dblarr(n_tid,n_elements(horb1x))
    
    for j=0,nbp-1 do begin
       for i=0,n_elements(horb1x)-1 do begin
@@ -272,9 +280,11 @@ if n_tid ge 1 then begin
       for i=0,n_elements(horb1x)-1 do begin
          momspin(j,i) = rg2p(j,i)*mb(j,i)*Msun*(Rp(j,i)*rsun)^2*spinp(j,i)
          
-         ; Calculation of energydot and tidal flux
+         ; Calculation of energydot and tidal flux, in W/m2
          tidalflux(j,i) = enerdot(ab(j,i)*AU,eb(j,i),spinp(j,i),oblpm(j,i)*!Pi/180.d0,G,mb(j,i)*Msun $
                ,Ms,Rp(j,i)*rsun,k2pDeltap(j)*day)/(4*!Pi*(Rp(j,i)*rsun)^2)
+         inst_tidalflux(j,i) = dEdt(j,i)/(4*!Pi*(Rp(j,i)*rsun)^2)
+         
          
       endfor
    endfor

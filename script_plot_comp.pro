@@ -149,6 +149,7 @@ if n_tid ge 1 then begin
       ;i = nbp-1-j
       i = j
       oplot,tb(i,*),tidalflux(i,*),color=incolor-i*indcolor,thick=9,linestyle=0;,psym=2
+      oplot,tb(i,*),inst_tidalflux(i,*),color=incolor-i*indcolor,thick=9,linestyle=2;,psym=2
    endfor
    if idl eq 1 then begin
       for i = 0,nbp_idl-1 do begin
