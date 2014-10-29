@@ -60,9 +60,9 @@ plot,tb(0,*),ab(0,*) $
 for j = 0,nbp-1 do begin
    ;i = nbp-1-j
    i = j
-   oplot,tb(i,*),ab(i,*),color=incolor-i*indcolor,thick=9
-   oplot,tb(i,*),ab(i,*)*(1-eb(i,*)),color=incolor-i*indcolor,thick=5,linestyle=2
-   oplot,tb(i,*),ab(i,*)*(1+eb(i,*)),color=incolor-i*indcolor,thick=5,linestyle=2
+   oplot,tb(i,*),ab(i,*),color=incolor-i*indcolor,thick=5
+   oplot,tb(i,*),ab(i,*)*(1-eb(i,*)),color=incolor-i*indcolor,thick=2,linestyle=2
+   oplot,tb(i,*),ab(i,*)*(1+eb(i,*)),color=incolor-i*indcolor,thick=2,linestyle=2
 endfor
 
 ;; oplot,toto1(*),Rst(*)*Rsun/AU,thick=5,color=255
@@ -122,7 +122,7 @@ if n_tid ge 1 then plot,tb(0,*),eb(0,*) $
 for j = 0,nbp-1 do begin
    ;i = nbp-1-j
    i = j
-   oplot,tb(i,*),eb(i,*),color=incolor-i*indcolor,thick=9,linestyle=0;,psym=2
+   oplot,tb(i,*),eb(i,*),color=incolor-i*indcolor,thick=5,linestyle=0;,psym=2
 endfor
 if idl eq 1 then begin
    for i = 0,nbp_idl-1 do begin
@@ -148,8 +148,8 @@ if n_tid ge 1 then begin
    for j = 0,nbp-1 do begin
       ;i = nbp-1-j
       i = j
-      oplot,tb(i,*),tidalflux(i,*),color=incolor-i*indcolor,thick=9,linestyle=0;,psym=2
-      oplot,tb(i,*),inst_tidalflux(i,*),color=incolor-i*indcolor,thick=9,linestyle=2;,psym=2
+      oplot,tb(i,*),inst_tidalflux(i,*),color=incolor-i*indcolor,thick=1,linestyle=2;,psym=2
+      oplot,tb(i,*),tidalflux(i,*),color=incolor-i*indcolor,thick=5,linestyle=0;,psym=2
    endfor
    if idl eq 1 then begin
       for i = 0,nbp_idl-1 do begin
@@ -183,7 +183,7 @@ plot,tb(0,*),incb(0,*) $
 for j=0,n_tid-1 do begin
    ;i = n_tid-1-j
    i = j
-   oplot,toto1(*),oblpm(i,*),color=incolor-i*indcolor,thick=9
+   oplot,toto1(*),oblpm(i,*),color=incolor-i*indcolor,thick=5
 endfor
 
 ;! idl
@@ -210,7 +210,7 @@ plot,tb(0,*),incb(0,*) $
 for j=0,n_tid-1 do begin
    ;i = n_tid-1-j
    i = j
-   oplot,toto1(*),oblsm(i,*),color=incolor-i*indcolor,thick=9
+   oplot,toto1(*),oblsm(i,*),color=incolor-i*indcolor,thick=5
 endfor
 
 ;! idl
@@ -248,17 +248,17 @@ for j=0,n_tid-1 do begin
    ;i = n_tid-1-j
    i = j
    oplot,toto1(*),2*!Pi/(spinp(i,*)*hr) $
-      ,thick=9,linestyle=0,color=incolor-i*indcolor
+      ,thick=5,linestyle=0,color=incolor-i*indcolor
 endfor
 oplot,toto1(*),2*!Pi/(spinst(*)*hr) $
-      ,thick=7,linestyle=0;,color=incolor-1*indcolor
+      ,thick=4,linestyle=0;,color=incolor-1*indcolor
 
 for j=0,n_tid-1 do begin
    ;i = n_tid-1-j
    i = j
    oplot,tb(i,*),2.d0*!Pi $
       /(pseudorot(eb(i,*),G,mb(i,*)*msun,Ms)*(ab(i,*)*AU)^(-3./2.)*hr) $
-		,color=incolor-i*indcolor,thick=6,linestyle=5
+		,color=incolor-i*indcolor,thick=3,linestyle=5
 endfor
 
 ;! idl
@@ -321,7 +321,7 @@ plot,tb(0,*),ab(0,*) $
      ,/xlog,/ylog
 
 oplot,toto1(*),abs((horb(*)+momspitot(*)+momstar(*)-(horb(0)+momspitot(0)+momstar(0))) $
-      /(horb(0)+momspitot(0)+momstar(0))),linestyle=0,thick=9,color=incolor-0*indcolor
+      /(horb(0)+momspitot(0)+momstar(0))),linestyle=0,thick=5,color=incolor-0*indcolor
 
 if idl eq 1 then begin
    for i = 0,nbp_idl-1 do begin
