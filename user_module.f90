@@ -79,52 +79,104 @@ module user_module
     integer :: iwrite=0
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: timestep!=3.6525d5!3.65d5 !4.56d6 !
-    real(double_precision) :: gm,qq,ee,ii,pp,nn,ll,Pst0,Pst
+
+
+    ! Temporary orbital elements needed to calculate pseudo-synchronization for planets:
+    real(double_precision) :: gm,qq,ee,ii,pp,nn,ll
+    real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la
+
+    ! Initial rotation and rotation of the star:
+    real(double_precision) :: Pst0,Pst
+    ! Love number for the star:
+    real(double_precision) :: k2s
+    ! Dissipation of the star:
+    real(double_precision) :: sigmast
+
+    ! Accelerations:
     real(double_precision) :: acc_tid_x,acc_tid_y,acc_tid_z
     real(double_precision) :: acc_rot_x,acc_rot_y,acc_rot_z
     real(double_precision) :: acc_GR_x,acc_GR_y,acc_GR_z
-    real(double_precision) :: rr,r_2,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+
+    ! Torques for planets and star:
     real(double_precision) :: N_tid_px,N_tid_py,N_tid_pz,N_tid_sx,N_tid_sy,N_tid_sz
     real(double_precision) :: N_rot_px,N_rot_py,N_rot_pz,N_rot_sx,N_rot_sy,N_rot_sz
+    real(double_precision), dimension(3,nbig+1) :: Ns
+
+    ! Runge Kutta terms (6 order):
     real(double_precision) :: k_rk_1x,k_rk_2x,k_rk_3x,k_rk_4x,k_rk_5x,k_rk_6x
     real(double_precision) :: k_rk_1y,k_rk_2y,k_rk_3y,k_rk_4y,k_rk_5y,k_rk_6y
     real(double_precision) :: k_rk_1z,k_rk_2z,k_rk_3z,k_rk_4z,k_rk_5z,k_rk_6z
-    real(double_precision) :: xintermediate
-    real(double_precision) :: dt,hdt,tstop,tmp,tmp1,tmp2,sigmast
-    real(double_precision), dimension(2) :: bobo
-    real(double_precision), dimension(3) :: totftides
-    real(double_precision), dimension(3,nbig+1) :: a1,a2,a3,xh,vh
-    real(double_precision), dimension(3,nbig+1) :: horb
-    real(double_precision), dimension(ntid+1) :: qa,ea,ia,pa,na,la
-    real(double_precision), dimension(3,nbig+1) :: Nts,Ntp,Nrs,Nrp,Ns,Np
-    real(double_precision), dimension(3,10) :: spin,spin_bf,xh_bf,vh_bf,xh_bf2,vh_bf2
-    real(double_precision), dimension(3,nbig+1) :: xh_1_rk2,vh_1_rk2,xh_2_rk2,vh_2_rk2
-    real(double_precision), dimension(3,nbig+1) :: xh_1_rk3,vh_1_rk3,xh_2_rk3,vh_2_rk3
-    real(double_precision), dimension(3,nbig+1) :: xh_1_rk4,vh_1_rk4,xh_2_rk4,vh_2_rk4
-    real(double_precision), dimension(3,nbig+1) :: xh_1_rk5,vh_1_rk5,xh_2_rk5,vh_2_rk5
-    real(double_precision), dimension(3,nbig+1) :: xh_1_rk6,vh_1_rk6,xh_2_rk6,vh_2_rk6
-    real(double_precision), dimension(10) :: Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
-    real(double_precision), dimension(10) :: rscalws,rscalwp,normspin2
-    ! don't use after collision
-    real(double_precision), dimension(nbig+1) :: r,r2,r4,r5,r7,r8,v2,vv,vrad
-    real(double_precision), dimension(nbig+1) :: horbn
-    real(double_precision), dimension(4161) :: timeBD,radiusBD,lumiBD,HZinGJ,HZoutGJ,HZinb,HZoutb
-    real(double_precision), dimension(1065) :: timestar,radiusstar,d2radiusstar
-    real(double_precision), dimension(1065) :: timedM,radiusdM
-    real(double_precision), dimension(4755) :: timeJup,radiusJup,k2Jup,rg2Jup,spinJup
-    real(double_precision), dimension(37) :: rg2st,trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
+    ! Runge Kutta terms (6 order) for position and velocity of the first half of mercury timestep:
+    real(double_precision), dimension(3,nbig+1) :: xh_1_rk2,vh_1_rk2
+    real(double_precision), dimension(3,nbig+1) :: xh_1_rk3,vh_1_rk3
+    real(double_precision), dimension(3,nbig+1) :: xh_1_rk4,vh_1_rk4
+    real(double_precision), dimension(3,nbig+1) :: xh_1_rk5,vh_1_rk5
+    real(double_precision), dimension(3,nbig+1) :: xh_1_rk6,vh_1_rk6
+    ! Runge Kutta terms (6 order) for position and velocity of the second half of mercury timestep:
+    real(double_precision), dimension(3,nbig+1) :: xh_2_rk2,vh_2_rk2
+    real(double_precision), dimension(3,nbig+1) :: xh_2_rk3,vh_2_rk3
+    real(double_precision), dimension(3,nbig+1) :: xh_2_rk4,vh_2_rk4
+    real(double_precision), dimension(3,nbig+1) :: xh_2_rk5,vh_2_rk5
+    real(double_precision), dimension(3,nbig+1) :: xh_2_rk6,vh_2_rk6
+    ! Values of spin, radius and moments of inertia (rg) used for Runge Kutta
     real(double_precision) :: spin0,spinp0,spinb0
     real(double_precision) :: Rst,Rst_5,Rst_10,Rstb
     real(double_precision) :: Rsth,Rsth5,Rsth10,Rstbh
     real(double_precision) :: Rst0,Rst0_5,Rst0_10,Rstb0
-    real(double_precision) :: rg2s,rg2sh,rg2s0,k2s
-    
-    real(double_precision), dimension(nbig+1) :: dEdt
-    
+    real(double_precision) :: rg2s,rg2sh,rg2s0
+    ! Position/velocity "before" (from previous steps) used for Runge Kutta::
+    real(double_precision), dimension(3,10) :: xh_bf,vh_bf,xh_bf2,vh_bf2
+    ! Temporary value for runge kutta:
+    real(double_precision) :: xintermediate
+
+
+    ! Temporary
+    real(double_precision) :: tmp
+
+    ! Time related and temporary things:
+    real(double_precision) :: dt,hdt
+    real(double_precision), dimension(2) :: bobo
+
+    ! Integration of the spin (total torque tides):
+    real(double_precision), dimension(3) :: totftides
+
+    ! Temporary accelerations for each effect:
+    real(double_precision), dimension(3,nbig+1) :: a1,a2,a3
+    ! Heliocentric coordinates:
+    real(double_precision), dimension(3,nbig+1) :: xh,vh
+    ! Orbital angular momentum vector and norm for each planet:
+    real(double_precision), dimension(3,nbig+1) :: horb
+    real(double_precision), dimension(nbig+1) :: horbn
+
+    ! Spins:
+    real(double_precision), dimension(3,10) :: spin,spin_bf
+
+
+    ! Parameters for the planets: physical radius
+    real(double_precision), dimension(10) :: Rp,Rp5,Rp10
+    ! Parameters for the planets: dissipation of the planet, general relativity stuff in tintin, love number, time lag, moments of inertia
+    real(double_precision), dimension(10) :: sigmap,tintin,k2p,k2pdeltap,rg2p
+
+    ! Data tables for evolving host body:
+    ! - Data for Brown dwarf
+    real(double_precision), dimension(:), allocatable :: timeBD,radiusBD,lumiBD,HZinGJ,HZoutGJ,HZinb,HZoutb
+    real(double_precision), dimension(37) :: rg2st,trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
+    !     * Initial rotation period for brown dwarfs (BD)
     real(double_precision), parameter, dimension(12) :: Ps0 = (/8.d0,13.d0,19.d0,24.d0,30.d0,36.d0,41.d0, &
          47.d0,53.d0,58.d0,64.d0,70.d0/)
+    !     * Love number for BD
     real(double_precision), parameter, dimension(12) :: k2st = (/0.379d0,0.378d0,0.376d0,0.369d0, &
          0.355d0,0.342d0,0.333d0,0.325d0,0.311d0,0.308d0,0.307d0,0.307d0/)
+    ! - Data for Star
+    real(double_precision), dimension(2003) :: timestar,radiusstar,d2radiusstar
+    ! - Data for M dwarf
+    real(double_precision), dimension(1065) :: timedM,radiusdM
+    ! - Data for Jupiter
+    real(double_precision), dimension(4755) :: timeJup,radiusJup,k2Jup,rg2Jup,spinJup
+
+
+    ! Energy loss due to tides (derivative of energy)
+    real(double_precision), dimension(nbig+1) :: dEdt
 
     character(len=80) :: planet_spin_filename
     character(len=80) :: planet_orbt_filename
@@ -211,7 +263,6 @@ module user_module
     ! Timestep calculation
     if (flagtime.eq.0) then 
        bobo = get_initial_timestep()
-       tstop = bobo(1)
        dt = bobo(2)
        hdt = 0.5d0*dt
        flagtime = flagtime+1
@@ -253,6 +304,16 @@ module user_module
                    rg2st(j) = rg1(j)
                 enddo
                 open(1,file='mass_10.0000.dat')
+
+                nptmss = 715
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 do nptmss = 1,715
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
@@ -266,6 +327,16 @@ module user_module
                    rg2st(j) = rg2(j)
                 enddo
                 open(1,file='mass_12.0000.dat')
+
+                nptmss = 720
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 do nptmss=1,720
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
@@ -279,6 +350,16 @@ module user_module
                    rg2st(j) = rg3(j)
                 enddo
                 open(1,file='mass_15.0000.dat')
+
+                nptmss = 856
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 do nptmss=1,856
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
@@ -292,6 +373,16 @@ module user_module
                    rg2st(j) = rg4(j)
                 enddo
                 open(1,file='mass_20.0000.dat')
+
+                nptmss = 864
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 do nptmss =1,864
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
@@ -305,6 +396,16 @@ module user_module
                    rg2st(j) = rg5(j)
                 enddo
                 open(1,file='mass_30.0000.dat')
+
+                nptmss = 878
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 do nptmss=1,878
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
@@ -318,6 +419,16 @@ module user_module
                    rg2st(j) = rg6(j)
                 enddo
                 open(1,file='mass_40.0000.dat')
+
+                nptmss = 886
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 do nptmss = 1,886
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)  
@@ -331,6 +442,16 @@ module user_module
                    rg2st(j) = rg7(j)
                 enddo
                 open(1,file='mass_50.0000.dat')
+
+                nptmss = 891
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+                
                 do nptmss=1,891
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
@@ -344,6 +465,16 @@ module user_module
                    rg2st(j) = rg8(j)
                 enddo
                 open(1,file='mass_60.0000.dat')
+
+                nptmss = 1663
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 do nptmss=1,1663
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
@@ -357,6 +488,16 @@ module user_module
                    rg2st(j) = rg9(j)
                 enddo
                 open(1,file='mass_70.0000.dat')
+
+                nptmss = 3585
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 do nptmss =1,3585
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
@@ -370,6 +511,16 @@ module user_module
                    rg2st(j) = rg10(j)
                 enddo
                 open(1,file='mass_72.0000.dat')
+
+                nptmss = 3721
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 do nptmss =1,3721
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
@@ -383,6 +534,16 @@ module user_module
                    rg2st(j) = rg11(j)
                 enddo
                 open(1,file='mass_75.0000.dat')
+
+                nptmss = 3903
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 do nptmss =1,3903
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
                         HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
@@ -395,6 +556,16 @@ module user_module
                 do j = 1,37       
                    rg2st(j) = rg12(j)
                 enddo
+
+                nptmss = 4161
+                allocate( timeBD(nptmss) )
+                allocate( radiusBD(nptmss))
+                allocate( lumiBD(nptmss) )
+                allocate( HZinGJ(nptmss) )
+                allocate( HZoutGJ(nptmss))
+                allocate( HZinb(nptmss)  )
+                allocate( HZoutb(nptmss) )
+
                 open(1,file='mass_80.0000.dat')
                 do nptmss =1,4161
                    read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
@@ -1218,9 +1389,12 @@ module user_module
           endif
           
           ! Integration on first half timestep
-          spin(1,1) = spin_bf(1,1) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
-          spin(2,1) = spin_bf(2,1) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
-          spin(3,1) = spin_bf(3,1) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
+          spin(1,1) = spin_bf(1,1) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x &
+                + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
+          spin(2,1) = spin_bf(2,1) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y &
+              + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
+          spin(3,1) = spin_bf(3,1) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
+              + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
           
 
           ! **************************************************************
@@ -1558,9 +1732,12 @@ module user_module
           endif
           
           ! Integration on first half timestep
-          spin(1,1) = spin(1,1) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
-          spin(2,1) = spin(2,1) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
-          spin(3,1) = spin(3,1) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
+          spin(1,1) = spin(1,1) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x &
+              + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
+          spin(2,1) = spin(2,1) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y & 
+              + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
+          spin(3,1) = spin(3,1) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z & 
+              + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
           
           
           
@@ -1746,9 +1923,12 @@ module user_module
              k_rk_6z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
              
              ! Integration for first half of timestep
-         spin(1,j) = spin_bf(1,j) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
-         spin(2,j) = spin_bf(2,j) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
-         spin(3,j) = spin_bf(3,j) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
+            spin(1,j) = spin_bf(1,j) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x & 
+                + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
+            spin(2,j) = spin_bf(2,j) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y & 
+                + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
+            spin(3,j) = spin_bf(3,j) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
+                + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
              
              ! *********************************************
              ! Integration on second half timestep
@@ -1924,9 +2104,12 @@ module user_module
              k_rk_6z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
              
              ! Integration for second half of timestep
-             spin(1,j) = spin(1,j) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
-             spin(2,j) = spin(2,j) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
-             spin(3,j) = spin(3,j) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
+             spin(1,j) = spin(1,j) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x &
+                 + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
+             spin(2,j) = spin(2,j) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y &
+                 + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
+             spin(3,j) = spin(3,j) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
+                 + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
 
           enddo
        endif
