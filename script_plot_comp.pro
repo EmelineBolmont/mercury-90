@@ -45,9 +45,7 @@ plot,tb(0,*),ab(0,*) $
      ,/nodata $
      ,xrange=[Tinf,Tsup],yrange=[amin,amax] $
      ,charsize=1.8,charthick=3 $
-     ;; ,title='SMA' $
-     ;; ,xtitle='t (years)' $
-     ,ytitle='a (AU)' $
+     ,ytitle='Semi-major axis (AU)' $
      ;; ,ytickname=['1.6e-2','2e-2','2.4e-2','2.6e-2','3d-2' $
      ;;             ,'3.4e-2'] $
      ;; ,yticks=5 $
@@ -101,10 +99,8 @@ if n_tid eq 0 then plot,tb(0,*),eb(0,*) $
      ,/nodata $
      ,xrange=[Tinf,Tsup],yrange=[emin,emax] $
      ,charsize=1.8,charthick=3 $
-     ;; ,title='Eccentricity' $
-     ;;,xtitle='Age of BD - t!d0!n (years)' $
      ,xtitle='Time (years)' $
-     ,ytitle='e' $
+     ,ytitle='Eccentricity' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ,xstyle=1,ystyle=1 $
      ,/xlog,/ylog
@@ -112,10 +108,9 @@ if n_tid ge 1 then plot,tb(0,*),eb(0,*) $
      ,/nodata $
      ,xrange=[Tinf,Tsup],yrange=[emin,emax] $
      ,charsize=1.8,charthick=3 $
-     ;; ,title='Eccentricity' $
      ;;,xtitle='Age of BD - t!d0!n (years)' $
      ;;,xtitle='Time (years)' $
-     ,ytitle='e' $
+     ,ytitle='Eccentricity' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ,xstyle=1,ystyle=1 $
      ,/xlog,/ylog
@@ -174,7 +169,7 @@ plot,tb(0,*),incb(0,*) $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ;; ,title='Spin' $
      ;; ,xtitle='t (years)' $
-     ,ytitle='obl (deg)' $
+     ,ytitle='Obliquity (deg)' $
      ,xstyle=1,ystyle=1 $
      ,/xlog,/ylog
 
@@ -202,7 +197,7 @@ plot,tb(0,*),incb(0,*) $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ;; ,title='Spin' $
      ;; ,xtitle='t (years)' $
-     ,ytitle='inc (deg)' $
+     ,ytitle='Inclination (deg)' $
      ,xstyle=1,ystyle=1 $
      ,/xlog,/ylog
 
@@ -233,7 +228,7 @@ plot,tb(0,*),ab(0,*) $
      ;; ,title='Rotation Period' $
      ;,xtitle='Age of BD - t!d0!n (years)' $
      ,xtitle='Time (years)' $
-     ,ytitle='P (hr)' $
+     ,ytitle='Rotation period (hr)' $
      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
      ;; ,ytickname=['20','30','40','50','70','100' $
      ;;             ] $
