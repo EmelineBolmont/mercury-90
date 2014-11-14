@@ -155,7 +155,7 @@ module user_module
     ! Parameters for the planets: physical radius
     real(double_precision), dimension(10) :: Rp,Rp5,Rp10
     ! Parameters for the planets: dissipation of the planet, general relativity stuff in tintin, love number, time lag, moments of inertia
-    real(double_precision), dimension(10) :: sigmap,tintin,k2p,k2pdeltap,rg2p
+    real(double_precision), dimension(10) :: sigmap,tintin,k2p,k2fp,k2pdeltap,rg2p
 
     ! Data tables for evolving host body:
     ! - Data for Brown dwarf
@@ -182,19 +182,35 @@ module user_module
     character(len=80) :: planet_orbt_filename
     character(len=80) :: planet_dEdt_filename
 
-    ! Data 
-    save timestar,radiusstar,d2radiusstar
+    ! Save data of tables for evolving host body
+    ! - Data for Brown Dwarf
     save timeBD,radiusBD
     save trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
+    ! - Date for Star
+    save timestar,radiusstar,d2radiusstar
+    ! - Data for M dwarf
     save timedM,radiusdM
+    ! - Data for Jupiter
     save timeJup,radiusJup,k2Jup,rg2Jup,spinJup
-    
+
+    ! Save data of radius of planet and star
+    save Rst0,Rst0_5,Rst0_10
+    save Rp,Rp5,Rp10
+
+    ! Save data for integration
     save xh_bf,vh_bf,xh_bf2,vh_bf2
-    save sigmast,k2s
-    save flagrg2,flagtime,ispin,flagbug
-    save timestep,nptmss,Rst0,Rst0_5,Rst0_10
+    save timestep,nptmss
     save spin_bf,dt,hdt
-    save Rp,sigmap,Rp5,Rp10,tintin,k2p,k2pdeltap,rg2p
+    save tintin
+
+    ! for the dissipation calculation
+    save sigmast,k2s
+    save k2p,k2fp,rg2p
+    !save freq,k2_tides,Delta_t,nptk2
+    !save sigmap,k2pdeltap,forcing_frequency,Ediss
+
+    ! Flags
+    save flagrg2,flagtime,ispin,flagbug
 
     !------------------------------------------------------------------------------
     ! superzoyotte
