@@ -742,6 +742,7 @@ module user_module
              ! Terrestrial for 0 and 1, gas giant for 2, what you want for 3
              if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.1)) then
                 k2p(j-1) = k2p_terr
+                k2fp(j-1) = k2p_terr
                 rg2p(j-1) = rg2p_terr
                 if (tides.eq.1) then
                    k2pdeltap(j-1) = k2pdeltap_terr
@@ -750,6 +751,7 @@ module user_module
              endif
              if (jupiter(j-1).eq.2) then
                 k2p(j-1) = k2p_gg
+                k2fp(j-1) = k2p_gg
                 rg2p(j-1) = rg2p_gg
                 if (tides.eq.1) then
                    k2pdeltap(j-1) = k2pdeltap_gg
@@ -758,6 +760,7 @@ module user_module
              endif
              if (jupiter(j-1).eq.3) then
                 k2p(j-1) = k2p_what
+                k2fp(j-1) = k2p_what
                 rg2p(j-1) = rg2p_what
                 if (tides.eq.1) then
                    k2pdeltap(j-1) = k2pdeltap_what
@@ -1782,7 +1785,7 @@ module user_module
              if (rot_flat.eq.1) then 
                 call Torque_rot_p (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
                      ,spin_bf(1,j),spin_bf(2,j),spin_bf(3,j) &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -1811,7 +1814,7 @@ module user_module
                      ,spin_bf(1,j)+bb2*k_rk_1x &
                      ,spin_bf(2,j)+bb2*k_rk_1y &
                      ,spin_bf(3,j)+bb2*k_rk_1z &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -1841,7 +1844,7 @@ module user_module
                      ,spin_bf(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
                      ,spin_bf(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
                      ,spin_bf(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -1870,7 +1873,7 @@ module user_module
                      ,spin_bf(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
                      ,spin_bf(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
                      ,spin_bf(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -1899,7 +1902,7 @@ module user_module
                      ,spin_bf(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
                      ,spin_bf(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
                      ,spin_bf(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -1928,7 +1931,7 @@ module user_module
                      ,spin_bf(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
                      ,spin_bf(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
                      ,spin_bf(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -1963,7 +1966,7 @@ module user_module
              if (rot_flat.eq.1) then 
                 call Torque_rot_p (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
                      ,spin(1,j),spin(2,j),spin(3,j) &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -1992,7 +1995,7 @@ module user_module
                      ,spin(1,j)+bb2*k_rk_1x &
                      ,spin(2,j)+bb2*k_rk_1y &
                      ,spin(3,j)+bb2*k_rk_1z &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -2022,7 +2025,7 @@ module user_module
                      ,spin(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
                      ,spin(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
                      ,spin(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -2051,7 +2054,7 @@ module user_module
                      ,spin(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
                      ,spin(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
                      ,spin(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -2080,7 +2083,7 @@ module user_module
                      ,spin(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
                      ,spin(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
                      ,spin(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -2109,7 +2112,7 @@ module user_module
                      ,spin(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
                      ,spin(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
                      ,spin(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                     ,Rp5(j),k2p(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                     ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
              else
                 N_rot_px = 0.0d0
                 N_rot_py = 0.0d0
@@ -2139,7 +2142,7 @@ module user_module
           if (tides.eq.1) then 
              call acc_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
                   ,Rsth5,Rsth10,k2s,dissstar,sigmast &
-                  ,Rp5(j),Rp10(j),k2p(j-1),sigmap(j) &
+                  ,Rp5(j),Rp10(j),k2fp(j-1),k2p(j-1),sigmap(j) &
                   ,j,acc_tid_x,acc_tid_y,acc_tid_z)
              a1(1,j) = acc_tid_x
              a1(2,j) = acc_tid_y
@@ -2154,7 +2157,7 @@ module user_module
           endif
           if (rot_flat.eq.1) then 
              call acc_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin &
-                  ,Rsth5,k2s,Rp5(j),k2p(j-1) &
+                  ,Rsth5,k2s,Rp5(j),k2fp(j-1) &
                   ,j,acc_rot_x,acc_rot_y,acc_rot_z)
              a3(1,j) = acc_rot_x
              a3(2,j) = acc_rot_y
@@ -2369,7 +2372,7 @@ module user_module
   ! Conservative part of the radial tidal force
   subroutine F_tides_rad_cons (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
        ,R_star5,k2_star &
-       ,R_plan5,k2_plan,j,Ftidr_cons)
+       ,R_plan5,k2f_plan,j,Ftidr_cons)
 
     use physical_constant
     implicit none
@@ -2378,7 +2381,7 @@ module user_module
     integer,intent(in) :: nbod,j
     real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
     real(double_precision),intent(in) :: R_star5,k2_star
-    real(double_precision),intent(in) :: R_plan5,k2_plan
+    real(double_precision),intent(in) :: R_plan5,k2f_plan
     real(double_precision),intent(in) :: m(nbod)
     
     real(double_precision), intent(out) :: Ftidr_cons
@@ -2393,7 +2396,7 @@ module user_module
     tmp1 = m(1)*m(1)
     tmp2 = m(j)*m(j)
     Ftidr_cons =  -3.0d0/(r_7*K2) &
-              *(tmp2*R_star5*k2_star+tmp1*R_plan5*k2_plan)
+              *(tmp2*R_star5*k2_star+tmp1*R_plan5*k2f_plan)
                           
     !------------------------------------------------------------------------------
     return
@@ -2437,7 +2440,7 @@ module user_module
   ! Sum of the dissipative and conservative part of the radial force
   subroutine F_tides_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
        ,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2_plan,sigma_plan,j,Ftidr)
+       ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,Ftidr)
 
     use physical_constant
     implicit none
@@ -2446,7 +2449,7 @@ module user_module
     integer,intent(in) :: nbod,j
     real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
     real(double_precision),intent(in) :: R_star5,R_star10,k2_star,diss_star,sigma_star
-    real(double_precision),intent(in) :: R_plan5,R_plan10,k2_plan,sigma_plan
+    real(double_precision),intent(in) :: R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan
     real(double_precision),intent(in) :: m(nbod)
     
     real(double_precision), intent(out) :: Ftidr
@@ -2458,7 +2461,7 @@ module user_module
     !------------------------------------------------------------------------------
     call F_tides_rad_cons (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
        ,R_star5,k2_star &
-       ,R_plan5,k2_plan,j,Ftidr_cons)
+       ,R_plan5,k2f_plan,j,Ftidr_cons)
     call F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
        ,R_star10,diss_star,sigma_star &
        ,R_plan10,sigma_plan,j,Ftidr_diss)
@@ -2571,7 +2574,7 @@ module user_module
   end subroutine Torque_tides_s 
   
   subroutine acc_tides (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2_plan,sigma_plan,j,acc_tid_x,acc_tid_y,acc_tid_z)
+       ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,acc_tid_x,acc_tid_y,acc_tid_z)
 
     use physical_constant
     implicit none
@@ -2580,7 +2583,7 @@ module user_module
     integer,intent(in) :: nbod,j
     real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
     real(double_precision),intent(in) :: R_star5,R_star10,k2_star,diss_star,sigma_star
-    real(double_precision),intent(in) :: R_plan5,R_plan10,k2_plan,sigma_plan
+    real(double_precision),intent(in) :: R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan
     real(double_precision),intent(in) :: m(nbod),spin(3,10)
     
     real(double_precision), intent(out) :: acc_tid_x,acc_tid_y,acc_tid_z
@@ -2594,7 +2597,7 @@ module user_module
     
     call F_tides_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
        ,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2_plan,sigma_plan,j,Ftidr)
+       ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,Ftidr)
     call F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10,diss_star,sigma_star,j,Ftidos)
     call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
     call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
