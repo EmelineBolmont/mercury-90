@@ -92,10 +92,17 @@ module user_module
     ! Dissipation of the star:
     real(double_precision) :: sigmast
 
-    ! Accelerations:
+    ! Total forces:
     real(double_precision) :: F_tid_tot_x,F_tid_tot_y,F_tid_tot_z
-    real(double_precision) :: acc_rot_x,acc_rot_y,acc_rot_z
-    real(double_precision) :: acc_GR_x,acc_GR_y,acc_GR_z
+    real(double_precision) :: F_rot_tot_x,F_rot_tot_y,F_rot_tot_z
+    real(double_precision) :: F_GR_tot_x,F_GR_tot_y,F_GR_tot_z
+    !real(double_precision) :: acc_rot_x,acc_rot_y,acc_rot_z
+    !real(double_precision) :: acc_GR_x,acc_GR_y,acc_GR_z
+
+    ! Sum of the forces 
+    real(double_precision) :: sum_F_tid_x,sum_F_tid_y,sum_F_tid_z
+    real(double_precision) :: sum_F_rot_x,sum_F_rot_y,sum_F_rot_z
+    real(double_precision) :: sum_F_GR_x,sum_F_GR_y,sum_F_GR_z
 
     ! Torques for planets and star:
     real(double_precision) :: N_tid_px,N_tid_py,N_tid_pz,N_tid_sx,N_tid_sy,N_tid_sz
@@ -2138,6 +2145,20 @@ module user_module
        !******************** final accelerations ***********************
        !****************************************************************
 
+       ! Initialization of the sum of all the force along x, y and z
+       ! For tides
+       sum_F_tid_x = 0.0d0
+       sum_F_tid_y = 0.0d0
+       sum_F_tid_z = 0.0d0
+       ! For rotation
+       sum_F_rot_x = 0.0d0
+       sum_F_rot_y = 0.0d0
+       sum_F_rot_z = 0.0d0
+       ! For GR
+       sum_F_GR_x = 0.0d0
+       sum_F_GR_y = 0.0d0
+       sum_F_GR_z = 0.0d0
+
        do j=2,ntid+1 
           ! The acceleration in the heliocentric coordinate is not just F/m,
           ! it must be the reduced mass, and the effect of other planets on the
@@ -2155,36 +2176,56 @@ module user_module
                   ,Rp10(j),sigmap(j),j,tmp)
              dEdt(j) = tmp
           else
+             F_tid_tot_x = 0.0d0 
+             F_tid_tot_y = 0.0d0
+             F_tid_tot_z = 0.0d0
              a1(1,j) = 0.0d0
              a1(2,j) = 0.0d0
              a1(3,j) = 0.0d0
           endif
+          sum_F_tid_x = sum_F_tid_x + F_tid_tot_x
+          sum_F_tid_y = sum_F_tid_y + F_tid_tot_y
+          sum_F_tid_z = sum_F_tid_z + F_tid_tot_z
           if (rot_flat.eq.1) then 
-             call acc_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin &
+             call F_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin &
                   ,Rsth5,k2s,Rp5(j),k2fp(j-1) &
-                  ,j,acc_rot_x,acc_rot_y,acc_rot_z)
-             a3(1,j) = acc_rot_x
-             a3(2,j) = acc_rot_y
-             a3(3,j) = acc_rot_z
+                  ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
+             a3(1,j) = tmp*F_rot_tot_x
+             a3(2,j) = tmp*F_rot_tot_y
+             a3(3,j) = tmp*F_rot_tot_z
           else
+             F_rot_tot_x = 0.0d0
+             F_rot_tot_y = 0.0d0
+             F_rot_tot_z = 0.0d0
              a3(1,j) = 0.0d0
              a3(2,j) = 0.0d0
              a3(3,j) = 0.0d0
           endif
+          sum_F_rot_x = sum_F_rot_x + F_rot_tot_x
+          sum_F_rot_y = sum_F_rot_y + F_rot_tot_y
+          sum_F_rot_z = sum_F_rot_z + F_rot_tot_z
           if (GenRel.eq.1) then 
-             call acc_GenRel (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j) &
-                  ,tintin(j),C2,j,acc_GR_x,acc_GR_y,acc_GR_z)
-             a2(1,j) = acc_GR_x
-             a2(2,j) = acc_GR_y
-             a2(3,j) = acc_GR_z
+             call F_GenRel (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j) &
+                  ,tintin(j),C2,j,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
+             a2(1,j) = tmp*F_GR_tot_x
+             a2(2,j) = tmp*F_GR_tot_y
+             a2(3,j) = tmp*F_GR_tot_z
           else
+             F_GR_tot_x = 0.0d0
+             F_GR_tot_y = 0.0d0
+             F_GR_tot_z = 0.0d0
              a2(1,j) = 0.0d0
              a2(2,j) = 0.0d0
              a2(3,j) = 0.0d0
           endif
-          a(1,j) = tides*a1(1,j)+GenRel*a2(1,j)+rot_flat*a3(1,j)
-          a(2,j) = tides*a1(2,j)+GenRel*a2(2,j)+rot_flat*a3(2,j)
-          a(3,j) = tides*a1(3,j)+GenRel*a2(3,j)+rot_flat*a3(3,j)
+          sum_F_GR_x = sum_F_GR_x + F_GR_tot_x
+          sum_F_GR_y = sum_F_GR_y + F_GR_tot_y
+          sum_F_GR_z = sum_F_GR_z + F_GR_tot_z
+       end do
+       do j=2,ntid+1
+          a(1,j) = tides*(a1(1,j)+sum_F_tid_x)+GenRel*(a2(1,j)+sum_F_rot_x)+rot_flat*(a3(1,j)+sum_F_GR_x)
+          a(2,j) = tides*(a1(2,j)+sum_F_tid_y)+GenRel*(a2(2,j)+sum_F_rot_y)+rot_flat*(a3(2,j)+sum_F_GR_y)
+          a(3,j) = tides*(a1(3,j)+sum_F_tid_z)+GenRel*(a2(3,j)+sum_F_rot_z)+rot_flat*(a3(3,j)+sum_F_GR_z)
        end do
     endif
     
@@ -2594,7 +2635,7 @@ module user_module
 
     ! Local
 !~     integer :: j
-    real(double_precision) :: tmp,tmp1,r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+    real(double_precision) :: tmp1,r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
     real(double_precision) :: Ftidr,Ftidos,Ftidop
 
     !------------------------------------------------------------------------------
@@ -2815,8 +2856,8 @@ module user_module
     return
   end subroutine Torque_rot_s 
   
-  subroutine acc_rotation (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan &
-       ,j,acc_rot_x,acc_rot_y,acc_rot_z)
+  subroutine F_rotation (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan &
+       ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
 
     use physical_constant
     implicit none
@@ -2828,11 +2869,11 @@ module user_module
     real(double_precision),intent(in) :: R_plan5,k2_plan
     real(double_precision),intent(in) :: m(nbod),spin(3,10)
     
-    real(double_precision), intent(out) :: acc_rot_x,acc_rot_y,acc_rot_z
+    real(double_precision), intent(out) :: F_rot_tot_x,F_rot_tot_y,F_rot_tot_z
 
     ! Local
 !~     integer :: j
-    real(double_precision) :: tmp
+    !real(double_precision) :: tmp
     real(double_precision) :: Frot_r,Frot_os,Frot_op
 
     !------------------------------------------------------------------------------
@@ -2841,13 +2882,13 @@ module user_module
     call F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spin(1,1),spin(2,1),spin(3,1),R_star5,k2_star,j,Frot_os)
     call F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spin(1,j),spin(2,j),spin(3,j),R_plan5,k2_plan,j,Frot_op)
     
-    tmp = K2/m(j)
-    acc_rot_x = tmp*(Frot_r*xhx + Frot_op*spin(1,j) + Frot_os*spin(1,1))
-    acc_rot_y = tmp*(Frot_r*xhy + Frot_op*spin(2,j) + Frot_os*spin(2,1))
-    acc_rot_z = tmp*(Frot_r*xhz + Frot_op*spin(3,j) + Frot_os*spin(3,1))
+    !tmp = K2/m(j)
+    F_rot_tot_x = Frot_r*xhx + Frot_op*spin(1,j) + Frot_os*spin(1,1)
+    F_rot_tot_y = Frot_r*xhy + Frot_op*spin(2,j) + Frot_os*spin(2,1)
+    F_rot_tot_z = Frot_r*xhz + Frot_op*spin(3,j) + Frot_os*spin(3,1)
     !------------------------------------------------------------------------------
     return
-  end subroutine acc_rotation
+  end subroutine F_rotation
   
   !********************************************
   !*********** GENERAL RELATIVITY *************
@@ -2906,7 +2947,7 @@ module user_module
     return
   end subroutine F_GR_ortho
   
-  subroutine acc_GenRel (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,acc_GR_x,acc_GR_y,acc_GR_z)
+  subroutine F_GenRel (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
 
     implicit none
 
@@ -2916,7 +2957,7 @@ module user_module
     real(double_precision),intent(in) :: tintin,C2
     real(double_precision),intent(in) :: m(nbod)
     
-    real(double_precision), intent(out) :: acc_GR_x,acc_GR_y,acc_GR_z
+    real(double_precision), intent(out) :: F_GR_tot_x,F_GR_tot_y,F_GR_tot_z
 
     ! Local
     real(double_precision) :: tmp,tmp1,FGR_rad,FGR_ort
@@ -2926,12 +2967,12 @@ module user_module
     call F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_ort)
     tmp  = sqrt(xhx*xhx+xhy*xhy+xhz*xhz)
     tmp1 = sqrt(vhx*vhx+vhy*vhy+vhz*vhz)
-    acc_GR_x = (FGR_rad*xhx/tmp+FGR_ort*vhx/tmp1)
-    acc_GR_y = (FGR_rad*xhy/tmp+FGR_ort*vhy/tmp1)
-    acc_GR_z = (FGR_rad*xhz/tmp+FGR_ort*vhz/tmp1)
+    F_GR_tot_x = m(j)*(FGR_rad*xhx/tmp+FGR_ort*vhx/tmp1)
+    F_GR_tot_y = m(j)*(FGR_rad*xhy/tmp+FGR_ort*vhy/tmp1)
+    F_GR_tot_z = m(j)*(FGR_rad*xhz/tmp+FGR_ort*vhz/tmp1)
     !------------------------------------------------------------------------------
     return
-  end subroutine acc_GenRel
+  end subroutine F_GenRel
   
   
   
