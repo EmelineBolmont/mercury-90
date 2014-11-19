@@ -2676,22 +2676,29 @@ module user_module
     real(double_precision) :: tmp,tmp1
     real(double_precision) :: Ftidr_diss,Ftidop
 	real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+    real(double_precision) :: spinx,spiny,spinz,N_tid_px,N_tid_py,N_tid_pz
 
     !------------------------------------------------------------------------------
     call F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
        ,0.0d0,0.0d0,0.0d0 &
        ,R_plan10,sigma_plan,j,Ftidr_diss)
     call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
+    spinx = spin(1,j)
+    spiny = spin(2,j)
+    spinz = spin(3,j)
+    call Torque_tides_p (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spinx,spiny,spinz &
+       ,R_plan10,sigma_plan,j,N_tid_px,N_tid_py,N_tid_pz)
     call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
     call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
     
     tmp = Ftidop/rr
     tmp1 = 1.d0/rr*(Ftidr_diss + tmp*v_rad)
 
-    dEdt = tmp1*(xhx*vhx+xhy*vhy+xhz*vhz) &
-			+ tmp*((spin(2,j)*xhz-spin(3,j)*xhy-vhx)*vhx &
-				  +(spin(3,j)*xhx-spin(1,j)*xhz-vhy)*vhy &
-				  +(spin(1,j)*xhy-spin(2,j)*xhx-vhz)*vhz)
+    dEdt = -(tmp1*(xhx*vhx+xhy*vhy+xhz*vhz) &
+			+ tmp*((spiny*xhz-spinz*xhy-vhx)*vhx &
+				  +(spinz*xhx-spinx*xhz-vhy)*vhy &
+				  +(spinx*xhy-spiny*xhx-vhz)*vhz)) &
+            + m(1)/(m(1)+m(j))*(N_tid_px*spinx+N_tid_py*spiny+N_tid_pz*spinz)
          
     !------------------------------------------------------------------------------
     return
