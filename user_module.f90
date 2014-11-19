@@ -1774,7 +1774,7 @@ module user_module
           ! **************************************************************
           
           do j=2,ntid+1 
-             tmp = - dt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
+             tmp = - hdt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
              
              ! Integration on first half timestep
              ! Torque at last time step t=time-dt
