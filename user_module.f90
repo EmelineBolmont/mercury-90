@@ -2163,7 +2163,7 @@ module user_module
           ! The acceleration in the heliocentric coordinate is not just F/m,
           ! it must be the reduced mass, and the effect of other planets on the
           ! star also has to be removed, see in article for explanation
-          tmp = K2*m(1)/(m(1)*m(j))
+          tmp = K2/m(j)
           if (tides.eq.1) then 
              call F_tides_tot (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
                   ,Rsth5,Rsth10,k2s,dissstar,sigmast &
@@ -2172,9 +2172,9 @@ module user_module
              a1(1,j) = tmp*F_tid_tot_x
              a1(2,j) = tmp*F_tid_tot_y
              a1(3,j) = tmp*F_tid_tot_z
-             sum_F_tid_x = sum_F_tid_x + F_tid_tot_x
-             sum_F_tid_y = sum_F_tid_y + F_tid_tot_y
-             sum_F_tid_z = sum_F_tid_z + F_tid_tot_z
+             sum_F_tid_x = sum_F_tid_x + F_tid_tot_x/m(1)
+             sum_F_tid_y = sum_F_tid_y + F_tid_tot_y/m(1)
+             sum_F_tid_z = sum_F_tid_z + F_tid_tot_z/m(1)
              call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
                   ,Rp10(j),sigmap(j),j,tmp)
              dEdt(j) = tmp
@@ -2190,9 +2190,9 @@ module user_module
              a3(1,j) = tmp*F_rot_tot_x
              a3(2,j) = tmp*F_rot_tot_y
              a3(3,j) = tmp*F_rot_tot_z
-             sum_F_rot_x = sum_F_rot_x + F_rot_tot_x
-             sum_F_rot_y = sum_F_rot_y + F_rot_tot_y
-             sum_F_rot_z = sum_F_rot_z + F_rot_tot_z
+             sum_F_rot_x = sum_F_rot_x + F_rot_tot_x/m(1)
+             sum_F_rot_y = sum_F_rot_y + F_rot_tot_y/m(1)
+             sum_F_rot_z = sum_F_rot_z + F_rot_tot_z/m(1)
           else
              a3(1,j) = 0.0d0
              a3(2,j) = 0.0d0
@@ -2204,9 +2204,9 @@ module user_module
              a2(1,j) = tmp*F_GR_tot_x
              a2(2,j) = tmp*F_GR_tot_y
              a2(3,j) = tmp*F_GR_tot_z
-             sum_F_GR_x = sum_F_GR_x + F_GR_tot_x
-             sum_F_GR_y = sum_F_GR_y + F_GR_tot_y
-             sum_F_GR_z = sum_F_GR_z + F_GR_tot_z
+             sum_F_GR_x = sum_F_GR_x + F_GR_tot_x/m(1)
+             sum_F_GR_y = sum_F_GR_y + F_GR_tot_y/m(1)
+             sum_F_GR_z = sum_F_GR_z + F_GR_tot_z/m(1)
           else
              a2(1,j) = 0.0d0
              a2(2,j) = 0.0d0
