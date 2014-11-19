@@ -93,7 +93,7 @@ module user_module
     real(double_precision) :: sigmast
 
     ! Accelerations:
-    real(double_precision) :: acc_tid_x,acc_tid_y,acc_tid_z
+    real(double_precision) :: F_tid_tot_x,F_tid_tot_y,F_tid_tot_z
     real(double_precision) :: acc_rot_x,acc_rot_y,acc_rot_z
     real(double_precision) :: acc_GR_x,acc_GR_y,acc_GR_z
 
@@ -2139,14 +2139,18 @@ module user_module
        !****************************************************************
 
        do j=2,ntid+1 
+          ! The acceleration in the heliocentric coordinate is not just F/m,
+          ! it must be the reduced mass, and the effect of other planets on the
+          ! star also has to be removed, see in article for explanation
+          tmp = K2*m(1)/(m(1)*m(j))
           if (tides.eq.1) then 
-             call acc_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+             call F_tides_tot (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
                   ,Rsth5,Rsth10,k2s,dissstar,sigmast &
                   ,Rp5(j),Rp10(j),k2fp(j-1),k2p(j-1),sigmap(j) &
-                  ,j,acc_tid_x,acc_tid_y,acc_tid_z)
-             a1(1,j) = acc_tid_x
-             a1(2,j) = acc_tid_y
-             a1(3,j) = acc_tid_z
+                  ,j,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
+             a1(1,j) = tmp*F_tid_tot_x
+             a1(2,j) = tmp*F_tid_tot_y
+             a1(3,j) = tmp*F_tid_tot_z
              call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
                   ,Rp10(j),sigmap(j),j,tmp)
              dEdt(j) = tmp
@@ -2573,8 +2577,8 @@ module user_module
     return
   end subroutine Torque_tides_s 
   
-  subroutine acc_tides (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,acc_tid_x,acc_tid_y,acc_tid_z)
+  subroutine F_tides_tot (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin,R_star5,R_star10,k2_star,diss_star,sigma_star &
+       ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
 
     use physical_constant
     implicit none
@@ -2586,7 +2590,7 @@ module user_module
     real(double_precision),intent(in) :: R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan
     real(double_precision),intent(in) :: m(nbod),spin(3,10)
     
-    real(double_precision), intent(out) :: acc_tid_x,acc_tid_y,acc_tid_z
+    real(double_precision), intent(out) :: F_tid_tot_x,F_tid_tot_y,F_tid_tot_z
 
     ! Local
 !~     integer :: j
@@ -2603,21 +2607,21 @@ module user_module
     call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
     call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
     
-    tmp  = K2/m(j)
+    !tmp  = K2/m(j)
     tmp1 = Ftidr+(Ftidos+Ftidop)*v_rad/rr
-    acc_tid_x = tmp*(tmp1*xhx/rr &
+    F_tid_tot_x = (tmp1*xhx/rr &
          + Ftidos/rr*(spin(2,1)*xhz-spin(3,1)*xhy-vhx) &
          + Ftidop/rr*(spin(2,j)*xhz-spin(3,j)*xhy-vhx))
-    acc_tid_y = tmp*(tmp1*xhy/rr &
+    F_tid_tot_y = (tmp1*xhy/rr &
          + Ftidos/rr*(spin(3,1)*xhx-spin(1,1)*xhz-vhy) &
          + Ftidop/rr*(spin(3,j)*xhx-spin(1,j)*xhz-vhy))
-    acc_tid_z = tmp*(tmp1*xhz/rr &
+    F_tid_tot_z = (tmp1*xhz/rr &
          + Ftidos/rr*(spin(1,1)*xhy-spin(2,1)*xhx-vhz) &
          + Ftidop/rr*(spin(1,j)*xhy-spin(2,j)*xhx-vhz)) 
          
     !------------------------------------------------------------------------------
     return
-  end subroutine acc_tides
+  end subroutine F_tides_tot
   
   ! Instantaneous energy loss dE/dt due to tides
   ! in Msun.AU^2.day^(-3)
