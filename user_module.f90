@@ -138,7 +138,7 @@ module user_module
 
 
     ! Temporary
-    real(double_precision) :: tmp
+    real(double_precision) :: tmp,tmp1
 
     ! Time related and temporary things:
     real(double_precision) :: dt,hdt
