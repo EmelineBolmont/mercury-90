@@ -138,7 +138,7 @@ module user_module
 
 
     ! Temporary
-    real(double_precision) :: tmp,tmp1
+    real(double_precision) :: tmp,tmp1,tmp_dEdt
 
     ! Time related and temporary things:
     real(double_precision) :: dt,hdt
@@ -2177,8 +2177,8 @@ module user_module
              sum_F_tid_y = sum_F_tid_y + tmp1*F_tid_tot_y
              sum_F_tid_z = sum_F_tid_z + tmp1*F_tid_tot_z
              call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
-                  ,Rp10(j),sigmap(j),j,tmp)
-             dEdt(j) = tmp
+                  ,Rp10(j),sigmap(j),j,tmp_dEdt)
+             dEdt(j) = tmp_dEdt
           else
              a1(1,j) = 0.0d0
              a1(2,j) = 0.0d0
