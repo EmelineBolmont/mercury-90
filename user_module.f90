@@ -2163,9 +2163,9 @@ module user_module
           ! The acceleration in the heliocentric coordinate is not just F/m,
           ! it must be the reduced mass, and the effect of other planets on the
           ! star also has to be removed, see in article for explanation
-          tmp  = K2/m(j)
-          tmp1 = K2/m(1) 
           if (tides.eq.1) then 
+             tmp  = K2/m(j)
+             tmp1 = K2/m(1) 
              call F_tides_tot (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
                   ,Rsth5,Rsth10,k2s,dissstar,sigmast &
                   ,Rp5(j),Rp10(j),k2fp(j-1),k2p(j-1),sigmap(j) &
@@ -2185,6 +2185,8 @@ module user_module
              a1(3,j) = 0.0d0
           endif
           if (rot_flat.eq.1) then 
+             tmp  = K2/m(j)
+             tmp1 = K2/m(1) 
              call F_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin &
                   ,Rsth5,k2s,Rp5(j),k2fp(j-1) &
                   ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
@@ -2200,6 +2202,8 @@ module user_module
              a3(3,j) = 0.0d0
           endif
           if (GenRel.eq.1) then 
+             tmp  = K2/m(j)
+             tmp1 = K2/m(1) 
              call F_GenRel (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j) &
                   ,tintin(j),C2,j,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
              a2(1,j) = tmp*F_GR_tot_x
