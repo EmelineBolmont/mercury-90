@@ -211,10 +211,11 @@ if n_tid ge 1 then begin
   
    if n_tid ge 1 then begin
       ;! Obliquities calculations
-      tmp     = dblarr(n_elements(horb1x))
-      oblpm  = dblarr(n_tid,n_elements(horb1x))
-      oblsm  = dblarr(n_tid,n_elements(horb1x))
-      spinp  = dblarr(n_tid,n_elements(horb1x))
+      tmp              = dblarr(n_elements(horb1x))
+      oblpm            = dblarr(n_tid,n_elements(horb1x))
+      oblsm            = dblarr(n_tid,n_elements(horb1x))
+      precession_angle = dblarr(n_tid,n_elements(horb1x))
+      spinp            = dblarr(n_tid,n_elements(horb1x))
       
       for i = 0,n_tid-1 do begin
          for bou = 0,n_elements(horb1x)-1 do begin
@@ -237,6 +238,16 @@ if n_tid ge 1 then begin
                oblsm(i,bou) = acos(tmp(bou))*180.d0/!Pi
             if abs(tmp(bou)) gt 1.d0 then oblsm(i,bou) = 1.0d-6
             
+            tmp(bou)=1.d0/sin(oblpm(i,bou)) $
+                      *(xb(i,bou)*spinpx(i,bou) $
+                      +yb(i,bou)*spinpy(i,bou) $
+                      +zb(i,bou)*spinpz(i,bou)) $
+                      /(sqrt(xb(i,bou)^2+yb(i,bou)^2+zb(i,bou)^2) $
+                       *sqrt(spinpx(i,bou)^2+spinpy(i,bou)^2+spinpz(i,bou)^2))
+            if abs(tmp(bou)) le 1.d0 then $
+               precession_angle(i,bou) = acos(tmp(bou))*180.d0/!Pi
+            if abs(tmp(bou)) gt 1.d0 then precession_angle(i,bou) = 1.0d-6
+
             spinp(i,bou) = sqrt(spinpx(i,bou)^2 $
                    +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
            
