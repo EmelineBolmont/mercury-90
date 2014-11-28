@@ -1,7 +1,7 @@
 @functions
 @constants
 
-;! Mass star:
+;! Mass star (kg):
 Ms = 0.08*Msun
 ;! Number planets
 nbp = 2
@@ -41,6 +41,7 @@ endif
 if n_tid ge 1 then begin
    filenames = 'spins.out'
    print,filenames
+   ; In Mercury spin is in day-1, but later on it is converted to s-1
    readcol,filenames,toto1,spinstx,spinsty,spinstz,Rst,rg2s,k2s,sigmas,format='F,F,F,F,F,F,F,F'
    
    spinpx = dblarr(n_tid,n_elements(toto1))
@@ -57,18 +58,22 @@ if n_tid ge 1 then begin
    for i=0,n_tid-1 do begin 
       filenamep = 'spinp'+strtrim(i+1,2)+'.out'
       print,filenamep
+      ; in Mercury spin is in day-1, later converted to s-1
+      ; Rp is here in Rsun, rg2p does not have unit
       readcol,filenamep,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='F,F,F,F,F,F'
       spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpz(i,*) = spinp1z
       Rp(i,*) = Rp1 & rg2p(i,*) = rg2p1
       
       filenameh = 'horb'+strtrim(i+1,2)+'.out'
       print,filenameh
+      ; The unit here does not matter, we always normalize later
       readcol,filenameh,toto1,horb1x,horb1y,horb1z,horb1,format='F,F,F,F,F'
       horbx(i,*) = horb1x & horby(i,*) = horb1y & horbz(i,*) = horb1z  
       horbp(i,*) = horb1
       
       filenamee = 'dEdt'+strtrim(i+1,2)+'.out'
       print,filenamee
+      ; Mercury gives dE/dt in Msun.AU^2.day^-3, we convert here in W
       readcol,filenamee,toto1,tmp,format='F,F'
       dEdt(i,*) = tmp*6.90125d37 ;conversation from Msun.AU^2.day^-3 to W
       
@@ -145,18 +150,24 @@ for i=0,nbp-1 do begin
    readf,1,header
    readf,1,read_array
    close,1
-
+   ; time in years
    tb[i,0:nlineb1-1] = read_array(0,*)
+   ; semi-major axis in AU
    ab[i,0:nlineb1-1] = read_array(1,*)
    eb[i,0:nlineb1-1] = read_array(2,*)
+   ; inclination in degrees
    incb[i,0:nlineb1-1] = read_array(3,*)
+   ; argument of pericenter, longitude of ascending node and mean anomaly in degrees
    perib[i,0:nlineb1-1] = read_array(4,*)
    nodeb[i,0:nlineb1-1] = read_array(5,*)
    manomb[i,0:nlineb1-1] = read_array(6,*)
+   ; mass in Msun
    mb[i,0:nlineb1-1] = read_array(7,*)
+   ; Positions in AU
    xb[i,0:nlineb1-1] = read_array(8,*)
    yb[i,0:nlineb1-1] = read_array(9,*)
    zb[i,0:nlineb1-1] = read_array(10,*)
+   ; Velocities in AU/day? 
    ub[i,0:nlineb1-1] = read_array(11,*)
    vb[i,0:nlineb1-1] = read_array(12,*)
    wb[i,0:nlineb1-1] = read_array(13,*)
@@ -212,9 +223,11 @@ if n_tid ge 1 then begin
    if n_tid ge 1 then begin
       ;! Obliquities calculations
       tmp              = dblarr(n_elements(horb1x))
+      ; Obliquities in degrees, precession angle in degrees
       oblpm            = dblarr(n_tid,n_elements(horb1x))
       oblsm            = dblarr(n_tid,n_elements(horb1x))
       precession_angle = dblarr(n_tid,n_elements(horb1x))
+      ; That's where the spin is converted to s-1
       spinp            = dblarr(n_tid,n_elements(horb1x))
       
       for i = 0,n_tid-1 do begin
@@ -257,9 +270,6 @@ if n_tid ge 1 then begin
    
    ; Angular momentum calculation
    horb_vec = dblarr(nbp,n_elements(horb1x))
-   ;horbx= dblarr(nbp,n_elements(horb1x))
-   ;horby= dblarr(nbp,n_elements(horb1x))
-   ;horbz= dblarr(nbp,n_elements(horb1x))
    horb = dblarr(n_elements(horb1x))
    spinst = dblarr(n_elements(horb1x))
    momspin = dblarr(n_tid,n_elements(horb1x))
@@ -272,11 +282,6 @@ if n_tid ge 1 then begin
    
    for j=0,nbp-1 do begin
       for i=0,n_elements(horb1x)-1 do begin
-         ;horbx(j,i)=(yb(j,i)*wb(j,i)-zb(j,i)*vb(j,i))
-         ;horby(j,i)=(zb(j,i)*ub(j,i)-xb(j,i)*wb(j,i))
-         ;horbz(j,i)=(xb(j,i)*vb(j,i)-yb(j,i)*ub(j,i))
-         
-         ; With x,y,z,u,v,w
          horb_vec(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
          ; Sum on number of planets to have total orbital momentum
          horb(i) = horb(i)+horb_vec(j,i)
@@ -295,8 +300,6 @@ if n_tid ge 1 then begin
          tidalflux(j,i) = enerdot(ab(j,i)*AU,eb(j,i),spinp(j,i),oblpm(j,i)*!Pi/180.d0,G,mb(j,i)*Msun $
                ,Ms,Rp(j,i)*rsun,k2pDeltap(j)*day)/(4*!Pi*(Rp(j,i)*rsun)^2)
          inst_tidalflux(j,i) = dEdt(j,i)/(4*!Pi*(Rp(j,i)*rsun)^2)
-         
-         
       endfor
    endfor
    for i=0,n_elements(horb1x)-1 do begin
@@ -304,7 +307,6 @@ if n_tid ge 1 then begin
          momspitot(i)=momspitot(i)+momspin(j,i)
       endfor
    endfor
-   
    
    indicend = dblarr(2,nbp)
    for j = 0,nbp-1 do begin
