@@ -2219,9 +2219,9 @@ module user_module
           endif
        end do
        do j=2,ntid+1
-          a(1,j) = tides*(a1(1,j)+sum_F_tid_x)+GenRel*(a2(1,j)+sum_F_rot_x)+rot_flat*(a3(1,j)+sum_F_GR_x)
-          a(2,j) = tides*(a1(2,j)+sum_F_tid_y)+GenRel*(a2(2,j)+sum_F_rot_y)+rot_flat*(a3(2,j)+sum_F_GR_y)
-          a(3,j) = tides*(a1(3,j)+sum_F_tid_z)+GenRel*(a2(3,j)+sum_F_rot_z)+rot_flat*(a3(3,j)+sum_F_GR_z)
+          a(1,j) = tides*(a1(1,j)+sum_F_tid_x)+rot_flat*(a2(1,j)+sum_F_rot_x)+GenRel*(a3(1,j)+sum_F_GR_x)
+          a(2,j) = tides*(a1(2,j)+sum_F_tid_y)+rot_flat*(a2(2,j)+sum_F_rot_y)+GenRel*(a3(2,j)+sum_F_GR_y)
+          a(3,j) = tides*(a1(3,j)+sum_F_tid_z)+rot_flat*(a2(3,j)+sum_F_rot_z)+GenRel*(a3(3,j)+sum_F_GR_z)
        end do
     endif
     
