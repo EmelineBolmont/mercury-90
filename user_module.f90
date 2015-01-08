@@ -2163,10 +2163,12 @@ module user_module
           ! The acceleration in the heliocentric coordinate is not just F/m,
           ! it must be the reduced mass, and the effect of other planets on the
           ! star also has to be removed, see in article for explanation
+          !
+          ! I'm using spin_bf to derive acceleration 
           if (tides.eq.1) then 
              tmp  = K2/m(j)
              tmp1 = K2/m(1) 
-             call F_tides_tot (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+             call F_tides_tot (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin_bf &
                   ,Rsth5,Rsth10,k2s,dissstar,sigmast &
                   ,Rp5(j),Rp10(j),k2fp(j-1),k2p(j-1),sigmap(j) &
                   ,j,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
@@ -2176,7 +2178,7 @@ module user_module
              sum_F_tid_x = sum_F_tid_x + tmp1*F_tid_tot_x
              sum_F_tid_y = sum_F_tid_y + tmp1*F_tid_tot_y
              sum_F_tid_z = sum_F_tid_z + tmp1*F_tid_tot_z
-             call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+             call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin_bf &
                   ,Rp10(j),sigmap(j),j,tmp_dEdt)
              dEdt(j) = tmp_dEdt
           else
@@ -2187,7 +2189,7 @@ module user_module
           if (rot_flat.eq.1) then 
              tmp  = K2/m(j)
              tmp1 = K2/m(1) 
-             call F_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin &
+             call F_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin_bf &
                   ,Rsth5,k2s,Rp5(j),k2fp(j-1) &
                   ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
              a3(1,j) = tmp*F_rot_tot_x
@@ -2219,9 +2221,9 @@ module user_module
           endif
        end do
        do j=2,ntid+1
-          a(1,j) = tides*(a1(1,j)+sum_F_tid_x)+rot_flat*(a2(1,j)+sum_F_rot_x)+GenRel*(a3(1,j)+sum_F_GR_x)
-          a(2,j) = tides*(a1(2,j)+sum_F_tid_y)+rot_flat*(a2(2,j)+sum_F_rot_y)+GenRel*(a3(2,j)+sum_F_GR_y)
-          a(3,j) = tides*(a1(3,j)+sum_F_tid_z)+rot_flat*(a2(3,j)+sum_F_rot_z)+GenRel*(a3(3,j)+sum_F_GR_z)
+          a(1,j) = tides*(a1(1,j)+sum_F_tid_x)+rot_flat*(a3(1,j)+sum_F_rot_x)+GenRel*(a2(1,j)+sum_F_GR_x)
+          a(2,j) = tides*(a1(2,j)+sum_F_tid_y)+rot_flat*(a3(2,j)+sum_F_rot_y)+GenRel*(a2(2,j)+sum_F_GR_y)
+          a(3,j) = tides*(a1(3,j)+sum_F_tid_z)+rot_flat*(a3(3,j)+sum_F_rot_z)+GenRel*(a2(3,j)+sum_F_GR_z)
        end do
     endif
     
@@ -2229,14 +2231,14 @@ module user_module
     if ((tides.eq.1).or.(rot_flat.eq.1)) then          
        if (time.ge.timestep) then
           open(13, file="spins.out", access="append")
-          write(13,'(8("  ", es19.9e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
+          write(13,'(8("  ", es19.9e3))') time/365.25d0,spin_bf(1,1),spin_bf(2,1),spin_bf(3,1),Rst/rsun,rg2s,k2s,sigmast
           close(13)
           do j=2,ntid+1
              write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
              write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
              write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
              open(13, file=planet_spin_filename, access='append')
-             write(13,'(6("  ", es19.9e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+             write(13,'(6("  ", es19.9e3))') time/365.25d0,spin_bf(1,j),spin_bf(2,j),spin_bf(3,j),Rp(j)/rsun,rg2p(j-1)
              close(13)
              open(13, file=planet_orbt_filename, access='append')
              write(13,'(5("  ", es19.9e3))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
