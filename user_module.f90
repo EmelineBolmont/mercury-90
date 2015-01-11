@@ -224,514 +224,528 @@ module user_module
 
     ! Error message
     if (ispin.eq.0) then
-       if ((brown_dwarf.eq.1).and.((M_dwarf.eq.1).or.(Sun_like_star.eq.1).or.(Jupiter_host.eq.1).or.(Rscst.eq.1))) then 
-          write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
-          stop
-       endif
-       if ((M_dwarf.eq.1).and.((Sun_like_star.eq.1).or.(Jupiter_host.eq.1).or.(Rscst.eq.1).or.(brown_dwarf.eq.1))) then
-          write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
-          stop
-       endif
-       if ((Sun_like_star.eq.1).and.((Jupiter_host.eq.1).or.(Rscst.eq.1).or.(brown_dwarf.eq.1).or.(M_dwarf.eq.1))) then 
-          write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
-          stop
-       endif
-       if ((Jupiter_host.eq.1).and.((Rscst.eq.1).or.(brown_dwarf.eq.1).or.(M_dwarf.eq.1).or.(Sun_like_star.eq.1))) then 
-          write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
-          stop
-       endif
-       if ((Rscst.eq.1).and.((brown_dwarf.eq.1).or.(M_dwarf.eq.1).or.(Sun_like_star.eq.1).or.(Jupiter_host.eq.1))) then 
-          write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
-          stop
-       endif
+        if ((brown_dwarf.eq.1).and.((M_dwarf.eq.1).or.(Sun_like_star.eq.1).or.(Jupiter_host.eq.1).or.(Rscst.eq.1))) then 
+            write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
+            stop
+        endif
+        if ((M_dwarf.eq.1).and.((Sun_like_star.eq.1).or.(Jupiter_host.eq.1).or.(Rscst.eq.1).or.(brown_dwarf.eq.1))) then
+            write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
+            stop
+        endif
+        if ((Sun_like_star.eq.1).and.((Jupiter_host.eq.1).or.(Rscst.eq.1).or.(brown_dwarf.eq.1).or.(M_dwarf.eq.1))) then 
+            write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
+            stop
+        endif
+        if ((Jupiter_host.eq.1).and.((Rscst.eq.1).or.(brown_dwarf.eq.1).or.(M_dwarf.eq.1).or.(Sun_like_star.eq.1))) then 
+            write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
+            stop
+        endif
+        if ((Rscst.eq.1).and.((brown_dwarf.eq.1).or.(M_dwarf.eq.1).or.(Sun_like_star.eq.1).or.(Jupiter_host.eq.1))) then 
+            write(*,*) "You're trying to have a host body of two types at the same time, this is not going to work"
+            stop
+        endif
     endif
 
     ! Acceleration initialization
     do j = 1, nbod
-       a(1,j) = 0.d0
-       a(2,j) = 0.d0
-       a(3,j) = 0.d0
+        a(1,j) = 0.d0
+        a(2,j) = 0.d0
+        a(3,j) = 0.d0
     end do
     do j=2,ntid+1
-       a1(1,j) = 0.d0
-       a1(2,j) = 0.d0
-       a1(3,j) = 0.d0
-       a2(1,j) = 0.d0
-       a2(2,j) = 0.d0
-       a2(3,j) = 0.d0
-       a3(1,j) = 0.d0
-       a3(2,j) = 0.d0
-       a3(3,j) = 0.d0
-       if (ispin.eq.0) then
-          qq = 0.d0
-          ee = 0.d0
-          pp = 0.d0
-          ii = 0.d0
-          nn = 0.d0
-          ll = 0.d0
-          qa(j) = 0.d0
-          ea(j) = 0.d0
-          pa(j) = 0.d0
-          ia(j) = 0.d0
-          na(j) = 0.d0
-          la(j) = 0.d0
-          timestep = time
-       endif
+        a1(1,j) = 0.d0
+        a1(2,j) = 0.d0
+        a1(3,j) = 0.d0
+        a2(1,j) = 0.d0
+        a2(2,j) = 0.d0
+        a2(3,j) = 0.d0
+        a3(1,j) = 0.d0
+        a3(2,j) = 0.d0
+        a3(3,j) = 0.d0
+        if (ispin.eq.0) then
+            qq = 0.d0
+            ee = 0.d0
+            pp = 0.d0
+            ii = 0.d0
+            nn = 0.d0
+            ll = 0.d0
+            qa(j) = 0.d0
+            ea(j) = 0.d0
+            pa(j) = 0.d0
+            ia(j) = 0.d0
+            na(j) = 0.d0
+            la(j) = 0.d0
+            timestep = time
+        endif
     end do
     if (iwrite.eq.0) then 
-       call write_simus_properties()
-       iwrite = 1
+        call write_simus_properties()
+        iwrite = 1
     endif
 
     ! Timestep calculation
     if (flagtime.eq.0) then 
-       bobo = get_initial_timestep()
-       dt = bobo(2)
-       hdt = 0.5d0*dt
-       flagtime = flagtime+1
+        bobo = get_initial_timestep()
+        dt = bobo(2)
+        hdt = 0.5d0*dt
+        flagtime = flagtime+1
     endif
 
     ! Following calculations in heliocentric coordinates   
     call conversion_dh2h(nbod,nbig,m,x,v,xh,vh)    
     if (ispin.eq.0) then
-       do j=2,ntid+1
-          xh_bf(1,j) = xh(1,j)
-          xh_bf(2,j) = xh(2,j)
-          xh_bf(3,j) = xh(3,j)
-          vh_bf(1,j) = vh(1,j)
-          vh_bf(2,j) = vh(2,j)
-          vh_bf(3,j) = vh(3,j)
-       enddo
+        do j=2,ntid+1
+            xh_bf(1,j) = xh(1,j)
+            xh_bf(2,j) = xh(2,j)
+            xh_bf(3,j) = xh(3,j)
+            vh_bf(1,j) = vh(1,j)
+            vh_bf(2,j) = vh(2,j)
+            vh_bf(3,j) = vh(3,j)
+        enddo
     endif      
-          
+    
     if ((tides.eq.1).or.(rot_flat.eq.1)) then 
+    
+        ! Calculation of orbital angular momentum
+        ! horb (without mass) in AU^2/day
+        do j=2,ntid+1
+            horb(1,j)  = (xh(2,j)*vh(3,j)-xh(3,j)*vh(2,j))
+            horb(2,j)  = (xh(3,j)*vh(1,j)-xh(1,j)*vh(3,j))
+            horb(3,j)  = (xh(1,j)*vh(2,j)-xh(2,j)*vh(1,j))    
+            horbn(j) = sqrt(horb(1,j)*horb(1,j)+horb(2,j)*horb(2,j)+horb(3,j)*horb(3,j))
+        end do
+              
        ! Charge host body data 
        ! + initial condition on host body spin, radius
+       
        if (brown_dwarf.eq.1) then 
-          if (flagrg2.eq.0) then    
-             sigmast = sigma_BD
-             ! Radius of BD's gyration data
-             open(1,file='rg2BD.dat')
-             do nptmss=1,37
-                read(1,*,iostat=error)trg2(nptmss),rg1(nptmss),rg2(nptmss), &
-                     rg3(nptmss),rg4(nptmss),rg5(nptmss),rg6(nptmss),rg7(nptmss), &
-                     rg8(nptmss),rg9(nptmss),rg10(nptmss),rg11(nptmss),rg12(nptmss)
-             end do
-             
-             ! If BD's mass is equal to one of these values, charge radius... 
-             if ((m(1).le.0.0101*K2).and.(m(1).ge.0.0099*K2)) then
-                iPs0 = 1
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg1(j)
-                enddo
-                open(1,file='mass_10.0000.dat')
+           
+           if (flagrg2.eq.0) then    
+               sigmast = sigma_BD
+               ! Radius of BD's gyration data
+               open(1,file='rg2BD.dat')
+               do nptmss=1,37
+                   read(1,*,iostat=error)trg2(nptmss),rg1(nptmss),rg2(nptmss), &
+                        rg3(nptmss),rg4(nptmss),rg5(nptmss),rg6(nptmss),rg7(nptmss), &
+                        rg8(nptmss),rg9(nptmss),rg10(nptmss),rg11(nptmss),rg12(nptmss)
+               end do
+               
+               ! If BD's mass is equal to one of these values, charge radius... 
+               if ((m(1).le.0.0101*K2).and.(m(1).ge.0.0099*K2)) then
+                   iPs0 = 1
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg1(j)
+                   enddo
+                   open(1,file='mass_10.0000.dat')
 
-                nptmss = 715
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
+                   nptmss = 715
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
 
-                do nptmss = 1,715
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0121*K2).and.(m(1).ge.0.0119*K2)) then
-                iPs0 = 2
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg2(j)
-                enddo
-                open(1,file='mass_12.0000.dat')
+                   do nptmss = 1,715
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0121*K2).and.(m(1).ge.0.0119*K2)) then
+                   iPs0 = 2
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg2(j)
+                   enddo
+                   open(1,file='mass_12.0000.dat')
 
-                nptmss = 720
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
+                   nptmss = 720
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
 
-                do nptmss=1,720
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0151*K2).and.(m(1).ge.0.0149*K2)) then
-                iPs0 = 3
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg3(j)
-                enddo
-                open(1,file='mass_15.0000.dat')
+                   do nptmss=1,720
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0151*K2).and.(m(1).ge.0.0149*K2)) then
+                   iPs0 = 3
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg3(j)
+                   enddo
+                   open(1,file='mass_15.0000.dat')
+ 
+                   nptmss = 856
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
+ 
+                   do nptmss=1,856
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then
+                   iPs0 = 4
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg4(j)
+                   enddo
+                   open(1,file='mass_20.0000.dat')
+            
+                   nptmss = 864
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
+ 
+                   do nptmss =1,864
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0301*K2).and.(m(1).ge.0.0299*K2)) then
+                   iPs0 = 5
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg5(j)
+                   enddo
+                   open(1,file='mass_30.0000.dat')
+ 
+                   nptmss = 878
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
+ 
+                   do nptmss=1,878
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0401*K2).and.(m(1).ge.0.0399*K2)) then
+                   iPs0 = 6
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg6(j)
+                   enddo
+                   open(1,file='mass_40.0000.dat')
+ 
+                   nptmss = 886
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
+ 
+                   do nptmss = 1,886
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)  
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0501*K2).and.(m(1).ge.0.0499*K2)) then
+                   iPs0 = 7
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg7(j)
+                   enddo
+                   open(1,file='mass_50.0000.dat')
+ 
+                   nptmss = 891
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
+                   
+                   do nptmss=1,891
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0601*K2).and.(m(1).ge.0.0599*K2)) then
+                   iPs0 = 8
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg8(j)
+                   enddo
+                   open(1,file='mass_60.0000.dat')
+ 
+                   nptmss = 1663
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
+ 
+                   do nptmss=1,1663
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0701*K2).and.(m(1).ge.0.0699*K2)) then
+                   iPs0 = 9
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg9(j)
+                   enddo
+                   open(1,file='mass_70.0000.dat')
+ 
+                   nptmss = 3585
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
+ 
+                   do nptmss =1,3585
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0721*K2).and.(m(1).ge.0.0719*K2)) then
+                   iPs0 = 10
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg10(j)
+                   enddo
+                   open(1,file='mass_72.0000.dat')
+ 
+                   nptmss = 3721
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
+ 
+                   do nptmss =1,3721
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0751*K2).and.(m(1).ge.0.0749*K2)) then
+                   iPs0 = 11
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg11(j)
+                   enddo
+                   open(1,file='mass_75.0000.dat')
+ 
+                   nptmss = 3903
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
+ 
+                   do nptmss =1,3903
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               else if ((m(1).le.0.0801*K2).and.(m(1).ge.0.0799*K2)) then
+                   iPs0 = 12
+                   k2s  = k2st(iPs0)
+                   Pst0 = Ps0(iPs0)
+                   do j = 1,37       
+                      rg2st(j) = rg12(j)
+                   enddo
+ 
+                   nptmss = 4161
+                   allocate( timeBD(nptmss) )
+                   allocate( radiusBD(nptmss))
+                   allocate( lumiBD(nptmss) )
+                   allocate( HZinGJ(nptmss) )
+                   allocate( HZoutGJ(nptmss))
+                   allocate( HZinb(nptmss)  )
+                   allocate( HZoutb(nptmss) )
+ 
+                   open(1,file='mass_80.0000.dat')
+                   do nptmss =1,4161
+                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                   end do
+                   nptmss = nptmss - 1
+               endif
 
-                nptmss = 856
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
-
-                do nptmss=1,856
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then
-                iPs0 = 4
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg4(j)
-                enddo
-                open(1,file='mass_20.0000.dat')
-
-                nptmss = 864
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
-
-                do nptmss =1,864
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0301*K2).and.(m(1).ge.0.0299*K2)) then
-                iPs0 = 5
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg5(j)
-                enddo
-                open(1,file='mass_30.0000.dat')
-
-                nptmss = 878
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
-
-                do nptmss=1,878
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0401*K2).and.(m(1).ge.0.0399*K2)) then
-                iPs0 = 6
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg6(j)
-                enddo
-                open(1,file='mass_40.0000.dat')
-
-                nptmss = 886
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
-
-                do nptmss = 1,886
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)  
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0501*K2).and.(m(1).ge.0.0499*K2)) then
-                iPs0 = 7
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg7(j)
-                enddo
-                open(1,file='mass_50.0000.dat')
-
-                nptmss = 891
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
-                
-                do nptmss=1,891
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0601*K2).and.(m(1).ge.0.0599*K2)) then
-                iPs0 = 8
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg8(j)
-                enddo
-                open(1,file='mass_60.0000.dat')
-
-                nptmss = 1663
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
-
-                do nptmss=1,1663
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0701*K2).and.(m(1).ge.0.0699*K2)) then
-                iPs0 = 9
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg9(j)
-                enddo
-                open(1,file='mass_70.0000.dat')
-
-                nptmss = 3585
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
-
-                do nptmss =1,3585
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0721*K2).and.(m(1).ge.0.0719*K2)) then
-                iPs0 = 10
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg10(j)
-                enddo
-                open(1,file='mass_72.0000.dat')
-
-                nptmss = 3721
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
-
-                do nptmss =1,3721
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0751*K2).and.(m(1).ge.0.0749*K2)) then
-                iPs0 = 11
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg11(j)
-                enddo
-                open(1,file='mass_75.0000.dat')
-
-                nptmss = 3903
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
-
-                do nptmss =1,3903
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             else if ((m(1).le.0.0801*K2).and.(m(1).ge.0.0799*K2)) then
-                iPs0 = 12
-                k2s  = k2st(iPs0)
-                Pst0 = Ps0(iPs0)
-                do j = 1,37       
-                   rg2st(j) = rg12(j)
-                enddo
-
-                nptmss = 4161
-                allocate( timeBD(nptmss) )
-                allocate( radiusBD(nptmss))
-                allocate( lumiBD(nptmss) )
-                allocate( HZinGJ(nptmss) )
-                allocate( HZoutGJ(nptmss))
-                allocate( HZinb(nptmss)  )
-                allocate( HZoutb(nptmss) )
-
-                open(1,file='mass_80.0000.dat')
-                do nptmss =1,4161
-                   read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                        HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                end do
-                nptmss = nptmss - 1
-             endif
-
-             ! Initialization of stellar spin (day-1)
-             if (crash.eq.0) then
-                spin0 = 24.d0*TWOPI/Pst0 
-                spin(1,1) = 0.d0
-                spin(2,1) = 0.d0
-                spin(3,1) = spin0
-             else
-                spin(1,1) = rot_crash(1) 
-                spin(2,1) = rot_crash(2) 
-                spin(3,1) = rot_crash(3) 
-             endif
-             flagrg2=1
-          endif
+               ! Initialization of stellar spin (day-1)
+               if (crash.eq.0) then
+                   spin0 = 24.d0*TWOPI/Pst0 
+                   spin(1,1) = 0.d0
+                   spin(2,1) = 0.d0
+                   spin(3,1) = spin0
+               else
+                   spin(1,1) = rot_crash(1) 
+                   spin(2,1) = rot_crash(2) 
+                   spin(3,1) = rot_crash(3) 
+               endif
+               flagrg2=1
+           endif
        endif
+
        if (M_dwarf.eq.1) then 
-          rg2s = rg2_dM
-          if (flagrg2.eq.0) then
-             ! Charge file of radius of Mdwarf 
-             open(1,file='01Msun.dat')
-             do nptmss = 1,1065
-                read(1,*,iostat=error)timedM(nptmss),radiusdM(nptmss)
-             end do
-             nptmss = nptmss - 1
-             if (crash.eq.0) then
-                Pst = Period_st
-                ! Initialization of stellar spin (day-1)
-                spin0 = TWOPI/Pst 
-                spin(1,1) = 0.d0
-                spin(2,1) = 0.d0
-                spin(3,1) = spin0
-             else
-                spin(1,1) = rot_crash(1)
-                spin(2,1) = rot_crash(2)
-                spin(3,1) = rot_crash(3)
-             end if
-             k2s   = k2st_dM
-             sigmast = sigma_dM
-             flagrg2 = 1
-          endif
+           rg2s = rg2_dM
+           if (flagrg2.eq.0) then
+               
+               ! Charge file of radius of Mdwarf 
+               open(1,file='01Msun.dat')
+               do nptmss = 1,1065
+                  read(1,*,iostat=error)timedM(nptmss),radiusdM(nptmss)
+               end do
+               nptmss = nptmss - 1
+               
+               ! Initialization of stellar spin (day-1)
+               if (crash.eq.0) then
+                   Pst = Period_st
+                   spin0 = TWOPI/Pst 
+                   spin(1,1) = 0.d0
+                   spin(2,1) = 0.d0
+                   spin(3,1) = spin0
+               else
+                   spin(1,1) = rot_crash(1)
+                   spin(2,1) = rot_crash(2)
+                   spin(3,1) = rot_crash(3)
+               end if
+               
+               k2s   = k2st_dM
+               sigmast = sigma_dM
+               flagrg2 = 1
+           
+           endif
        endif
        if (Sun_like_star.eq.1) then 
-          rg2s = rg2_Sun
-          if (flagrg2.eq.0) then 
-             ! Charge file of radius of Mdwarf 
-             open(1,file='SRad_Spli_M-1_0000.dat')
-             do nptmss = 1,2003
-                read(1,*,iostat=error)timestar(nptmss),radiusstar(nptmss),d2radiusstar(nptmss)
-             end do
-             nptmss = nptmss - 1
-             ! Initialization Sun-like star spin (day-1)
-             if (crash.eq.0) then
-                Pst = Period_st
-                spin0 = TWOPI/Pst !day-1
-                spin(1,1) = 0.d0
-                spin(2,1) = 0.d0
-                spin(3,1) = spin0
-             else
-                spin(1,1) = rot_crash(1) !day-1
-                spin(2,1) = rot_crash(2) !day-1
-                spin(3,1) = rot_crash(3) !day-1
-             end if
-             k2s   = k2st_Sun
-             sigmast = sigma_Sun
-             flagrg2 = 1
-          endif
+           rg2s = rg2_Sun
+           if (flagrg2.eq.0) then 
+
+               ! Charge file of radius of Mdwarf 
+               open(1,file='SRad_Spli_M-1_0000.dat')
+               do nptmss = 1,2003
+                   read(1,*,iostat=error)timestar(nptmss),radiusstar(nptmss),d2radiusstar(nptmss)
+               end do
+               nptmss = nptmss - 1
+               
+               ! Initialization Sun-like star spin (day-1)
+               if (crash.eq.0) then
+                   Pst = Period_st
+                   spin0 = TWOPI/Pst !day-1
+                   spin(1,1) = 0.d0
+                   spin(2,1) = 0.d0
+                   spin(3,1) = spin0
+               else
+                   spin(1,1) = rot_crash(1) !day-1
+                   spin(2,1) = rot_crash(2) !day-1
+                   spin(3,1) = rot_crash(3) !day-1
+               end if
+
+               k2s   = k2st_Sun
+               sigmast = sigma_Sun
+               flagrg2 = 1
+           
+           endif
        endif
        if (Jupiter_host.eq.1) then 
-          if (flagrg2.eq.0) then 
-             ! Charge file of radius of Jupiter 
-             open(1,file='Jupiter.dat')
-             do nptmss = 1,4755
-                read(1,*,iostat=error) timeJup(nptmss),radiusJup(nptmss) &
-                     ,k2Jup(nptmss),rg2Jup(nptmss),spinJup(nptmss)
-             end do
-             nptmss = nptmss - 1
-             if (crash.eq.0) then
-                call spline_b_val(nptmss,timeJup*365.25-t_init,radiusJup,time,Rstb0)
-                Rst0    =  minau * Rstb0
-                ! spinJup is s-1
-                call spline_b_val(nptmss,timeJup*365.25-t_init,spinJup,time,spinb0)
-                ! Initialization of stellar spin (day-1)
-                spin0 = spinb0*86400.d0
-                spin(1,1) = 0.d0
-                spin(2,1) = 0.d0
-                spin(3,1) = spin0
-             else
-                spin(1,1) = rot_crash(1)
-                spin(2,1) = rot_crash(2)
-                spin(3,1) = rot_crash(3)
-                call spline_b_val(nptmss,timeJup*365.25-t_init,radiusJup,0.0d0,Rstb0)
-                Rst0    = minau * Rstb0
-             end if
-             ! Give good value of sigmast
-             sigmast = dissstar*2.d0*K2*k2delta_jup/(3.d0*Rst0*Rst0*Rst0*Rst0*Rst0)
-             flagrg2 = 1
-          endif
+           if (flagrg2.eq.0) then 
+              
+              ! Charge file of radius of Jupiter 
+              open(1,file='Jupiter.dat')
+              do nptmss = 1,4755
+                 read(1,*,iostat=error) timeJup(nptmss),radiusJup(nptmss) &
+                      ,k2Jup(nptmss),rg2Jup(nptmss),spinJup(nptmss)
+              end do
+              nptmss = nptmss - 1
+              if (crash.eq.0) then
+                 call spline_b_val(nptmss,timeJup*365.25-t_init,radiusJup,time,Rstb0)
+                 Rst0    =  minau * Rstb0
+                 ! spinJup is s-1
+                 call spline_b_val(nptmss,timeJup*365.25-t_init,spinJup,time,spinb0)
+                 ! Initialization of stellar spin (day-1)
+                 spin0 = spinb0*86400.d0
+                 spin(1,1) = 0.d0
+                 spin(2,1) = 0.d0
+                 spin(3,1) = spin0
+              else
+                 spin(1,1) = rot_crash(1)
+                 spin(2,1) = rot_crash(2)
+                 spin(3,1) = rot_crash(3)
+                 call spline_b_val(nptmss,timeJup*365.25-t_init,radiusJup,0.0d0,Rstb0)
+                 Rst0    = minau * Rstb0
+              end if
+              ! Give good value of sigmast
+              sigmast = dissstar*2.d0*K2*k2delta_jup/(3.d0*Rst0*Rst0*Rst0*Rst0*Rst0)
+              flagrg2 = 1
+           endif
        endif
        if (Rscst.eq.1) then 
-          rg2s   = rg2_what
-          Rsth   = radius_star*rsun
-          Rst    = Rsth
-          Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-          Rst_5  = Rsth5
-          Rst0_5 = Rsth5
-          Rsth10 = Rsth5*Rsth5
-          Rst_10 = Rsth10
-          Rst0_10= Rsth10
-          if (flagrg2.eq.0) then
-             Pst = Period_st
-             k2s   = k2st_what
-             sigmast = sigma_what
-             if (crash.eq.0) then
-                ! Initialization of stellar spin (day-1)
-                spin0 = TWOPI/Pst !day-1
-                spin(1,1) = 0.d0
-                spin(2,1) = 0.d0
-                spin(3,1) = spin0
-             else
-                spin(1,1) = rot_crash(1) !day-1
-                spin(2,1) = rot_crash(2) !day-1
-                spin(3,1) = rot_crash(3) !day-1
-             endif
-             flagrg2 = 1
-          endif
+           rg2s   = rg2_what
+           Rsth   = radius_star*rsun
+           Rst    = Rsth
+           Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+           Rst_5  = Rsth5
+           Rst0_5 = Rsth5
+           Rsth10 = Rsth5*Rsth5
+           Rst_10 = Rsth10
+           Rst0_10= Rsth10
+           if (flagrg2.eq.0) then
+              Pst = Period_st
+              k2s   = k2st_what
+              sigmast = sigma_what
+              if (crash.eq.0) then
+                 ! Initialization of stellar spin (day-1)
+                 spin0 = TWOPI/Pst !day-1
+                 spin(1,1) = 0.d0
+                 spin(2,1) = 0.d0
+                 spin(3,1) = spin0
+              else
+                 spin(1,1) = rot_crash(1) !day-1
+                 spin(2,1) = rot_crash(2) !day-1
+                 spin(3,1) = rot_crash(3) !day-1
+              endif
+              flagrg2 = 1
+           endif
        endif
     endif
     
-    ! Calculation of orbital angular momentum
-    ! horb (without mass) in AU^2/day
-    do j=2,ntid+1
-       horb(1,j)  = (xh(2,j)*vh(3,j)-xh(3,j)*vh(2,j))
-       horb(2,j)  = (xh(3,j)*vh(1,j)-xh(1,j)*vh(3,j))
-       horb(3,j)  = (xh(1,j)*vh(2,j)-xh(2,j)*vh(1,j))    
-       horbn(j) = sqrt(horb(1,j)*horb(1,j)+horb(2,j)*horb(2,j)+horb(3,j)*horb(3,j))
-    end do
 
     ! Initialization of many things concerning planets
     if (ispin.eq.0) then 
