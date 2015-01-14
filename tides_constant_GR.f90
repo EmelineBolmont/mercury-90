@@ -175,10 +175,10 @@ contains
         !Input
         !None actually
         ! Outpout
-        real(double_precision), dimension(2) :: get_initial_timestep 
+        real(double_precision), dimension(3) :: get_initial_timestep 
         !Locals
         integer :: j, lineno, nsub, lim(2,10), error
-        real(double_precision) :: h0,tstop
+        real(double_precision) :: h0,tstop,mass_star
         character(len=80) :: c80
         character(len=150) :: string
         !-----------------------------------------------------------------------
@@ -219,7 +219,7 @@ subroutine write_simus_properties()
 
     use git_infos
     implicit none
-    real(double_precision), dimension(2) :: timestep
+    real(double_precision), dimension(3) :: timestep
     real(double_precision) :: distance_accuracy
     integer :: j
     real(double_precision), parameter :: TWOTHIRD = 2.d0 / 3.d0

@@ -68,7 +68,7 @@ module user_module
     ! Output
     real(double_precision),intent(out) :: a(3,nbod)
     
-    !------------------------------------------------------------------------------ 
+    !---------------------------------------------------------------------------
     !------Local-------
 
     ! Local
@@ -77,8 +77,10 @@ module user_module
     integer :: flagtime=0
     integer :: ispin=0
     integer :: iwrite=0
+    integer :: initialization = 0
+    integer :: charge_data = 0
     real(double_precision) :: flagbug=0.d0
-    real(double_precision) :: timestep!=3.6525d5!3.65d5 !4.56d6 !
+    real(double_precision) :: timestep
 
 
     ! Temporary orbital elements needed to calculate pseudo-synchronization for planets:
@@ -142,7 +144,7 @@ module user_module
 
     ! Time related and temporary things:
     real(double_precision) :: dt,hdt
-    real(double_precision), dimension(2) :: bobo
+    real(double_precision), dimension(3) :: bobo
 
     ! Integration of the spin (total torque tides):
     real(double_precision), dimension(3) :: totftides
@@ -218,7 +220,7 @@ module user_module
     !save sigmap,k2pdeltap,forcing_frequency,Ediss
 
     ! Flags
-    save flagrg2,flagtime,ispin,flagbug
+    save flagrg2,flagtime,ispin,flagbug,charge_data,initialization
 
     !------------------------------------------------------------------------------
     ! superzoyotte
@@ -594,372 +596,373 @@ module user_module
             endif
  
             charge_data = 1
-       endif    
+        endif    
 
-       !------------------------------------------------------------------------
-       ! Initial condition on host body spin, radius
-       ! and then for planets
+        !------------------------------------------------------------------------
+        ! Initial condition on host body spin, radius
+        ! and then for planets
 
-       if (initialization.eq.0) then
+        if (initialization.eq.0) then
 
-           !--------------------------------------------------------------------
-           !-------------------------  HOST BODY  ------------------------------
-           !--------------------------------------------------------------------
+            !--------------------------------------------------------------------
+            !-------------------------  HOST BODY  ------------------------------
+            !--------------------------------------------------------------------
 
-           !--------------------------------------------------------------------
-           !-----------------------  BROWN DWARF  ------------------------------
-           if (brown_dwarf.eq.1) then 
-               
-               ! Here defining k2s and initial rotation period of BD
-               if ((m(1).le.0.0101*K2).and.(m(1).ge.0.0099*K2)) then
-                   iPs0 = 1
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0121*K2).and.(m(1).ge.0.0119*K2)) then
-                   iPs0 = 2
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0151*K2).and.(m(1).ge.0.0149*K2)) then
-                   iPs0 = 3
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then    
-                   iPs0 = 4
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0301*K2).and.(m(1).ge.0.0299*K2)) then
-                   iPs0 = 5
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0401*K2).and.(m(1).ge.0.0399*K2)) then
-                   iPs0 = 6
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0501*K2).and.(m(1).ge.0.0499*K2)) then
-                   iPs0 = 7
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0601*K2).and.(m(1).ge.0.0599*K2)) then
-                   iPs0 = 8
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0701*K2).and.(m(1).ge.0.0699*K2)) then
-                   iPs0 = 9
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0721*K2).and.(m(1).ge.0.0719*K2)) then
-                   iPs0 = 10
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0751*K2).and.(m(1).ge.0.0749*K2)) then
-                   iPs0 = 11
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               else if ((m(1).le.0.0801*K2).and.(m(1).ge.0.0799*K2)) then
-                   iPs0 = 12
-                   k2s  = k2st(iPs0)
-                   Pst0 = Ps0(iPs0)
-               endif
-               ! Dissipation for the BD
-               sigmast = sigma_BD
-
-               ! Initialization of the things that change: radius and radius of
-               ! gyration
-               if (crash.eq.0) then
-                   ! Determination of the radius at time = t_init
-                   call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb0)
-                   ! Determination of the radius of gyration at time = t_init
-                   call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
-               else
-                   ! Determination of the radius at time = t_crash
-                   call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb0)
-                   ! Determination of the radius of gyration at time = t_crash
-                   call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s0)
-               endif
-               Rst0    = Rsun * Rstb0
-               Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-               Rst0_10 = Rst0_5*Rst0_5
-
-               ! I use here Rsth and rg2s because it is the one used in the 
-               ! expression of the force later on
-               Rsth     = Rst0   
-               Rsth_5   = Rst0_5 
-               Rsth_10  = Rst0_10
-               rg2s     = rg2s0
-           endif           
-
-           !--------------------------------------------------------------------
-           !-------------------------  M DWARF  --------------------------------
-           if (M_dwarf.eq.1) then 
-               ! radius of gyration, love number for dM
-               rg2s = rg2_dM
-               k2s   = k2st_dM
-               ! Dissipation for the dM
-               sigmast = sigma_dM
-               ! Value of initial rotation period for dM
-               Pst = Period_st
-
-               ! Initialization of the things that change: radius and radius of
-               ! gyration
-               if (crash.eq.0) then
-                   ! Determination of the radius at time = t_init
-                   call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time,Rstb0)
-               else
-                   ! Determination of the radius at time = t_crash
-                   call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash,Rstb0)
-               endif
-               Rst0    = Rsun * Rstb0
-               Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-               Rst0_10 = Rst0_5*Rst0_5
-
-               ! I use here Rsth because it is the one used in the expression of
-               ! the force later on
-               Rsth     = Rst0   
-               Rsth_5   = Rst0_5 
-               Rsth_10  = Rst0_10
-           endif
-
-           !--------------------------------------------------------------------
-           !----------------------  SUN LIKE STAR  -----------------------------
-           if (Sun_like_star.eq.1) then 
-               ! radius of gyration, love number for Sun-like star
-               rg2s = rg2_Sun
-               k2s   = k2st_Sun
-               ! Dissipation for the Sun-like star
-               sigmast = sigma_Sun
-               ! Value of initial rotation period for Sun-like star
-               Pst = Period_st
-
-               ! Initialization of the things that change: radius and radius of
-               ! gyration
-               if (crash.eq.0) then
-                   ! Determination of the radius at time = t_init
-                   call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time,Rstb0)
-               else
-                   ! Determination of the radius at time = t_crash
-                   call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash,Rstb0)
-               endif
-               Rst0    = minau * Rstb0
-               Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-               Rst0_10 = Rst0_5*Rst0_5
-
-               ! I use here Rsth because it is the one used in the expression of
-               ! the force later on
-               Rsth     = Rst0   
-               Rsth_5   = Rst0_5 
-               Rsth_10  = Rst0_10
-           endif
-
-           !--------------------------------------------------------------------
-           !-------------------------  JUPITER  --------------------------------
-           if (Jupiter_host.eq.1) then 
-               ! Dissipation for Jupiter 
-               sigmast = dissstar*2.d0*K2*k2delta_jup/(3.d0*Rst0*Rst0*Rst0*Rst0*Rst0)
+            !--------------------------------------------------------------------
+            !-----------------------  BROWN DWARF  ------------------------------
+            if (brown_dwarf.eq.1) then 
                 
-               ! Initialization of the things that change: radius and radius of
-               ! gyration and love number
-               if (crash.eq.0) then
-                   ! Determination of the radius at time = t_init
-                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb0)
-                   ! Determination of the radius of gyration at time = t_init
-                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s0)
-                   ! Determination of the love number at time = t_init
-                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time,k2s)
-               else
-                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb0)
-                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s0)
-                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash,k2s)
+                ! Here defining k2s and initial rotation period of BD
+                if ((m(1).le.0.0101*K2).and.(m(1).ge.0.0099*K2)) then
+                    iPs0 = 1
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0121*K2).and.(m(1).ge.0.0119*K2)) then
+                    iPs0 = 2
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0151*K2).and.(m(1).ge.0.0149*K2)) then
+                    iPs0 = 3
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then    
+                    iPs0 = 4
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0301*K2).and.(m(1).ge.0.0299*K2)) then
+                    iPs0 = 5
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0401*K2).and.(m(1).ge.0.0399*K2)) then
+                    iPs0 = 6
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0501*K2).and.(m(1).ge.0.0499*K2)) then
+                    iPs0 = 7
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0601*K2).and.(m(1).ge.0.0599*K2)) then
+                    iPs0 = 8
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0701*K2).and.(m(1).ge.0.0699*K2)) then
+                    iPs0 = 9
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0721*K2).and.(m(1).ge.0.0719*K2)) then
+                    iPs0 = 10
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0751*K2).and.(m(1).ge.0.0749*K2)) then
+                    iPs0 = 11
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                else if ((m(1).le.0.0801*K2).and.(m(1).ge.0.0799*K2)) then
+                    iPs0 = 12
+                    k2s  = k2st(iPs0)
+                    Pst0 = Ps0(iPs0)
+                endif
+                ! Dissipation for the BD
+                sigmast = sigma_BD
+
+                ! Initialization of the things that change: radius and radius of
+                ! gyration
+                if (crash.eq.0) then
+                    ! Determination of the radius at time = t_init
+                    call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb0)
+                    ! Determination of the radius of gyration at time = t_init
+                    call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
+                else
+                    ! Determination of the radius at time = t_crash
+                    call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb0)
+                    ! Determination of the radius of gyration at time = t_crash
+                    call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s0)
+                endif
+                Rst0    = Rsun * Rstb0
+                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
+                Rst0_10 = Rst0_5*Rst0_5
+
+                ! I use here Rsth and rg2s because it is the one used in the 
+                ! expression of the force later on
+                Rsth     = Rst0   
+                Rsth5    = Rst0_5 
+                Rsth10   = Rst0_10
+                rg2s     = rg2s0
+            endif           
+
+            !--------------------------------------------------------------------
+            !-------------------------  M DWARF  --------------------------------
+            if (M_dwarf.eq.1) then 
+                ! radius of gyration, love number for dM
+                rg2s = rg2_dM
+                k2s   = k2st_dM
+                ! Dissipation for the dM
+                sigmast = sigma_dM
+                ! Value of initial rotation period for dM
+                Pst = Period_st
+
+                ! Initialization of the things that change: radius and radius of
+                ! gyration
+                if (crash.eq.0) then
+                    ! Determination of the radius at time = t_init
+                    call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time,Rstb0)
+                else
+                    ! Determination of the radius at time = t_crash
+                    call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash,Rstb0)
+                endif
+                Rst0    = Rsun * Rstb0
+                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
+                Rst0_10 = Rst0_5*Rst0_5
+
+                ! I use here Rsth because it is the one used in the expression of
+                ! the force later on
+                Rsth     = Rst0   
+                Rsth5    = Rst0_5 
+                Rsth10   = Rst0_10
+            endif
+
+            !--------------------------------------------------------------------
+            !----------------------  SUN LIKE STAR  -----------------------------
+            if (Sun_like_star.eq.1) then 
+                ! radius of gyration, love number for Sun-like star
+                rg2s = rg2_Sun
+                k2s   = k2st_Sun
+                ! Dissipation for the Sun-like star
+                sigmast = sigma_Sun
+                ! Value of initial rotation period for Sun-like star
+                Pst = Period_st
+
+                ! Initialization of the things that change: radius and radius of
+                ! gyration
+                if (crash.eq.0) then
+                    ! Determination of the radius at time = t_init
+                    call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time,Rstb0)
+                else
+                    ! Determination of the radius at time = t_crash
+                    call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash,Rstb0)
+                endif
+                Rst0    = minau * Rstb0
+                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
+                Rst0_10 = Rst0_5*Rst0_5
+
+                ! I use here Rsth because it is the one used in the expression of
+                ! the force later on
+                Rsth     = Rst0   
+                Rsth5    = Rst0_5 
+                Rsth10   = Rst0_10
+            endif
+
+            !--------------------------------------------------------------------
+            !-------------------------  JUPITER  --------------------------------
+            if (Jupiter_host.eq.1) then 
+                ! Dissipation for Jupiter 
+                sigmast = dissstar*2.d0*K2*k2delta_jup/(3.d0*Rst0*Rst0*Rst0*Rst0*Rst0)
+                 
+                ! Initialization of the things that change: radius and radius of
+                ! gyration and love number
+                if (crash.eq.0) then
+                    ! Determination of the radius at time = t_init
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb0)
+                    ! Determination of the radius of gyration at time = t_init
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s0)
+                    ! Determination of the love number at time = t_init
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time,k2s)
+                else
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb0)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s0)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash,k2s)
+                endif
+                Rst0    = minau * Rstb0
+                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
+                Rst0_10 = Rst0_5*Rst0_5
+
+                ! I use here Rsth and rg2s because it is the one used in the expression of
+                ! the force later on
+                Rsth     = Rst0   
+                Rsth5    = Rst0_5 
+                Rsth10   = Rst0_10
+                rg2s     = rg2s0
+            endif    
+
+            !--------------------------------------------------------------------
+            !-----------------------  NON EVOLVING ------------------------------
+            if (Rscst.eq.1) then 
+                ! radius of gyration, love number when host body does not evolve
+                rg2s   = rg2_what
+                k2s   = k2st_what
+                ! Dissipation
+                sigmast = sigma_what
+                ! Value of initial rotation period
+                Pst = Period_st
+                ! Value of the radius 
+                Rsth   = radius_star*rsun
+                Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+                Rsth10 = Rsth5*Rsth5
+            endif
+
+            !--------------------------------------------------------------------
+            !-------------  Initialization of stellar spin (day-1)  -------------
+            if (crash.eq.0) then
+                if (brown_dwarf.eq.1) spin0 = 24.d0*TWOPI/Pst0 
+                if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1).or.(Rscst.eq.1)) spin0 = TWOPI/Pst 
+                if (Jupiter_host.eq.1) then 
+                    ! spinJup in s-1, conversion in day-1
+                    call spline_b_val(nptmss,timeJup*365.25-t_init,spinJup,time,spinb0)
+                    spin0 = spinb0*86400.d0
+                endif
+                spin(1,1) = 0.d0
+                spin(2,1) = 0.d0
+                spin(3,1) = spin0
+            else
+                spin(1,1) = rot_crash(1) 
+                spin(2,1) = rot_crash(2) 
+                spin(3,1) = rot_crash(3) 
+            endif
+
+
+            !--------------------------------------------------------------------
+            !--------------------------  PLANETS  -------------------------------
+            !--------------------------------------------------------------------
+
+            do j=2,ntid+1
+
+                !----------------------------------------------------------------
+                !------------------  Planetary radius in AU  --------------------
+
+                ! If planet_type eq 0, rocky planet with prescription mass-radius
+                if (planet_type(j-1).eq.0) Rp(j) = rearth*((0.0592d0*0.7d0+0.0975d0) &
+                     *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))**2+(0.2337d0*0.7d0+0.4938d0) &
+                     *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))+0.3102d0*0.7d0+0.7932d0)
+                ! If planet_type ne 0, value given by radius_p of tides_constants
+                if (planet_type(j-1).ne.0) Rp(j) = radius_p(j-1)*rearth
+
+                Rp5(j)  = Rp(j)*Rp(j)*Rp(j)*Rp(j)*Rp(j)
+                Rp10(j) = Rp5(j)*Rp5(j)
+
+                !----------------------------------------------------------------
+                !------------------  Planetary radius of gyration  --------------
+                !---------------  love number and fluid love number  ------------
+                !------------------  planetary dissipation  ---------------------
+
+                ! planet_type = 0 or 1: terrestrial planet
+                if ((planet_type(j-1).eq.0).or.(planet_type(j-1).eq.1)) then
+                    rg2p(j-1) = rg2p_terr
+                    k2p(j-1) = k2p_terr
+                    k2fp(j-1) = k2p_terr
+                    if (tides.eq.1) then
+                        k2pdeltap(j-1) = k2pdeltap_terr
+                        sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                    endif
+                endif
+
+                ! planet_type = 2: gas giant (Jupiter)
+                if (planet_type(j-1).eq.2) then
+                    rg2p(j-1) = rg2p_gg
+                    k2p(j-1) = k2p_gg
+                    k2fp(j-1) = k2p_gg
+                    if (tides.eq.1) then
+                        k2pdeltap(j-1) = k2pdeltap_gg
+                        sigmap(j) = dissplan(j-1)*sigma_gg
+                    endif
+                endif
+
+                ! planet_type = 3: you give the values you want in tides_constant_GR
+                if (planet_type(j-1).eq.3) then
+                    rg2p(j-1) = rg2p_what
+                    k2p(j-1) = k2p_what
+                    k2fp(j-1) = k2p_what
+                    if (tides.eq.1) then
+                        k2pdeltap(j-1) = k2pdeltap_what
+                        sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                    endif
+                endif
+            enddo
+
+            !--------------------------------------------------------------------
+            !------------  Initialization of spin of planets (day-1)  -----------
+            if (crash.eq.0) then
+                do j=2,ntid+1
+
+                    ! if pseudo_rot eq 0, then rotation period given in
+                    ! tides_constants
+                    if (pseudo_rot(j-1).eq.0) spinp0 = 24.d0*TWOPI/Pp0(j-1)
+
+                    ! Initially I need the orbital elements to compute
+                    ! pseudo-synchronization and initial direction of spins
+
+                    ! gm is in AU^3.day^-2
+                    gm = m(1) + m(j)
+                    call mco_x2el(gm,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),qq,ee,ii,pp,nn,ll)
+                    qa(j) = qq
+                    ea(j) = ee
+                    pa(j) = pp
+                    ia(j) = ii
+                    na(j) = nn 
+                    la(j) = ll
+
+                    ! if pseudo_rot eq 1, then pseudo-synchronization
+                    if (pseudo_rot(j-1).ne.0) then 
+                        spinp0 = pseudo_rot(j-1)*(1.d0+15.d0/2.d0*ea(j)**2+45.d0/8.d0*ea(j)**4+5.d0/16.d0*ea(j)**6) &
+                             *1.d0/(1.d0+3.d0*ea(j)**2+3.d0/8.d0*ea(j)**4)*1./(1-ea(j)**2)**1.5d0*sqrt(m(1)+m(j)) &
+                             *(qa(j)/(1.d0-ea(j)))**(-1.5d0)
+                    endif
+
+                    ! If the planet has no inclination
+                    if (ia(j).eq.0.0) then
+                        spin(1,j) = spinp0*sin(oblp(j-1))
+                        spin(2,j) = 0.0d0
+                        spin(3,j) = spinp0*cos(oblp(j-1)) 
+                    endif
+
+                    ! If the planet has an inclination, it's a bit more
+                    ! complicated
+                    if (ia(j).ne.0.0) then
+                        spin(1,j) = spinp0*(horb(1,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
+                        spin(2,j) = spinp0*(horb(2,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
+                        spin(3,j) = spinp0*cos(oblp(j-1)+ia(j)) 
+                    endif
+                enddo
+
+            else
+
+               spin(1,2) = rot_crashp1(1) !day-1
+               spin(2,2) = rot_crashp1(2) !day-1
+               spin(3,2) = rot_crashp1(3) !day-1 
+
+               if (ntid.ge.2) then
+                  spin(1,3) = rot_crashp2(1) !day-1
+                  spin(2,3) = rot_crashp2(2) !day-1
+                  spin(3,3) = rot_crashp2(3) !day-1
                endif
-               Rst0    = minau * Rstb0
-               Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-               Rst0_10 = Rst0_5*Rst0_5
 
-               ! I use here Rsth and rg2s because it is the one used in the expression of
-               ! the force later on
-               Rsth     = Rst0   
-               Rsth_5   = Rst0_5 
-               Rsth_10  = Rst0_10
-               rg2s     = rg2s0
-           endif    
-
-           !--------------------------------------------------------------------
-           !-----------------------  NON EVOLVING ------------------------------
-           if (Rscst.eq.1) then 
-               ! radius of gyration, love number when host body does not evolve
-               rg2s   = rg2_what
-               k2s   = k2st_what
-               ! Dissipation
-               sigmast = sigma_what
-               ! Value of initial rotation period
-               Pst = Period_st
-               ! Value of the radius 
-               Rsth   = radius_star*rsun
-               Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-               Rsth10 = Rsth5*Rsth5
-           endif
-
-           !--------------------------------------------------------------------
-           !-------------  Initialization of stellar spin (day-1)  -------------
-           if (crash.eq.0) then
-               if (brown_dwarf.eq.1) spin0 = 24.d0*TWOPI/Pst0 
-               if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1).or.(Rscst.eq.1)) spin0 = TWOPI/Pst 
-               if (Jupiter_host.eq.1) then 
-                   ! spinJup in s-1, conversion in day-1
-                   call spline_b_val(nptmss,timeJup*365.25-t_init,spinJup,time,spinb0)
-                   spin0 = spinb0*86400.d0
-               endif
-               spin(1,1) = 0.d0
-               spin(2,1) = 0.d0
-               spin(3,1) = spin0
-           else
-               spin(1,1) = rot_crash(1) 
-               spin(2,1) = rot_crash(2) 
-               spin(3,1) = rot_crash(3) 
-           endif
-
-
-           !--------------------------------------------------------------------
-           !--------------------------  PLANETS  -------------------------------
-           !--------------------------------------------------------------------
-
-           do j=2,ntid+1
-
-               !----------------------------------------------------------------
-               !------------------  Planetary radius in AU  --------------------
-
-               ! If planet_type eq 0, rocky planet with prescription mass-radius
-               if (planet_type(j-1).eq.0) Rp(j) = rearth*((0.0592d0*0.7d0+0.0975d0) &
-                    *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))**2+(0.2337d0*0.7d0+0.4938d0) &
-                    *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))+0.3102d0*0.7d0+0.7932d0)
-               ! If planet_type ne 0, value given by radius_p of tides_constants
-               if (planet_type(j-1).ne.0) Rp(j) = radius_p(j-1)*rearth
-
-               Rp5(j)  = Rp(j)*Rp(j)*Rp(j)*Rp(j)*Rp(j)
-               Rp10(j) = Rp5(j)*Rp5(j)
-
-               !----------------------------------------------------------------
-               !------------------  Planetary radius of gyration  --------------
-               !---------------  love number and fluid love number  ------------
-               !------------------  planetary dissipation  ---------------------
-
-               ! planet_type = 0 or 1: terrestrial planet
-               if ((planet_type(j-1).eq.0).or.(planet_type(j-1).eq.1)) then
-                   rg2p(j-1) = rg2p_terr
-                   k2p(j-1) = k2p_terr
-                   k2fp(j-1) = k2p_terr
-                   if (tides.eq.1) then
-                       k2pdeltap(j-1) = k2pdeltap_terr
-                       sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
-                   endif
+               if (ntid.ge.3) then
+                  spin(1,4) = rot_crashp3(1) !day-1
+                  spin(2,4) = rot_crashp3(2) !day-1
+                  spin(3,4) = rot_crashp3(3) !day-1
                endif
 
-               ! planet_type = 2: gas giant (Jupiter)
-               if (planet_type(j-1).eq.2) then
-                   rg2p(j-1) = rg2p_gg
-                   k2p(j-1) = k2p_gg
-                   k2fp(j-1) = k2p_gg
-                   if (tides.eq.1) then
-                       k2pdeltap(j-1) = k2pdeltap_gg
-                       sigmap(j) = dissplan(j-1)*sigma_gg
-                   endif
+               if (ntid.ge.4) then
+                  spin(1,5) = rot_crashp4(1) !day-1
+                  spin(2,5) = rot_crashp4(2) !day-1
+                  spin(3,5) = rot_crashp4(3) !day-1
                endif
 
-               ! planet_type = 3: you give the values you want in tides_constant_GR
-               if (planet_type(j-1).eq.3) then
-                   rg2p(j-1) = rg2p_what
-                   k2p(j-1) = k2p_what
-                   k2fp(j-1) = k2p_what
-                   if (tides.eq.1) then
-                       k2pdeltap(j-1) = k2pdeltap_what
-                       sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
-                   endif
+               if (ntid.ge.5) then
+                  spin(1,6) = rot_crashp5(1) !day-1
+                  spin(2,6) = rot_crashp5(2) !day-1
+                  spin(3,6) = rot_crashp5(3) !day-1
                endif
-           enddo
 
-           !--------------------------------------------------------------------
-           !------------  Initialization of spin of planets (day-1)  -----------
-           if (crash.eq.0) then
-               do j=2,ntid+1
-
-                   ! if pseudo_rot eq 0, then rotation period given in
-                   ! tides_constants
-                   if (pseudo_rot(j-1).eq.0) spinp0 = 24.d0*TWOPI/Pp0(j-1)
-
-                   ! Initially I need the orbital elements to compute
-                   ! pseudo-synchronization and initial direction of spins
-
-                   ! gm is in AU^3.day^-2
-                   gm = m(1) + m(j)
-                   call mco_x2el(gm,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),qq,ee,ii,pp,nn,ll)
-                   qa(j) = qq
-                   ea(j) = ee
-                   pa(j) = pp
-                   ia(j) = ii
-                   na(j) = nn 
-                   la(j) = ll
-
-                   ! if pseudo_rot eq 1, then pseudo-synchronization
-                   if (pseudo_rot(j-1).ne.0) then 
-                       spinp0 = pseudo_rot(j-1)*(1.d0+15.d0/2.d0*ea(j)**2+45.d0/8.d0*ea(j)**4+5.d0/16.d0*ea(j)**6) &
-                            *1.d0/(1.d0+3.d0*ea(j)**2+3.d0/8.d0*ea(j)**4)*1./(1-ea(j)**2)**1.5d0*sqrt(m(1)+m(j)) &
-                            *(qa(j)/(1.d0-ea(j)))**(-1.5d0)
-                   endif
-
-                   ! If the planet has no inclination
-                   if (ia(j).eq.0.0) then
-                       spin(1,j) = spinp0*sin(oblp(j-1))
-                       spin(2,j) = 0.0d0
-                       spin(3,j) = spinp0*cos(oblp(j-1)) 
-                   endif
-
-                   ! If the planet has an inclination, it's a bit more
-                   ! complicated
-                   if (ia(j).ne.0.0) then
-                       spin(1,j) = spinp0*(horb(1,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
-                       spin(2,j) = spinp0*(horb(2,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
-                       spin(3,j) = spinp0*cos(oblp(j-1)+ia(j)) 
-                   endif
-               enddo
-
-           else
-
-              spin(1,2) = rot_crashp1(1) !day-1
-              spin(2,2) = rot_crashp1(2) !day-1
-              spin(3,2) = rot_crashp1(3) !day-1 
-
-              if (ntid.ge.2) then
-                 spin(1,3) = rot_crashp2(1) !day-1
-                 spin(2,3) = rot_crashp2(2) !day-1
-                 spin(3,3) = rot_crashp2(3) !day-1
-              endif
-
-              if (ntid.ge.3) then
-                 spin(1,4) = rot_crashp3(1) !day-1
-                 spin(2,4) = rot_crashp3(2) !day-1
-                 spin(3,4) = rot_crashp3(3) !day-1
-              endif
-
-              if (ntid.ge.4) then
-                 spin(1,5) = rot_crashp4(1) !day-1
-                 spin(2,5) = rot_crashp4(2) !day-1
-                 spin(3,5) = rot_crashp4(3) !day-1
-              endif
-
-              if (ntid.ge.5) then
-                 spin(1,6) = rot_crashp5(1) !day-1
-                 spin(2,6) = rot_crashp5(2) !day-1
-                 spin(3,6) = rot_crashp5(3) !day-1
-              endif
-
-              if (ntid.ge.6) then
-                 spin(1,7) = rot_crashp6(1) !day-1
-                 spin(2,7) = rot_crashp6(2) !day-1
-                 spin(3,7) = rot_crashp6(3) !day-1
-              endif
-           endif
-           
-           initialization = 1
-       endif
+               if (ntid.ge.6) then
+                  spin(1,7) = rot_crashp6(1) !day-1
+                  spin(2,7) = rot_crashp6(2) !day-1
+                  spin(3,7) = rot_crashp6(3) !day-1
+               endif
+            endif
+            
+            initialization = 1
+        endif
+    endif   
 
     if ((time.ne.0.0).and.((tides.eq.1).or.(rot_flat.eq.1))) then 
        
