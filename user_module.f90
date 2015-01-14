@@ -202,6 +202,7 @@ module user_module
 
     ! Save data of radius of planet and star
     save Rst0,Rst0_5,Rst0_10
+    !save Rst0,Rst0_5,Rst0_10
     save Rp,Rp5,Rp10
 
     ! Save data for integration
@@ -278,6 +279,7 @@ module user_module
             timestep = time
         endif
     end do
+
     if (iwrite.eq.0) then 
         call write_simus_properties()
         iwrite = 1
@@ -303,9 +305,13 @@ module user_module
             vh_bf(3,j) = vh(3,j)
         enddo
     endif      
-    
+
+    ! Definition of factor used for GR force calculation
+    if (GenRel.eq.1) tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
+
+    ! If you have tides of rot flat
     if ((tides.eq.1).or.(rot_flat.eq.1)) then 
-    
+ 
         ! Calculation of orbital angular momentum
         ! horb (without mass) in AU^2/day
         do j=2,ntid+1
@@ -314,783 +320,877 @@ module user_module
             horb(3,j)  = (xh(1,j)*vh(2,j)-xh(2,j)*vh(1,j))    
             horbn(j) = sqrt(horb(1,j)*horb(1,j)+horb(2,j)*horb(2,j)+horb(3,j)*horb(3,j))
         end do
-              
-       ! Charge host body data 
-       ! + initial condition on host body spin, radius
-       
-       if (brown_dwarf.eq.1) then 
-           
-           if (flagrg2.eq.0) then    
-               sigmast = sigma_BD
-               ! Radius of BD's gyration data
-               open(1,file='rg2BD.dat')
-               do nptmss=1,37
-                   read(1,*,iostat=error)trg2(nptmss),rg1(nptmss),rg2(nptmss), &
-                        rg3(nptmss),rg4(nptmss),rg5(nptmss),rg6(nptmss),rg7(nptmss), &
-                        rg8(nptmss),rg9(nptmss),rg10(nptmss),rg11(nptmss),rg12(nptmss)
-               end do
+
+        !-----------------------------------------------------------------------
+        ! Charge host body data 
+        if (charge_data.eq.0) then
+
+            if (brown_dwarf.eq.1) then 
+                ! BD's radius of gyration
+                open(1,file='rg2BD.dat')
+                do nptmss=1,37
+                    read(1,*,iostat=error)trg2(nptmss),rg1(nptmss),rg2(nptmss), &
+                         rg3(nptmss),rg4(nptmss),rg5(nptmss),rg6(nptmss),rg7(nptmss), &
+                         rg8(nptmss),rg9(nptmss),rg10(nptmss),rg11(nptmss),rg12(nptmss)
+                end do
+
+                ! If BD's mass is equal to one of these values, charge radius... 
+                if ((m(1).le.0.0101*K2).and.(m(1).ge.0.0099*K2)) then
+                    do j = 1,37       
+                        rg2st(j) = rg1(j)
+                    enddo
+                    open(1,file='mass_10.0000.dat')
+                    nptmss = 715
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss = 1,715
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0121*K2).and.(m(1).ge.0.0119*K2)) then
+                    do j = 1,37       
+                       rg2st(j) = rg2(j)
+                    enddo
+                    open(1,file='mass_12.0000.dat')
+                    nptmss = 720
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss=1,720
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0151*K2).and.(m(1).ge.0.0149*K2)) then
+                    do j = 1,37       
+                       rg2st(j) = rg3(j)
+                    enddo
+                    open(1,file='mass_15.0000.dat')
+                    nptmss = 856
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss=1,856
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then
+                    do j = 1,37       
+                       rg2st(j) = rg4(j)
+                    enddo
+                    open(1,file='mass_20.0000.dat')
+                    nptmss = 864
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss =1,864
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0301*K2).and.(m(1).ge.0.0299*K2)) then
+                    do j = 1,37       
+                        rg2st(j) = rg5(j)
+                    enddo
+                    open(1,file='mass_30.0000.dat')
+                    nptmss = 878
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss=1,878
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0401*K2).and.(m(1).ge.0.0399*K2)) then
+                    do j = 1,37       
+                        rg2st(j) = rg6(j)
+                    enddo
+                    open(1,file='mass_40.0000.dat')
+                    nptmss = 886
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss = 1,886
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)  
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0501*K2).and.(m(1).ge.0.0499*K2)) then
+                    do j = 1,37       
+                        rg2st(j) = rg7(j)
+                    enddo
+                    open(1,file='mass_50.0000.dat')
+                    nptmss = 891
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss=1,891
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0601*K2).and.(m(1).ge.0.0599*K2)) then
+                    do j = 1,37       
+                        rg2st(j) = rg8(j)
+                    enddo
+                    open(1,file='mass_60.0000.dat')
+                    nptmss = 1663
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss=1,1663
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0701*K2).and.(m(1).ge.0.0699*K2)) then
+                    do j = 1,37       
+                        rg2st(j) = rg9(j)
+                    enddo
+                    open(1,file='mass_70.0000.dat')
+                    nptmss = 3585
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss =1,3585
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0721*K2).and.(m(1).ge.0.0719*K2)) then
+                    do j = 1,37       
+                        rg2st(j) = rg10(j)
+                    enddo
+                    open(1,file='mass_72.0000.dat')
+                    nptmss = 3721
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss =1,3721
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0751*K2).and.(m(1).ge.0.0749*K2)) then
+                    do j = 1,37       
+                        rg2st(j) = rg11(j)
+                    enddo
+                    open(1,file='mass_75.0000.dat')
+                    nptmss = 3903
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss =1,3903
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+
+                else if ((m(1).le.0.0801*K2).and.(m(1).ge.0.0799*K2)) then
+                    do j = 1,37       
+                        rg2st(j) = rg12(j)
+                    enddo
+                    open(1,file='mass_80.0000.dat')
+                    nptmss = 4161
+                    allocate( timeBD(nptmss) )
+                    allocate( radiusBD(nptmss))
+                    allocate( lumiBD(nptmss) )
+                    allocate( HZinGJ(nptmss) )
+                    allocate( HZoutGJ(nptmss))
+                    allocate( HZinb(nptmss)  )
+                    allocate( HZoutb(nptmss) )
+                    do nptmss =1,4161
+                       read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
+                            HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
+                    end do
+                    nptmss = nptmss - 1
+                endif
+            endif
+
+            ! Charge file of radius of Mdwarf 
+            if (M_dwarf.eq.1) then 
+                open(1,file='01Msun.dat')
+                do nptmss = 1,1065
+                    read(1,*,iostat=error)timedM(nptmss),radiusdM(nptmss)
+                end do
+                nptmss = nptmss - 1
+            endif
+
+            ! Charge file of radius of Sun-like star 
+            if (Sun_like_star.eq.1) then 
+                open(1,file='SRad_Spli_M-1_0000.dat')
+                do nptmss = 1,2003
+                    read(1,*,iostat=error)timestar(nptmss),radiusstar(nptmss),d2radiusstar(nptmss)
+                end do
+                nptmss = nptmss - 1
+            endif
+
+            ! Charge file of radius of Jupiter 
+            if (Jupiter_host.eq.1) then 
+                open(1,file='Jupiter.dat')
+                do nptmss = 1,4755
+                   read(1,*,iostat=error) timeJup(nptmss),radiusJup(nptmss) &
+                        ,k2Jup(nptmss),rg2Jup(nptmss),spinJup(nptmss)
+                end do
+                nptmss = nptmss - 1
+            endif
+ 
+            charge_data = 1
+       endif    
+
+       !------------------------------------------------------------------------
+       ! Initial condition on host body spin, radius
+       ! and then for planets
+
+       if (initialization.eq.0) then
+
+           !--------------------------------------------------------------------
+           !-------------------------  HOST BODY  ------------------------------
+           !--------------------------------------------------------------------
+
+           !--------------------------------------------------------------------
+           !-----------------------  BROWN DWARF  ------------------------------
+           if (brown_dwarf.eq.1) then 
                
-               ! If BD's mass is equal to one of these values, charge radius... 
+               ! Here defining k2s and initial rotation period of BD
                if ((m(1).le.0.0101*K2).and.(m(1).ge.0.0099*K2)) then
                    iPs0 = 1
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg1(j)
-                   enddo
-                   open(1,file='mass_10.0000.dat')
-
-                   nptmss = 715
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
-
-                   do nptmss = 1,715
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
                else if ((m(1).le.0.0121*K2).and.(m(1).ge.0.0119*K2)) then
                    iPs0 = 2
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg2(j)
-                   enddo
-                   open(1,file='mass_12.0000.dat')
-
-                   nptmss = 720
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
-
-                   do nptmss=1,720
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
                else if ((m(1).le.0.0151*K2).and.(m(1).ge.0.0149*K2)) then
                    iPs0 = 3
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg3(j)
-                   enddo
-                   open(1,file='mass_15.0000.dat')
- 
-                   nptmss = 856
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
- 
-                   do nptmss=1,856
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
-               else if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then
+               else if ((m(1).le.0.0201*K2).and.(m(1).ge.0.0199*K2)) then    
                    iPs0 = 4
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg4(j)
-                   enddo
-                   open(1,file='mass_20.0000.dat')
-            
-                   nptmss = 864
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
- 
-                   do nptmss =1,864
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
                else if ((m(1).le.0.0301*K2).and.(m(1).ge.0.0299*K2)) then
                    iPs0 = 5
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg5(j)
-                   enddo
-                   open(1,file='mass_30.0000.dat')
- 
-                   nptmss = 878
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
- 
-                   do nptmss=1,878
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
                else if ((m(1).le.0.0401*K2).and.(m(1).ge.0.0399*K2)) then
                    iPs0 = 6
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg6(j)
-                   enddo
-                   open(1,file='mass_40.0000.dat')
- 
-                   nptmss = 886
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
- 
-                   do nptmss = 1,886
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)  
-                   end do
-                   nptmss = nptmss - 1
                else if ((m(1).le.0.0501*K2).and.(m(1).ge.0.0499*K2)) then
                    iPs0 = 7
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg7(j)
-                   enddo
-                   open(1,file='mass_50.0000.dat')
- 
-                   nptmss = 891
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
-                   
-                   do nptmss=1,891
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
                else if ((m(1).le.0.0601*K2).and.(m(1).ge.0.0599*K2)) then
                    iPs0 = 8
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg8(j)
-                   enddo
-                   open(1,file='mass_60.0000.dat')
- 
-                   nptmss = 1663
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
- 
-                   do nptmss=1,1663
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
                else if ((m(1).le.0.0701*K2).and.(m(1).ge.0.0699*K2)) then
                    iPs0 = 9
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg9(j)
-                   enddo
-                   open(1,file='mass_70.0000.dat')
- 
-                   nptmss = 3585
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
- 
-                   do nptmss =1,3585
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
                else if ((m(1).le.0.0721*K2).and.(m(1).ge.0.0719*K2)) then
                    iPs0 = 10
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg10(j)
-                   enddo
-                   open(1,file='mass_72.0000.dat')
- 
-                   nptmss = 3721
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
- 
-                   do nptmss =1,3721
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
                else if ((m(1).le.0.0751*K2).and.(m(1).ge.0.0749*K2)) then
                    iPs0 = 11
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg11(j)
-                   enddo
-                   open(1,file='mass_75.0000.dat')
- 
-                   nptmss = 3903
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
- 
-                   do nptmss =1,3903
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
                else if ((m(1).le.0.0801*K2).and.(m(1).ge.0.0799*K2)) then
                    iPs0 = 12
                    k2s  = k2st(iPs0)
                    Pst0 = Ps0(iPs0)
-                   do j = 1,37       
-                      rg2st(j) = rg12(j)
-                   enddo
- 
-                   nptmss = 4161
-                   allocate( timeBD(nptmss) )
-                   allocate( radiusBD(nptmss))
-                   allocate( lumiBD(nptmss) )
-                   allocate( HZinGJ(nptmss) )
-                   allocate( HZoutGJ(nptmss))
-                   allocate( HZinb(nptmss)  )
-                   allocate( HZoutb(nptmss) )
- 
-                   open(1,file='mass_80.0000.dat')
-                   do nptmss =1,4161
-                      read(1,*,iostat=error)timeBD(nptmss),radiusBD(nptmss),lumiBD(nptmss), &
-                           HZinGJ(nptmss),HZoutGJ(nptmss),HZinb(nptmss),HZoutb(nptmss)
-                   end do
-                   nptmss = nptmss - 1
                endif
+               ! Dissipation for the BD
+               sigmast = sigma_BD
 
-               ! Initialization of stellar spin (day-1)
+               ! Initialization of the things that change: radius and radius of
+               ! gyration
                if (crash.eq.0) then
-                   spin0 = 24.d0*TWOPI/Pst0 
-                   spin(1,1) = 0.d0
-                   spin(2,1) = 0.d0
-                   spin(3,1) = spin0
+                   ! Determination of the radius at time = t_init
+                   call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb0)
+                   ! Determination of the radius of gyration at time = t_init
+                   call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
                else
-                   spin(1,1) = rot_crash(1) 
-                   spin(2,1) = rot_crash(2) 
-                   spin(3,1) = rot_crash(3) 
+                   ! Determination of the radius at time = t_crash
+                   call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb0)
+                   ! Determination of the radius of gyration at time = t_crash
+                   call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s0)
                endif
-               flagrg2=1
-           endif
-       endif
+               Rst0    = Rsun * Rstb0
+               Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
+               Rst0_10 = Rst0_5*Rst0_5
 
-       if (M_dwarf.eq.1) then 
-           rg2s = rg2_dM
-           if (flagrg2.eq.0) then
-               
-               ! Charge file of radius of Mdwarf 
-               open(1,file='01Msun.dat')
-               do nptmss = 1,1065
-                  read(1,*,iostat=error)timedM(nptmss),radiusdM(nptmss)
-               end do
-               nptmss = nptmss - 1
-               
-               ! Initialization of stellar spin (day-1)
-               if (crash.eq.0) then
-                   Pst = Period_st
-                   spin0 = TWOPI/Pst 
-                   spin(1,1) = 0.d0
-                   spin(2,1) = 0.d0
-                   spin(3,1) = spin0
-               else
-                   spin(1,1) = rot_crash(1)
-                   spin(2,1) = rot_crash(2)
-                   spin(3,1) = rot_crash(3)
-               end if
-               
+               ! I use here Rsth and rg2s because it is the one used in the 
+               ! expression of the force later on
+               Rsth     = Rst0   
+               Rsth_5   = Rst0_5 
+               Rsth_10  = Rst0_10
+               rg2s     = rg2s0
+           endif           
+
+           !--------------------------------------------------------------------
+           !-------------------------  M DWARF  --------------------------------
+           if (M_dwarf.eq.1) then 
+               ! radius of gyration, love number for dM
+               rg2s = rg2_dM
                k2s   = k2st_dM
+               ! Dissipation for the dM
                sigmast = sigma_dM
-               flagrg2 = 1
-           
-           endif
-       endif
-       if (Sun_like_star.eq.1) then 
-           rg2s = rg2_Sun
-           if (flagrg2.eq.0) then 
+               ! Value of initial rotation period for dM
+               Pst = Period_st
 
-               ! Charge file of radius of Mdwarf 
-               open(1,file='SRad_Spli_M-1_0000.dat')
-               do nptmss = 1,2003
-                   read(1,*,iostat=error)timestar(nptmss),radiusstar(nptmss),d2radiusstar(nptmss)
-               end do
-               nptmss = nptmss - 1
-               
-               ! Initialization Sun-like star spin (day-1)
+               ! Initialization of the things that change: radius and radius of
+               ! gyration
                if (crash.eq.0) then
-                   Pst = Period_st
-                   spin0 = TWOPI/Pst !day-1
-                   spin(1,1) = 0.d0
-                   spin(2,1) = 0.d0
-                   spin(3,1) = spin0
+                   ! Determination of the radius at time = t_init
+                   call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time,Rstb0)
                else
-                   spin(1,1) = rot_crash(1) !day-1
-                   spin(2,1) = rot_crash(2) !day-1
-                   spin(3,1) = rot_crash(3) !day-1
-               end if
+                   ! Determination of the radius at time = t_crash
+                   call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash,Rstb0)
+               endif
+               Rst0    = Rsun * Rstb0
+               Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
+               Rst0_10 = Rst0_5*Rst0_5
 
+               ! I use here Rsth because it is the one used in the expression of
+               ! the force later on
+               Rsth     = Rst0   
+               Rsth_5   = Rst0_5 
+               Rsth_10  = Rst0_10
+           endif
+
+           !--------------------------------------------------------------------
+           !----------------------  SUN LIKE STAR  -----------------------------
+           if (Sun_like_star.eq.1) then 
+               ! radius of gyration, love number for Sun-like star
+               rg2s = rg2_Sun
                k2s   = k2st_Sun
+               ! Dissipation for the Sun-like star
                sigmast = sigma_Sun
-               flagrg2 = 1
-           
+               ! Value of initial rotation period for Sun-like star
+               Pst = Period_st
+
+               ! Initialization of the things that change: radius and radius of
+               ! gyration
+               if (crash.eq.0) then
+                   ! Determination of the radius at time = t_init
+                   call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time,Rstb0)
+               else
+                   ! Determination of the radius at time = t_crash
+                   call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash,Rstb0)
+               endif
+               Rst0    = minau * Rstb0
+               Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
+               Rst0_10 = Rst0_5*Rst0_5
+
+               ! I use here Rsth because it is the one used in the expression of
+               ! the force later on
+               Rsth     = Rst0   
+               Rsth_5   = Rst0_5 
+               Rsth_10  = Rst0_10
            endif
-       endif
-       if (Jupiter_host.eq.1) then 
-           if (flagrg2.eq.0) then 
-              
-              ! Charge file of radius of Jupiter 
-              open(1,file='Jupiter.dat')
-              do nptmss = 1,4755
-                 read(1,*,iostat=error) timeJup(nptmss),radiusJup(nptmss) &
-                      ,k2Jup(nptmss),rg2Jup(nptmss),spinJup(nptmss)
-              end do
-              nptmss = nptmss - 1
-              if (crash.eq.0) then
-                 call spline_b_val(nptmss,timeJup*365.25-t_init,radiusJup,time,Rstb0)
-                 Rst0    =  minau * Rstb0
-                 ! spinJup is s-1
-                 call spline_b_val(nptmss,timeJup*365.25-t_init,spinJup,time,spinb0)
-                 ! Initialization of stellar spin (day-1)
-                 spin0 = spinb0*86400.d0
-                 spin(1,1) = 0.d0
-                 spin(2,1) = 0.d0
-                 spin(3,1) = spin0
-              else
-                 spin(1,1) = rot_crash(1)
-                 spin(2,1) = rot_crash(2)
-                 spin(3,1) = rot_crash(3)
-                 call spline_b_val(nptmss,timeJup*365.25-t_init,radiusJup,0.0d0,Rstb0)
-                 Rst0    = minau * Rstb0
-              end if
-              ! Give good value of sigmast
-              sigmast = dissstar*2.d0*K2*k2delta_jup/(3.d0*Rst0*Rst0*Rst0*Rst0*Rst0)
-              flagrg2 = 1
+
+           !--------------------------------------------------------------------
+           !-------------------------  JUPITER  --------------------------------
+           if (Jupiter_host.eq.1) then 
+               ! Dissipation for Jupiter 
+               sigmast = dissstar*2.d0*K2*k2delta_jup/(3.d0*Rst0*Rst0*Rst0*Rst0*Rst0)
+                
+               ! Initialization of the things that change: radius and radius of
+               ! gyration and love number
+               if (crash.eq.0) then
+                   ! Determination of the radius at time = t_init
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb0)
+                   ! Determination of the radius of gyration at time = t_init
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s0)
+                   ! Determination of the love number at time = t_init
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time,k2s)
+               else
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb0)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s0)
+                   call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash,k2s)
+               endif
+               Rst0    = minau * Rstb0
+               Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
+               Rst0_10 = Rst0_5*Rst0_5
+
+               ! I use here Rsth and rg2s because it is the one used in the expression of
+               ! the force later on
+               Rsth     = Rst0   
+               Rsth_5   = Rst0_5 
+               Rsth_10  = Rst0_10
+               rg2s     = rg2s0
+           endif    
+
+           !--------------------------------------------------------------------
+           !-----------------------  NON EVOLVING ------------------------------
+           if (Rscst.eq.1) then 
+               ! radius of gyration, love number when host body does not evolve
+               rg2s   = rg2_what
+               k2s   = k2st_what
+               ! Dissipation
+               sigmast = sigma_what
+               ! Value of initial rotation period
+               Pst = Period_st
+               ! Value of the radius 
+               Rsth   = radius_star*rsun
+               Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
+               Rsth10 = Rsth5*Rsth5
            endif
-       endif
-       if (Rscst.eq.1) then 
-           rg2s   = rg2_what
-           Rsth   = radius_star*rsun
-           Rst    = Rsth
-           Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-           Rst_5  = Rsth5
-           Rst0_5 = Rsth5
-           Rsth10 = Rsth5*Rsth5
-           Rst_10 = Rsth10
-           Rst0_10= Rsth10
-           if (flagrg2.eq.0) then
-              Pst = Period_st
-              k2s   = k2st_what
-              sigmast = sigma_what
-              if (crash.eq.0) then
-                 ! Initialization of stellar spin (day-1)
-                 spin0 = TWOPI/Pst !day-1
-                 spin(1,1) = 0.d0
-                 spin(2,1) = 0.d0
-                 spin(3,1) = spin0
-              else
-                 spin(1,1) = rot_crash(1) !day-1
-                 spin(2,1) = rot_crash(2) !day-1
-                 spin(3,1) = rot_crash(3) !day-1
+
+           !--------------------------------------------------------------------
+           !-------------  Initialization of stellar spin (day-1)  -------------
+           if (crash.eq.0) then
+               if (brown_dwarf.eq.1) spin0 = 24.d0*TWOPI/Pst0 
+               if ((M_dwarf.eq.1).or.(Sun_like_star.eq.1).or.(Rscst.eq.1)) spin0 = TWOPI/Pst 
+               if (Jupiter_host.eq.1) then 
+                   ! spinJup in s-1, conversion in day-1
+                   call spline_b_val(nptmss,timeJup*365.25-t_init,spinJup,time,spinb0)
+                   spin0 = spinb0*86400.d0
+               endif
+               spin(1,1) = 0.d0
+               spin(2,1) = 0.d0
+               spin(3,1) = spin0
+           else
+               spin(1,1) = rot_crash(1) 
+               spin(2,1) = rot_crash(2) 
+               spin(3,1) = rot_crash(3) 
+           endif
+
+
+           !--------------------------------------------------------------------
+           !--------------------------  PLANETS  -------------------------------
+           !--------------------------------------------------------------------
+
+           do j=2,ntid+1
+
+               !----------------------------------------------------------------
+               !------------------  Planetary radius in AU  --------------------
+
+               ! If planet_type eq 0, rocky planet with prescription mass-radius
+               if (planet_type(j-1).eq.0) Rp(j) = rearth*((0.0592d0*0.7d0+0.0975d0) &
+                    *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))**2+(0.2337d0*0.7d0+0.4938d0) &
+                    *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))+0.3102d0*0.7d0+0.7932d0)
+               ! If planet_type ne 0, value given by radius_p of tides_constants
+               if (planet_type(j-1).ne.0) Rp(j) = radius_p(j-1)*rearth
+
+               Rp5(j)  = Rp(j)*Rp(j)*Rp(j)*Rp(j)*Rp(j)
+               Rp10(j) = Rp5(j)*Rp5(j)
+
+               !----------------------------------------------------------------
+               !------------------  Planetary radius of gyration  --------------
+               !---------------  love number and fluid love number  ------------
+               !------------------  planetary dissipation  ---------------------
+
+               ! planet_type = 0 or 1: terrestrial planet
+               if ((planet_type(j-1).eq.0).or.(planet_type(j-1).eq.1)) then
+                   rg2p(j-1) = rg2p_terr
+                   k2p(j-1) = k2p_terr
+                   k2fp(j-1) = k2p_terr
+                   if (tides.eq.1) then
+                       k2pdeltap(j-1) = k2pdeltap_terr
+                       sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                   endif
+               endif
+
+               ! planet_type = 2: gas giant (Jupiter)
+               if (planet_type(j-1).eq.2) then
+                   rg2p(j-1) = rg2p_gg
+                   k2p(j-1) = k2p_gg
+                   k2fp(j-1) = k2p_gg
+                   if (tides.eq.1) then
+                       k2pdeltap(j-1) = k2pdeltap_gg
+                       sigmap(j) = dissplan(j-1)*sigma_gg
+                   endif
+               endif
+
+               ! planet_type = 3: you give the values you want in tides_constant_GR
+               if (planet_type(j-1).eq.3) then
+                   rg2p(j-1) = rg2p_what
+                   k2p(j-1) = k2p_what
+                   k2fp(j-1) = k2p_what
+                   if (tides.eq.1) then
+                       k2pdeltap(j-1) = k2pdeltap_what
+                       sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                   endif
+               endif
+           enddo
+
+           !--------------------------------------------------------------------
+           !------------  Initialization of spin of planets (day-1)  -----------
+           if (crash.eq.0) then
+               do j=2,ntid+1
+
+                   ! if pseudo_rot eq 0, then rotation period given in
+                   ! tides_constants
+                   if (pseudo_rot(j-1).eq.0) spinp0 = 24.d0*TWOPI/Pp0(j-1)
+
+                   ! Initially I need the orbital elements to compute
+                   ! pseudo-synchronization and initial direction of spins
+
+                   ! gm is in AU^3.day^-2
+                   gm = m(1) + m(j)
+                   call mco_x2el(gm,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),qq,ee,ii,pp,nn,ll)
+                   qa(j) = qq
+                   ea(j) = ee
+                   pa(j) = pp
+                   ia(j) = ii
+                   na(j) = nn 
+                   la(j) = ll
+
+                   ! if pseudo_rot eq 1, then pseudo-synchronization
+                   if (pseudo_rot(j-1).ne.0) then 
+                       spinp0 = pseudo_rot(j-1)*(1.d0+15.d0/2.d0*ea(j)**2+45.d0/8.d0*ea(j)**4+5.d0/16.d0*ea(j)**6) &
+                            *1.d0/(1.d0+3.d0*ea(j)**2+3.d0/8.d0*ea(j)**4)*1./(1-ea(j)**2)**1.5d0*sqrt(m(1)+m(j)) &
+                            *(qa(j)/(1.d0-ea(j)))**(-1.5d0)
+                   endif
+
+                   ! If the planet has no inclination
+                   if (ia(j).eq.0.0) then
+                       spin(1,j) = spinp0*sin(oblp(j-1))
+                       spin(2,j) = 0.0d0
+                       spin(3,j) = spinp0*cos(oblp(j-1)) 
+                   endif
+
+                   ! If the planet has an inclination, it's a bit more
+                   ! complicated
+                   if (ia(j).ne.0.0) then
+                       spin(1,j) = spinp0*(horb(1,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
+                       spin(2,j) = spinp0*(horb(2,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
+                       spin(3,j) = spinp0*cos(oblp(j-1)+ia(j)) 
+                   endif
+               enddo
+
+           else
+
+              spin(1,2) = rot_crashp1(1) !day-1
+              spin(2,2) = rot_crashp1(2) !day-1
+              spin(3,2) = rot_crashp1(3) !day-1 
+
+              if (ntid.ge.2) then
+                 spin(1,3) = rot_crashp2(1) !day-1
+                 spin(2,3) = rot_crashp2(2) !day-1
+                 spin(3,3) = rot_crashp2(3) !day-1
               endif
-              flagrg2 = 1
+
+              if (ntid.ge.3) then
+                 spin(1,4) = rot_crashp3(1) !day-1
+                 spin(2,4) = rot_crashp3(2) !day-1
+                 spin(3,4) = rot_crashp3(3) !day-1
+              endif
+
+              if (ntid.ge.4) then
+                 spin(1,5) = rot_crashp4(1) !day-1
+                 spin(2,5) = rot_crashp4(2) !day-1
+                 spin(3,5) = rot_crashp4(3) !day-1
+              endif
+
+              if (ntid.ge.5) then
+                 spin(1,6) = rot_crashp5(1) !day-1
+                 spin(2,6) = rot_crashp5(2) !day-1
+                 spin(3,6) = rot_crashp5(3) !day-1
+              endif
+
+              if (ntid.ge.6) then
+                 spin(1,7) = rot_crashp6(1) !day-1
+                 spin(2,7) = rot_crashp6(2) !day-1
+                 spin(3,7) = rot_crashp6(3) !day-1
+              endif
            endif
+           
+           initialization = 1
        endif
-    endif
-    
 
-    ! Initialization of many things concerning planets
-    if (ispin.eq.0) then 
-       do j=2,ntid+1
-          if ((tides.eq.1).or.(rot_flat.eq.1)) then 
-             ! Calculate the planets properties   
-             ! Planetary radius in AU (rearth in AU) Rocky planet
-             if (jupiter(j-1).eq.0) Rp(j) = rearth*((0.0592d0*0.7d0+0.0975d0) &
-                  *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))**2+(0.2337d0*0.7d0+0.4938d0) &
-                  *(dlog10(m(j))+dlog10(m2earth)-dlog10(K2))+0.3102d0*0.7d0+0.7932d0)
-             if (jupiter(j-1).ne.0) Rp(j) = radius_p(j-1)*rearth
-             Rp5(j)  = Rp(j)*Rp(j)*Rp(j)*Rp(j)*Rp(j)
-             Rp10(j) = Rp5(j)*Rp5(j)
-             ! k2p, rg2p, k2pdeltap and sigmap
-             ! Terrestrial for 0 and 1, gas giant for 2, what you want for 3
-             if ((jupiter(j-1).eq.0).or.(jupiter(j-1).eq.1)) then
-                k2p(j-1) = k2p_terr
-                k2fp(j-1) = k2p_terr
-                rg2p(j-1) = rg2p_terr
-                if (tides.eq.1) then
-                   k2pdeltap(j-1) = k2pdeltap_terr
-                   sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
-                endif
-             endif
-             if (jupiter(j-1).eq.2) then
-                k2p(j-1) = k2p_gg
-                k2fp(j-1) = k2p_gg
-                rg2p(j-1) = rg2p_gg
-                if (tides.eq.1) then
-                   k2pdeltap(j-1) = k2pdeltap_gg
-                   sigmap(j) = dissplan(j-1)*sigma_gg
-                endif
-             endif
-             if (jupiter(j-1).eq.3) then
-                k2p(j-1) = k2p_what
-                k2fp(j-1) = k2p_what
-                rg2p(j-1) = rg2p_what
-                if (tides.eq.1) then
-                   k2pdeltap(j-1) = k2pdeltap_what
-                   sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
-                endif
-             endif
-          endif
-          ! Factor used for GR force calculation
-          if (GenRel.eq.1) tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
-       enddo
-       if ((tides.eq.1).or.(rot_flat.eq.1)) then 
-          ! Initialization of spin planets
-          if (crash.eq.0) then
-             do j=2,ntid+1
-                gm = m(1) + m(j)
-                ! gm is in AU^3.day^-2
-                call mco_x2el(gm,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),qq,ee,ii,pp,nn,ll)
-                qa(j) = qq
-                ea(j) = ee
-                pa(j) = pp
-                ia(j) = ii
-                na(j) = nn 
-                la(j) = ll
-                ! Initialization of planetary spin (day-1)
-                if (pseudo_rot(j-1).eq.0) spinp0 = 24.d0*TWOPI/Pp0(j-1)
-                if (pseudo_rot(j-1).ne.0) then 
-                   spinp0 = pseudo_rot(j-1)*(1.d0+15.d0/2.d0*ea(j)**2+45.d0/8.d0*ea(j)**4+5.d0/16.d0*ea(j)**6) &
-                        *1.d0/(1.d0+3.d0*ea(j)**2+3.d0/8.d0*ea(j)**4)*1./(1-ea(j)**2)**1.5d0*sqrt(m(1)+m(j)) &
-                        *(qa(j)/(1.d0-ea(j)))**(-1.5d0)
-                endif
-                if (ia(j).eq.0.0) then
-                   spin(1,j) = spinp0*sin(oblp(j-1))
-                   spin(2,j) = 0.0d0
-                   spin(3,j) = spinp0*cos(oblp(j-1)) 
-                endif
-                if (ia(j).ne.0.0) then
-                   spin(1,j) = spinp0*(horb(1,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
-                   spin(2,j) = spinp0*(horb(2,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
-                   spin(3,j) = spinp0*cos(oblp(j-1)+ia(j)) 
-                endif
-             enddo
-          else
-             spin(1,1) = rot_crash(1) !day-1
-             spin(2,1) = rot_crash(2) !day-1
-             spin(3,1) = rot_crash(3) !day-1
-             spin(1,2) = rot_crashp1(1) !day-1
-             spin(2,2) = rot_crashp1(2) !day-1
-             spin(3,2) = rot_crashp1(3) !day-1 
-             if (ntid.ge.2) then
-                spin(1,3) = rot_crashp2(1) !day-1
-                spin(2,3) = rot_crashp2(2) !day-1
-                spin(3,3) = rot_crashp2(3) !day-1
-             endif
-             if (ntid.ge.3) then
-                spin(1,4) = rot_crashp3(1) !day-1
-                spin(2,4) = rot_crashp3(2) !day-1
-                spin(3,4) = rot_crashp3(3) !day-1
-             endif
-             if (ntid.ge.4) then
-                spin(1,5) = rot_crashp4(1) !day-1
-                spin(2,5) = rot_crashp4(2) !day-1
-                spin(3,5) = rot_crashp4(3) !day-1
-             endif
-             if (ntid.ge.5) then
-                spin(1,6) = rot_crashp5(1) !day-1
-                spin(2,6) = rot_crashp5(2) !day-1
-                spin(3,6) = rot_crashp5(3) !day-1
-             endif
-             if (ntid.ge.6) then
-                spin(1,7) = rot_crashp6(1) !day-1
-                spin(2,7) = rot_crashp6(2) !day-1
-                spin(3,7) = rot_crashp6(3) !day-1
-             endif
-          endif
-       endif
-    endif
+    if ((time.ne.0.0).and.((tides.eq.1).or.(rot_flat.eq.1))) then 
+       
+        ! Interpolation to have the host body radius (and radius of gyration for BDs)
+        ! Here Rst in AU, Rsth5; Rsth10
+        ! Rst0: value of Rs at previous time step (t-dt)
+        ! Rsth: value of Rs at middle of previous time step (t-0.5*dt=t-hdt)
+        ! Rst: value at present timestep (t)
+        ! Same notation for rg2s when it varies
+        ! k2s in case of a Jupiter host body is estimated at t-0.5*dt
 
-    if ((tides.eq.1).or.(rot_flat.eq.1)) then 
-       ! Interpolation to have the host body radius (and radius of gyration for BDs)
-       ! Here Rst in AU, Rsth5; Rsth10
-       if (brown_dwarf.eq.1) then
-          if (crash.eq.0) then
-             if (ispin.eq.0) then 
-                call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-dt,Rstb0)
-                Rst0    = Rsun * Rstb0
-                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-                Rst0_10 = Rst0_5*Rst0_5
-             endif
-             call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb)
-             Rst    = Rsun * Rstb
-             Rst_5  = Rst*Rst*Rst*Rst*Rst
-             Rst_10 = Rst_5*Rst_5
-             call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-dt*0.5d0,Rstbh)
-             Rsth = Rsun * Rstbh
-             Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-             Rsth10 = Rsth5*Rsth5             
-             call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-dt,rg2s0)
-             call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s)
-             call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-dt*0.5d0,rg2sh)
-          else
-             if (ispin.eq.0) then 
-                call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-dt,Rstb0)
-                Rst0    = Rsun * Rstb0
-                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-                Rst0_10 = Rst0_5*Rst0_5
-             endif
-             call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb)
-             Rst    = Rsun * Rstb
-             Rst_5  = Rst*Rst*Rst*Rst*Rst
-             Rst_10 = Rst_5*Rst_5
-             call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-dt*0.5d0,Rstbh)
-             Rsth   = Rsun * Rstbh
-             Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-             Rsth10 = Rsth5*Rsth5             
-             call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-dt,rg2s0)
-             call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s)
-             call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-dt*0.5d0,rg2sh)
-          endif
-       endif
-       if (M_dwarf.eq.1) then
-          if (crash.eq.0) then
-             if (ispin.eq.0) then 
-                call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time-dt,Rstb0)
-                Rst0    = Rsun * Rstb0
-                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-                Rst0_10 = Rst0_5*Rst0_5
-             endif
-             call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time,Rstb)
-             Rst    = Rsun * Rstb
-             Rst_5  = Rst*Rst*Rst*Rst*Rst
-             Rst_10 = Rst_5*Rst_5
-             call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time-dt*0.5d0,Rstbh)
-             Rsth   = Rsun * Rstbh
-             Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-             Rsth10 = Rsth5*Rsth5
-          else
-             if (ispin.eq.0) then 
-                call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash-dt,Rstb0)
-                Rst0    = Rsun * Rstb0
-                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-                Rst0_10 = Rst0_5*Rst0_5
-             endif
-             call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash,Rstb)
-             Rst    = Rsun * Rstb
-             Rst_5  = Rst*Rst*Rst*Rst*Rst
-             Rst_10 = Rst_5*Rst_5
-             call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash-dt*0.5d0,Rstbh)
-             Rsth = Rsun * Rstbh
-             Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-             Rsth10 = Rsth5*Rsth5
-          endif
-       endif
-       if (Sun_like_star.eq.1) then
-          if (crash.eq.0) then
-             if (ispin.eq.0) then 
-                call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time-dt,Rstb0)
-                Rst0    = minau * Rstb0
-                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-                Rst0_10 = Rst0_5*Rst0_5
-             endif
-             call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time,Rstb)
-             Rst    = minau * Rstb
-             Rst_5  = Rst*Rst*Rst*Rst*Rst
-             Rst_10 = Rst_5*Rst_5
-             call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time-dt*0.5d0,Rstbh)
-             Rsth   = minau * Rstbh
-             Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-             Rsth10 = Rsth5*Rsth5
-          else
-             if (ispin.eq.0) then 
-                call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash-dt,Rstb0)
-                Rst0    = minau * Rstb0
-                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-                Rst0_10 = Rst0_5*Rst0_5
-             endif
-             call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash,Rstb)
-             Rst    = minau * Rstb
-             Rst_5  = Rst*Rst*Rst*Rst*Rst
-             Rst_10 = Rst_5*Rst_5
-             call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash-dt*0.5d0,Rstbh)
-             Rsth   = minau * Rstbh
-             Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-             Rsth10 = Rsth5*Rsth5
-          endif
-       endif
-       if (Jupiter_host.eq.1) then
-          if (crash.eq.0) then
-             if (ispin.eq.0) then 
-                call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-dt,Rstb0)
-                Rst0    = minau * Rstb0
-                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-                Rst0_10 = Rst0_5*Rst0_5
-             endif
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb)
-             Rst    = minau * Rstb
-             Rst_5  = Rst*Rst*Rst*Rst*Rst
-             Rst_10 = Rst_5*Rst_5
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-dt*0.5d0,Rstbh)
-             Rsth   = minau * Rstbh
-             Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-             Rsth10 = Rsth5*Rsth5
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-dt,rg2s0)
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s)
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-dt*0.5d0,rg2sh)
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time-dt*0.5d0,k2s)
-          else
-             if (ispin.eq.0) then 
-                call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-dt,Rstb0)
-                Rst0    = minau * Rstb0
-                Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-                Rst0_10 = Rst0_5*Rst0_5
-             endif
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb)
-             Rst    = minau * Rstb
-             Rst_5  = Rst*Rst*Rst*Rst*Rst
-             Rst_10 = Rst_5*Rst_5
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-dt*0.5d0,Rstbh)
-             Rsth   = minau * Rstbh
-             Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
-             Rsth10 = Rsth5*Rsth5             
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-dt,rg2s0)
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s)
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-dt*0.5d0,rg2sh)
-             call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash-dt*0.5d0,k2s)
-          endif
-       endif
+        if (brown_dwarf.eq.1) then
+
+            if (crash.eq.0) then
+                if (ispin.eq.0) then 
+                    call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-dt,Rstb0)
+                endif
+                call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-hdt,Rstbh)
+                call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb)
+                
+                call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-dt,rg2s0)
+                call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-hdt,rg2sh)
+                call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s)
+            else
+                if (ispin.eq.0) then 
+                    call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-dt,Rstb0)
+                endif
+                call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-hdt,Rstbh)
+                call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb)
+
+                call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-dt,rg2s0)
+                call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-hdt,rg2sh)
+                call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s)
+            endif
+
+            Rst0   = Rsun * Rstb0
+            Rsth   = Rsun * Rstbh
+            Rst    = Rsun * Rstb
+        endif
+
+        if (M_dwarf.eq.1) then
+
+            if (crash.eq.0) then
+                if (ispin.eq.0) then 
+                    call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time-dt,Rstb0)
+                endif
+                call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time-hdt,Rstbh)
+                call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time,Rstb)
+            else
+                if (ispin.eq.0) then 
+                    call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash-dt,Rstb0)
+                endif
+                call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash-hdt,Rstbh)
+                call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash,Rstb)
+            endif
+
+            Rst0   = Rsun * Rstb0
+            Rsth   = Rsun * Rstbh
+            Rst    = Rsun * Rstb
+        endif
+
+        if (Sun_like_star.eq.1) then
+
+            if (crash.eq.0) then
+                if (ispin.eq.0) then 
+                    call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time-dt,Rstb0)
+                endif
+                call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time-hdt,Rstbh)
+                call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time,Rstb)
+            else
+                if (ispin.eq.0) then 
+                    call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash-dt,Rstb0)
+                endif
+                call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash-hdt,Rstbh)
+                call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash,Rstb)
+            endif
+
+            Rst0   = minau * Rstb0
+            Rsth   = minau * Rstbh
+            Rst    = minau * Rstb
+        endif
+
+        if (Jupiter_host.eq.1) then
+
+            if (crash.eq.0) then
+                if (ispin.eq.0) then 
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-dt,Rstb0)
+                endif
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-hdt,Rstbh)
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb)
+                
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-dt,rg2s0)
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-hdt,rg2sh)
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s)
+                
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time-hdt,k2s)
+            else
+                if (ispin.eq.0) then 
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-dt,Rstb0)
+                endif
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb)
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-hdt,Rstbh)
+                
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-dt,rg2s0)
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s)
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-hdt,rg2sh)
+                
+                call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash-hdt,k2s)
+            endif
+
+            Rst0   = minau * Rstb0
+            Rsth   = minau * Rstbh
+            Rst    = minau * Rstb
+        endif
+
+        if (Rscst.eq.1) then
+            Rst0   = radius_star*rsun
+            Rsth   = Rst0
+            Rst    = Rst0
+        endif
+
+        Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
+        Rst0_10 = Rst0_5*Rst0_5
+        Rsth5   = Rsth*Rsth*Rsth*Rsth*Rsth
+        Rsth10  = Rsth5*Rsth5
+        Rst_5   = Rst*Rst*Rst*Rst*Rst
+        Rst_10  = Rst_5*Rst_5
     endif
 
-    if ((time.ne.0).and.(flagbug.ge.2)) then
 
-       ! **************************************************************
-       ! **************  Runge Kutta integration  *********************
-       ! ********************** of spin *******************************
-       ! **************************************************************
+
+    ! **************************************************************
+    ! **************  Runge Kutta integration  *********************
+    ! ********************** of spin *******************************
+    ! **************************************************************
+
+
+    !if ((time.ne.0).and.(flagbug.ge.2)) then
+    if (time.ne.0) then
+
        
        if ((tides.eq.1).or.(rot_flat.eq.1)) then       
-          do j=2,ntid+1
-             do kk=1,3
-!~                 ! interpolation of value of x at time-dt/2 
-!~                 call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-!~                      ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-dt*0.5d0,xintermediate)
-!~                 xh_int(kk,j) = xintermediate
-!~                 ! interpolation of value of v at time-dt/2 
-!~                 call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-!~                      ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-dt*0.5d0,xintermediate)
-!~                 vh_int(kk,j) = xintermediate
-                ! Interpolation for Runge-Kutta steps on first half of timestep
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(1))*dt*0.5d0,xintermediate)
-                xh_1_rk2(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(1))*dt*0.5d0,xintermediate)
-                vh_1_rk2(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(2))*dt*0.5d0,xintermediate)
-                xh_1_rk3(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(2))*dt*0.5d0,xintermediate)
-                vh_1_rk3(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(3))*dt*0.5d0,xintermediate)
-                xh_1_rk4(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(3))*dt*0.5d0,xintermediate)
-                vh_1_rk4(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-dt*0.5d0,xintermediate)
-                xh_1_rk5(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-dt*0.5d0,xintermediate)
-                vh_1_rk5(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(5))*dt*0.5d0,xintermediate)
-                xh_1_rk6(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(5))*dt*0.5d0,xintermediate)
-                vh_1_rk6(kk,j) = xintermediate
-                ! Interpolation for Runge-Kutta steps on second half of timestep
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(1))*dt*0.5d0,xintermediate)
-                xh_2_rk2(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(1))*dt*0.5d0,xintermediate)
-                vh_2_rk2(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(2))*dt*0.5d0,xintermediate)
-                xh_2_rk3(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(2))*dt*0.5d0,xintermediate)
-                vh_2_rk3(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(3))*dt*0.5d0,xintermediate)
-                xh_2_rk4(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(3))*dt*0.5d0,xintermediate)
-                vh_2_rk4(kk,j) = xintermediate
-                xh_2_rk5(kk,j) = xh(kk,j)
-                vh_2_rk5(kk,j) = vh(kk,j)
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(5))*dt*0.5d0,xintermediate)
-                xh_2_rk6(kk,j) = xintermediate
-                call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                     ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(5))*dt*0.5d0,xintermediate)
-                vh_2_rk6(kk,j) = xintermediate
-             enddo
+           do j=2,ntid+1
 
-             
-          enddo   
-       
+               do kk=1,3
+                   ! Interpolation for Runge-Kutta steps on first half of timestep
+
+                   ! Interpolation of position for 1st RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(1))*hdt,xintermediate)
+                   xh_1_rk2(kk,j) = xintermediate
+                   ! Interpolation of velocity for 1st RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(1))*hdt,xintermediate)
+                   vh_1_rk2(kk,j) = xintermediate
+                   ! Interpolation of position for 2nd RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(2))*hdt,xintermediate)
+                   xh_1_rk3(kk,j) = xintermediate
+                   ! Interpolation of velocity for 2nd RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(2))*hdt,xintermediate)
+                   vh_1_rk3(kk,j) = xintermediate
+                   ! Interpolation of position for 3rd RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(3))*hdt,xintermediate)
+                   xh_1_rk4(kk,j) = xintermediate
+                   ! Interpolation of velocity for 3rd RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(3))*hdt,xintermediate)
+                   vh_1_rk4(kk,j) = xintermediate
+                   ! Interpolation of position for 4th RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-hdt,xintermediate)
+                   xh_1_rk5(kk,j) = xintermediate
+                   ! Interpolation of velocity for 4th RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-hdt,xintermediate)
+                   vh_1_rk5(kk,j) = xintermediate
+                   ! Interpolation of position for 5th RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(5))*hdt,xintermediate)
+                   xh_1_rk6(kk,j) = xintermediate
+                   ! Interpolation of velocity for 5th RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(5))*hdt,xintermediate)
+                   vh_1_rk6(kk,j) = xintermediate
+
+                   ! Interpolation for Runge-Kutta steps on second half of timestep
+
+                   ! Interpolation of position for 1st RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(1))*hdt,xintermediate)
+                   xh_2_rk2(kk,j) = xintermediate
+                   ! Interpolation of velocity for 1st RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(1))*hdt,xintermediate)
+                   vh_2_rk2(kk,j) = xintermediate
+                   ! Interpolation of position for 2nd RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(2))*hdt,xintermediate)
+                   xh_2_rk3(kk,j) = xintermediate
+                   ! Interpolation of velocity for 2nd RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(2))*hdt,xintermediate)
+                   vh_2_rk3(kk,j) = xintermediate
+                   ! Interpolation of position for 3rd RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(3))*hdt,xintermediate)
+                   xh_2_rk4(kk,j) = xintermediate
+                   ! Interpolation of velocity for 3rd RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(3))*hdt,xintermediate)
+                   vh_2_rk4(kk,j) = xintermediate
+                   ! Interpolation of position for 4th RK parameter 
+                   xh_2_rk5(kk,j) = xh(kk,j)
+                   ! Interpolation of velocity for 4th RK parameter 
+                   vh_2_rk5(kk,j) = vh(kk,j)
+                   ! Interpolation of position for 5th RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(5))*hdt,xintermediate)
+                   xh_2_rk6(kk,j) = xintermediate
+                   ! Interpolation of velocity for 5th RK parameter 
+                   call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
+                        ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(5))*hdt,xintermediate)
+                   vh_2_rk6(kk,j) = xintermediate
+               enddo
+           enddo   
+
+
+
           ! **************************************************************
           ! STAR spin evolution
           ! **************************************************************
@@ -1098,6 +1198,7 @@ module user_module
           ! First half of timestep (zoyotte)
           ! Torque at last time step t=time-dt
           ! Calculation of Runge-kutta factor k1
+
           do j=2,ntid+1 
              if (tides.eq.1) then
                 call Torque_tides_s (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
@@ -2153,106 +2254,124 @@ module user_module
 
           enddo
        endif
-       
-       
-       !****************************************************************
-       !******************** final accelerations ***********************
-       !****************************************************************
+    endif 
 
-       ! Initialization of the sum of all the force along x, y and z
-       ! For tides
-       sum_F_tid_x = 0.0d0
-       sum_F_tid_y = 0.0d0
-       sum_F_tid_z = 0.0d0
-       ! For rotation
-       sum_F_rot_x = 0.0d0
-       sum_F_rot_y = 0.0d0
-       sum_F_rot_z = 0.0d0
-       ! For GR
-       sum_F_GR_x = 0.0d0
-       sum_F_GR_y = 0.0d0
-       sum_F_GR_z = 0.0d0
+    !---------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
+    !------------------------  ACCELERATIONS -----------------------------------
+    !---------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
-       do j=2,ntid+1 
-          ! The acceleration in the heliocentric coordinate is not just F/m,
-          ! it must be the reduced mass, and the effect of other planets on the
-          ! star also has to be removed, see in article for explanation
-          !
-          ! I'm using spin_bf to derive acceleration 
-          if (tides.eq.1) then 
-             tmp  = K2/m(j)
-             tmp1 = K2/m(1) 
-             call F_tides_tot (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin_bf &
-                  ,Rsth5,Rsth10,k2s,dissstar,sigmast &
-                  ,Rp5(j),Rp10(j),k2fp(j-1),k2p(j-1),sigmap(j) &
-                  ,j,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
-             a1(1,j) = tmp*F_tid_tot_x
-             a1(2,j) = tmp*F_tid_tot_y
-             a1(3,j) = tmp*F_tid_tot_z
-             sum_F_tid_x = sum_F_tid_x + tmp1*F_tid_tot_x
-             sum_F_tid_y = sum_F_tid_y + tmp1*F_tid_tot_y
-             sum_F_tid_z = sum_F_tid_z + tmp1*F_tid_tot_z
-             call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin_bf &
-                  ,Rp10(j),sigmap(j),j,tmp_dEdt)
-             dEdt(j) = tmp_dEdt
-          else
-             a1(1,j) = 0.0d0
-             a1(2,j) = 0.0d0
-             a1(3,j) = 0.0d0
-          endif
-          if (rot_flat.eq.1) then 
-             tmp  = K2/m(j)
-             tmp1 = K2/m(1) 
-             call F_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin_bf &
-                  ,Rsth5,k2s,Rp5(j),k2fp(j-1) &
-                  ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
-             a3(1,j) = tmp*F_rot_tot_x
-             a3(2,j) = tmp*F_rot_tot_y
-             a3(3,j) = tmp*F_rot_tot_z
-             sum_F_rot_x = sum_F_rot_x + tmp1*F_rot_tot_x
-             sum_F_rot_y = sum_F_rot_y + tmp1*F_rot_tot_y
-             sum_F_rot_z = sum_F_rot_z + tmp1*F_rot_tot_z
-          else
-             a3(1,j) = 0.0d0
-             a3(2,j) = 0.0d0
-             a3(3,j) = 0.0d0
-          endif
-          if (GenRel.eq.1) then 
-             tmp  = K2/m(j)
-             tmp1 = K2/m(1) 
-             call F_GenRel (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j) &
-                  ,tintin(j),C2,j,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
-             a2(1,j) = tmp*F_GR_tot_x
-             a2(2,j) = tmp*F_GR_tot_y
-             a2(3,j) = tmp*F_GR_tot_z
-             sum_F_GR_x = sum_F_GR_x + tmp1*F_GR_tot_x
-             sum_F_GR_y = sum_F_GR_y + tmp1*F_GR_tot_y
-             sum_F_GR_z = sum_F_GR_z + tmp1*F_GR_tot_z
-          else
-             a2(1,j) = 0.0d0
-             a2(2,j) = 0.0d0
-             a2(3,j) = 0.0d0
-          endif
-       end do
-       do j=2,ntid+1
-          a(1,j) = tides*(a1(1,j)+sum_F_tid_x)+rot_flat*(a3(1,j)+sum_F_rot_x)+GenRel*(a2(1,j)+sum_F_GR_x)
-          a(2,j) = tides*(a1(2,j)+sum_F_tid_y)+rot_flat*(a3(2,j)+sum_F_rot_y)+GenRel*(a2(2,j)+sum_F_GR_y)
-          a(3,j) = tides*(a1(3,j)+sum_F_tid_z)+rot_flat*(a3(3,j)+sum_F_rot_z)+GenRel*(a2(3,j)+sum_F_GR_z)
-       end do
-    endif
-    
-    ! Write stuff
+
+    ! Initialization of the sum of all the force along x, y and z
+    ! For tides
+    sum_F_tid_x = 0.0d0
+    sum_F_tid_y = 0.0d0
+    sum_F_tid_z = 0.0d0
+    ! For rotation
+    sum_F_rot_x = 0.0d0
+    sum_F_rot_y = 0.0d0
+    sum_F_rot_z = 0.0d0
+    ! For GR
+    sum_F_GR_x = 0.0d0
+    sum_F_GR_y = 0.0d0
+    sum_F_GR_z = 0.0d0
+
+    ! The acceleration in the heliocentric coordinate is not just F/m,
+    ! it must be the reduced mass, and the effect of other planets on the
+    ! star also has to be removed, see in article for explanation
+
+    do j=2,ntid+1 
+
+        if (tides.eq.1) then 
+            tmp  = K2/m(j)
+            tmp1 = K2/m(1) 
+            ! Here I call subroutine that gives the total tidal force
+            call F_tides_tot (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+                 ,Rsth5,Rsth10,k2s,dissstar,sigmast &
+                 ,Rp5(j),Rp10(j),k2fp(j-1),k2p(j-1),sigmap(j) &
+                 ,j,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
+            ! Calculation of the acceleration     
+            a1(1,j) = tmp*F_tid_tot_x
+            a1(2,j) = tmp*F_tid_tot_y
+            a1(3,j) = tmp*F_tid_tot_z
+            ! Calculation of the sum of the acceleration of all planets
+            sum_F_tid_x = sum_F_tid_x + tmp1*F_tid_tot_x
+            sum_F_tid_y = sum_F_tid_y + tmp1*F_tid_tot_y
+            sum_F_tid_z = sum_F_tid_z + tmp1*F_tid_tot_z
+            ! Here I calculate the instantaneous energy loss, but maybe I don't
+            ! need to do that each time step as Sergi pointed out
+            call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+                 ,Rp10(j),sigmap(j),j,tmp_dEdt)
+            dEdt(j) = tmp_dEdt
+        else
+            a1(1,j) = 0.0d0
+            a1(2,j) = 0.0d0
+            a1(3,j) = 0.0d0
+        endif
+
+        if (rot_flat.eq.1) then 
+            tmp  = K2/m(j)
+            tmp1 = K2/m(1) 
+            ! Here I call subroutine that gives the total rotation flattening
+            ! induced force
+            call F_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin &
+                 ,Rsth5,k2s,Rp5(j),k2fp(j-1) &
+                 ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
+            ! Calculation of the acceleration     
+            a2(1,j) = tmp*F_rot_tot_x
+            a2(2,j) = tmp*F_rot_tot_y
+            a2(3,j) = tmp*F_rot_tot_z
+            ! Calculation of the sum of the acceleration of all planets
+            sum_F_rot_x = sum_F_rot_x + tmp1*F_rot_tot_x
+            sum_F_rot_y = sum_F_rot_y + tmp1*F_rot_tot_y
+            sum_F_rot_z = sum_F_rot_z + tmp1*F_rot_tot_z
+        else
+            a2(1,j) = 0.0d0
+            a2(2,j) = 0.0d0
+            a2(3,j) = 0.0d0
+        endif
+
+        if (GenRel.eq.1) then 
+            tmp  = K2/m(j)
+            tmp1 = K2/m(1) 
+            ! Here I call subroutine that gives the total GR force
+            call F_GenRel (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j) &
+                 ,tintin(j),C2,j,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
+            ! Calculation of the acceleration     
+            a3(1,j) = tmp*F_GR_tot_x
+            a3(2,j) = tmp*F_GR_tot_y
+            a3(3,j) = tmp*F_GR_tot_z
+            ! Calculation of the sum of the acceleration of all planets
+            sum_F_GR_x = sum_F_GR_x + tmp1*F_GR_tot_x
+            sum_F_GR_y = sum_F_GR_y + tmp1*F_GR_tot_y
+            sum_F_GR_z = sum_F_GR_z + tmp1*F_GR_tot_z
+        else
+            a3(1,j) = 0.0d0
+            a3(2,j) = 0.0d0
+            a3(3,j) = 0.0d0
+        endif
+    end do
+
+    ! Sum of all accelerations
+    do j=2,ntid+1
+        a(1,j) = tides*(a1(1,j)+sum_F_tid_x)+rot_flat*(a2(1,j)+sum_F_rot_x)+GenRel*(a3(1,j)+sum_F_GR_x)
+        a(2,j) = tides*(a1(2,j)+sum_F_tid_y)+rot_flat*(a2(2,j)+sum_F_rot_y)+GenRel*(a3(2,j)+sum_F_GR_y)
+        a(3,j) = tides*(a1(3,j)+sum_F_tid_z)+rot_flat*(a2(3,j)+sum_F_rot_z)+GenRel*(a3(3,j)+sum_F_GR_z)
+    end do
+
+    ! Write spin and stuff
     if ((tides.eq.1).or.(rot_flat.eq.1)) then          
        if (time.ge.timestep) then
           open(13, file="spins.out", access="append")
-          write(13,'(8("  ", es19.9e3))') time/365.25d0,spin_bf(1,1),spin_bf(2,1),spin_bf(3,1),Rst/rsun,rg2s,k2s,sigmast
+          write(13,'(8("  ", es19.9e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
           close(13)
           do j=2,ntid+1
              write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
              write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
              write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
              open(13, file=planet_spin_filename, access='append')
-             write(13,'(6("  ", es19.9e3))') time/365.25d0,spin_bf(1,j),spin_bf(2,j),spin_bf(3,j),Rp(j)/rsun,rg2p(j-1)
+             write(13,'(6("  ", es19.9e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
              close(13)
              open(13, file=planet_orbt_filename, access='append')
              write(13,'(5("  ", es19.9e3))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
@@ -2265,734 +2384,727 @@ module user_module
           timestep = timestep + output*365.25d0
        endif
     endif    
-    
+
+    ! Attribution of new values (correponding at t) to old one (t-dt)
     do j=2,ntid+1 
-       xh_bf2(1,j) = xh_bf(1,j)
-       xh_bf2(2,j) = xh_bf(2,j)
-       xh_bf2(3,j) = xh_bf(3,j)
-       vh_bf2(1,j) = vh_bf(1,j)
-       vh_bf2(2,j) = vh_bf(2,j)
-       vh_bf2(3,j) = vh_bf(3,j)
-       xh_bf(1,j) = xh(1,j)
-       xh_bf(2,j) = xh(2,j)
-       xh_bf(3,j) = xh(3,j)
-       vh_bf(1,j) = vh(1,j)
-       vh_bf(2,j) = vh(2,j)
-       vh_bf(3,j) = vh(3,j)
-       spin_bf(1,j) = spin(1,j)
-       spin_bf(2,j) = spin(2,j)
-       spin_bf(3,j) = spin(3,j)
+        xh_bf2(1,j) = xh_bf(1,j)
+        xh_bf2(2,j) = xh_bf(2,j)
+        xh_bf2(3,j) = xh_bf(3,j)
+        vh_bf2(1,j) = vh_bf(1,j)
+        vh_bf2(2,j) = vh_bf(2,j)
+        vh_bf2(3,j) = vh_bf(3,j)
+        xh_bf(1,j) = xh(1,j)
+        xh_bf(2,j) = xh(2,j)
+        xh_bf(3,j) = xh(3,j)
+        vh_bf(1,j) = vh(1,j)
+        vh_bf(2,j) = vh(2,j)
+        vh_bf(3,j) = vh(3,j)
+        spin_bf(1,j) = spin(1,j)
+        spin_bf(2,j) = spin(2,j)
+        spin_bf(3,j) = spin(3,j)
     enddo
+
     spin_bf(1,1) = spin(1,1)
     spin_bf(2,1) = spin(2,1)
     spin_bf(3,1) = spin(3,1)
+
     Rst0    = Rst
     Rst0_5  = Rst_5
     Rst0_10 = Rst_10
 
+    ! flagbug increases of each timestep, I don't know if I will keep that
     flagbug = flagbug+1
+    ! ispin is called once only during the whole time of the simulation
     ispin=1
 
     return
   end subroutine mfo_user
 
+
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  ! -----------------------------  SUBROUTINES ---------------------------------
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+
+
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !----------------------------   GENERAL ONES  -------------------------------- 
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+
+
+  !-----------------------------------------------------------------------------
+  ! Conversion from democratic heliocentric to heliocentric coordinates
   subroutine conversion_dh2h (nbod,nbig,m,x,v,xh,vh)
-
-    implicit none
-
-    ! Input/Output
-    integer,intent(in) :: nbod,nbig
-    real(double_precision),intent(in) :: m(nbod),x(3,nbod),v(3,nbod)
-
-    real(double_precision), intent(out) :: xh(3,nbod),vh(3,nbod)
-
-    ! Local
-    integer :: j
-    real(double_precision) :: mvsum(3),temp
-
-    !------------------------------------------------------------------------------
-
-    mvsum(1) = 0.d0
-    mvsum(2) = 0.d0
-    mvsum(3) = 0.d0
-
-    do j = 2, nbod
-       xh(1,j) = x(1,j)
-       xh(2,j) = x(2,j)
-       xh(3,j) = x(3,j)
-       mvsum(1) = mvsum(1)  +  m(j) * v(1,j)
-       mvsum(2) = mvsum(2)  +  m(j) * v(2,j)
-       mvsum(3) = mvsum(3)  +  m(j) * v(3,j)
-    end do
-
-    temp = 1.d0 / m(1)
-    mvsum(1) = temp * mvsum(1)
-    mvsum(2) = temp * mvsum(2)
-    mvsum(3) = temp * mvsum(3)
-    !~ 
-    do j = 2, nbod
-       vh(1,j) = v(1,j) + mvsum(1)
-       vh(2,j) = v(2,j) + mvsum(2)
-       vh(3,j) = v(3,j) + mvsum(3)
-    end do
-
-    !------------------------------------------------------------------------------
-
-    return
-  end subroutine conversion_dh2h
  
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,nbig
+      real(double_precision),intent(in) :: m(nbod),x(3,nbod),v(3,nbod)
+      real(double_precision), intent(out) :: xh(3,nbod),vh(3,nbod)
+      ! Local
+      integer :: j
+      real(double_precision) :: mvsum(3),temp
+      !-------------------------------------------------------------------------
+      mvsum(1) = 0.d0
+      mvsum(2) = 0.d0
+      mvsum(3) = 0.d0
+      do j = 2, nbod
+          xh(1,j) = x(1,j)
+          xh(2,j) = x(2,j)
+          xh(3,j) = x(3,j)
+          mvsum(1) = mvsum(1)  +  m(j) * v(1,j)
+          mvsum(2) = mvsum(2)  +  m(j) * v(2,j)
+          mvsum(3) = mvsum(3)  +  m(j) * v(3,j)
+      end do
+      temp = 1.d0 / m(1)
+      mvsum(1) = temp * mvsum(1)
+      mvsum(2) = temp * mvsum(2)
+      mvsum(3) = temp * mvsum(3)
+      do j = 2, nbod
+          vh(1,j) = v(1,j) + mvsum(1)
+          vh(2,j) = v(2,j) + mvsum(2)
+          vh(3,j) = v(3,j) + mvsum(3)
+      end do
+      !-------------------------------------------------------------------------
+      return
+  end subroutine conversion_dh2h
+
+  !-----------------------------------------------------------------------------
   ! Calculation of r(j), powers of r(j)
   ! Distances in AU
   subroutine rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-
-    implicit none
-
-    ! Input/Output
-    real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision), intent(out) :: r_2,rr,r_4,r_5,r_7,r_8
-    !------------------------------------------------------------------------------
-    r_2 = xhx*xhx+xhy*xhy+xhz*xhz
-    rr  = sqrt(r_2)
-    r_4 = r_2*r_2
-    r_5 = r_4*rr
-    r_7 = r_4*r_2*rr
-    r_8 = r_4*r_4
-    !------------------------------------------------------------------------------
-    return
+ 
+      implicit none
+      ! Input/Output
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision), intent(out) :: r_2,rr,r_4,r_5,r_7,r_8
+      !-------------------------------------------------------------------------
+      r_2 = xhx*xhx+xhy*xhy+xhz*xhz
+      rr  = sqrt(r_2)
+      r_4 = r_2*r_2
+      r_5 = r_4*rr
+      r_7 = r_4*r_2*rr
+      r_8 = r_4*r_4
+      !-------------------------------------------------------------------------
+      return
   end subroutine rad_power
-  
+
+  !-----------------------------------------------------------------------------
   ! Calculation of velocity vv(j), radial velocity vrad(j)
   ! velocities in AU/day
   subroutine velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
 
-    implicit none
-
-    ! Input/Output
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision), intent(out) :: v_2,norm_v,v_rad
-    
-    !------------------------------------------------------------------------------
-    v_2    = vhx*vhx+vhy*vhy+vhz*vhz
-    norm_v = sqrt(v_2)         
-    ! Radial velocity
-    v_rad  = (xhx*vhx+xhy*vhy+xhz*vhz)/sqrt(xhx*xhx+xhy*xhy+xhz*xhz)
-    !------------------------------------------------------------------------------
-    return
+      implicit none
+      ! Input/Output
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision), intent(out) :: v_2,norm_v,v_rad
+      !-------------------------------------------------------------------------
+      v_2    = vhx*vhx+vhy*vhy+vhz*vhz
+      norm_v = sqrt(v_2)         
+      ! Radial velocity
+      v_rad  = (xhx*vhx+xhy*vhy+xhz*vhz)/sqrt(xhx*xhx+xhy*xhy+xhz*xhz)
+      !-------------------------------------------------------------------------
+      return
   end subroutine velocities
-   
+
+  !-----------------------------------------------------------------------------
   ! Calculation of r scalar spin
   subroutine r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspin)
-
-    implicit none
-
-    ! Input/Output
-    real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision),intent(in) :: spinx,spiny,spinz
-
-    real(double_precision), intent(out) :: rscalspin
-
-    !------------------------------------------------------------------------------
-    rscalspin = xhx*spinx+xhy*spiny+xhz*spinz
-    !------------------------------------------------------------------------------
-
-    return
+ 
+      implicit none
+      ! Input/Output
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: spinx,spiny,spinz
+      real(double_precision), intent(out) :: rscalspin
+      !-------------------------------------------------------------------------
+      rscalspin = xhx*spinx+xhy*spiny+xhz*spinz
+      !-------------------------------------------------------------------------
+      return
   end subroutine r_scal_spin
-  
+
+  !-----------------------------------------------------------------------------
   ! Calculation of the norm square of the spin
   subroutine norm_spin_2 (spinx,spiny,spinz,normspin_2)
 
-    implicit none
-
-    ! Input/Output
-    real(double_precision),intent(in) :: spinx,spiny,spinz
-
-    real(double_precision), intent(out) :: normspin_2
-
-    ! Local
-    ! none
-
-    !------------------------------------------------------------------------------
-    normspin_2 = spinx*spinx+spiny*spiny+spinz*spinz
-    !------------------------------------------------------------------------------
-
-    return
+      implicit none
+      ! Input/Output
+      real(double_precision),intent(in) :: spinx,spiny,spinz
+      real(double_precision), intent(out) :: normspin_2
+      !-------------------------------------------------------------------------
+      normspin_2 = spinx*spinx+spiny*spiny+spinz*spinz
+      !-------------------------------------------------------------------------
+      return
   end subroutine norm_spin_2
   
-  !*******************************************
-  !**************** TIDES ********************
-  !*******************************************
-  ! ****************** tidal force *********************
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !-----------------------------  TIDES  ---------------------------------------
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+
+  !-----------------------------------------------------------------------------
+  !--------------------------  tidal force  ------------------------------------
   ! Ftidr in Msun.AU.day-2
   ! Ftidos and Ftidop in Msun.AU.day-1
   ! K2 = G in AU^3.Msun-1.day-2
-  
+
+  !-----------------------------------------------------------------------------
   ! Conservative part of the radial tidal force
   subroutine F_tides_rad_cons (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-       ,R_star5,k2_star &
-       ,R_plan5,k2f_plan,j,Ftidr_cons)
+         ,R_star5,k2_star &
+         ,R_plan5,k2f_plan,j,Ftidr_cons)
 
-    use physical_constant
-    implicit none
-
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: R_star5,k2_star
-    real(double_precision),intent(in) :: R_plan5,k2f_plan
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: Ftidr_cons
-
-    ! Local
-!~     integer :: j
-    real(double_precision) :: tmp1,tmp2
-    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
-
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    tmp1 = m(1)*m(1)
-    tmp2 = m(j)*m(j)
-    Ftidr_cons =  -3.0d0/(r_7*K2) &
-              *(tmp2*R_star5*k2_star+tmp1*R_plan5*k2f_plan)
-                          
-    !------------------------------------------------------------------------------
-    return
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision),intent(in) :: R_star5,k2_star
+      real(double_precision),intent(in) :: R_plan5,k2f_plan
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: Ftidr_cons
+      ! Local
+      real(double_precision) :: tmp1,tmp2
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
+      !-------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+      tmp1 = m(1)*m(1)
+      tmp2 = m(j)*m(j)
+      Ftidr_cons =  -3.0d0/(r_7*K2) &
+                *(tmp2*R_star5*k2_star+tmp1*R_plan5*k2f_plan)
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_tides_rad_cons
-  
+
+  !-----------------------------------------------------------------------------
   ! Dissipative part of the radial tidal force
   subroutine F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-       ,R_star10,diss_star,sigma_star &
-       ,R_plan10,sigma_plan,j,Ftidr_diss)
+         ,R_star10,diss_star,sigma_star &
+         ,R_plan10,sigma_plan,j,Ftidr_diss)
 
-    use physical_constant
-    implicit none
-
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
-    real(double_precision),intent(in) :: R_plan10,sigma_plan
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: Ftidr_diss
-
-    ! Local
-!~     integer :: j
-    real(double_precision) :: tmp,tmp1,tmp2
-    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
-
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
-    tmp  = K2*K2
-    tmp1 = m(1)*m(1)
-    tmp2 = m(j)*m(j)
-    Ftidr_diss =  - 13.5d0*v_rad/(r_8*tmp) &
-              *(tmp2*R_star10*diss_star*sigma_star &
-              +tmp1*R_plan10*sigma_plan)              
-    !------------------------------------------------------------------------------
-    return
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
+      real(double_precision),intent(in) :: R_plan10,sigma_plan
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: Ftidr_diss
+      ! Local
+      real(double_precision) :: tmp,tmp1,tmp2
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+      !-------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+      call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
+      tmp  = K2*K2
+      tmp1 = m(1)*m(1)
+      tmp2 = m(j)*m(j)
+      Ftidr_diss =  - 13.5d0*v_rad/(r_8*tmp) &
+                *(tmp2*R_star10*diss_star*sigma_star &
+                +tmp1*R_plan10*sigma_plan)              
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_tides_rad_diss
-  
+
+  !-----------------------------------------------------------------------------
   ! Sum of the dissipative and conservative part of the radial force
   subroutine F_tides_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-       ,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,Ftidr)
+         ,R_star5,R_star10,k2_star,diss_star,sigma_star &
+         ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,Ftidr)
 
-    use physical_constant
-    implicit none
-
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: R_star5,R_star10,k2_star,diss_star,sigma_star
-    real(double_precision),intent(in) :: R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: Ftidr
-
-    ! Local
-!~     integer :: j
-    real(double_precision) :: Ftidr_cons,Ftidr_diss
-
-    !------------------------------------------------------------------------------
-    call F_tides_rad_cons (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-       ,R_star5,k2_star &
-       ,R_plan5,k2f_plan,j,Ftidr_cons)
-    call F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-       ,R_star10,diss_star,sigma_star &
-       ,R_plan10,sigma_plan,j,Ftidr_diss)
-
-    Ftidr = Ftidr_cons + Ftidr_diss            
-    !------------------------------------------------------------------------------
-    return
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision),intent(in) :: diss_star,sigma_star,sigma_plan
+      real(double_precision),intent(in) :: R_star5,R_star10,k2_star
+      real(double_precision),intent(in) :: R_plan5,R_plan10,k2f_plan,k2_plan
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: Ftidr
+      ! Local
+      real(double_precision) :: Ftidr_cons,Ftidr_diss
+      !-------------------------------------------------------------------------
+      call F_tides_rad_cons (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
+         ,R_star5,k2_star &
+         ,R_plan5,k2f_plan,j,Ftidr_cons)
+      call F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
+         ,R_star10,diss_star,sigma_star &
+         ,R_plan10,sigma_plan,j,Ftidr_diss)
+ 
+      Ftidr = Ftidr_cons + Ftidr_diss            
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_tides_rad
+
+  !-----------------------------------------------------------------------------
+  ! Orthoradial part of the force due to stellar tides
+  subroutine F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10,diss_star &
+         ,sigma_star,j,Ftidos)
   
-  subroutine F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10,diss_star,sigma_star,j,Ftidos)
-  
-  use physical_constant
-  implicit none
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: Ftidos
+      ! Local
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
+      !-------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: Ftidos
-
-    ! Local
-    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
-
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    Ftidos = 4.5d0*m(j)*m(j)*R_star10*diss_star*sigma_star/(K2*K2*r_7)
-    !------------------------------------------------------------------------------
-    return
+      Ftidos = 4.5d0*m(j)*m(j)*R_star10*diss_star*sigma_star/(K2*K2*r_7)
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_tides_ortho_star 
-    
-  subroutine F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
+
+  !-----------------------------------------------------------------------------
+  ! Orthoradial part of the force due to planetary tides
+  subroutine F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan &
+         ,j,Ftidop)
   
-  use physical_constant
-  implicit none
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: R_plan10,sigma_plan
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: Ftidop
+      ! Local
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
+      !-------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision),intent(in) :: R_plan10,sigma_plan
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: Ftidop
-
-    ! Local
-    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
-
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    Ftidop = 4.5d0*m(1)*m(1)*R_plan10*sigma_plan/(K2*K2*r_7)
-    !------------------------------------------------------------------------------
-    return
+      Ftidop = 4.5d0*m(1)*m(1)*R_plan10*sigma_plan/(K2*K2*r_7)
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_tides_ortho_plan   
-  
+
+  !-----------------------------------------------------------------------------
+  ! Torque on planet created by star 
   subroutine Torque_tides_p (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spinx,spiny,spinz &
        ,R_plan10,sigma_plan,j,N_tid_px,N_tid_py,N_tid_pz)
   
-  implicit none
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision),intent(in) :: spinx,spiny,spinz
+      real(double_precision),intent(in) :: R_plan10,sigma_plan
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: N_tid_px,N_tid_py,N_tid_pz
+      ! Local
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,rscalspin,Ftidop
+      !-------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+      call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspin)
+      call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)        
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: spinx,spiny,spinz
-    real(double_precision),intent(in) :: R_plan10,sigma_plan
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: N_tid_px,N_tid_py,N_tid_pz
-
-    ! Local
-    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,rscalspin,Ftidop
-
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspin)
-    call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)        
-    N_tid_px = Ftidop*(rr*spinx-rscalspin*xhx/rr-1.0d0/rr*(xhy*vhz-xhz*vhy))
-    N_tid_py = Ftidop*(rr*spiny-rscalspin*xhy/rr-1.0d0/rr*(xhz*vhx-xhx*vhz))
-    N_tid_pz = Ftidop*(rr*spinz-rscalspin*xhz/rr-1.0d0/rr*(xhx*vhy-xhy*vhx))              
-    !------------------------------------------------------------------------------
-    return
+      N_tid_px = Ftidop*(rr*spinx-rscalspin*xhx/rr-1.0d0/rr*(xhy*vhz-xhz*vhy))
+      N_tid_py = Ftidop*(rr*spiny-rscalspin*xhy/rr-1.0d0/rr*(xhz*vhx-xhx*vhz))
+      N_tid_pz = Ftidop*(rr*spinz-rscalspin*xhz/rr-1.0d0/rr*(xhx*vhy-xhy*vhx))              
+      !-------------------------------------------------------------------------
+      return
   end subroutine Torque_tides_p 
-  
+
+  !-----------------------------------------------------------------------------
+  ! Torque on star created by planet 
   subroutine Torque_tides_s (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spinx,spiny,spinz &
        ,R_star10,diss_star,sigma_star,j,N_tid_sx,N_tid_sy,N_tid_sz)
   
-  implicit none
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision),intent(in) :: spinx,spiny,spinz
+      real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: N_tid_sx,N_tid_sy,N_tid_sz
+      ! Local
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,rscalspin,Ftidos
+      !-------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+      call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspin)
+      call F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10,diss_star &
+              ,sigma_star,j,Ftidos)          
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: spinx,spiny,spinz
-    real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: N_tid_sx,N_tid_sy,N_tid_sz
-
-    ! Local
-    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,rscalspin,Ftidos
-
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspin)
-    call F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10,diss_star,sigma_star,j,Ftidos)          
-    N_tid_sx = Ftidos*(rr*spinx-rscalspin*xhx/rr-1.0d0/rr*(xhy*vhz-xhz*vhy))
-    N_tid_sy = Ftidos*(rr*spiny-rscalspin*xhy/rr-1.0d0/rr*(xhz*vhx-xhx*vhz))
-    N_tid_sz = Ftidos*(rr*spinz-rscalspin*xhz/rr-1.0d0/rr*(xhx*vhy-xhy*vhx))              
-    !------------------------------------------------------------------------------
-    return
+      N_tid_sx = Ftidos*(rr*spinx-rscalspin*xhx/rr-1.0d0/rr*(xhy*vhz-xhz*vhy))
+      N_tid_sy = Ftidos*(rr*spiny-rscalspin*xhy/rr-1.0d0/rr*(xhz*vhx-xhx*vhz))
+      N_tid_sz = Ftidos*(rr*spinz-rscalspin*xhz/rr-1.0d0/rr*(xhx*vhy-xhy*vhx))              
+      !-------------------------------------------------------------------------
+      return
   end subroutine Torque_tides_s 
-  
-  subroutine F_tides_tot (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
 
-    use physical_constant
-    implicit none
-
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: R_star5,R_star10,k2_star,diss_star,sigma_star
-    real(double_precision),intent(in) :: R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan
-    real(double_precision),intent(in) :: m(nbod),spin(3,10)
-    
-    real(double_precision), intent(out) :: F_tid_tot_x,F_tid_tot_y,F_tid_tot_z
-
-    ! Local
-!~     integer :: j
-    real(double_precision) :: tmp1,r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
-    real(double_precision) :: Ftidr,Ftidos,Ftidop
-
-    !------------------------------------------------------------------------------
-    
-    call F_tides_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
+  !-----------------------------------------------------------------------------
+  ! Total tidal force
+  subroutine F_tides_tot (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin &
        ,R_star5,R_star10,k2_star,diss_star,sigma_star &
-       ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,Ftidr)
-    call F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10,diss_star,sigma_star,j,Ftidos)
-    call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
-    call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    
-    !tmp  = K2/m(j)
-    tmp1 = Ftidr+(Ftidos+Ftidop)*v_rad/rr
-    F_tid_tot_x = (tmp1*xhx/rr &
-         + Ftidos/rr*(spin(2,1)*xhz-spin(3,1)*xhy-vhx) &
-         + Ftidop/rr*(spin(2,j)*xhz-spin(3,j)*xhy-vhx))
-    F_tid_tot_y = (tmp1*xhy/rr &
-         + Ftidos/rr*(spin(3,1)*xhx-spin(1,1)*xhz-vhy) &
-         + Ftidop/rr*(spin(3,j)*xhx-spin(1,j)*xhz-vhy))
-    F_tid_tot_z = (tmp1*xhz/rr &
-         + Ftidos/rr*(spin(1,1)*xhy-spin(2,1)*xhx-vhz) &
-         + Ftidop/rr*(spin(1,j)*xhy-spin(2,j)*xhx-vhz)) 
-         
-    !------------------------------------------------------------------------------
-    return
+       ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j &
+       ,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
+
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision),intent(in) :: diss_star,sigma_star,sigma_plan
+      real(double_precision),intent(in) :: R_star5,R_star10,k2_star
+      real(double_precision),intent(in) :: R_plan5,R_plan10,k2f_plan,k2_plan
+      real(double_precision),intent(in) :: m(nbod),spin(3,10)
+      real(double_precision), intent(out) :: F_tid_tot_x,F_tid_tot_y,F_tid_tot_z
+      ! Local
+      real(double_precision) :: tmp1,r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+      real(double_precision) :: Ftidr,Ftidos,Ftidop
+      !-------------------------------------------------------------------------
+      call F_tides_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
+         ,R_star5,R_star10,k2_star,diss_star,sigma_star &
+         ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,Ftidr)
+      call F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10 &
+         ,diss_star,sigma_star,j,Ftidos)
+      call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
+      call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+
+      tmp1 = Ftidr+(Ftidos+Ftidop)*v_rad/rr
+
+      F_tid_tot_x = (tmp1*xhx/rr &
+           + Ftidos/rr*(spin(2,1)*xhz-spin(3,1)*xhy-vhx) &
+           + Ftidop/rr*(spin(2,j)*xhz-spin(3,j)*xhy-vhx))
+      F_tid_tot_y = (tmp1*xhy/rr &
+           + Ftidos/rr*(spin(3,1)*xhx-spin(1,1)*xhz-vhy) &
+           + Ftidop/rr*(spin(3,j)*xhx-spin(1,j)*xhz-vhy))
+      F_tid_tot_z = (tmp1*xhz/rr &
+           + Ftidos/rr*(spin(1,1)*xhy-spin(2,1)*xhx-vhz) &
+           + Ftidop/rr*(spin(1,j)*xhy-spin(2,j)*xhx-vhz)) 
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_tides_tot
-  
+
+  !-----------------------------------------------------------------------------
   ! Instantaneous energy loss dE/dt due to tides
   ! in Msun.AU^2.day^(-3)
   subroutine dEdt_tides (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin &
-       ,R_plan10,sigma_plan,j,dEdt)
+         ,R_plan10,sigma_plan,j,dEdt)
 
-    use physical_constant
-    implicit none
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision),intent(in) :: R_plan10,sigma_plan
+      real(double_precision),intent(in) :: m(nbod),spin(3,10)
+      real(double_precision), intent(out) :: dEdt
+      ! Local
+      real(double_precision) :: tmp,tmp1
+      real(double_precision) :: Ftidr_diss,Ftidop
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+      real(double_precision) :: spinx,spiny,spinz,N_tid_px,N_tid_py,N_tid_pz
+      !-------------------------------------------------------------------------
+      call F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
+         ,0.0d0,0.0d0,0.0d0 &
+         ,R_plan10,sigma_plan,j,Ftidr_diss)
+      call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
+      spinx = spin(1,j)
+      spiny = spin(2,j)
+      spinz = spin(3,j)
+      call Torque_tides_p (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spinx,spiny,spinz &
+         ,R_plan10,sigma_plan,j,N_tid_px,N_tid_py,N_tid_pz)
+      call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: R_plan10,sigma_plan
-    real(double_precision),intent(in) :: m(nbod),spin(3,10)
-    
-    real(double_precision), intent(out) :: dEdt
+      tmp = Ftidop/rr
+      tmp1 = 1.d0/rr*(Ftidr_diss + tmp*v_rad)
 
-    ! Local
-!~     integer :: j
-    real(double_precision) :: tmp,tmp1
-    real(double_precision) :: Ftidr_diss,Ftidop
-	real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
-    real(double_precision) :: spinx,spiny,spinz,N_tid_px,N_tid_py,N_tid_pz
-
-    !------------------------------------------------------------------------------
-    call F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-       ,0.0d0,0.0d0,0.0d0 &
-       ,R_plan10,sigma_plan,j,Ftidr_diss)
-    call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
-    spinx = spin(1,j)
-    spiny = spin(2,j)
-    spinz = spin(3,j)
-    call Torque_tides_p (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spinx,spiny,spinz &
-       ,R_plan10,sigma_plan,j,N_tid_px,N_tid_py,N_tid_pz)
-    call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    
-    tmp = Ftidop/rr
-    tmp1 = 1.d0/rr*(Ftidr_diss + tmp*v_rad)
-
-    dEdt = -(tmp1*(xhx*vhx+xhy*vhy+xhz*vhz) &
-			+ tmp*((spiny*xhz-spinz*xhy-vhx)*vhx &
-				  +(spinz*xhx-spinx*xhz-vhy)*vhy &
-				  +(spinx*xhy-spiny*xhx-vhz)*vhz)) &
-            + m(1)/(m(1)+m(j))*(N_tid_px*spinx+N_tid_py*spiny+N_tid_pz*spinz)
-         
-    !------------------------------------------------------------------------------
-    return
+      dEdt = -(tmp1*(xhx*vhx+xhy*vhy+xhz*vhz) &
+          + tmp*((spiny*xhz-spinz*xhy-vhx)*vhx &
+                 +(spinz*xhx-spinx*xhz-vhy)*vhy &
+                 +(spinx*xhy-spiny*xhx-vhz)*vhz)) &
+              + m(1)/(m(1)+m(j))*(N_tid_px*spinx+N_tid_py*spiny+N_tid_pz*spinz)
+      !-------------------------------------------------------------------------
+      return
   end subroutine dEdt_tides
-  
-  !********************************************
-  !************** ROTATION ********************
-  !********************************************
-  ! ****************** force due to rotational deformation ********************* 
-  ! J2 of planet and star: Jpi and Jsi  (no unit)
+
+
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !---------------------------  ROTATION  --------------------------------------
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+
   ! Cpi in Msun.AU^5.day-2
   ! Frot_r in Msun.day-2
   ! Frot_os and Frot_op in Msun.AU.day-1
-  
-  subroutine F_rot_rad (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan,j,Frot_r)
 
-    use physical_constant
-    implicit none
+  !-----------------------------------------------------------------------------
+  ! Radial part of the rotation flattening induced force
+  subroutine F_rot_rad (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5 &
+         ,k2_plan,j,Frot_r)
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: R_star5,k2_star,R_plan5,k2_plan
-    real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision),intent(in) :: spin(3,10)
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: Frot_r
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: R_star5,k2_star,R_plan5,k2_plan
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: spin(3,10)
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: Frot_r
+      ! Local
+      real(double_precision) :: Cpi,Csi,rscalspinp,rscalspins
+      real(double_precision) :: normspin_2p,normspin_2s,r_2,rr,r_4,r_5,r_7,r_8
+      !-------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+      call r_scal_spin (xhx,xhy,xhz,spin(1,j),spin(2,j),spin(3,j),rscalspinp)
+      call r_scal_spin (xhx,xhy,xhz,spin(1,1),spin(2,1),spin(3,1),rscalspins)
+      call norm_spin_2 (spin(1,j),spin(2,j),spin(3,j),normspin_2p)
+      call norm_spin_2 (spin(1,1),spin(2,1),spin(3,1),normspin_2s)
 
-    ! Local
-    real(double_precision) :: Cpi,Csi,rscalspinp,rscalspins
-    real(double_precision) :: normspin_2p,normspin_2s,r_2,rr,r_4,r_5,r_7,r_8
+      Cpi = m(1)*k2_plan*normspin_2p*R_plan5/(6.d0*K2)
+      Csi = m(j)*k2_star*normspin_2s*R_star5/(6.d0*K2)
 
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    call r_scal_spin (xhx,xhy,xhz,spin(1,j),spin(2,j),spin(3,j),rscalspinp)
-    call r_scal_spin (xhx,xhy,xhz,spin(1,1),spin(2,1),spin(3,1),rscalspins)
-    call norm_spin_2 (spin(1,j),spin(2,j),spin(3,j),normspin_2p)
-    call norm_spin_2 (spin(1,1),spin(2,1),spin(3,1),normspin_2s)
-    
-    Cpi = m(1)*k2_plan*normspin_2p*R_plan5/(6.d0*K2)
-    Csi = m(j)*k2_star*normspin_2s*R_star5/(6.d0*K2)
-    
-    Frot_r = -3.d0/r_5*(Csi+Cpi) &
-         + 15.d0/r_7*(Csi*rscalspins*rscalspins/normspin_2s &
-         +Cpi*rscalspinp*rscalspinp/normspin_2p)    
-    !------------------------------------------------------------------------------
-    return
-  end subroutine F_rot_rad
-  
-  subroutine F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_star5,k2_star,j,Frot_os)
+      Frot_r = -3.d0/r_5*(Csi+Cpi) &
+           + 15.d0/r_7*(Csi*rscalspins*rscalspins/normspin_2s &
+           +Cpi*rscalspinp*rscalspinp/normspin_2p)    
+      !-------------------------------------------------------------------------
+      return
+  end subroutine F_rot_rad 
 
-    use physical_constant
-    implicit none
+  !-----------------------------------------------------------------------------
+  ! Orthoradial part of the rotation flattening of the star force
+  subroutine F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_star5 &
+         ,k2_star,j,Frot_os)
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: R_star5,k2_star
-    real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision),intent(in) :: spinx,spiny,spinz
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: Frot_os
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: R_star5,k2_star
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: spinx,spiny,spinz
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: Frot_os
+      ! Local
+      real(double_precision) :: Cpi,Csi,rscalspins,normspin_2s
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
+      !-------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+      call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspins)
+      call norm_spin_2 (spinx,spiny,spinz,normspin_2s)
 
-    ! Local
-    real(double_precision) :: Cpi,Csi,rscalspins,normspin_2s,r_2,rr,r_4,r_5,r_7,r_8
+      Csi = m(j)*k2_star*normspin_2s*R_star5/(6.d0*K2)
 
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspins)
-    call norm_spin_2 (spinx,spiny,spinz,normspin_2s)
-    Csi = m(j)*k2_star*normspin_2s*R_star5/(6.d0*K2)
-    Frot_os =  -6.d0*Csi*rscalspins/(normspin_2s*r_5)  
-    !------------------------------------------------------------------------------
-    return
+      Frot_os =  -6.d0*Csi*rscalspins/(normspin_2s*r_5)  
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_rot_ortho_s
-  
-  subroutine F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_plan5,k2_plan,j,Frot_op)
 
-    use physical_constant
-    implicit none
+  !-----------------------------------------------------------------------------
+  ! Orthoradial part of the rotation flattening of the planet force
+  subroutine F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_plan5 &
+         ,k2_plan,j,Frot_op)
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: R_plan5,k2_plan
-    real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision),intent(in) :: spinx,spiny,spinz
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: Frot_op
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: R_plan5,k2_plan
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: spinx,spiny,spinz
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: Frot_op
+      ! Local
+      real(double_precision) :: Cpi,Csi,rscalspinp,normspin_2p
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
+      !------------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+      call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspinp)
+      call norm_spin_2 (spinx,spiny,spinz,normspin_2p)
 
-    ! Local
-    real(double_precision) :: Cpi,Csi,rscalspinp,normspin_2p,r_2,rr,r_4,r_5,r_7,r_8
+      Cpi = m(1)*k2_plan*normspin_2p*R_plan5/(6.d0*K2)
 
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspinp)
-    call norm_spin_2 (spinx,spiny,spinz,normspin_2p)
-    Cpi = m(1)*k2_plan*normspin_2p*R_plan5/(6.d0*K2)
-    Frot_op =  -6.d0*Cpi*rscalspinp/(normspin_2p*r_5)  
-    !------------------------------------------------------------------------------
-    return
+      Frot_op =  -6.d0*Cpi*rscalspinp/(normspin_2p*r_5)  
+      !------------------------------------------------------------------------------
+      return
   end subroutine F_rot_ortho_p
-  
+
+  !-----------------------------------------------------------------------------
+  ! Torque acting on the planet
   subroutine Torque_rot_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz &
        ,R_plan5,k2_plan,j,N_rot_px,N_rot_py,N_rot_pz)
   
-  implicit none
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: spinx,spiny,spinz
+      real(double_precision),intent(in) :: R_plan5,k2_plan
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: N_rot_px,N_rot_py,N_rot_pz
+      ! Local
+      real(double_precision) :: Frot_op
+      !-------------------------------------------------------------------------
+      call F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_plan5 &
+                          ,k2_plan,j,Frot_op)               
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision),intent(in) :: spinx,spiny,spinz
-    real(double_precision),intent(in) :: R_plan5,k2_plan
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: N_rot_px,N_rot_py,N_rot_pz
+      N_rot_px = Frot_op*(xhy*spinz-xhz*spiny)
+      N_rot_py = Frot_op*(xhz*spinx-xhx*spinz)
+      N_rot_pz = Frot_op*(xhx*spiny-xhy*spinx) 
+      !-------------------------------------------------------------------------
+      return
+  end subroutine Torque_rot_p  
 
-    ! Local
-    real(double_precision) :: Frot_op
-
-    !------------------------------------------------------------------------------
-    call F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_plan5,k2_plan,j,Frot_op)               
-    N_rot_px = Frot_op*(xhy*spinz-xhz*spiny)
-    N_rot_py = Frot_op*(xhz*spinx-xhx*spinz)
-    N_rot_pz = Frot_op*(xhx*spiny-xhy*spinx) 
-    !------------------------------------------------------------------------------
-    return
-  end subroutine Torque_rot_p 
-  
+  !-----------------------------------------------------------------------------
+  ! Torque acting on the star
   subroutine Torque_rot_s (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz &
        ,R_star5,k2_star,j,N_rot_sx,N_rot_sy,N_rot_sz)
   
-  implicit none
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: spinx,spiny,spinz
+      real(double_precision),intent(in) :: R_star5,k2_star
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: N_rot_sx,N_rot_sy,N_rot_sz
+      ! Local
+      real(double_precision) :: Frot_os
+      !-------------------------------------------------------------------------
+      call F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_star5 &
+                          ,k2_star,j,Frot_os)               
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision),intent(in) :: spinx,spiny,spinz
-    real(double_precision),intent(in) :: R_star5,k2_star
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: N_rot_sx,N_rot_sy,N_rot_sz
+      N_rot_sx = Frot_os*(xhy*spinz-xhz*spiny)
+      N_rot_sy = Frot_os*(xhz*spinx-xhx*spinz)
+      N_rot_sz = Frot_os*(xhx*spiny-xhy*spinx) 
+      !-------------------------------------------------------------------------
+      return
+  end subroutine Torque_rot_s  
 
-    ! Local
-    real(double_precision) :: Frot_os
+  !-----------------------------------------------------------------------------
+  ! Force due to the rotational flattening 
+  subroutine F_rotation (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5 &
+         ,k2_plan,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
 
-    !------------------------------------------------------------------------------
-    call F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_star5,k2_star,j,Frot_os)               
-    N_rot_sx = Frot_os*(xhy*spinz-xhz*spiny)
-    N_rot_sy = Frot_os*(xhz*spinx-xhx*spinz)
-    N_rot_sz = Frot_os*(xhx*spiny-xhy*spinx) 
-    !------------------------------------------------------------------------------
-    return
-  end subroutine Torque_rot_s 
-  
-  subroutine F_rotation (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan &
-       ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: R_star5,k2_star
+      real(double_precision),intent(in) :: R_plan5,k2_plan
+      real(double_precision),intent(in) :: m(nbod),spin(3,10)
+      real(double_precision), intent(out) :: F_rot_tot_x,F_rot_tot_y,F_rot_tot_z
+      ! Local
+      real(double_precision) :: Frot_r,Frot_os,Frot_op
+      !-------------------------------------------------------------------------
+      call F_rot_rad (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan &
+                      ,j,Frot_r)
+      call F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spin(1,1),spin(2,1),spin(3,1) &
+                      ,R_star5,k2_star,j,Frot_os)
+      call F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spin(1,j),spin(2,j),spin(3,j) &
+                      ,R_plan5,k2_plan,j,Frot_op)
 
-    use physical_constant
-    implicit none
-
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz
-    real(double_precision),intent(in) :: R_star5,k2_star
-    real(double_precision),intent(in) :: R_plan5,k2_plan
-    real(double_precision),intent(in) :: m(nbod),spin(3,10)
-    
-    real(double_precision), intent(out) :: F_rot_tot_x,F_rot_tot_y,F_rot_tot_z
-
-    ! Local
-!~     integer :: j
-    !real(double_precision) :: tmp
-    real(double_precision) :: Frot_r,Frot_os,Frot_op
-
-    !------------------------------------------------------------------------------
-    
-    call F_rot_rad (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan,j,Frot_r)
-    call F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spin(1,1),spin(2,1),spin(3,1),R_star5,k2_star,j,Frot_os)
-    call F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spin(1,j),spin(2,j),spin(3,j),R_plan5,k2_plan,j,Frot_op)
-    
-    !tmp = K2/m(j)
-    F_rot_tot_x = Frot_r*xhx + Frot_op*spin(1,j) + Frot_os*spin(1,1)
-    F_rot_tot_y = Frot_r*xhy + Frot_op*spin(2,j) + Frot_os*spin(2,1)
-    F_rot_tot_z = Frot_r*xhz + Frot_op*spin(3,j) + Frot_os*spin(3,1)
-    !------------------------------------------------------------------------------
-    return
+      F_rot_tot_x = Frot_r*xhx + Frot_op*spin(1,j) + Frot_os*spin(1,1)
+      F_rot_tot_y = Frot_r*xhy + Frot_op*spin(2,j) + Frot_os*spin(2,1)
+      F_rot_tot_z = Frot_r*xhz + Frot_op*spin(3,j) + Frot_os*spin(3,1)
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_rotation
-  
-  !********************************************
-  !*********** GENERAL RELATIVITY *************
-  !********************************************
+
+
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !---------------------------   GENERAL  --------------------------------------
+  !---------------------------  RELATIVITY  ------------------------------------
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+
   ! FGR_rad in AU.day-2 and FGR_ort in day-1
-  
+
+  !-----------------------------------------------------------------------------
+  ! Radial part of the GR force (Kidder 1995, Mardling & Lin 2002)
   subroutine F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_rad)
 
-    implicit none
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision),intent(in) :: tintin,C2
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: FGR_rad
+      ! Local
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+      !-------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+      call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: tintin,C2
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: FGR_rad
-
-    ! Local
-    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
-
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
-    
-    FGR_rad = -(m(1)+m(j))/(r_2*C2*C2) &
-         *((1.0d0+3.0d0*tintin)*v_2 &  
-         -2.d0*(2.d0+tintin)*(m(1)+m(j))/rr &
-         -1.5d0*tintin*v_rad*v_rad) 
-    !------------------------------------------------------------------------------
-    return
+      FGR_rad = -(m(1)+m(j))/(r_2*C2*C2) &
+           *((1.0d0+3.0d0*tintin)*v_2 &  
+           -2.d0*(2.d0+tintin)*(m(1)+m(j))/rr &
+           -1.5d0*tintin*v_rad*v_rad) 
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_GR_rad
-  
+
+  !-----------------------------------------------------------------------------
+  ! Orthoradial part of the GR force
   subroutine F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_ort)
 
-    implicit none
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision),intent(in) :: tintin,C2
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: FGR_ort
+      ! Local
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
+      !-------------------------------------------------------------------------
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+      call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: tintin,C2
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: FGR_ort
-
-    ! Local
-    real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8,v_2,norm_v,v_rad
-
-    !------------------------------------------------------------------------------
-    call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-    call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
-    
-    FGR_ort = (m(1)+m(j))/(r_2*C2*C2) &
-                  *2.0d0*(2.0d0-tintin)*v_rad*norm_v 
-    !------------------------------------------------------------------------------
-    return
+      FGR_ort = (m(1)+m(j))/(r_2*C2*C2) &
+                    *2.0d0*(2.0d0-tintin)*v_rad*norm_v 
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_GR_ortho
-  
-  subroutine F_GenRel (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
 
-    implicit none
+  !-----------------------------------------------------------------------------
+  ! GR force
+  subroutine F_GenRel (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j &
+         ,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
 
-    ! Input/Output
-    integer,intent(in) :: nbod,j
-    real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-    real(double_precision),intent(in) :: tintin,C2
-    real(double_precision),intent(in) :: m(nbod)
-    
-    real(double_precision), intent(out) :: F_GR_tot_x,F_GR_tot_y,F_GR_tot_z
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
+      real(double_precision),intent(in) :: tintin,C2
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision), intent(out) :: F_GR_tot_x,F_GR_tot_y,F_GR_tot_z
+      ! Local
+      real(double_precision) :: tmp,tmp1,FGR_rad,FGR_ort
+      !-------------------------------------------------------------------------
+      call F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_rad)
+      call F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_ort)
 
-    ! Local
-    real(double_precision) :: tmp,tmp1,FGR_rad,FGR_ort
+      tmp  = sqrt(xhx*xhx+xhy*xhy+xhz*xhz)
+      tmp1 = sqrt(vhx*vhx+vhy*vhy+vhz*vhz)
 
-    !------------------------------------------------------------------------------
-    call F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_rad)
-    call F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_ort)
-    tmp  = sqrt(xhx*xhx+xhy*xhy+xhz*xhz)
-    tmp1 = sqrt(vhx*vhx+vhy*vhy+vhz*vhz)
-    F_GR_tot_x = m(j)*(FGR_rad*xhx/tmp+FGR_ort*vhx/tmp1)
-    F_GR_tot_y = m(j)*(FGR_rad*xhy/tmp+FGR_ort*vhy/tmp1)
-    F_GR_tot_z = m(j)*(FGR_rad*xhz/tmp+FGR_ort*vhz/tmp1)
-    !------------------------------------------------------------------------------
-    return
+      F_GR_tot_x = m(j)*(FGR_rad*xhx/tmp+FGR_ort*vhx/tmp1)
+      F_GR_tot_y = m(j)*(FGR_rad*xhy/tmp+FGR_ort*vhy/tmp1)
+      F_GR_tot_z = m(j)*(FGR_rad*xhz/tmp+FGR_ort*vhz/tmp1)
+      !-------------------------------------------------------------------------
+      return
   end subroutine F_GenRel
-  
-  
-  
+
 end module user_module

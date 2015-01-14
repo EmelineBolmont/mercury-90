@@ -17,7 +17,7 @@ implicit none
 ! Constants:
 
 ! DR = conversion factor from degrees to radians
-! K2 = Gaussian gravitational constant squared
+! K2 = Gaussian gravitational constant 
 ! AU = astronomical unit in cm
 ! MSUN = mass of the Sun in g
 
@@ -33,7 +33,7 @@ real(double_precision), parameter :: MSUN = 1.9891e33 !< MSUN = mass of the Sun 
 real(double_precision), parameter :: DAY = 86400.d0 !< amount of second in one day. [s]
 
 ! values in numerical Units. Time is in Days, lengths are in AU and masses are in MSUN
-real(double_precision), parameter :: K2 = 2.959122082855911d-4 !< K2 = Gaussian gravitational constant squared [AU^3.MSUN-1.DAY-2]
+real(double_precision), parameter :: K2 = 2.959122082855911d-4 !< K2 = Gaussian gravitational constant [AU^3.MSUN-1.DAY-2]
 !! 1W=1kg.m^2s^(-3) [W.m-2.K-4] = [M T-3 K-4] ; 
 real(double_precision), parameter :: SIGMA_STEFAN = 5.670400d-8 / (1.d-3 * MSUN) * DAY**3  !< stefan-Boltzmann constant [MSUN.DAY-3.T-4] 
 !! in CGS : \sigma \approx 5.6704 \times 10^{-5}\ \textrm{erg}\,\textrm{cm}^{-2}\,\textrm{s}^{-1}\,\textrm{K}^{-4}
