@@ -102,11 +102,16 @@ module tides_constant_GR
   ! factor to multiply the value of the dissipation of the host body
   real(double_precision), parameter :: dissstar = 1.0d0
 
-  ! For R=cst, choose sigmast:
+  ! For R=cst
+  ! Dissipation 
   real(double_precision), parameter :: sigma_what = 2.006*3.845764d4 !-60+64
+  ! Radius of gyration
   real(double_precision), parameter :: rg2_what = 2.0d-1
+  ! Love number
   real(double_precision), parameter :: k2st_what = 0.307d0 
-  real(double_precision), parameter :: radius_star = 0.943 !Rsun
+  ! Radius of star in Rsun
+  real(double_precision), parameter :: radius_star = 0.943
+
   ! For R=cst, or dM or Suns
   real(double_precision), parameter :: Period_st   = 8.0d0    !day 
   
