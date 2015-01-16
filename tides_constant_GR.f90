@@ -113,7 +113,8 @@ module tides_constant_GR
   real(double_precision), parameter :: radius_star = 0.943
 
   ! For R=cst, or dM or Suns
-  real(double_precision), parameter :: Period_st   = 8.0d0    !day 
+  ! Initial period of rotation in day
+  real(double_precision), parameter :: Period_st   = 8.0d0
   
 
 
