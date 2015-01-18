@@ -203,7 +203,7 @@ module user_module
     save timeJup,radiusJup,k2Jup,rg2Jup,spinJup
 
     ! Save data of radius of planet and star
-    save Rst0,Rst0_5,Rst0_10
+    save Rst0,Rst0_5,Rst0_10,rg2s0
     !save Rst0,Rst0_5,Rst0_10
     save Rp,Rp5,Rp10
 
@@ -1014,26 +1014,26 @@ module user_module
                  if (crash.eq.0) then
                      if (ispin.eq.0) then 
                          call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-dt,Rstb0)
+                         call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-dt,rg2s0)
                      endif
                      call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-hdt,Rstbh)
                      call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb)
                      
-                     call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-dt,rg2s0)
                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-hdt,rg2sh)
                      call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s)
                  else
                      if (ispin.eq.0) then 
                          call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-dt,Rstb0)
+                         call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-dt,rg2s0)
                      endif
                      call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-hdt,Rstbh)
                      call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb)
 
-                     call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-dt,rg2s0)
                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-hdt,rg2sh)
                      call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s)
                  endif
 
-                 Rst0 = Rsun * Rstb0
+                 if (ispin.eq.0) Rst0 = Rsun * Rstb0
                  Rsth = Rsun * Rstbh
                  Rst  = Rsun * Rstb
              endif
@@ -1056,7 +1056,7 @@ module user_module
                      call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash,Rstb)
                  endif
 
-                 Rst0 = Rsun * Rstb0
+                 if (ispin.eq.0) Rst0 = Rsun * Rstb0
                  Rsth = Rsun * Rstbh
                  Rst  = Rsun * Rstb
 
@@ -1083,7 +1083,7 @@ module user_module
                      call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash,Rstb)
                  endif
 
-                 Rst0 = minau * Rstb0
+                 if (ispin.eq.0) Rst0 = minau * Rstb0
                  Rsth = minau * Rstbh
                  Rst  = minau * Rstb
 
@@ -1099,11 +1099,11 @@ module user_module
                  if (crash.eq.0) then
                      if (ispin.eq.0) then 
                          call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-dt,Rstb0)
+                         call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-dt,rg2s0)
                      endif
                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-hdt,Rstbh)
                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb)
                      
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-dt,rg2s0)
                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-hdt,rg2sh)
                      call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s)
                      
@@ -1111,18 +1111,18 @@ module user_module
                  else
                      if (ispin.eq.0) then 
                          call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-dt,Rstb0)
+                         call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-dt,rg2s0)
                      endif
                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb)
                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-hdt,Rstbh)
                      
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-dt,rg2s0)
                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s)
                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-hdt,rg2sh)
                      
                      call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash-hdt,k2s)
                  endif
 
-                 Rst0 = minau * Rstb0
+                 if (ispin.eq.0) Rst0 = minau * Rstb0
                  Rsth = minau * Rstbh
                  Rst  = minau * Rstb
              endif
@@ -2363,6 +2363,7 @@ module user_module
     Rst0    = Rst
     Rst0_5  = Rst_5
     Rst0_10 = Rst_10
+    rg2s0   = rg2s
 
     ! ispin is called once only during the whole time of the simulation
     if (flagbug.ge.2) ispin=1
