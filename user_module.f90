@@ -312,7 +312,7 @@ module user_module
     if (GenRel.eq.1) tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
 
     !Sergi: addition here
-    if (flagbug.ge.0) then
+    if (flagbug.ge.1) then
 
         ! If you have tides of rot flat
         if ((tides.eq.1).or.(rot_flat.eq.1)) then 
