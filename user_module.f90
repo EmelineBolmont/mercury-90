@@ -216,8 +216,6 @@ module user_module
     ! for the dissipation calculation
     save sigmast,k2s
     save k2p,k2fp,rg2p
-    !save freq,k2_tides,Delta_t,nptk2
-    !save sigmap,k2pdeltap,forcing_frequency,Ediss
 
     ! Flags
     save flagrg2,flagtime,ispin,flagbug,charge_data
@@ -987,174 +985,173 @@ module user_module
                        spin(2,7) = rot_crashp6(2) !day-1
                        spin(3,7) = rot_crashp6(3) !day-1
                     endif
-                 endif
-                 
-             endif
-         endif   
+                endif
+            endif
+        endif   
 
-         !----------------------------------------------------------------------
-         !----------------------------------------------------------------------
-         !---------------  Interpolation of all things needed  -----------------
-         !----------------------------------------------------------------------
-         !----------------------------------------------------------------------
+        !----------------------------------------------------------------------
+        !----------------------------------------------------------------------
+        !---------------  Interpolation of all things needed  -----------------
+        !----------------------------------------------------------------------
+        !----------------------------------------------------------------------
 
-         if ((flagbug.ge.2).and.((tides.eq.1).or.(rot_flat.eq.1))) then 
-            
-             ! Here Rst in AU, Rsth5; Rsth10
-             ! Rst0: value of Rs at previous time step (t-dt)
-             ! Rsth: value of Rs at middle of previous time step (t-0.5*dt=t-hdt)
-             ! Rst: value at present timestep (t)
-             ! Same notation for rg2s when it varies
-             ! k2s in case of a Jupiter host body is estimated at t-0.5*dt
+        if ((flagbug.ge.2).and.((tides.eq.1).or.(rot_flat.eq.1))) then 
+           
+            ! Here Rst in AU, Rsth5; Rsth10
+            ! Rst0: value of Rs at previous time step (t-dt)
+            ! Rsth: value of Rs at middle of previous time step (t-0.5*dt=t-hdt)
+            ! Rst: value at present timestep (t)
+            ! Same notation for rg2s when it varies
+            ! k2s in case of a Jupiter host body is estimated at t-0.5*dt
 
-             !-----------------------------------------------------------------------
-             !-----------------------  BROWN DWARF  ---------------------------------
-             if (brown_dwarf.eq.1) then
+            !-----------------------------------------------------------------------
+            !-----------------------  BROWN DWARF  ---------------------------------
+            if (brown_dwarf.eq.1) then
 
-                 if (crash.eq.0) then
-                     if (ispin.eq.0) then 
-                         call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-dt,Rstb0)
-                         call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-dt,rg2s0)
-                     endif
-                     call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-hdt,Rstbh)
-                     call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb)
-                     
-                     call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-hdt,rg2sh)
-                     call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s)
-                 else
-                     if (ispin.eq.0) then 
-                         call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-dt,Rstb0)
-                         call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-dt,rg2s0)
-                     endif
-                     call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-hdt,Rstbh)
-                     call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb)
+                if (crash.eq.0) then
+                    if (ispin.eq.0) then 
+                        call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-dt,Rstb0)
+                        call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-dt,rg2s0)
+                    endif
+                    call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-hdt,Rstbh)
+                    call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time,Rstb)
+                    
+                    call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-hdt,rg2sh)
+                    call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s)
+                else
+                    if (ispin.eq.0) then 
+                        call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-dt,Rstb0)
+                        call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-dt,rg2s0)
+                    endif
+                    call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-hdt,Rstbh)
+                    call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb)
 
-                     call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-hdt,rg2sh)
-                     call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s)
-                 endif
+                    call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-hdt,rg2sh)
+                    call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s)
+                endif
 
-                 if (ispin.eq.0) Rst0 = Rsun * Rstb0
-                 Rsth = Rsun * Rstbh
-                 Rst  = Rsun * Rstb
-             endif
+                if (ispin.eq.0) Rst0 = Rsun * Rstb0
+                Rsth = Rsun * Rstbh
+                Rst  = Rsun * Rstb
+            endif
 
-             !-----------------------------------------------------------------------
-             !-------------------------  M DWARF  -----------------------------------
-             if (M_dwarf.eq.1) then
+            !-----------------------------------------------------------------------
+            !-------------------------  M DWARF  -----------------------------------
+            if (M_dwarf.eq.1) then
 
-                 if (crash.eq.0) then
-                     if (ispin.eq.0) then 
-                         call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time-dt,Rstb0)
-                     endif
-                     call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time-hdt,Rstbh)
-                     call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time,Rstb)
-                 else
-                     if (ispin.eq.0) then 
-                         call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash-dt,Rstb0)
-                     endif
-                     call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash-hdt,Rstbh)
-                     call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash,Rstb)
-                 endif
+                if (crash.eq.0) then
+                    if (ispin.eq.0) then 
+                        call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time-dt,Rstb0)
+                    endif
+                    call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time-hdt,Rstbh)
+                    call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time,Rstb)
+                else
+                    if (ispin.eq.0) then 
+                        call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash-dt,Rstb0)
+                    endif
+                    call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash-hdt,Rstbh)
+                    call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash,Rstb)
+                endif
 
-                 if (ispin.eq.0) Rst0 = Rsun * Rstb0
-                 Rsth = Rsun * Rstbh
-                 Rst  = Rsun * Rstb
+                if (ispin.eq.0) Rst0 = Rsun * Rstb0
+                Rsth = Rsun * Rstbh
+                Rst  = Rsun * Rstb
 
-                 rg2s  = rg2_dM
-                 rg2s0 = rg2s
-                 rg2sh = rg2s
-             endif
+                rg2s  = rg2_dM
+                rg2s0 = rg2s
+                rg2sh = rg2s
+            endif
 
-             !-----------------------------------------------------------------------
-             !----------------------  SUN LIKE STAR  --------------------------------
-             if (Sun_like_star.eq.1) then
+            !-----------------------------------------------------------------------
+            !----------------------  SUN LIKE STAR  --------------------------------
+            if (Sun_like_star.eq.1) then
 
-                 if (crash.eq.0) then
-                     if (ispin.eq.0) then 
-                         call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time-dt,Rstb0)
-                     endif
-                     call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time-hdt,Rstbh)
-                     call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time,Rstb)
-                 else
-                     if (ispin.eq.0) then 
-                         call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash-dt,Rstb0)
-                     endif
-                     call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash-hdt,Rstbh)
-                     call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash,Rstb)
-                 endif
+                if (crash.eq.0) then
+                    if (ispin.eq.0) then 
+                        call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time-dt,Rstb0)
+                    endif
+                    call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time-hdt,Rstbh)
+                    call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time,Rstb)
+                else
+                    if (ispin.eq.0) then 
+                        call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash-dt,Rstb0)
+                    endif
+                    call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash-hdt,Rstbh)
+                    call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash,Rstb)
+                endif
 
-                 if (ispin.eq.0) Rst0 = minau * Rstb0
-                 Rsth = minau * Rstbh
-                 Rst  = minau * Rstb
+                if (ispin.eq.0) Rst0 = minau * Rstb0
+                Rsth = minau * Rstbh
+                Rst  = minau * Rstb
 
-                 rg2s  = rg2_Sun
-                 rg2s0 = rg2s
-                 rg2sh = rg2s
-             endif
+                rg2s  = rg2_Sun
+                rg2s0 = rg2s
+                rg2sh = rg2s
+            endif
 
-             !-----------------------------------------------------------------------
-             !-------------------------  JUPITER  -----------------------------------
-             if (Jupiter_host.eq.1) then
+            !-----------------------------------------------------------------------
+            !-------------------------  JUPITER  -----------------------------------
+            if (Jupiter_host.eq.1) then
 
-                 if (crash.eq.0) then
-                     if (ispin.eq.0) then 
-                         call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-dt,Rstb0)
-                         call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-dt,rg2s0)
-                     endif
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-hdt,Rstbh)
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb)
-                     
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-hdt,rg2sh)
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s)
-                     
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time-hdt,k2s)
-                 else
-                     if (ispin.eq.0) then 
-                         call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-dt,Rstb0)
-                         call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-dt,rg2s0)
-                     endif
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb)
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-hdt,Rstbh)
-                     
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s)
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-hdt,rg2sh)
-                     
-                     call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash-hdt,k2s)
-                 endif
+                if (crash.eq.0) then
+                    if (ispin.eq.0) then 
+                        call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-dt,Rstb0)
+                        call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-dt,rg2s0)
+                    endif
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-hdt,Rstbh)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time,Rstb)
+                    
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-hdt,rg2sh)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time,rg2s)
+                    
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time-hdt,k2s)
+                else
+                    if (ispin.eq.0) then 
+                        call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-dt,Rstb0)
+                        call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-dt,rg2s0)
+                    endif
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-hdt,Rstbh)
+                    
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-hdt,rg2sh)
+                    
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash-hdt,k2s)
+                endif
 
-                 if (ispin.eq.0) Rst0 = minau * Rstb0
-                 Rsth = minau * Rstbh
-                 Rst  = minau * Rstb
-             endif
+                if (ispin.eq.0) Rst0 = minau * Rstb0
+                Rsth = minau * Rstbh
+                Rst  = minau * Rstb
+            endif
 
-             !-----------------------------------------------------------------------
-             !-----------------------  NON EVOLVING  --------------------------------
-             if (Rscst.eq.1) then
-                 Rst0  = radius_star*rsun
-                 Rsth  = Rst0
-                 Rst   = Rst0
+            !-----------------------------------------------------------------------
+            !-----------------------  NON EVOLVING  --------------------------------
+            if (Rscst.eq.1) then
+                Rst0  = radius_star*rsun
+                Rsth  = Rst0
+                Rst   = Rst0
 
-                 rg2s  = rg2_what
-                 rg2s0 = rg2s
-                 rg2sh = rg2s
-             endif
+                rg2s  = rg2_what
+                rg2s0 = rg2s
+                rg2sh = rg2s
+            endif
 
-             Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
-             Rst0_10 = Rst0_5*Rst0_5
-             Rsth5   = Rsth*Rsth*Rsth*Rsth*Rsth
-             Rsth10  = Rsth5*Rsth5
-             Rst_5   = Rst*Rst*Rst*Rst*Rst
-             Rst_10  = Rst_5*Rst_5
-         endif
+            Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
+            Rst0_10 = Rst0_5*Rst0_5
+            Rsth5   = Rsth*Rsth*Rsth*Rsth*Rsth
+            Rsth10  = Rsth5*Rsth5
+            Rst_5   = Rst*Rst*Rst*Rst*Rst
+            Rst_10  = Rst_5*Rst_5
+        endif
 
 
-         !---------------------------------------------------------------------------
-         !---------------------------------------------------------------------------
-         !------------------  Runge Kutta integration of spin  ---------------------
-         !---------------------------------------------------------------------------
-         !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
+        !------------------  Runge Kutta integration of spin  ---------------------
+        !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
 
-         if (flagbug.ge.2) then
+        if (flagbug.ge.2) then
 
             if ((tides.eq.1).or.(rot_flat.eq.1)) then       
                 do j=2,ntid+1
@@ -1245,1094 +1242,1094 @@ module user_module
                 enddo   
 
 
-               !---------------------------------------------------------------------
-               !----------------------  STAR spin evolution  ------------------------
-               !---------------------------------------------------------------------
+                !---------------------------------------------------------------------
+                !----------------------  STAR spin evolution  ------------------------
+                !---------------------------------------------------------------------
 
-               !---------------------------------------------------------------------
-               !---------------------  First half of timestep  ---------------------- 
-               !---------------------------------------------------------------------
+                !---------------------------------------------------------------------
+                !---------------------  First half of timestep  ---------------------- 
+                !---------------------------------------------------------------------
 
-               ! Torque at last time step t=time-dt
-               ! Calculation of Runge-kutta factor k1
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
-                          ,vh_bf(1,j),vh_bf(2,j),vh_bf(3,j) &
-                          ,spin_bf(1,1),spin_bf(2,1),spin_bf(3,1) &
-                          ,Rst0_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
-                            ,spin_bf(1,1),spin_bf(2,1),spin_bf(3,1) &
-                            ,Rst0_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
-                   tmp = m(1)/(m(1)+m(j))
-                   totftides(1) = totftides(1) + tmp*Ns(1,j)
-                   totftides(2) = totftides(2) + tmp*Ns(2,j)
-                   totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
+                ! Torque at last time step t=time-dt
+                ! Calculation of Runge-kutta factor k1
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
+                           ,vh_bf(1,j),vh_bf(2,j),vh_bf(3,j) &
+                           ,spin_bf(1,1),spin_bf(2,1),spin_bf(3,1) &
+                           ,Rst0_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
+                             ,spin_bf(1,1),spin_bf(2,1),spin_bf(3,1) &
+                             ,Rst0_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
+                    tmp = m(1)/(m(1)+m(j))
+                    totftides(1) = totftides(1) + tmp*Ns(1,j)
+                    totftides(2) = totftides(2) + tmp*Ns(2,j)
+                    totftides(3) = totftides(3) + tmp*Ns(3,j)
+                end do   
 
-               k_rk_1x = -hdt*totftides(1)
-               k_rk_1y = -hdt*totftides(2)
-               k_rk_1z = -hdt*totftides(3)           
-
-
-               ! Torque at t=time-hdt*(2-a(2)) 
-               ! Calculation of Runge-kutta factor k2
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_1_rk2(1,j),xh_1_rk2(2,j),xh_1_rk2(3,j) &
-                            ,vh_1_rk2(1,j),vh_1_rk2(2,j),vh_1_rk2(3,j) &
-                            ,spin_bf(1,1) + bb2*k_rk_1x &
-                            ,spin_bf(2,1) + bb2*k_rk_1y &
-                            ,spin_bf(3,1) + bb2*k_rk_1z &
-                            ,Rst0_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_1_rk2(1,j),xh_1_rk2(2,j),xh_1_rk2(3,j) &
-                            ,spin_bf(1,1) + bb2*k_rk_1x &
-                            ,spin_bf(2,1) + bb2*k_rk_1y &
-                            ,spin_bf(3,1) + bb2*k_rk_1z &
-                            ,Rst0_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif    
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
-                   tmp = m(1)/(m(1)+m(j))
-                   totftides(1) = totftides(1) + tmp*Ns(1,j)
-                   totftides(2) = totftides(2) + tmp*Ns(2,j)
-                   totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
-
-               k_rk_2x = -hdt*totftides(1)
-               k_rk_2y = -hdt*totftides(2)
-               k_rk_2z = -hdt*totftides(3)           
+                k_rk_1x = -hdt*totftides(1)
+                k_rk_1y = -hdt*totftides(2)
+                k_rk_1z = -hdt*totftides(3)           
 
 
-               ! Torque at t=time-hdt*(2-a(3)) 
-               ! Calculation of Runge-kutta factor k3
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_1_rk3(1,j),xh_1_rk3(2,j),xh_1_rk3(3,j) &
-                            ,vh_1_rk3(1,j),vh_1_rk3(2,j),vh_1_rk3(3,j) &
-                            ,spin_bf(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
-                            ,spin_bf(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
-                            ,spin_bf(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                            ,Rst0_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_1_rk3(1,j),xh_1_rk3(2,j),xh_1_rk3(3,j) &
-                            ,spin_bf(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
-                            ,spin_bf(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
-                            ,spin_bf(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                            ,Rst0_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif    
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
-                   tmp = m(1)/(m(1)+m(j))
-                   totftides(1) = totftides(1) + tmp*Ns(1,j)
-                   totftides(2) = totftides(2) + tmp*Ns(2,j)
-                   totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
+                ! Torque at t=time-hdt*(2-a(2)) 
+                ! Calculation of Runge-kutta factor k2
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_1_rk2(1,j),xh_1_rk2(2,j),xh_1_rk2(3,j) &
+                             ,vh_1_rk2(1,j),vh_1_rk2(2,j),vh_1_rk2(3,j) &
+                             ,spin_bf(1,1) + bb2*k_rk_1x &
+                             ,spin_bf(2,1) + bb2*k_rk_1y &
+                             ,spin_bf(3,1) + bb2*k_rk_1z &
+                             ,Rst0_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_1_rk2(1,j),xh_1_rk2(2,j),xh_1_rk2(3,j) &
+                             ,spin_bf(1,1) + bb2*k_rk_1x &
+                             ,spin_bf(2,1) + bb2*k_rk_1y &
+                             ,spin_bf(3,1) + bb2*k_rk_1z &
+                             ,Rst0_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif    
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
+                    tmp = m(1)/(m(1)+m(j))
+                    totftides(1) = totftides(1) + tmp*Ns(1,j)
+                    totftides(2) = totftides(2) + tmp*Ns(2,j)
+                    totftides(3) = totftides(3) + tmp*Ns(3,j)
+                end do   
 
-               k_rk_3x = -hdt*totftides(1)
-               k_rk_3y = -hdt*totftides(2)
-               k_rk_3z = -hdt*totftides(3)           
-
-
-               ! Torque at t=time-hdt*(2-a(4)) 
-               ! Calculation of Runge-kutta factor k4
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_1_rk4(1,j),xh_1_rk4(2,j),xh_1_rk4(3,j) &
-                            ,vh_1_rk4(1,j),vh_1_rk4(2,j),vh_1_rk4(3,j) &
-                            ,spin_bf(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
-                            ,spin_bf(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
-                            ,spin_bf(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
-                            ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_1_rk4(1,j),xh_1_rk4(2,j),xh_1_rk4(3,j) &
-                            ,spin_bf(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
-                            ,spin_bf(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
-                            ,spin_bf(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
-                            ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif    
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
-                   tmp = m(1)/(m(1)+m(j))
-                   totftides(1) = totftides(1) + tmp*Ns(1,j)
-                   totftides(2) = totftides(2) + tmp*Ns(2,j)
-                   totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
-
-               k_rk_4x = -hdt*totftides(1)
-               k_rk_4y = -hdt*totftides(2)
-               k_rk_4z = -hdt*totftides(3)           
+                k_rk_2x = -hdt*totftides(1)
+                k_rk_2y = -hdt*totftides(2)
+                k_rk_2z = -hdt*totftides(3)           
 
 
-               ! Torque at t=time-hdt*(2-a(5)) 
-               ! Calculation of Runge-kutta factor k5
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
-                            ,vh_1_rk5(1,j),vh_1_rk5(2,j),vh_1_rk5(3,j) &
+                ! Torque at t=time-hdt*(2-a(3)) 
+                ! Calculation of Runge-kutta factor k3
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_1_rk3(1,j),xh_1_rk3(2,j),xh_1_rk3(3,j) &
+                             ,vh_1_rk3(1,j),vh_1_rk3(2,j),vh_1_rk3(3,j) &
+                             ,spin_bf(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
+                             ,spin_bf(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
+                             ,spin_bf(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
+                             ,Rst0_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_1_rk3(1,j),xh_1_rk3(2,j),xh_1_rk3(3,j) &
+                             ,spin_bf(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
+                             ,spin_bf(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
+                             ,spin_bf(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
+                             ,Rst0_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif    
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
+                    tmp = m(1)/(m(1)+m(j))
+                    totftides(1) = totftides(1) + tmp*Ns(1,j)
+                    totftides(2) = totftides(2) + tmp*Ns(2,j)
+                    totftides(3) = totftides(3) + tmp*Ns(3,j)
+                end do   
+
+                k_rk_3x = -hdt*totftides(1)
+                k_rk_3y = -hdt*totftides(2)
+                k_rk_3z = -hdt*totftides(3)           
+
+
+                ! Torque at t=time-hdt*(2-a(4)) 
+                ! Calculation of Runge-kutta factor k4
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_1_rk4(1,j),xh_1_rk4(2,j),xh_1_rk4(3,j) &
+                             ,vh_1_rk4(1,j),vh_1_rk4(2,j),vh_1_rk4(3,j) &
+                             ,spin_bf(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
+                             ,spin_bf(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
+                             ,spin_bf(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
+                             ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_1_rk4(1,j),xh_1_rk4(2,j),xh_1_rk4(3,j) &
+                             ,spin_bf(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
+                             ,spin_bf(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
+                             ,spin_bf(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
+                             ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif    
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
+                    tmp = m(1)/(m(1)+m(j))
+                    totftides(1) = totftides(1) + tmp*Ns(1,j)
+                    totftides(2) = totftides(2) + tmp*Ns(2,j)
+                    totftides(3) = totftides(3) + tmp*Ns(3,j)
+                end do   
+
+                k_rk_4x = -hdt*totftides(1)
+                k_rk_4y = -hdt*totftides(2)
+                k_rk_4z = -hdt*totftides(3)           
+
+
+                ! Torque at t=time-hdt*(2-a(5)) 
+                ! Calculation of Runge-kutta factor k5
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
+                             ,vh_1_rk5(1,j),vh_1_rk5(2,j),vh_1_rk5(3,j) &
+                             ,spin_bf(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
+                             ,spin_bf(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
+                             ,spin_bf(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
+                             ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
                             ,spin_bf(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
                             ,spin_bf(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
                             ,spin_bf(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
-                            ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
-                           ,spin_bf(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
-                           ,spin_bf(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
-                           ,spin_bf(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
-                           ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif    
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
+                            ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif    
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
+                    tmp = m(1)/(m(1)+m(j))
+                    totftides(1) = totftides(1) + tmp*Ns(1,j)
+                    totftides(2) = totftides(2) + tmp*Ns(2,j)
+                    totftides(3) = totftides(3) + tmp*Ns(3,j)
+                end do   
+
+                k_rk_5x = -hdt*totftides(1)
+                k_rk_5y = -hdt*totftides(2)
+                k_rk_5z = -hdt*totftides(3)           
+
+
+                ! Torque at t=time-hdt*(2-a(6)) 
+                ! Calculation of Runge-kutta factor k6
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_1_rk6(1,j),xh_1_rk6(2,j),xh_1_rk6(3,j) &
+                             ,vh_1_rk6(1,j),vh_1_rk6(2,j),vh_1_rk6(3,j) &
+                             ,spin_bf(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
+                             ,spin_bf(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
+                             ,spin_bf(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                             ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_1_rk6(1,j),xh_1_rk6(2,j),xh_1_rk6(3,j) &
+                             ,spin_bf(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
+                             ,spin_bf(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
+                             ,spin_bf(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                             ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif    
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
+                    tmp = m(1)/(m(1)+m(j))
+                    totftides(1) = totftides(1) + tmp*Ns(1,j)
+                    totftides(2) = totftides(2) + tmp*Ns(2,j)
+                    totftides(3) = totftides(3) + tmp*Ns(3,j)
+                end do   
+
+                k_rk_6x = -hdt*totftides(1)
+                k_rk_6y = -hdt*totftides(2)
+                k_rk_6z = -hdt*totftides(3)           
+
+                ! Sum of Runge Kutta parameters
+                sum_RK(1) = cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x &
+                           + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
+                sum_RK(2) = cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y &
+                           + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
+                sum_RK(3) = cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
+                           + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
+
+                ! Integration on first half timestep
+                tmp  = rg2s0*Rst0*Rst0/(rg2sh*Rsth*Rsth)
+                tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
+                spin(1,1) = tmp * spin_bf(1,1) + sum_RK(1)*tmp1 
+                spin(2,1) = tmp * spin_bf(2,1) + sum_RK(2)*tmp1 
+                spin(3,1) = tmp * spin_bf(3,1) + sum_RK(3)*tmp1 
+
+
+                !---------------------------------------------------------------------
+                !--------------------  Second half of timestep  ---------------------- 
+                !---------------------------------------------------------------------
+                !---------------------------------------------------------------------
+
+                ! Torque at time t=time-dt/2
+                ! Calculation of Runge-kutta factor k1
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
+                           ,vh_1_rk5(1,j),vh_1_rk5(2,j),vh_1_rk5(3,j) &
+                           ,spin(1,1),spin(2,1),spin(3,1) &
+                           ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
+                             ,spin(1,1),spin(2,1),spin(3,1) &
+                             ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
+                    tmp = m(1)/(m(1)+m(j))
+                    totftides(1) = totftides(1) + tmp*Ns(1,j)
+                    totftides(2) = totftides(2) + tmp*Ns(2,j)
+                    totftides(3) = totftides(3) + tmp*Ns(3,j)
+                end do   
+
+                k_rk_1x = -hdt*totftides(1)
+                k_rk_1y = -hdt*totftides(2)
+                k_rk_1z = -hdt*totftides(3)           
+
+
+                ! Torque at t=time-hdt*(1-a(2)) 
+                ! Calculation of Runge-kutta factor k2
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_2_rk2(1,j),xh_2_rk2(2,j),xh_2_rk2(3,j) &
+                             ,vh_2_rk2(1,j),vh_2_rk2(2,j),vh_2_rk2(3,j) &
+                             ,spin(1,1) + bb2*k_rk_1x &
+                             ,spin(2,1) + bb2*k_rk_1y &
+                             ,spin(3,1) + bb2*k_rk_1z &
+                             ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_2_rk2(1,j),xh_2_rk2(2,j),xh_2_rk2(3,j) &
+                             ,spin(1,1) + bb2*k_rk_1x &
+                             ,spin(2,1) + bb2*k_rk_1y &
+                             ,spin(3,1) + bb2*k_rk_1z &
+                             ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif    
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
+                    tmp = m(1)/(m(1)+m(j))
+                    totftides(1) = totftides(1) + tmp*Ns(1,j)
+                    totftides(2) = totftides(2) + tmp*Ns(2,j)
+                    totftides(3) = totftides(3) + tmp*Ns(3,j)
+                end do   
+
+                k_rk_2x = -hdt*totftides(1)
+                k_rk_2y = -hdt*totftides(2)
+                k_rk_2z = -hdt*totftides(3)           
+
+
+                ! Torque at t=time-hdt*(1-a(3)) 
+                ! Calculation of Runge-kutta factor k3
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_2_rk3(1,j),xh_2_rk3(2,j),xh_2_rk3(3,j) &
+                             ,vh_2_rk3(1,j),vh_2_rk3(2,j),vh_2_rk3(3,j) &
+                             ,spin(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
+                             ,spin(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
+                             ,spin(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
+                             ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_2_rk3(1,j),xh_2_rk3(2,j),xh_2_rk3(3,j) &
+                             ,spin(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
+                             ,spin(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
+                             ,spin(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
+                             ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif    
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
                    tmp = m(1)/(m(1)+m(j))
                    totftides(1) = totftides(1) + tmp*Ns(1,j)
                    totftides(2) = totftides(2) + tmp*Ns(2,j)
                    totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
+                end do   
 
-               k_rk_5x = -hdt*totftides(1)
-               k_rk_5y = -hdt*totftides(2)
-               k_rk_5z = -hdt*totftides(3)           
+                k_rk_3x = -hdt*totftides(1)
+                k_rk_3y = -hdt*totftides(2)
+                k_rk_3z = -hdt*totftides(3)           
 
 
-               ! Torque at t=time-hdt*(2-a(6)) 
-               ! Calculation of Runge-kutta factor k6
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_1_rk6(1,j),xh_1_rk6(2,j),xh_1_rk6(3,j) &
-                            ,vh_1_rk6(1,j),vh_1_rk6(2,j),vh_1_rk6(3,j) &
-                            ,spin_bf(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
-                            ,spin_bf(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
-                            ,spin_bf(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                            ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_1_rk6(1,j),xh_1_rk6(2,j),xh_1_rk6(3,j) &
-                            ,spin_bf(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
-                            ,spin_bf(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
-                            ,spin_bf(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                            ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif    
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
+                ! Torque at t=time-hdt*(1-a(4)) 
+                ! Calculation of Runge-kutta factor k4
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_2_rk4(1,j),xh_2_rk4(2,j),xh_2_rk4(3,j) &
+                             ,vh_2_rk4(1,j),vh_2_rk4(2,j),vh_2_rk4(3,j) &
+                             ,spin(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
+                             ,spin(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
+                             ,spin(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
+                             ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_2_rk4(1,j),xh_2_rk4(2,j),xh_2_rk4(3,j) &
+                             ,spin(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
+                             ,spin(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
+                             ,spin(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
+                             ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif    
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
                    tmp = m(1)/(m(1)+m(j))
                    totftides(1) = totftides(1) + tmp*Ns(1,j)
                    totftides(2) = totftides(2) + tmp*Ns(2,j)
                    totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
+                end do   
 
-               k_rk_6x = -hdt*totftides(1)
-               k_rk_6y = -hdt*totftides(2)
-               k_rk_6z = -hdt*totftides(3)           
+                k_rk_4x = -hdt*totftides(1)
+                k_rk_4y = -hdt*totftides(2)
+                k_rk_4z = -hdt*totftides(3)           
 
-               ! Sum of Runge Kutta parameters
-               sum_RK(1) = cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x &
-                          + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
-               sum_RK(2) = cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y &
-                          + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
-               sum_RK(3) = cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
-                          + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
-
-               ! Integration on first half timestep
-               tmp  = rg2s0*Rst0*Rst0/(rg2sh*Rsth*Rsth)
-               tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
-               spin(1,1) = tmp * spin_bf(1,1) + sum_RK(1)*tmp1 
-               spin(2,1) = tmp * spin_bf(2,1) + sum_RK(2)*tmp1 
-               spin(3,1) = tmp * spin_bf(3,1) + sum_RK(3)*tmp1 
-
-
-               !---------------------------------------------------------------------
-               !--------------------  Second half of timestep  ---------------------- 
-               !---------------------------------------------------------------------
-               !---------------------------------------------------------------------
-
-               ! Torque at time t=time-dt/2
-               ! Calculation of Runge-kutta factor k1
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
-                          ,vh_1_rk5(1,j),vh_1_rk5(2,j),vh_1_rk5(3,j) &
-                          ,spin(1,1),spin(2,1),spin(3,1) &
-                          ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
-                            ,spin(1,1),spin(2,1),spin(3,1) &
-                            ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
+ 
+                ! Torque at t=time-hdt*(1-a(5)) 
+                ! Calculation of Runge-kutta factor k5
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_2_rk5(1,j),xh_2_rk5(2,j),xh_2_rk5(3,j) &
+                             ,vh_2_rk5(1,j),vh_2_rk5(2,j),vh_2_rk5(3,j) &
+                             ,spin(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
+                             ,spin(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
+                             ,spin(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
+                             ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_2_rk5(1,j),xh_2_rk5(2,j),xh_2_rk5(3,j) &
+                             ,spin(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
+                             ,spin(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
+                             ,spin(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
+                             ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif    
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
                    tmp = m(1)/(m(1)+m(j))
                    totftides(1) = totftides(1) + tmp*Ns(1,j)
                    totftides(2) = totftides(2) + tmp*Ns(2,j)
                    totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
+                end do   
 
-               k_rk_1x = -hdt*totftides(1)
-               k_rk_1y = -hdt*totftides(2)
-               k_rk_1z = -hdt*totftides(3)           
+                k_rk_5x = -hdt*totftides(1)
+                k_rk_5y = -hdt*totftides(2)
+                k_rk_5z = -hdt*totftides(3)           
 
 
-               ! Torque at t=time-hdt*(1-a(2)) 
-               ! Calculation of Runge-kutta factor k2
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_2_rk2(1,j),xh_2_rk2(2,j),xh_2_rk2(3,j) &
-                            ,vh_2_rk2(1,j),vh_2_rk2(2,j),vh_2_rk2(3,j) &
-                            ,spin(1,1) + bb2*k_rk_1x &
-                            ,spin(2,1) + bb2*k_rk_1y &
-                            ,spin(3,1) + bb2*k_rk_1z &
-                            ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_2_rk2(1,j),xh_2_rk2(2,j),xh_2_rk2(3,j) &
-                            ,spin(1,1) + bb2*k_rk_1x &
-                            ,spin(2,1) + bb2*k_rk_1y &
-                            ,spin(3,1) + bb2*k_rk_1z &
-                            ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif    
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
+                ! Torque at t=time-hdt*(1-a(6)) 
+                ! Calculation of Runge-kutta factor k6
+                do j=2,ntid+1 
+                    if (tides.eq.1) then
+                        call Torque_tides_s (nbod,m,xh_2_rk6(1,j),xh_2_rk6(2,j),xh_2_rk6(3,j) &
+                             ,vh_2_rk6(1,j),vh_2_rk6(2,j),vh_2_rk6(3,j) &
+                             ,spin(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
+                             ,spin(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
+                             ,spin(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                             ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                    else
+                        N_tid_sx = 0.0d0
+                        N_tid_sy = 0.0d0
+                        N_tid_sz = 0.0d0
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_s (nbod,m,xh_2_rk6(1,j),xh_2_rk6(2,j),xh_2_rk6(3,j) &
+                             ,spin(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
+                             ,spin(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
+                             ,spin(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                             ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                    else
+                        N_rot_sx = 0.0d0
+                        N_rot_sy = 0.0d0
+                        N_rot_sz = 0.0d0
+                    endif    
+                    Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
+                    Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
+                    Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
+                enddo
+                totftides(1) = 0.d0
+                totftides(2) = 0.d0
+                totftides(3) = 0.d0
+                do j=2,ntid+1 
                    tmp = m(1)/(m(1)+m(j))
                    totftides(1) = totftides(1) + tmp*Ns(1,j)
                    totftides(2) = totftides(2) + tmp*Ns(2,j)
                    totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
+                end do   
 
-               k_rk_2x = -hdt*totftides(1)
-               k_rk_2y = -hdt*totftides(2)
-               k_rk_2z = -hdt*totftides(3)           
-
-
-               ! Torque at t=time-hdt*(1-a(3)) 
-               ! Calculation of Runge-kutta factor k3
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_2_rk3(1,j),xh_2_rk3(2,j),xh_2_rk3(3,j) &
-                            ,vh_2_rk3(1,j),vh_2_rk3(2,j),vh_2_rk3(3,j) &
-                            ,spin(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
-                            ,spin(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
-                            ,spin(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                            ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_2_rk3(1,j),xh_2_rk3(2,j),xh_2_rk3(3,j) &
-                            ,spin(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
-                            ,spin(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
-                            ,spin(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                            ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif    
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
-                  tmp = m(1)/(m(1)+m(j))
-                  totftides(1) = totftides(1) + tmp*Ns(1,j)
-                  totftides(2) = totftides(2) + tmp*Ns(2,j)
-                  totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
-
-               k_rk_3x = -hdt*totftides(1)
-               k_rk_3y = -hdt*totftides(2)
-               k_rk_3z = -hdt*totftides(3)           
+                k_rk_6x = -hdt*totftides(1)
+                k_rk_6y = -hdt*totftides(2)
+                k_rk_6z = -hdt*totftides(3)           
 
 
-               ! Torque at t=time-hdt*(1-a(4)) 
-               ! Calculation of Runge-kutta factor k4
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_2_rk4(1,j),xh_2_rk4(2,j),xh_2_rk4(3,j) &
-                            ,vh_2_rk4(1,j),vh_2_rk4(2,j),vh_2_rk4(3,j) &
-                            ,spin(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
-                            ,spin(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
-                            ,spin(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
-                            ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_2_rk4(1,j),xh_2_rk4(2,j),xh_2_rk4(3,j) &
-                            ,spin(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
-                            ,spin(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
-                            ,spin(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
-                            ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif    
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
-                  tmp = m(1)/(m(1)+m(j))
-                  totftides(1) = totftides(1) + tmp*Ns(1,j)
-                  totftides(2) = totftides(2) + tmp*Ns(2,j)
-                  totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
+                ! Sum of Runge Kutta parameters
+                sum_RK(1) = cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x &
+                           + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
+                sum_RK(2) = cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y &
+                           + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
+                sum_RK(3) = cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
+                           + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
 
-               k_rk_4x = -hdt*totftides(1)
-               k_rk_4y = -hdt*totftides(2)
-               k_rk_4z = -hdt*totftides(3)           
-
-
-               ! Torque at t=time-hdt*(1-a(5)) 
-               ! Calculation of Runge-kutta factor k5
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_2_rk5(1,j),xh_2_rk5(2,j),xh_2_rk5(3,j) &
-                            ,vh_2_rk5(1,j),vh_2_rk5(2,j),vh_2_rk5(3,j) &
-                            ,spin(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
-                            ,spin(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
-                            ,spin(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
-                            ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_2_rk5(1,j),xh_2_rk5(2,j),xh_2_rk5(3,j) &
-                            ,spin(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
-                            ,spin(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
-                            ,spin(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
-                            ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif    
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
-                  tmp = m(1)/(m(1)+m(j))
-                  totftides(1) = totftides(1) + tmp*Ns(1,j)
-                  totftides(2) = totftides(2) + tmp*Ns(2,j)
-                  totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
-
-               k_rk_5x = -hdt*totftides(1)
-               k_rk_5y = -hdt*totftides(2)
-               k_rk_5z = -hdt*totftides(3)           
-
-
-               ! Torque at t=time-hdt*(1-a(6)) 
-               ! Calculation of Runge-kutta factor k6
-               do j=2,ntid+1 
-                   if (tides.eq.1) then
-                       call Torque_tides_s (nbod,m,xh_2_rk6(1,j),xh_2_rk6(2,j),xh_2_rk6(3,j) &
-                            ,vh_2_rk6(1,j),vh_2_rk6(2,j),vh_2_rk6(3,j) &
-                            ,spin(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
-                            ,spin(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
-                            ,spin(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                            ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
-                   else
-                       N_tid_sx = 0.0d0
-                       N_tid_sy = 0.0d0
-                       N_tid_sz = 0.0d0
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_s (nbod,m,xh_2_rk6(1,j),xh_2_rk6(2,j),xh_2_rk6(3,j) &
-                            ,spin(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
-                            ,spin(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
-                            ,spin(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                            ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
-                   else
-                       N_rot_sx = 0.0d0
-                       N_rot_sy = 0.0d0
-                       N_rot_sz = 0.0d0
-                   endif    
-                   Ns(1,j) =  tides*N_tid_sx + rot_flat*N_rot_sx
-                   Ns(2,j) =  tides*N_tid_sy + rot_flat*N_rot_sy  
-                   Ns(3,j) =  tides*N_tid_sz + rot_flat*N_rot_sz
-               enddo
-               totftides(1) = 0.d0
-               totftides(2) = 0.d0
-               totftides(3) = 0.d0
-               do j=2,ntid+1 
-                  tmp = m(1)/(m(1)+m(j))
-                  totftides(1) = totftides(1) + tmp*Ns(1,j)
-                  totftides(2) = totftides(2) + tmp*Ns(2,j)
-                  totftides(3) = totftides(3) + tmp*Ns(3,j)
-               end do   
-
-               k_rk_6x = -hdt*totftides(1)
-               k_rk_6y = -hdt*totftides(2)
-               k_rk_6z = -hdt*totftides(3)           
-
-
-               ! Sum of Runge Kutta parameters
-               sum_RK(1) = cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x &
-                          + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
-               sum_RK(2) = cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y &
-                          + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
-               sum_RK(3) = cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
-                          + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
-
-               ! Integration on second half timestep
-               tmp  = rg2s0*Rst0*Rst0/(rg2sh*Rsth*Rsth)
-               tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
-               spin(1,1) = tmp * spin(1,1) + sum_RK(1)*tmp1 
-               spin(2,1) = tmp * spin(2,1) + sum_RK(2)*tmp1 
-               spin(3,1) = tmp * spin(3,1) + sum_RK(3)*tmp1 
+                ! Integration on second half timestep
+                tmp  = rg2s0*Rst0*Rst0/(rg2sh*Rsth*Rsth)
+                tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
+                spin(1,1) = tmp * spin(1,1) + sum_RK(1)*tmp1 
+                spin(2,1) = tmp * spin(2,1) + sum_RK(2)*tmp1 
+                spin(3,1) = tmp * spin(3,1) + sum_RK(3)*tmp1 
 
 
 
-               !---------------------------------------------------------------------
-               !---------------------  PLANETS spin evolution  ----------------------
-               !---------------------------------------------------------------------
+                !---------------------------------------------------------------------
+                !---------------------  PLANETS spin evolution  ----------------------
+                !---------------------------------------------------------------------
 
-               !---------------------------------------------------------------------
-               !---------------------  First half of timestep  ---------------------- 
-               !---------------------------------------------------------------------
+                !---------------------------------------------------------------------
+                !---------------------  First half of timestep  ---------------------- 
+                !---------------------------------------------------------------------
 
-          
-               do j=2,ntid+1 
-                   tmp = - hdt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
+         
+                do j=2,ntid+1 
+                    tmp = - hdt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
 
-                   ! Torque at last time step t=time-dt
-                   ! Calculation of Runge-kutta factor k1
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
-                            ,vh_bf(1,j),vh_bf(2,j),vh_bf(3,j) &
-                            ,spin_bf(1,j),spin_bf(2,j),spin_bf(3,j),Rp10(j),sigmap(j),j &
-                            ,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
-                            ,spin_bf(1,j),spin_bf(2,j),spin_bf(3,j) &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif
-                   k_rk_1x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_1y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_1z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at last time step t=time-dt
+                    ! Calculation of Runge-kutta factor k1
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
+                             ,vh_bf(1,j),vh_bf(2,j),vh_bf(3,j) &
+                             ,spin_bf(1,j),spin_bf(2,j),spin_bf(3,j),Rp10(j),sigmap(j),j &
+                             ,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
+                             ,spin_bf(1,j),spin_bf(2,j),spin_bf(3,j) &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif
+                    k_rk_1x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_1y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_1z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Torque at t=time-hdt*(2-a(2)) 
-                   ! Calculation of Runge-kutta factor k2
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_1_rk2(1,j),xh_1_rk2(2,j),xh_1_rk2(3,j) &
-                            ,vh_1_rk2(1,j),vh_1_rk2(2,j),vh_1_rk2(3,j) &
-                            ,spin_bf(1,j)+bb2*k_rk_1x &
-                            ,spin_bf(2,j)+bb2*k_rk_1y &
-                            ,spin_bf(3,j)+bb2*k_rk_1z &
-                            ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_1_rk2(1,j),xh_1_rk2(2,j),xh_1_rk2(3,j) &
-                            ,spin_bf(1,j)+bb2*k_rk_1x &
-                            ,spin_bf(2,j)+bb2*k_rk_1y &
-                            ,spin_bf(3,j)+bb2*k_rk_1z &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif       
-                   k_rk_2x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_2y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_2z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at t=time-hdt*(2-a(2)) 
+                    ! Calculation of Runge-kutta factor k2
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_1_rk2(1,j),xh_1_rk2(2,j),xh_1_rk2(3,j) &
+                             ,vh_1_rk2(1,j),vh_1_rk2(2,j),vh_1_rk2(3,j) &
+                             ,spin_bf(1,j)+bb2*k_rk_1x &
+                             ,spin_bf(2,j)+bb2*k_rk_1y &
+                             ,spin_bf(3,j)+bb2*k_rk_1z &
+                             ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_1_rk2(1,j),xh_1_rk2(2,j),xh_1_rk2(3,j) &
+                             ,spin_bf(1,j)+bb2*k_rk_1x &
+                             ,spin_bf(2,j)+bb2*k_rk_1y &
+                             ,spin_bf(3,j)+bb2*k_rk_1z &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif       
+                    k_rk_2x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_2y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_2z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Torque at t=time-hdt*(2-a(3)) 
-                   ! Calculation of Runge-kutta factor k3
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_1_rk3(1,j),xh_1_rk3(2,j),xh_1_rk3(3,j) &
-                            ,vh_1_rk3(1,j),vh_1_rk3(2,j),vh_1_rk3(3,j) &
-                            ,spin_bf(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
-                            ,spin_bf(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
-                            ,spin_bf(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                            ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_1_rk3(1,j),xh_1_rk3(2,j),xh_1_rk3(3,j) &
-                            ,spin_bf(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
-                            ,spin_bf(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
-                            ,spin_bf(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif           
-                   k_rk_3x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_3y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_3z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at t=time-hdt*(2-a(3)) 
+                    ! Calculation of Runge-kutta factor k3
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_1_rk3(1,j),xh_1_rk3(2,j),xh_1_rk3(3,j) &
+                             ,vh_1_rk3(1,j),vh_1_rk3(2,j),vh_1_rk3(3,j) &
+                             ,spin_bf(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
+                             ,spin_bf(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
+                             ,spin_bf(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
+                             ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_1_rk3(1,j),xh_1_rk3(2,j),xh_1_rk3(3,j) &
+                             ,spin_bf(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
+                             ,spin_bf(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
+                             ,spin_bf(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif           
+                    k_rk_3x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_3y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_3z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Torque at t=time-hdt*(2-a(4)) 
-                   ! Calculation of Runge-kutta factor k4
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_1_rk4(1,j),xh_1_rk4(2,j),xh_1_rk4(3,j) &
-                            ,vh_1_rk4(1,j),vh_1_rk4(2,j),vh_1_rk4(3,j) &
-                            ,spin_bf(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
-                            ,spin_bf(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
-                            ,spin_bf(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
-                            ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_1_rk4(1,j),xh_1_rk4(2,j),xh_1_rk4(3,j) &
-                            ,spin_bf(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
-                            ,spin_bf(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
-                            ,spin_bf(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif         
-                   k_rk_4x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_4y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_4z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at t=time-hdt*(2-a(4)) 
+                    ! Calculation of Runge-kutta factor k4
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_1_rk4(1,j),xh_1_rk4(2,j),xh_1_rk4(3,j) &
+                             ,vh_1_rk4(1,j),vh_1_rk4(2,j),vh_1_rk4(3,j) &
+                             ,spin_bf(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
+                             ,spin_bf(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
+                             ,spin_bf(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
+                             ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_1_rk4(1,j),xh_1_rk4(2,j),xh_1_rk4(3,j) &
+                             ,spin_bf(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
+                             ,spin_bf(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
+                             ,spin_bf(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif         
+                    k_rk_4x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_4y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_4z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Torque at t=time-hdt*(2-a(5)) 
-                   ! Calculation of Runge-kutta factor k5
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
-                            ,vh_1_rk5(1,j),vh_1_rk5(2,j),vh_1_rk5(3,j) &
-                            ,spin_bf(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
-                            ,spin_bf(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
-                            ,spin_bf(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
-                            ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
-                            ,spin_bf(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
-                            ,spin_bf(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
-                            ,spin_bf(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif         
-                   k_rk_5x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_5y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_5z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at t=time-hdt*(2-a(5)) 
+                    ! Calculation of Runge-kutta factor k5
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
+                             ,vh_1_rk5(1,j),vh_1_rk5(2,j),vh_1_rk5(3,j) &
+                             ,spin_bf(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
+                             ,spin_bf(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
+                             ,spin_bf(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
+                             ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
+                             ,spin_bf(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
+                             ,spin_bf(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
+                             ,spin_bf(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif         
+                    k_rk_5x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_5y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_5z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Torque at t=time-hdt*(2-a(6)) 
-                   ! Calculation of Runge-kutta factor k6
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_1_rk6(1,j),xh_1_rk6(2,j),xh_1_rk6(3,j) &
-                            ,vh_1_rk6(1,j),vh_1_rk6(2,j),vh_1_rk6(3,j) &
-                            ,spin_bf(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
-                            ,spin_bf(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
-                            ,spin_bf(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                            ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_1_rk6(1,j),xh_1_rk6(2,j),xh_1_rk6(3,j) &
-                            ,spin_bf(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
-                            ,spin_bf(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
-                            ,spin_bf(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif         
-                   k_rk_6x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_6y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_6z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at t=time-hdt*(2-a(6)) 
+                    ! Calculation of Runge-kutta factor k6
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_1_rk6(1,j),xh_1_rk6(2,j),xh_1_rk6(3,j) &
+                             ,vh_1_rk6(1,j),vh_1_rk6(2,j),vh_1_rk6(3,j) &
+                             ,spin_bf(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
+                             ,spin_bf(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
+                             ,spin_bf(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                             ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_1_rk6(1,j),xh_1_rk6(2,j),xh_1_rk6(3,j) &
+                             ,spin_bf(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
+                             ,spin_bf(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
+                             ,spin_bf(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif         
+                    k_rk_6x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_6y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_6z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Integration for first half of timestep
-                   spin(1,j) = spin_bf(1,j) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x & 
-                              + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
-                   spin(2,j) = spin_bf(2,j) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y & 
-                              + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
-                   spin(3,j) = spin_bf(3,j) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
-                              + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
+                    ! Integration for first half of timestep
+                    spin(1,j) = spin_bf(1,j) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x & 
+                               + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
+                    spin(2,j) = spin_bf(2,j) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y & 
+                               + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
+                    spin(3,j) = spin_bf(3,j) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
+                               + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
 
 
-                   !-----------------------------------------------------------------
-                   !--------------------  Second half of timestep  ------------------ 
-                   !-----------------------------------------------------------------
-                   !-----------------------------------------------------------------
+                    !-----------------------------------------------------------------
+                    !--------------------  Second half of timestep  ------------------ 
+                    !-----------------------------------------------------------------
+                    !-----------------------------------------------------------------
 
-                   ! Torque at last time step t=time-dt/2
-                   ! Calculation of Runge-kutta factor k1
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
-                            ,vh_1_rk5(1,j),vh_1_rk5(2,j),vh_1_rk5(3,j) &
-                            ,spin(1,j),spin(2,j),spin(3,j),Rp10(j),sigmap(j),j &
-                            ,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
-                            ,spin(1,j),spin(2,j),spin(3,j) &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif
-                   k_rk_1x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_1y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_1z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at last time step t=time-dt/2
+                    ! Calculation of Runge-kutta factor k1
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
+                             ,vh_1_rk5(1,j),vh_1_rk5(2,j),vh_1_rk5(3,j) &
+                             ,spin(1,j),spin(2,j),spin(3,j),Rp10(j),sigmap(j),j &
+                             ,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
+                             ,spin(1,j),spin(2,j),spin(3,j) &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif
+                    k_rk_1x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_1y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_1z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Torque at t=time-hdt*(1-a(2)) 
-                   ! Calculation of Runge-kutta factor k2
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_2_rk2(1,j),xh_2_rk2(2,j),xh_2_rk2(3,j) &
-                            ,vh_2_rk2(1,j),vh_2_rk2(2,j),vh_2_rk2(3,j) &
-                            ,spin(1,j)+bb2*k_rk_1x &
-                            ,spin(2,j)+bb2*k_rk_1y &
-                            ,spin(3,j)+bb2*k_rk_1z &
-                            ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_2_rk2(1,j),xh_2_rk2(2,j),xh_2_rk2(3,j) &
-                            ,spin(1,j)+bb2*k_rk_1x &
-                            ,spin(2,j)+bb2*k_rk_1y &
-                            ,spin(3,j)+bb2*k_rk_1z &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif       
-                   k_rk_2x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_2y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_2z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at t=time-hdt*(1-a(2)) 
+                    ! Calculation of Runge-kutta factor k2
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_2_rk2(1,j),xh_2_rk2(2,j),xh_2_rk2(3,j) &
+                             ,vh_2_rk2(1,j),vh_2_rk2(2,j),vh_2_rk2(3,j) &
+                             ,spin(1,j)+bb2*k_rk_1x &
+                             ,spin(2,j)+bb2*k_rk_1y &
+                             ,spin(3,j)+bb2*k_rk_1z &
+                             ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_2_rk2(1,j),xh_2_rk2(2,j),xh_2_rk2(3,j) &
+                             ,spin(1,j)+bb2*k_rk_1x &
+                             ,spin(2,j)+bb2*k_rk_1y &
+                             ,spin(3,j)+bb2*k_rk_1z &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif       
+                    k_rk_2x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_2y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_2z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Torque at t=time-hdt*(1-a(3)) 
-                   ! Calculation of Runge-kutta factor k3
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_2_rk3(1,j),xh_2_rk3(2,j),xh_2_rk3(3,j) &
-                            ,vh_2_rk3(1,j),vh_2_rk3(2,j),vh_2_rk3(3,j) &
-                            ,spin(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
-                            ,spin(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
-                            ,spin(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                            ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_2_rk3(1,j),xh_2_rk3(2,j),xh_2_rk3(3,j) &
-                            ,spin(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
-                            ,spin(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
-                            ,spin(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif           
-                   k_rk_3x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_3y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_3z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at t=time-hdt*(1-a(3)) 
+                    ! Calculation of Runge-kutta factor k3
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_2_rk3(1,j),xh_2_rk3(2,j),xh_2_rk3(3,j) &
+                             ,vh_2_rk3(1,j),vh_2_rk3(2,j),vh_2_rk3(3,j) &
+                             ,spin(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
+                             ,spin(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
+                             ,spin(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
+                             ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_2_rk3(1,j),xh_2_rk3(2,j),xh_2_rk3(3,j) &
+                             ,spin(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
+                             ,spin(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
+                             ,spin(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif           
+                    k_rk_3x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_3y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_3z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Torque at t=time-hdt*(1-a(4)) 
-                   ! Calculation of Runge-kutta factor k4
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_2_rk4(1,j),xh_2_rk4(2,j),xh_2_rk4(3,j) &
-                            ,vh_2_rk4(1,j),vh_2_rk4(2,j),vh_2_rk4(3,j) &
-                            ,spin(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
-                            ,spin(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
-                            ,spin(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
-                            ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_2_rk4(1,j),xh_2_rk4(2,j),xh_2_rk4(3,j) &
-                            ,spin(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
-                            ,spin(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
-                            ,spin(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif         
-                   k_rk_4x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_4y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_4z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at t=time-hdt*(1-a(4)) 
+                    ! Calculation of Runge-kutta factor k4
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_2_rk4(1,j),xh_2_rk4(2,j),xh_2_rk4(3,j) &
+                             ,vh_2_rk4(1,j),vh_2_rk4(2,j),vh_2_rk4(3,j) &
+                             ,spin(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
+                             ,spin(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
+                             ,spin(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
+                             ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_2_rk4(1,j),xh_2_rk4(2,j),xh_2_rk4(3,j) &
+                             ,spin(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
+                             ,spin(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
+                             ,spin(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif         
+                    k_rk_4x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_4y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_4z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Torque at t=time-hdt*(1-a(5)) 
-                   ! Calculation of Runge-kutta factor k5
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_2_rk5(1,j),xh_2_rk5(2,j),xh_2_rk5(3,j) &
-                            ,vh_2_rk5(1,j),vh_2_rk5(2,j),vh_2_rk5(3,j) &
-                            ,spin(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
-                            ,spin(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
-                            ,spin(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
-                            ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_2_rk5(1,j),xh_2_rk5(2,j),xh_2_rk5(3,j) &
-                            ,spin(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
-                            ,spin(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
-                            ,spin(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif         
-                   k_rk_5x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_5y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_5z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at t=time-hdt*(1-a(5)) 
+                    ! Calculation of Runge-kutta factor k5
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_2_rk5(1,j),xh_2_rk5(2,j),xh_2_rk5(3,j) &
+                             ,vh_2_rk5(1,j),vh_2_rk5(2,j),vh_2_rk5(3,j) &
+                             ,spin(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
+                             ,spin(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
+                             ,spin(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
+                             ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_2_rk5(1,j),xh_2_rk5(2,j),xh_2_rk5(3,j) &
+                             ,spin(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
+                             ,spin(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
+                             ,spin(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif         
+                    k_rk_5x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_5y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_5z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Torque at t=time-hdt*(1-a(6)) 
-                   ! Calculation of Runge-kutta factor k6
-                   if (tides.eq.1) then
-                       call Torque_tides_p (nbod,m,xh_2_rk6(1,j),xh_2_rk6(2,j),xh_2_rk6(3,j) &
-                            ,vh_2_rk6(1,j),vh_2_rk6(2,j),vh_2_rk6(3,j) &
-                            ,spin(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
-                            ,spin(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
-                            ,spin(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                            ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
-                   else
-                       N_tid_px = 0.0d0
-                       N_tid_py = 0.0d0
-                       N_tid_pz = 0.0d0 
-                   endif
-                   if (rot_flat.eq.1) then 
-                       call Torque_rot_p (nbod,m,xh_2_rk6(1,j),xh_2_rk6(2,j),xh_2_rk6(3,j) &
-                            ,spin(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
-                            ,spin(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
-                            ,spin(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                            ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
-                   else
-                       N_rot_px = 0.0d0
-                       N_rot_py = 0.0d0
-                       N_rot_pz = 0.0d0 
-                   endif         
-                   k_rk_6x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
-                   k_rk_6y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
-                   k_rk_6z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
+                    ! Torque at t=time-hdt*(1-a(6)) 
+                    ! Calculation of Runge-kutta factor k6
+                    if (tides.eq.1) then
+                        call Torque_tides_p (nbod,m,xh_2_rk6(1,j),xh_2_rk6(2,j),xh_2_rk6(3,j) &
+                             ,vh_2_rk6(1,j),vh_2_rk6(2,j),vh_2_rk6(3,j) &
+                             ,spin(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
+                             ,spin(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
+                             ,spin(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                             ,Rp10(j),sigmap(j),j,N_tid_px,N_tid_py,N_tid_pz)
+                    else
+                        N_tid_px = 0.0d0
+                        N_tid_py = 0.0d0
+                        N_tid_pz = 0.0d0 
+                    endif
+                    if (rot_flat.eq.1) then 
+                        call Torque_rot_p (nbod,m,xh_2_rk6(1,j),xh_2_rk6(2,j),xh_2_rk6(3,j) &
+                             ,spin(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
+                             ,spin(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
+                             ,spin(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                    else
+                        N_rot_px = 0.0d0
+                        N_rot_py = 0.0d0
+                        N_rot_pz = 0.0d0 
+                    endif         
+                    k_rk_6x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
+                    k_rk_6y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
+                    k_rk_6z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
 
-                   ! Integration for second half of timestep
-                   spin(1,j) = spin(1,j) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x &
-                              + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
-                   spin(2,j) = spin(2,j) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y &
-                              + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
-                   spin(3,j) = spin(3,j) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
-                              + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
+                    ! Integration for second half of timestep
+                    spin(1,j) = spin(1,j) + cc(1)*k_rk_1x + cc(2)*k_rk_2x + cc(3)*k_rk_3x &
+                               + cc(4)*k_rk_4x + cc(5)*k_rk_5x + cc(6)*k_rk_6x
+                    spin(2,j) = spin(2,j) + cc(1)*k_rk_1y + cc(2)*k_rk_2y + cc(3)*k_rk_3y &
+                               + cc(4)*k_rk_4y + cc(5)*k_rk_5y + cc(6)*k_rk_6y
+                    spin(3,j) = spin(3,j) + cc(1)*k_rk_1z + cc(2)*k_rk_2z + cc(3)*k_rk_3z &
+                               + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
 
-               enddo
-           endif
-       endif 
+                enddo
+            endif
+        endif 
 
-       !---------------------------------------------------------------------------
-       !---------------------------------------------------------------------------
-       !-------------------------  Write spin and stuff  --------------------------
-       !---------------------------------------------------------------------------
-       !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
+        !-------------------------  Write spin and stuff  --------------------------
+        !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
 
-       if ((flagbug.ge.1).and.((tides.eq.1).or.(rot_flat.eq.1))) then          
-          if (time.ge.timestep) then
-             open(13, file="spins.out", access="append")
-             write(13,'(8("  ", es19.9e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
-             close(13)
-             do j=2,ntid+1
-                write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
-                write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
-                write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
-                open(13, file=planet_spin_filename, access='append')
-                write(13,'(6("  ", es19.9e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+        if ((flagbug.ge.1).and.((tides.eq.1).or.(rot_flat.eq.1))) then          
+            if (time.ge.timestep) then
+                open(13, file="spins.out", access="append")
+                write(13,'(8("  ", es19.9e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
                 close(13)
-                open(13, file=planet_orbt_filename, access='append')
-                write(13,'(5("  ", es19.9e3))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
-                     ,horb(3,j)/horbn(j),horbn(j)
-                close(13)
-                open(13, file=planet_dEdt_filename, access='append')
-                write(13,'(4("  ", es19.9e3))') time/365.25d0,dEdt(j)
-                close(13)
-             enddo
-             timestep = timestep + output*365.25d0
-          endif
-       endif    
+                do j=2,ntid+1
+                    write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
+                    write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
+                    write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
+                    open(13, file=planet_spin_filename, access='append')
+                    write(13,'(6("  ", es19.9e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+                    close(13)
+                    open(13, file=planet_orbt_filename, access='append')
+                    write(13,'(5("  ", es19.9e3))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
+                         ,horb(3,j)/horbn(j),horbn(j)
+                    close(13)
+                    open(13, file=planet_dEdt_filename, access='append')
+                    write(13,'(4("  ", es19.9e3))') time/365.25d0,dEdt(j)
+                    close(13)
+                enddo
+                timestep = timestep + output*365.25d0
+            endif
+        endif    
 
-       !---------------------------------------------------------------------------
-       !---------------------------------------------------------------------------
-       !------------------------  ACCELERATIONS -----------------------------------
-       !---------------------------------------------------------------------------
-       !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
+        !------------------------  ACCELERATIONS -----------------------------------
+        !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
 
 
-       ! Initialization of the sum of all the force along x, y and z
-       ! For tides
-       sum_F_tid_x = 0.0d0
-       sum_F_tid_y = 0.0d0
-       sum_F_tid_z = 0.0d0
-       ! For rotation
-       sum_F_rot_x = 0.0d0
-       sum_F_rot_y = 0.0d0
-       sum_F_rot_z = 0.0d0
-       ! For GR
-       sum_F_GR_x = 0.0d0
-       sum_F_GR_y = 0.0d0
-       sum_F_GR_z = 0.0d0
+        ! Initialization of the sum of all the force along x, y and z
+        ! For tides
+        sum_F_tid_x = 0.0d0
+        sum_F_tid_y = 0.0d0
+        sum_F_tid_z = 0.0d0
+        ! For rotation
+        sum_F_rot_x = 0.0d0
+        sum_F_rot_y = 0.0d0
+        sum_F_rot_z = 0.0d0
+        ! For GR
+        sum_F_GR_x = 0.0d0
+        sum_F_GR_y = 0.0d0
+        sum_F_GR_z = 0.0d0
 
-       ! The acceleration in the heliocentric coordinate is not just F/m,
-       ! it must be the reduced mass, and the effect of other planets on the
-       ! star also has to be removed, see in article for explanation
+        ! The acceleration in the heliocentric coordinate is not just F/m,
+        ! it must be the reduced mass, and the effect of other planets on the
+        ! star also has to be removed, see in article for explanation
 
-       do j=2,ntid+1 
+        do j=2,ntid+1 
 
-           if (tides.eq.1) then 
-               tmp  = K2/m(j)
-               tmp1 = K2/m(1) 
-               ! Here I call subroutine that gives the total tidal force
-               call F_tides_tot (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
-                    ,Rsth5,Rsth10,k2s,dissstar,sigmast &
-                    ,Rp5(j),Rp10(j),k2fp(j-1),k2p(j-1),sigmap(j) &
-                    ,j,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
-               ! Calculation of the acceleration     
-               a1(1,j) = tmp*F_tid_tot_x
-               a1(2,j) = tmp*F_tid_tot_y
-               a1(3,j) = tmp*F_tid_tot_z
-               ! Calculation of the sum of the acceleration of all planets
-               sum_F_tid_x = sum_F_tid_x + tmp1*F_tid_tot_x
-               sum_F_tid_y = sum_F_tid_y + tmp1*F_tid_tot_y
-               sum_F_tid_z = sum_F_tid_z + tmp1*F_tid_tot_z
-               ! Here I calculate the instantaneous energy loss, but maybe I don't
-               ! need to do that each time step as Sergi pointed out
-               call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
-                    ,Rp10(j),sigmap(j),j,tmp_dEdt)
-               dEdt(j) = tmp_dEdt
-           else
-               a1(1,j) = 0.0d0
-               a1(2,j) = 0.0d0
-               a1(3,j) = 0.0d0
-           endif
+            if (tides.eq.1) then 
+                tmp  = K2/m(j)
+                tmp1 = K2/m(1) 
+                ! Here I call subroutine that gives the total tidal force
+                call F_tides_tot (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+                     ,Rsth5,Rsth10,k2s,dissstar,sigmast &
+                     ,Rp5(j),Rp10(j),k2fp(j-1),k2p(j-1),sigmap(j) &
+                     ,j,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
+                ! Calculation of the acceleration     
+                a1(1,j) = tmp*F_tid_tot_x
+                a1(2,j) = tmp*F_tid_tot_y
+                a1(3,j) = tmp*F_tid_tot_z
+                ! Calculation of the sum of the acceleration of all planets
+                sum_F_tid_x = sum_F_tid_x + tmp1*F_tid_tot_x
+                sum_F_tid_y = sum_F_tid_y + tmp1*F_tid_tot_y
+                sum_F_tid_z = sum_F_tid_z + tmp1*F_tid_tot_z
+                ! Here I calculate the instantaneous energy loss, but maybe I don't
+                ! need to do that each time step as Sergi pointed out
+                call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+                     ,Rp10(j),sigmap(j),j,tmp_dEdt)
+                dEdt(j) = tmp_dEdt
+            else
+                a1(1,j) = 0.0d0
+                a1(2,j) = 0.0d0
+                a1(3,j) = 0.0d0
+            endif
 
-           if (rot_flat.eq.1) then 
-               tmp  = K2/m(j)
-               tmp1 = K2/m(1) 
-               ! Here I call subroutine that gives the total rotation flattening
-               ! induced force
-               call F_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin &
-                    ,Rsth5,k2s,Rp5(j),k2fp(j-1) &
-                    ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
-               ! Calculation of the acceleration     
-               a2(1,j) = tmp*F_rot_tot_x
-               a2(2,j) = tmp*F_rot_tot_y
-               a2(3,j) = tmp*F_rot_tot_z
-               ! Calculation of the sum of the acceleration of all planets
-               sum_F_rot_x = sum_F_rot_x + tmp1*F_rot_tot_x
-               sum_F_rot_y = sum_F_rot_y + tmp1*F_rot_tot_y
-               sum_F_rot_z = sum_F_rot_z + tmp1*F_rot_tot_z
-           else
-               a2(1,j) = 0.0d0
-               a2(2,j) = 0.0d0
-               a2(3,j) = 0.0d0
-           endif
+            if (rot_flat.eq.1) then 
+                tmp  = K2/m(j)
+                tmp1 = K2/m(1) 
+                ! Here I call subroutine that gives the total rotation flattening
+                ! induced force
+                call F_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin &
+                     ,Rsth5,k2s,Rp5(j),k2fp(j-1) &
+                     ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
+                ! Calculation of the acceleration     
+                a2(1,j) = tmp*F_rot_tot_x
+                a2(2,j) = tmp*F_rot_tot_y
+                a2(3,j) = tmp*F_rot_tot_z
+                ! Calculation of the sum of the acceleration of all planets
+                sum_F_rot_x = sum_F_rot_x + tmp1*F_rot_tot_x
+                sum_F_rot_y = sum_F_rot_y + tmp1*F_rot_tot_y
+                sum_F_rot_z = sum_F_rot_z + tmp1*F_rot_tot_z
+            else
+                a2(1,j) = 0.0d0
+                a2(2,j) = 0.0d0
+                a2(3,j) = 0.0d0
+            endif
 
-           if (GenRel.eq.1) then 
-               tmp  = K2/m(j)
-               tmp1 = K2/m(1) 
-               ! Here I call subroutine that gives the total GR force
-               call F_GenRel (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j) &
-                    ,tintin(j),C2,j,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
-               ! Calculation of the acceleration     
-               a3(1,j) = tmp*F_GR_tot_x
-               a3(2,j) = tmp*F_GR_tot_y
-               a3(3,j) = tmp*F_GR_tot_z
-               ! Calculation of the sum of the acceleration of all planets
-               sum_F_GR_x = sum_F_GR_x + tmp1*F_GR_tot_x
-               sum_F_GR_y = sum_F_GR_y + tmp1*F_GR_tot_y
-               sum_F_GR_z = sum_F_GR_z + tmp1*F_GR_tot_z
-           else
-               a3(1,j) = 0.0d0
-               a3(2,j) = 0.0d0
-               a3(3,j) = 0.0d0
-           endif
-       end do
+            if (GenRel.eq.1) then 
+                tmp  = K2/m(j)
+                tmp1 = K2/m(1) 
+                ! Here I call subroutine that gives the total GR force
+                call F_GenRel (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j) &
+                     ,tintin(j),C2,j,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
+                ! Calculation of the acceleration     
+                a3(1,j) = tmp*F_GR_tot_x
+                a3(2,j) = tmp*F_GR_tot_y
+                a3(3,j) = tmp*F_GR_tot_z
+                ! Calculation of the sum of the acceleration of all planets
+                sum_F_GR_x = sum_F_GR_x + tmp1*F_GR_tot_x
+                sum_F_GR_y = sum_F_GR_y + tmp1*F_GR_tot_y
+                sum_F_GR_z = sum_F_GR_z + tmp1*F_GR_tot_z
+            else
+                a3(1,j) = 0.0d0
+                a3(2,j) = 0.0d0
+                a3(3,j) = 0.0d0
+            endif
+        end do
 
-       ! Sum of all accelerations
-       do j=2,ntid+1
-           a(1,j) = tides*(a1(1,j)+sum_F_tid_x)+rot_flat*(a2(1,j)+sum_F_rot_x)+GenRel*(a3(1,j)+sum_F_GR_x)
-           a(2,j) = tides*(a1(2,j)+sum_F_tid_y)+rot_flat*(a2(2,j)+sum_F_rot_y)+GenRel*(a3(2,j)+sum_F_GR_y)
-           a(3,j) = tides*(a1(3,j)+sum_F_tid_z)+rot_flat*(a2(3,j)+sum_F_rot_z)+GenRel*(a3(3,j)+sum_F_GR_z)
-       end do
+        ! Sum of all accelerations
+        do j=2,ntid+1
+            a(1,j) = tides*(a1(1,j)+sum_F_tid_x)+rot_flat*(a2(1,j)+sum_F_rot_x)+GenRel*(a3(1,j)+sum_F_GR_x)
+            a(2,j) = tides*(a1(2,j)+sum_F_tid_y)+rot_flat*(a2(2,j)+sum_F_rot_y)+GenRel*(a3(2,j)+sum_F_GR_y)
+            a(3,j) = tides*(a1(3,j)+sum_F_tid_z)+rot_flat*(a2(3,j)+sum_F_rot_z)+GenRel*(a3(3,j)+sum_F_GR_z)
+        end do
 
     ! Sergi 
     endif
