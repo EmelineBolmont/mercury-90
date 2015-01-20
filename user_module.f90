@@ -309,7 +309,6 @@ module user_module
     ! Definition of factor used for GR force calculation
     if (GenRel.eq.1) tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
 
-    !Sergi: addition here
     if (flagbug.ge.1) then
 
         ! If you have tides of rot flat
@@ -2199,36 +2198,6 @@ module user_module
 
         !---------------------------------------------------------------------------
         !---------------------------------------------------------------------------
-        !-------------------------  Write spin and stuff  --------------------------
-        !---------------------------------------------------------------------------
-        !---------------------------------------------------------------------------
-
-        if ((flagbug.ge.1).and.((tides.eq.1).or.(rot_flat.eq.1))) then          
-            if (time.ge.timestep) then
-                open(13, file="spins.out", access="append")
-                write(13,'(8("  ", es19.9e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
-                close(13)
-                do j=2,ntid+1
-                    write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
-                    write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
-                    write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
-                    open(13, file=planet_spin_filename, access='append')
-                    write(13,'(6("  ", es19.9e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
-                    close(13)
-                    open(13, file=planet_orbt_filename, access='append')
-                    write(13,'(5("  ", es19.9e3))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
-                         ,horb(3,j)/horbn(j),horbn(j)
-                    close(13)
-                    open(13, file=planet_dEdt_filename, access='append')
-                    write(13,'(4("  ", es19.9e3))') time/365.25d0,dEdt(j)
-                    close(13)
-                enddo
-                timestep = timestep + output*365.25d0
-            endif
-        endif    
-
-        !---------------------------------------------------------------------------
-        !---------------------------------------------------------------------------
         !------------------------  ACCELERATIONS -----------------------------------
         !---------------------------------------------------------------------------
         !---------------------------------------------------------------------------
@@ -2270,11 +2239,6 @@ module user_module
                 sum_F_tid_x = sum_F_tid_x + tmp1*F_tid_tot_x
                 sum_F_tid_y = sum_F_tid_y + tmp1*F_tid_tot_y
                 sum_F_tid_z = sum_F_tid_z + tmp1*F_tid_tot_z
-                ! Here I calculate the instantaneous energy loss, but maybe I don't
-                ! need to do that each time step as Sergi pointed out
-                call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
-                     ,Rp10(j),sigmap(j),j,tmp_dEdt)
-                dEdt(j) = tmp_dEdt
             else
                 a1(1,j) = 0.0d0
                 a1(2,j) = 0.0d0
@@ -2331,7 +2295,42 @@ module user_module
             a(3,j) = tides*(a1(3,j)+sum_F_tid_z)+rot_flat*(a2(3,j)+sum_F_rot_z)+GenRel*(a3(3,j)+sum_F_GR_z)
         end do
 
-    ! Sergi 
+        !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
+        !-------------------------  Write spin and stuff  --------------------------
+        !---------------------------------------------------------------------------
+        !---------------------------------------------------------------------------
+
+        if ((flagbug.ge.1).and.((tides.eq.1).or.(rot_flat.eq.1))) then          
+            if (time.ge.timestep) then
+                open(13, file="spins.out", access="append")
+                write(13,'(8("  ", es19.9e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
+                close(13)
+                do j=2,ntid+1
+                    write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
+                    write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
+                    write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
+                    open(13, file=planet_spin_filename, access='append')
+                    write(13,'(6("  ", es19.9e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+                    close(13)
+                    open(13, file=planet_orbt_filename, access='append')
+                    write(13,'(5("  ", es19.9e3))') time/365.25d0,horb(1,j)/horbn(j),horb(2,j)/horbn(j) &
+                         ,horb(3,j)/horbn(j),horbn(j)
+                    close(13)
+                    if (tides.eq.1) then
+                        ! Here I calculate the instantaneous energy loss
+                        call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+                             ,Rp10(j),sigmap(j),j,tmp_dEdt)
+                        dEdt(j) = tmp_dEdt
+                    endif
+                    open(13, file=planet_dEdt_filename, access='append')
+                    write(13,'(4("  ", es19.9e3))') time/365.25d0,dEdt(j)
+                    close(13)
+                enddo
+                timestep = timestep + output*365.25d0
+            endif
+        endif    
+
     endif
     
     ! Attribution of new values (correponding at t) to old one (t-dt)
