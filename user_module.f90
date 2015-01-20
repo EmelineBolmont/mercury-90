@@ -1529,9 +1529,9 @@ module user_module
                ! Integration on first half timestep
                tmp  = rg2s0*Rst0*Rst0/(rg2sh*Rsth*Rsth)
                tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
-               spin(1,1) = tmp * spin_bf(1,1) + sum_RK(1)/tmp1 
-               spin(2,1) = tmp * spin_bf(2,1) + sum_RK(2)/tmp1 
-               spin(3,1) = tmp * spin_bf(3,1) + sum_RK(3)/tmp1 
+               spin(1,1) = tmp * spin_bf(1,1) + sum_RK(1)*tmp1 
+               spin(2,1) = tmp * spin_bf(2,1) + sum_RK(2)*tmp1 
+               spin(3,1) = tmp * spin_bf(3,1) + sum_RK(3)*tmp1 
 
 
                !---------------------------------------------------------------------
@@ -1816,9 +1816,9 @@ module user_module
                ! Integration on second half timestep
                tmp  = rg2s0*Rst0*Rst0/(rg2sh*Rsth*Rsth)
                tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
-               spin(1,1) = tmp * spin(1,1) + sum_RK(1)/tmp1 
-               spin(2,1) = tmp * spin(2,1) + sum_RK(2)/tmp1 
-               spin(3,1) = tmp * spin(3,1) + sum_RK(3)/tmp1 
+               spin(1,1) = tmp * spin(1,1) + sum_RK(1)*tmp1 
+               spin(2,1) = tmp * spin(2,1) + sum_RK(2)*tmp1 
+               spin(3,1) = tmp * spin(3,1) + sum_RK(3)*tmp1 
 
 
 
