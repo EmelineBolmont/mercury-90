@@ -43,7 +43,7 @@ if n_tid ge 1 then begin
    print,filenames
    ; In Mercury spin is in day-1, but later on it is converted to s-1
    readcol,filenames,toto1,spinstx,spinsty,spinstz,Rst,rg2s,k2s,sigmas,format='F,F,F,F,F,F,F,F'
-   
+
    spinpx = dblarr(n_tid,n_elements(toto1))
    spinpy = dblarr(n_tid,n_elements(toto1))
    spinpz = dblarr(n_tid,n_elements(toto1))
@@ -54,7 +54,7 @@ if n_tid ge 1 then begin
    Rp     = dblarr(n_tid,n_elements(toto1)) 
    rg2p   = dblarr(n_tid,n_elements(toto1))
    dEdt   = dblarr(n_tid,n_elements(toto1))
-   
+
    for i=0,n_tid-1 do begin 
       filenamep = 'spinp'+strtrim(i+1,2)+'.out'
       print,filenamep
@@ -63,23 +63,22 @@ if n_tid ge 1 then begin
       readcol,filenamep,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='F,F,F,F,F,F'
       spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpz(i,*) = spinp1z
       Rp(i,*) = Rp1 & rg2p(i,*) = rg2p1
-      
+
       filenameh = 'horb'+strtrim(i+1,2)+'.out'
       print,filenameh
       ; The unit here does not matter, we always normalize later
       readcol,filenameh,toto1,horb1x,horb1y,horb1z,horb1,format='F,F,F,F,F'
       horbx(i,*) = horb1x & horby(i,*) = horb1y & horbz(i,*) = horb1z  
       horbp(i,*) = horb1
-      
+
       filenamee = 'dEdt'+strtrim(i+1,2)+'.out'
       print,filenamee
       ; Mercury gives dE/dt in Msun.AU^2.day^-3, we convert here in W
       readcol,filenamee,toto1,tmp,format='F,F'
       dEdt(i,*) = tmp*6.90125d37 ;conversation from Msun.AU^2.day^-3 to W
-      
    endfor
 endif 
-   
+
 ; n line maximum
 nmaxb = max(nlineb)
 if idl eq 1 then nline = max(nline_idl)
@@ -189,7 +188,7 @@ if n_tid ge 1 then begin
       rg2si      =  dblarr(nbp_idl,nline)
       tidefluxi  =  dblarr(nbp_idl,nline)
       Ip         =  dblarr(nbp_idl)  
-            
+
       for i = 0,nbp_idl-1 do begin
          headeri = strarr(1)
          nline = file_lines(filename_idl(i))-1
@@ -198,7 +197,7 @@ if n_tid ge 1 then begin
          readf,1,headeri
          readf,1,read_array
          close,1
-         
+
          ti[i,0:nline-1] = read_array(0,*);+toto1(0)
          ai[i,0:nline-1] = read_array(1,*)
          ei[i,0:nline-1] = read_array(2,*)
@@ -210,7 +209,7 @@ if n_tid ge 1 then begin
          Rsi[i,0:nline-1] = read_array(8,*)
          rg2si[i,0:nline-1] = read_array(9,*)
       endfor
-      
+
       for i = 0,nbp_idl-1 do begin
          for j = 0,nline-1 do begin
             tidefluxi(i,j) = enerdot(ai(i,j)*AU,ei(i,j),rotpi(i,j),oblpi(i,j)*!Pi/180.d0,G $
@@ -219,7 +218,7 @@ if n_tid ge 1 then begin
          Ip(i) = rg2p(i,0)*mb(i,0)*Msun*(Rp(i,0)*rsun)^2
       endfor 
    endif
-  
+
    if n_tid ge 1 then begin
       ;! Obliquities calculations
       tmp              = dblarr(n_elements(horb1x))
@@ -229,10 +228,10 @@ if n_tid ge 1 then begin
       precession_angle = dblarr(n_tid,n_elements(horb1x))
       ; That's where the spin is converted to s-1
       spinp            = dblarr(n_tid,n_elements(horb1x))
-      
+
       for i = 0,n_tid-1 do begin
          for bou = 0,n_elements(horb1x)-1 do begin
-         
+
             tmp(bou)=(horbx(i,bou)*spinpx(i,bou) $
                       +horby(i,bou)*spinpy(i,bou) $
                       +horbz(i,bou)*spinpz(i,bou)) $
@@ -241,7 +240,7 @@ if n_tid ge 1 then begin
             if abs(tmp(bou)) le 1.d0 then $ 
                oblpm(i,bou) = acos(tmp(bou))*180.d0/!Pi
             if abs(tmp(bou)) gt 1.d0 then oblpm(i,bou) = 1.0d-6
-           
+
             tmp(bou)=(horbx(i,bou)*spinstx(bou) $
                       +horby(i,bou)*spinsty(bou) $
                       +horbz(i,bou)*spinstz(bou)) $
@@ -250,7 +249,7 @@ if n_tid ge 1 then begin
             if abs(tmp(bou)) le 1.d0 then $ 
                oblsm(i,bou) = acos(tmp(bou))*180.d0/!Pi
             if abs(tmp(bou)) gt 1.d0 then oblsm(i,bou) = 1.0d-6
-            
+
             tmp(bou)=1.d0/sin(oblpm(i,bou)) $
                       *(xb(i,bou)*spinpx(i,bou) $
                       +yb(i,bou)*spinpy(i,bou) $
@@ -263,11 +262,10 @@ if n_tid ge 1 then begin
 
             spinp(i,bou) = sqrt(spinpx(i,bou)^2 $
                    +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
-           
          endfor
       endfor
    endif
-   
+
    ; Angular momentum calculation
    horb_vec = dblarr(nbp,n_elements(horb1x))
    horb = dblarr(n_elements(horb1x))
@@ -275,11 +273,11 @@ if n_tid ge 1 then begin
    momspin = dblarr(n_tid,n_elements(horb1x))
    momspitot = dblarr(n_elements(horb1x))
    momstar = dblarr(n_elements(horb1x))
-   
+
    ; Tidal flux
    tidalflux = dblarr(n_tid,n_elements(horb1x))
    inst_tidalflux = dblarr(n_tid,n_elements(horb1x))
-   
+
    for j=0,nbp-1 do begin
       for i=0,n_elements(horb1x)-1 do begin
          horb_vec(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
@@ -291,23 +289,24 @@ if n_tid ge 1 then begin
    for i=0,n_elements(horb1x)-1 do begin
       momstar(i)=rg2s(i)*Ms*(Rst(i)*Rsun)^2*spinst(i) 
    endfor
-    
+
    for j=0,n_tid-1 do begin
       for i=0,n_elements(horb1x)-1 do begin
          momspin(j,i) = rg2p(j,i)*mb(j,i)*Msun*(Rp(j,i)*rsun)^2*spinp(j,i)
-         
+
          ; Calculation of energydot and tidal flux, in W/m2
          tidalflux(j,i) = enerdot(ab(j,i)*AU,eb(j,i),spinp(j,i),oblpm(j,i)*!Pi/180.d0,G,mb(j,i)*Msun $
                ,Ms,Rp(j,i)*rsun,k2pDeltap(j)*day)/(4*!Pi*(Rp(j,i)*rsun)^2)
          inst_tidalflux(j,i) = dEdt(j,i)/(4*!Pi*(Rp(j,i)*rsun)^2)
       endfor
    endfor
+
    for i=0,n_elements(horb1x)-1 do begin
       for j=0,n_tid-1 do begin
          momspitot(i)=momspitot(i)+momspin(j,i)
       endfor
    endfor
-   
+
    indicend = dblarr(2,nbp)
    for j = 0,nbp-1 do begin
       for i = 0,n_elements(tb(j,*))-1 do begin
@@ -318,6 +317,7 @@ if n_tid ge 1 then begin
          endelse
       endfor
    endfor
+
    if n_tid ge 1 then begin
       for i = 0,n_elements(toto1(*))-1 do begin
          if toto1(i) le 1.d10 then begin

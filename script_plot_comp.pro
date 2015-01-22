@@ -55,7 +55,7 @@ if conservation eq 0 then begin
              ,xGRIDSTYLE=1,xTICKLEN=0.5 $
              ,xstyle=1,ystyle=1 $
              ,/xlog,/ylog
-        
+
         ;;! Mercury
         for j = 0,nbp-1 do begin
            ;i = nbp-1-j
@@ -64,17 +64,17 @@ if conservation eq 0 then begin
            oplot,tb(i,*),ab(i,*)*(1-eb(i,*)),color=incolor-i*indcolor,thick=2,linestyle=2
            oplot,tb(i,*),ab(i,*)*(1+eb(i,*)),color=incolor-i*indcolor,thick=2,linestyle=2
         endfor
-        
+
         ;; oplot,toto1(*),Rst(*)*Rsun/AU,thick=5,color=255
         if n_tid ge 1 then $
            oplot,toto1(*), $
                  (G*(Ms+mb(0,*)*Msun))^(1/3.)*(sqrt(spinstz(*)^2+spinstx(*)^2+spinsty(*)^2)/86400.d0)^(-2./3.)/AU $
                        ,thick=7;,color=255
-                    
+
         print,'Porb =',2.d0*!Pi/sqrt(G*(Ms+mb(0,0)*msun))*(ab(0,0)*AU)^(3.d0/2.d0)*1.0d0/(86400.d0),' days'
         print,'min(e) =',min(eb(0,*));!,min(eb(1,*))
         print,'max(e) =',max(eb(0,*));!,max(eb(1,*))
-        
+
         ;;! IDL
         if idl eq 1 then begin
            for i = 0,nbp_idl-1 do begin
@@ -85,7 +85,7 @@ if conservation eq 0 then begin
                  ,thick=4,linestyle=2;,color=255
            endfor
         endif
-        
+
         ;;! eccentricity with respect to t
         multiplot
         if n_tid eq 0 then plot,tb(0,*),eb(0,*) $
@@ -106,18 +106,20 @@ if conservation eq 0 then begin
              ,xGRIDSTYLE=1,xTICKLEN=0.5 $
              ,xstyle=1,ystyle=1 $
              ,/xlog,/ylog
+
         for j = 0,nbp-1 do begin
            ;i = nbp-1-j
            i = j
            oplot,tb(i,*),eb(i,*),color=incolor-i*indcolor,thick=5,linestyle=0;,psym=2
         endfor
+
         if idl eq 1 then begin
            for i = 0,nbp_idl-1 do begin
               oplot,ti(i,*),ei(i,*) $
                  ,color=idlicol-i*idlcol,thick=4,linestyle=2
            endfor
         endif
-        
+
         if n_tid ge 1 then begin
             ;;! Tidal flux with respect to t
             multiplot
@@ -137,18 +139,21 @@ if conservation eq 0 then begin
                oplot,tb(i,*),inst_tidalflux(i,*),color=incolor-i*indcolor,thick=1,linestyle=2;,psym=2
                oplot,tb(i,*),tidalflux(i,*),color=incolor-i*indcolor,thick=5,linestyle=0;,psym=2
             endfor
+
             if idl eq 1 then begin
                for i = 0,nbp_idl-1 do begin
                   oplot,ti(i,*),tidefluxi(i,*) $
                      ,color=idlicol-i*idlcol,thick=4,linestyle=2
                endfor
             endif
+
             ;; oplot,[Tinf,Tsup],[2.4,2.4],linestyle=2,thick=8,color=1
             ;; oplot,[Tinf,Tsup],[4.8,4.8],linestyle=2,thick=8,color=1
             ;; oplot,[Tinf,Tsup],[300,300],linestyle=3,thick=8,color=1
         endif
         multiplot,/reset
     endif 
+
     if ae eq 0 then begin
         ;! Inclination
         multiplot,[1,3],ygap=0.01
@@ -160,15 +165,14 @@ if conservation eq 0 then begin
              ,ytitle='Obliquity (deg)' $
              ,xstyle=1,ystyle=1 $
              ,/xlog,/ylog
-        
+
         ;! Mercury
-        
         for j=0,n_tid-1 do begin
            ;i = n_tid-1-j
            i = j
            oplot,toto1(*),oblpm(i,*),color=incolor-i*indcolor,thick=5
         endfor
-        
+
         ;! idl
         if idl eq 1 then begin
            for i=0,nbp_idl-1 do begin
@@ -176,7 +180,7 @@ if conservation eq 0 then begin
                   ,color=idlicol-i*idlcol,thick=4,linestyle=2
            endfor
         endif
-        
+
         multiplot
         plot,tb(0,*),incb(0,*) $
              ,/nodata $
@@ -186,14 +190,14 @@ if conservation eq 0 then begin
              ,ytitle='Inclination (deg)' $
              ,xstyle=1,ystyle=1 $
              ,/xlog,/ylog
-        
+
         ;! Mercury
         for j=0,n_tid-1 do begin
            ;i = n_tid-1-j
            i = j
            oplot,toto1(*),oblsm(i,*),color=incolor-i*indcolor,thick=5
         endfor
-        
+
         ;! idl
         if idl eq 1 then begin
            for i=0,nbp_idl-1 do begin
@@ -201,10 +205,12 @@ if conservation eq 0 then begin
                   ,color=idlicol-i*idlcol,thick=4,linestyle=2
            endfor
         endif
+
         ;; for i = 0,nbp-1 do begin
         ;;    oplot,tb(i,*),incb(i,*),color=255,thick=5,linestyle=5
         ;; endfor
-        
+
+
         ;! Rotation of bodies
         multiplot
         plot,tb(0,*),ab(0,*) $
@@ -221,7 +227,7 @@ if conservation eq 0 then begin
              ;; ,ytickv=[20,30,40,50,70,100] $
              ,xstyle=1,ystyle=1 $
              ,/xlog,/ylog
-         
+
         ;! Mercury
         i=0
         for j=0,n_tid-1 do begin
@@ -230,9 +236,10 @@ if conservation eq 0 then begin
            oplot,toto1(*),2*!Pi/(spinp(i,*)*hr) $
               ,thick=5,linestyle=0,color=incolor-i*indcolor
         endfor
+
         oplot,toto1(*),2*!Pi/(spinst(*)*hr) $
               ,thick=4,linestyle=0;,color=incolor-1*indcolor
-        
+
         for j=0,n_tid-1 do begin
            ;i = n_tid-1-j
            i = j
@@ -240,7 +247,7 @@ if conservation eq 0 then begin
               /(pseudorot(eb(i,*),G,mb(i,*)*msun,Ms)*(ab(i,*)*AU)^(-3./2.)*hr) $
         		,color=incolor-i*indcolor,thick=3,linestyle=5
         endfor
-        
+
         ;! idl
         if idl eq 1 then begin
            for i = 0,nbp_idl-1 do begin
@@ -253,9 +260,11 @@ if conservation eq 0 then begin
               ;; oplot,tb(i,*),2*!Pi/(pseudorot(eb(i,*),G,mb(i,*)*Msun,Ms)*(ab(i,*)*AU)^(-3./2.)*hr) $
               ;;       ,color=255,thick=3,linestyle=5
            endfor
+
         endif
     multiplot,/reset
     endif
+
     if ae eq 2 then begin
         plot,tb(0,*),ab(0,*) $
              ,/nodata $
@@ -279,35 +288,7 @@ if conservation eq 0 then begin
 endif
 
 if conservation eq 1 then begin
-    ;; multiplot,[1,2],ygap=0.01
-    ;; plot,tb(0,*),ab(0,*) $
-    ;;      ,/nodata $
-    ;;      ,xrange=[Tinf,Tsup],yrange=[1d-20,1d20] $
-    ;;      ,charsize=2.5,charthick=3.5 $ ;,charsize=1.8,charthick=3
-    ;;      ;;,xtitle='Time (years)' $
-    ;;      ;; ,ytitle='Fractional change of total angular momentum' $
-    ;;      ,xGRIDSTYLE=1,xTICKLEN=0.5 $
-    ;;      ,xstyle=1,ystyle=1 $
-    ;;      ,/xlog,/ylog
-    ;; 
-    ;; for j=0,nbp-1 do begin
-    ;;    oplot,toto1(*),horb_vec(j,*)/horb_vec(j,0),linestyle=0,thick=12,color=incolor+j*indcolor   
-    ;;    if j le n_tid then oplot,toto1(*),momspin(j,*)/momspin(j,0),linestyle=2,thick=12,color=incolor+j*indcolor
-    ;; endfor   
-    ;; oplot,toto1(*),momstar(*)/momstar(0),linestyle=0,thick=12,color=255
-    ;; 
-    ;; if idl eq 1 then begin
-    ;;     for i = 0,n_tid-1 do begin
-    ;;        oplot,ti(i,*),(mb(i,*)*msun*Ms*sqrt(G*ai(i,*)*AU*(1-ei(i,*)^2)/(mb(i,*)+Ms))) $
-    ;;           /(mb(i,0)*msun*Ms*sqrt(G*ai(i,0)*AU*(1-ei(i,0)^2)/(mb(i,0)+Ms))) $
-    ;;           ,psym=sym(1),thick=1,color=incolor+j*indcolor
-    ;;        oplot,ti(i,*),Ip(i)*rotpi(i,*)/(Ip(i)*rotpi(i,0)),psym=sym(1),thick=1,color=incolor+j*indcolor
-    ;;        oplot,ti(i,*),Isi(*)*rotsi(i,*)/(Isi(0)*rotsi(i,0)),psym=sym(1),thick=1,color=incolor+j*indcolor
-    ;;     endfor
-    ;; endif
-    ;; 
-    ;; multiplot
-    
+
     plot,tb(0,*),ab(0,*) $
          ,/nodata $
          ,xrange=[Tinf,Tsup],yrange=[1d-10,1d0] $
@@ -317,10 +298,10 @@ if conservation eq 1 then begin
          ,xGRIDSTYLE=1,xTICKLEN=0.5 $
          ,xstyle=1,ystyle=1 $
          ,/xlog,/ylog
-    
+
     oplot,toto1(*),abs((horb(*)+momspitot(*)+momstar(*)-(horb(0)+momspitot(0)+momstar(0))) $
           /(horb(0)+momspitot(0)+momstar(0))),linestyle=0,thick=5,color=incolor-0*indcolor
-    
+
     if idl eq 1 then begin
        for i = 0,nbp_idl-1 do begin
           oplot,ti(i,*),abs((mb(i,*)*msun*Ms*sqrt(G*ai(i,*)*AU*(1-ei(i,*)^2)/(mb(i,*)*msun+Ms)) $
@@ -330,7 +311,7 @@ if conservation eq 1 then begin
                 ,color=idlicol-i*idlcol,thick=4,linestyle=2
        endfor
     endif
-       
+
 endif
 
 END

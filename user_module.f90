@@ -1523,11 +1523,19 @@ module user_module
                            + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
 
                 ! Integration on first half timestep
-                tmp  = rg2s0*Rst0*Rst0/(rg2sh*Rsth*Rsth)
-                tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
-                spin(1,1) = tmp * spin_bf(1,1) + sum_RK(1)*tmp1 
-                spin(2,1) = tmp * spin_bf(2,1) + sum_RK(2)*tmp1 
-                spin(3,1) = tmp * spin_bf(3,1) + sum_RK(3)*tmp1 
+                if (Rscst.ne.1) then
+                    tmp  = rg2s0*Rst0*Rst0/(rg2sh*Rsth*Rsth)
+                    tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
+                    spin(1,1) = tmp * spin_bf(1,1) + sum_RK(1) * tmp1 
+                    spin(2,1) = tmp * spin_bf(2,1) + sum_RK(2) * tmp1 
+                    spin(3,1) = tmp * spin_bf(3,1) + sum_RK(3) * tmp1 
+                endif
+                if (Rscst.eq.1) then
+                    tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
+                    spin(1,1) = spin_bf(1,1) + sum_RK(1) * tmp1
+                    spin(2,1) = spin_bf(2,1) + sum_RK(2) * tmp1
+                    spin(3,1) = spin_bf(3,1) + sum_RK(3) * tmp1
+                endif
 
 
                 !---------------------------------------------------------------------
@@ -1810,11 +1818,19 @@ module user_module
                            + cc(4)*k_rk_4z + cc(5)*k_rk_5z + cc(6)*k_rk_6z
 
                 ! Integration on second half timestep
-                tmp  = rg2s0*Rst0*Rst0/(rg2sh*Rsth*Rsth)
-                tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
-                spin(1,1) = tmp * spin(1,1) + sum_RK(1)*tmp1 
-                spin(2,1) = tmp * spin(2,1) + sum_RK(2)*tmp1 
-                spin(3,1) = tmp * spin(3,1) + sum_RK(3)*tmp1 
+                if (Rscst.ne.1) then
+                    tmp  = rg2sh*Rsth*Rsth/(rg2s*Rst*Rst)
+                    tmp1 = K2/(m(1)*rg2s*Rst*Rst)
+                    spin(1,1) = tmp * spin(1,1) + sum_RK(1) * tmp1 
+                    spin(2,1) = tmp * spin(2,1) + sum_RK(2) * tmp1 
+                    spin(3,1) = tmp * spin(3,1) + sum_RK(3) * tmp1 
+                endif
+                if (Rscst.eq.1) then
+                    tmp1 = K2/(m(1)*rg2sh*Rsth*Rsth)
+                    spin(1,1) = spin(1,1) + sum_RK(1) * tmp1 
+                    spin(2,1) = spin(2,1) + sum_RK(2) * tmp1 
+                    spin(3,1) = spin(3,1) + sum_RK(3) * tmp1 
+                endif
 
 
 
