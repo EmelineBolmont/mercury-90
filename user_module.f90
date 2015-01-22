@@ -276,7 +276,6 @@ module user_module
             ia(j) = 0.d0
             na(j) = 0.d0
             la(j) = 0.d0
-            timestep = time
         endif
     end do
 
@@ -291,6 +290,7 @@ module user_module
         dt = bobo(2)
         hdt = 0.5d0*dt
         flagtime = flagtime+1
+        timestep = 0.0d0
     endif
 
     ! Following calculations in heliocentric coordinates   
