@@ -10,7 +10,7 @@ module tides_constant_GR
   !----------------------------------------------------------------------------- 
   ! Output of spin every 'output' years
   real(double_precision), parameter :: output = 100
-  
+
   !---------------------------  effects  --------------------------------------- 
   ! If you want effect of rotational induced flattening or not
   integer, parameter :: rot_flat = 1
