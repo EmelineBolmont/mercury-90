@@ -284,7 +284,7 @@ subroutine write_simus_properties()
           endif
           if (planet_type(j-1).eq.3) then
              write(10,'(a,f12.5,a,f12.5)') 'k2p =',k2p_what,', rg2p =',rg2p_what
-             write(10,'(a,f12.5,a,f12.5)') 'k2pdeltap =',k2pdeltap_what,' day, dissplan =',dissplan(j)
+             write(10,'(a,es19.9e3,a,f12.5)') 'k2pdeltap =',k2pdeltap_what,' day, dissplan =',dissplan(j)
           endif
        enddo
     endif
