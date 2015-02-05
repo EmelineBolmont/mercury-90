@@ -50,7 +50,6 @@ if n_tid ge 1 then begin
    horbx  = dblarr(n_tid,n_elements(toto1))
    horby  = dblarr(n_tid,n_elements(toto1))
    horbz  = dblarr(n_tid,n_elements(toto1))
-   horbp  = dblarr(n_tid,n_elements(toto1))
    Rp     = dblarr(n_tid,n_elements(toto1)) 
    rg2p   = dblarr(n_tid,n_elements(toto1))
    dEdt   = dblarr(n_tid,n_elements(toto1))
@@ -60,21 +59,20 @@ if n_tid ge 1 then begin
       print,filenamep
       ; in Mercury spin is in day-1, later converted to s-1
       ; Rp is here in Rsun, rg2p does not have unit
-      readcol,filenamep,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='F,F,F,F,F,F'
+      readcol,filenamep,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='F,3(e21.14),F,F'
       spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpz(i,*) = spinp1z
       Rp(i,*) = Rp1 & rg2p(i,*) = rg2p1
 
       filenameh = 'horb'+strtrim(i+1,2)+'.out'
       print,filenameh
       ; The unit here does not matter, we always normalize later
-      readcol,filenameh,toto1,horb1x,horb1y,horb1z,horb1,format='F,F,F,F,F'
+      readcol,filenameh,toto1,horb1x,horb1y,horb1z,format='F,3(e21.14)'
       horbx(i,*) = horb1x & horby(i,*) = horb1y & horbz(i,*) = horb1z  
-      horbp(i,*) = horb1
 
       filenamee = 'dEdt'+strtrim(i+1,2)+'.out'
       print,filenamee
       ; Mercury gives dE/dt in Msun.AU^2.day^-3, we convert here in W
-      readcol,filenamee,toto1,tmp,format='F,F'
+      readcol,filenamee,toto1,tmp,format='F,e21.14'
       dEdt(i,*) = tmp*6.90125d37 ;conversation from Msun.AU^2.day^-3 to W
    endfor
 endif 
