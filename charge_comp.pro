@@ -42,7 +42,7 @@ if n_tid ge 1 then begin
    filenames = 'spins.out'
    print,filenames
    ; In Mercury spin is in day-1, but later on it is converted to s-1
-   readcol,filenames,toto1,spinstx,spinsty,spinstz,Rst,rg2s,k2s,sigmas,format='F,3(e21.10),F,F,F,F'
+   readcol,filenames,toto1,spinstx,spinsty,spinstz,Rst,rg2s,k2s,sigmas,format='F,F,F,F,F,F,F,F'
 
    spinpx = dblarr(n_tid,n_elements(toto1))
    spinpy = dblarr(n_tid,n_elements(toto1))
@@ -59,20 +59,20 @@ if n_tid ge 1 then begin
       print,filenamep
       ; in Mercury spin is in day-1, later converted to s-1
       ; Rp is here in Rsun, rg2p does not have unit
-      readcol,filenamep,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='F,3(e21.10),F,F'
+      readcol,filenamep,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,format='F,F,F,F,F,F'
       spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpz(i,*) = spinp1z
       Rp(i,*) = Rp1 & rg2p(i,*) = rg2p1
 
       filenameh = 'horb'+strtrim(i+1,2)+'.out'
       print,filenameh
       ; The unit here does not matter, we always normalize later
-      readcol,filenameh,toto1,horb1x,horb1y,horb1z,format='F,3(e21.10)'
+      readcol,filenameh,toto1,horb1x,horb1y,horb1z,format='F,F,F,F'
       horbx(i,*) = horb1x & horby(i,*) = horb1y & horbz(i,*) = horb1z  
 
       filenamee = 'dEdt'+strtrim(i+1,2)+'.out'
       print,filenamee
       ; Mercury gives dE/dt in Msun.AU^2.day^-3, we convert here in W
-      readcol,filenamee,toto1,tmp,format='F,e21.10'
+      readcol,filenamee,toto1,tmp,format='F,F'
       dEdt(i,*) = tmp*6.90125d37 ;conversation from Msun.AU^2.day^-3 to W
    endfor
 endif 
@@ -291,7 +291,7 @@ if n_tid ge 1 then begin
 
    for j=0,nbp-1 do begin
       for i=0,n_elements(horb1x)-1 do begin
-         horb_vec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*horbp(j,i)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
+         horb_vec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
          horb_sec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(G*(Ms+mb(j,i)*Msun)*ab(j,i)*AU)*sqrt(1-eb(j,i)^2)*cos(incb(j,i)*!pi/180.d0) ; kg.m^2.s-1
          horb_circ(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(G*(Ms+mb(j,i)*Msun)*ab(j,i)*AU) ; kg.m^2.s-1
          ; Sum on number of planets to have total orbital momentum
