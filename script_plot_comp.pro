@@ -26,8 +26,8 @@ ops_plot=0
 ; Obliquity, inclination, rotation period: ae = 0
 ; semi-major axis, ecc, tidal flux: ae = 1
 ; Precession angle : ae = 2
-; Conservation of angular momentum: ae = 3
-; Angular momentum deficit: ae = 4
+; Angular momentum deficit: ae = 3
+; Conservation of angular momentum: ae = 4
 ae = 1
 
 if ops_plot eq 1 then begin
@@ -306,7 +306,7 @@ if ae eq 3 then begin
          ,/xlog,/ylog
 
     oplot,toto1(*),AMD(*),linestyle=0,thick=5
-    oplot,toto1(*),AMD_sec(*),linestyle=0,thick=5,color=80
+    oplot,toto1(*),AMD_sec(*),linestyle=5,thick=5
     print,'Average of AMD',mean(AMD(*))
     print,'Average of AMD_sec',mean(AMD_sec(*))
 endif
