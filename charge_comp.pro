@@ -267,8 +267,21 @@ if n_tid ge 1 then begin
    endif
 
    ; Angular momentum calculation
+   ; calculated with horb coming from mercury
    horb_vec = dblarr(nbp,n_elements(horb1x))
-   horb = dblarr(n_elements(horb1x))
+   ; calculated with sma, ecc and inclination
+   horb_sec = dblarr(nbp,n_elements(horb1x))
+   ; circular angular momentum (what it should be with ecc = 0, inc = 0)
+   horb_circ = dblarr(nbp,n_elements(horb1x))
+   ; Sum over all planets
+   horb_v = dblarr(n_elements(horb1x))
+   horb_s = dblarr(n_elements(horb1x))
+   horb_c = dblarr(n_elements(horb1x))
+
+   ; Angular momentum deficit calculation 
+   AMD     = dblarr(n_elements(horb1x))
+   AMD_sec = dblarr(n_elements(horb1x))
+
    spinst = dblarr(n_elements(horb1x))
    momspin = dblarr(n_tid,n_elements(horb1x))
    momspitot = dblarr(n_elements(horb1x))
@@ -280,9 +293,17 @@ if n_tid ge 1 then begin
 
    for j=0,nbp-1 do begin
       for i=0,n_elements(horb1x)-1 do begin
-         horb_vec(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
+         horb_vec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*horbp(j,i)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
+         horb_sec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(G*(Ms+mb(j,i)*Msun)*ab(j,i)*AU)*sqrt(1-eb(j,i)^2)*cos(incb(j,i)*!pi/180.d0) ; kg.m^2.s-1
+         horb_circ(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(G*(Ms+mb(j,i)*Msun)*ab(j,i)*AU) ; kg.m^2.s-1
          ; Sum on number of planets to have total orbital momentum
-         horb(i) = horb(i)+horb_vec(j,i)
+         horb_v(i) = horb_v(i) + horb_vec(j,i)
+         horb_s(i) = horb_s(i) + horb_sec(j,i)
+         horb_c(i) = horb_c(i) + horb_circ(j,i)
+         ; Calculation of angular momentum deficit
+         AMD(i)     = horb_c(i) - horb_v(i)
+         AMD_sec(i) = horb_c(i) - horb_s(i)
+
          spinst(i) = sqrt(spinstx(i)^2+spinsty(i)^2+spinstz(i)^2)/day ; s-1
       endfor
    endfor
