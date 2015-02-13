@@ -151,9 +151,11 @@ module tides_constant_GR
   ! k2delta_t for Jupiter: 2-3d-2 s, here in day (Leconte)
   real(double_precision), parameter :: k2delta_jup = 2.893519d-7
 
-  ! Some stuff, constants mainly
+  ! Radius of the Sun in AU 
   real(double_precision), parameter :: rsun = 4.67920694d-3
+  ! Radius of Earth in AU
   real(double_precision), parameter :: rearth = 4.25874677d-5
+  ! Ratio between mass of the Sun and mass of Earth
   real(double_precision), parameter :: m2earth = (1.9891d6/5.9794d0)
   ! meter in AU
   real(double_precision), parameter :: minau = 6.68458d-12
