@@ -65,11 +65,11 @@ module tides_constant_GR
   ! 0: Earth-like (mass-radius relationship, Fortney 2007) 
   ! 1: Terrestrial (no mass-radius relationship)
   ! 2: Gas giant
-  ! 3: others (like Neptune)
-  integer, parameter, dimension(ntid) :: planet_type = (/0,0/)
+  ! 3: user chooses everything
+  integer, parameter, dimension(ntid) :: planet_type = (/0,3/)
   ! If planet_type ne 0, then indicate radius in Rearth
   ! for ex: 1 or 0.954d0*Rjup
-  real(double_precision), parameter, dimension(ntid) :: radius_p = (/0.d0,0.d0/)
+  real(double_precision), parameter, dimension(ntid) :: radius_p = (/0.d0,1.d0/)
 
   !---------------------------  initial spin  ----------------------------------
   ! If pseudo_rot eq 0 : initial period as given by Pp0 (in hr)
@@ -78,20 +78,22 @@ module tides_constant_GR
   real(double_precision), parameter, dimension(ntid) :: Pp0 = (/24.d0,24.d0/)
 
   ! Planets obliquities in rad
-  real(double_precision), parameter, dimension(ntid) :: oblp = (/0.0d0,0.0d0/)
+  real(double_precision), parameter, dimension(ntid) :: oblp = (/0.0d0,0.2d0/)
 
   !---------------------  for planets with planet_type=3  ----------------------
   !--------------  love number, radius of gyration, dissipation  ---------------
   ! Radius of gyration
-  real(double_precision), parameter :: rg2p_what = 3.308d-1
-  ! love number
-  real(double_precision), parameter :: k2p_what = 0.305d0
-  ! k2delta_t
-  real(double_precision), parameter :: k2pdeltap_what = 2.465278d-3
+  real(double_precision), parameter, dimension(ntid) :: rg2p_what = (/0.d0,3.308d-1/)
+  ! Tidal love number
+  real(double_precision), parameter, dimension(ntid) :: k2tp_what = (/0.d0,0.299d0/)
+  ! Fluid love number
+  real(double_precision), parameter, dimension(ntid) :: k2fp_what = (/0.d0,0.9532d0/)
+  ! k2delta_t (day)
+  real(double_precision), parameter, dimension(ntid) :: k2pdeltap_what = (/0.0d0,2.465278d-3/)
 
   !---------------------------  dissipation  -----------------------------------
   ! factor to multiply the value of the dissipation of the planets
-  real(double_precision), parameter, dimension(ntid) :: dissplan = (/1.d0,10.d0/)
+  real(double_precision), parameter, dimension(ntid) :: dissplan = (/1.d0,1.d0/)
 
 
   !----------------------------------------------------------------------------- 
@@ -130,7 +132,8 @@ module tides_constant_GR
   real(double_precision), parameter :: k2st_Sun = 0.03d0 
   ! Radius of gyration, love number and k2delta_t for terrestrial planets
   real(double_precision), parameter :: rg2p_terr = 3.308d-1
-  real(double_precision), parameter :: k2p_terr = 0.305d0
+  real(double_precision), parameter :: k2fp_terr = 0.9532d0
+  real(double_precision), parameter :: k2p_terr = 0.299d0
   real(double_precision), parameter :: k2pdeltap_terr = 2.465278d-3
   ! Radius of gyration, love number and k2delta_t for gas giants
   real(double_precision), parameter :: rg2p_gg = 2.54d-1
@@ -275,7 +278,7 @@ subroutine write_simus_properties()
        do j = 2, ntid+1
           write(10,'(a,i1)') 'PLANET',j
           if ((planet_type(j-1).eq.0).or.(planet_type(j-1).eq.1)) then
-             write(10,'(a,f12.5,a,f12.5)') 'k2p =',k2p_terr,', rg2p =',rg2p_terr
+             write(10,'(a,f12.5,a,f12.5)') 'k2fp =',k2fp_terr,'k2p =',k2p_terr,', rg2p =',rg2p_terr
              write(10,'(a,f12.5,a,f12.5)') 'k2pdeltap =',k2pdeltap_terr,' day, dissplan =',dissplan(j-1)
           endif
           if (planet_type(j-1).eq.2) then
@@ -283,8 +286,8 @@ subroutine write_simus_properties()
              write(10,'(a,f12.5,a,f12.5)') 'k2pdeltap =',k2pdeltap_gg,' day, dissplan =',dissplan(j-1)
           endif
           if (planet_type(j-1).eq.3) then
-             write(10,'(a,f12.5,a,f12.5)') 'k2p =',k2p_what,', rg2p =',rg2p_what
-             write(10,'(a,es19.9e3,a,f12.5)') 'k2pdeltap =',k2pdeltap_what,' day, dissplan =',dissplan(j-1)
+             write(10,'(a,f12.5,a,f12.5)') 'k2p =',k2tp_what(j-1),'k2p =',k2fp_what(j-1),', rg2p =',rg2p_what(j-1)
+             write(10,'(a,es19.9e3,a,f12.5)') 'k2pdeltap =',k2pdeltap_what(j-1),' day, dissplan =',dissplan(j-1)
           endif
        enddo
     endif

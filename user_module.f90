@@ -666,7 +666,7 @@ module user_module
                         Pst0 = Ps0(iPs0)
                     endif
                     ! Dissipation for the BD
-                    sigmast = sigma_BD
+                    sigmast = dissstar*sigma_BD
 
                     ! Initialization of the things that change: radius and radius of
                     ! gyration
@@ -705,7 +705,7 @@ module user_module
                     rg2s  = rg2_dM
                     k2s   = k2st_dM
                     ! Dissipation for the dM
-                    sigmast = sigma_dM
+                    sigmast = dissstar*sigma_dM
                     ! Value of initial rotation period for dM
                     Pst = Period_st
 
@@ -741,7 +741,7 @@ module user_module
                     rg2s  = rg2_Sun
                     k2s   = k2st_Sun
                     ! Dissipation for the Sun-like star
-                    sigmast = sigma_Sun
+                    sigmast = dissstar*sigma_Sun
                     ! Value of initial rotation period for Sun-like star
                     Pst = Period_st
 
@@ -814,7 +814,7 @@ module user_module
                     rg2s  = rg2_what
                     k2s   = k2st_what
                     ! Dissipation
-                    sigmast = sigma_what
+                    sigmast = dissstar*sigma_what
                     ! Value of initial rotation period
                     Pst = Period_st
                     ! Value of the radius 
@@ -874,7 +874,7 @@ module user_module
                     if ((planet_type(j-1).eq.0).or.(planet_type(j-1).eq.1)) then
                         rg2p(j-1) = rg2p_terr
                         k2p(j-1) = k2p_terr
-                        k2fp(j-1) = k2p_terr
+                        k2fp(j-1) = k2fp_terr
                         if (tides.eq.1) then
                             k2pdeltap(j-1) = k2pdeltap_terr
                             sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
@@ -894,11 +894,11 @@ module user_module
 
                     ! planet_type = 3: you give the values you want in tides_constant_GR
                     if (planet_type(j-1).eq.3) then
-                        rg2p(j-1) = rg2p_what
-                        k2p(j-1) = k2p_what
-                        k2fp(j-1) = k2p_what
+                        rg2p(j-1) = rg2p_what(j-1)
+                        k2p(j-1) = k2tp_what(j-1)
+                        k2fp(j-1) = k2fp_what(j-1)
                         if (tides.eq.1) then
-                            k2pdeltap(j-1) = k2pdeltap_what
+                            k2pdeltap(j-1) = k2pdeltap_what(j-1)
                             sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
                         endif
                     endif
@@ -1256,7 +1256,7 @@ module user_module
                         call Torque_tides_s (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
                            ,vh_bf(1,j),vh_bf(2,j),vh_bf(3,j) &
                            ,spin_bf(1,1),spin_bf(2,1),spin_bf(3,1) &
-                           ,Rst0_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                           ,Rst0_10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1299,7 +1299,7 @@ module user_module
                              ,spin_bf(1,1) + bb2*k_rk_1x &
                              ,spin_bf(2,1) + bb2*k_rk_1y &
                              ,spin_bf(3,1) + bb2*k_rk_1z &
-                             ,Rst0_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                             ,Rst0_10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1344,7 +1344,7 @@ module user_module
                              ,spin_bf(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
                              ,spin_bf(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
                              ,spin_bf(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                             ,Rst0_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                             ,Rst0_10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1389,7 +1389,7 @@ module user_module
                              ,spin_bf(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
                              ,spin_bf(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
                              ,spin_bf(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
-                             ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                             ,Rsth10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1434,7 +1434,7 @@ module user_module
                              ,spin_bf(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
                              ,spin_bf(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
                              ,spin_bf(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
-                             ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                             ,Rsth10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1479,7 +1479,7 @@ module user_module
                              ,spin_bf(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
                              ,spin_bf(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
                              ,spin_bf(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                             ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                             ,Rsth10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1550,7 +1550,7 @@ module user_module
                         call Torque_tides_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
                            ,vh_1_rk5(1,j),vh_1_rk5(2,j),vh_1_rk5(3,j) &
                            ,spin(1,1),spin(2,1),spin(3,1) &
-                           ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                           ,Rsth10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1593,7 +1593,7 @@ module user_module
                              ,spin(1,1) + bb2*k_rk_1x &
                              ,spin(2,1) + bb2*k_rk_1y &
                              ,spin(3,1) + bb2*k_rk_1z &
-                             ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                             ,Rsth10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1638,7 +1638,7 @@ module user_module
                              ,spin(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
                              ,spin(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
                              ,spin(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                             ,Rsth10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                             ,Rsth10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1683,7 +1683,7 @@ module user_module
                              ,spin(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
                              ,spin(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
                              ,spin(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
-                             ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                             ,Rst_10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1728,7 +1728,7 @@ module user_module
                              ,spin(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
                              ,spin(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
                              ,spin(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
-                             ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                             ,Rst_10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -1773,7 +1773,7 @@ module user_module
                              ,spin(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
                              ,spin(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
                              ,spin(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                             ,Rst_10,dissstar,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
+                             ,Rst_10,sigmast,j,N_tid_sx,N_tid_sy,N_tid_sz)
                     else
                         N_tid_sx = 0.0d0
                         N_tid_sy = 0.0d0
@@ -2244,7 +2244,7 @@ module user_module
                 tmp1 = K2/m(1) 
                 ! Here I call subroutine that gives the total tidal force
                 call F_tides_tot (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
-                     ,Rsth5,Rsth10,k2s,dissstar,sigmast &
+                     ,Rsth5,Rsth10,k2s,sigmast &
                      ,Rp5(j),Rp10(j),k2fp(j-1),k2p(j-1),sigmap(j) &
                      ,j,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
                 ! Calculation of the acceleration     
@@ -2550,7 +2550,7 @@ module user_module
   !-----------------------------------------------------------------------------
   ! Dissipative part of the radial tidal force
   subroutine F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-         ,R_star10,diss_star,sigma_star &
+         ,R_star10,sigma_star &
          ,R_plan10,sigma_plan,j,Ftidr_diss)
 
       use physical_constant
@@ -2558,7 +2558,7 @@ module user_module
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-      real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
+      real(double_precision),intent(in) :: R_star10,sigma_star
       real(double_precision),intent(in) :: R_plan10,sigma_plan
       real(double_precision),intent(in) :: m(nbod)
       real(double_precision), intent(out) :: Ftidr_diss
@@ -2572,7 +2572,7 @@ module user_module
       tmp1 = m(1)*m(1)
       tmp2 = m(j)*m(j)
       Ftidr_diss =  - 13.5d0*v_rad/(r_8*tmp) &
-                *(tmp2*R_star10*diss_star*sigma_star &
+                *(tmp2*R_star10*sigma_star &
                 +tmp1*R_plan10*sigma_plan)              
       !-------------------------------------------------------------------------
       return
@@ -2581,7 +2581,7 @@ module user_module
   !-----------------------------------------------------------------------------
   ! Sum of the dissipative and conservative part of the radial force
   subroutine F_tides_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-         ,R_star5,R_star10,k2_star,diss_star,sigma_star &
+         ,R_star5,R_star10,k2_star,sigma_star &
          ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,Ftidr)
 
       use physical_constant
@@ -2589,7 +2589,7 @@ module user_module
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-      real(double_precision),intent(in) :: diss_star,sigma_star,sigma_plan
+      real(double_precision),intent(in) :: sigma_star,sigma_plan
       real(double_precision),intent(in) :: R_star5,R_star10,k2_star
       real(double_precision),intent(in) :: R_plan5,R_plan10,k2f_plan,k2_plan
       real(double_precision),intent(in) :: m(nbod)
@@ -2601,7 +2601,7 @@ module user_module
          ,R_star5,k2_star &
          ,R_plan5,k2f_plan,j,Ftidr_cons)
       call F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-         ,R_star10,diss_star,sigma_star &
+         ,R_star10,sigma_star &
          ,R_plan10,sigma_plan,j,Ftidr_diss)
  
       Ftidr = Ftidr_cons + Ftidr_diss            
@@ -2611,7 +2611,7 @@ module user_module
 
   !-----------------------------------------------------------------------------
   ! Orthoradial part of the force due to stellar tides
-  subroutine F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10,diss_star &
+  subroutine F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10 &
          ,sigma_star,j,Ftidos)
   
       use physical_constant
@@ -2619,7 +2619,7 @@ module user_module
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz
-      real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
+      real(double_precision),intent(in) :: R_star10,sigma_star
       real(double_precision),intent(in) :: m(nbod)
       real(double_precision), intent(out) :: Ftidos
       ! Local
@@ -2627,7 +2627,7 @@ module user_module
       !-------------------------------------------------------------------------
       call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
 
-      Ftidos = 4.5d0*m(j)*m(j)*R_star10*diss_star*sigma_star/(K2*K2*r_7)
+      Ftidos = 4.5d0*m(j)*m(j)*R_star10*sigma_star/(K2*K2*r_7)
       !-------------------------------------------------------------------------
       return
   end subroutine F_tides_ortho_star 
@@ -2685,14 +2685,14 @@ module user_module
   !-----------------------------------------------------------------------------
   ! Torque on star created by planet 
   subroutine Torque_tides_s (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spinx,spiny,spinz &
-       ,R_star10,diss_star,sigma_star,j,N_tid_sx,N_tid_sy,N_tid_sz)
+       ,R_star10,sigma_star,j,N_tid_sx,N_tid_sy,N_tid_sz)
   
       implicit none
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
       real(double_precision),intent(in) :: spinx,spiny,spinz
-      real(double_precision),intent(in) :: R_star10,diss_star,sigma_star
+      real(double_precision),intent(in) :: R_star10,sigma_star
       real(double_precision),intent(in) :: m(nbod)
       real(double_precision), intent(out) :: N_tid_sx,N_tid_sy,N_tid_sz
       ! Local
@@ -2700,7 +2700,7 @@ module user_module
       !-------------------------------------------------------------------------
       call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
       call r_scal_spin (xhx,xhy,xhz,spinx,spiny,spinz,rscalspin)
-      call F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10,diss_star &
+      call F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10 &
               ,sigma_star,j,Ftidos)          
 
       N_tid_sx = Ftidos*(rr*spinx-rscalspin*xhx/rr-1.0d0/rr*(xhy*vhz-xhz*vhy))
@@ -2713,7 +2713,7 @@ module user_module
   !-----------------------------------------------------------------------------
   ! Total tidal force
   subroutine F_tides_tot (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,spin &
-       ,R_star5,R_star10,k2_star,diss_star,sigma_star &
+       ,R_star5,R_star10,k2_star,sigma_star &
        ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j &
        ,F_tid_tot_x,F_tid_tot_y,F_tid_tot_z)
 
@@ -2722,7 +2722,7 @@ module user_module
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-      real(double_precision),intent(in) :: diss_star,sigma_star,sigma_plan
+      real(double_precision),intent(in) :: sigma_star,sigma_plan
       real(double_precision),intent(in) :: R_star5,R_star10,k2_star
       real(double_precision),intent(in) :: R_plan5,R_plan10,k2f_plan,k2_plan
       real(double_precision),intent(in) :: m(nbod),spin(3,10)
@@ -2732,10 +2732,10 @@ module user_module
       real(double_precision) :: Ftidr,Ftidos,Ftidop
       !-------------------------------------------------------------------------
       call F_tides_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-         ,R_star5,R_star10,k2_star,diss_star,sigma_star &
+         ,R_star5,R_star10,k2_star,sigma_star &
          ,R_plan5,R_plan10,k2f_plan,k2_plan,sigma_plan,j,Ftidr)
       call F_tides_ortho_star (nbod,m,xhx,xhy,xhz,R_star10 &
-         ,diss_star,sigma_star,j,Ftidos)
+         ,sigma_star,j,Ftidos)
       call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
       call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
       call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
@@ -2776,7 +2776,7 @@ module user_module
       real(double_precision) :: spinx,spiny,spinz,N_tid_px,N_tid_py,N_tid_pz
       !-------------------------------------------------------------------------
       call F_tides_rad_diss (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz &
-         ,0.0d0,0.0d0,0.0d0 &
+         ,0.0d0,0.0d0 &
          ,R_plan10,sigma_plan,j,Ftidr_diss)
       call F_tides_ortho_plan (nbod,m,xhx,xhy,xhz,R_plan10,sigma_plan,j,Ftidop)
       spinx = spin(1,j)
