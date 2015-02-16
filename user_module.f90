@@ -2335,7 +2335,7 @@ module user_module
                     write(13,'(4("  ", es20.10e3))') time/365.25d0,horb(1,j),horb(2,j),horb(3,j)
                     close(13)
                     if (tides.eq.1) then
-                        ! Here I calculate the instantaneous energy loss
+                        ! Here I calculate the instantaneous energy loss in Msun.AU^2.day^-3
                         call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
                              ,Rp10(j),sigmap(j),j,tmp_dEdt)
                         dEdt(j) = tmp_dEdt
