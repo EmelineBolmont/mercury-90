@@ -89,7 +89,7 @@ module user_module
     ! Initial rotation and rotation of the star:
     real(double_precision) :: Pst0,Pst
     ! Love number for the star:
-    real(double_precision) :: k2s
+    real(double_precision) :: k2s,k2fs
     ! Dissipation of the star:
     real(double_precision) :: sigmast
 
@@ -211,7 +211,7 @@ module user_module
     save tintin
 
     ! for the dissipation calculation
-    save sigmast,k2s
+    save sigmast,k2s,k2fs
     save k2p,k2fp,rg2p
 
     ! Flags
@@ -662,6 +662,9 @@ module user_module
                         k2s  = k2st(iPs0)
                         Pst0 = Ps0(iPs0)
                     endif
+
+                    ! Fluid Love number = potential Love number 
+                    k2fs = k2s
                     ! Dissipation for the BD
                     sigmast = dissstar*sigma_BD
 
@@ -698,9 +701,12 @@ module user_module
                 !---------------------------------------------------------------
                 !-------------------------  M DWARF  ---------------------------
                 if (M_dwarf.eq.1) then 
-                    ! radius of gyration, love number for dM
+                    ! radius of gyration    
                     rg2s  = rg2_dM
+                    ! potential love number
                     k2s   = k2st_dM
+                    ! fluid love number
+                    k2fs  = k2fst_what
                     ! Dissipation for the dM
                     sigmast = dissstar*sigma_dM
                     ! Value of initial rotation period for dM
@@ -734,9 +740,12 @@ module user_module
                 !---------------------------------------------------------------
                 !----------------------  SUN LIKE STAR  ------------------------
                 if (Sun_like_star.eq.1) then 
-                    ! radius of gyration, love number for Sun-like star
+                    ! radius of gyration    
                     rg2s  = rg2_Sun
+                    ! potential love number
                     k2s   = k2st_Sun
+                    ! fluid love number
+                    k2fs  = k2fst_what
                     ! Dissipation for the Sun-like star
                     sigmast = dissstar*sigma_Sun
                     ! Value of initial rotation period for Sun-like star
@@ -791,6 +800,9 @@ module user_module
                     Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
                     Rst0_10 = Rst0_5*Rst0_5
 
+                    ! fluid love number = potential Love number
+                    k2fs = k2s
+
                     ! I use here Rsth and rg2s because it is the one used in the expression of
                     ! the force later on
                     Rsth     = Rst0   
@@ -807,13 +819,17 @@ module user_module
                 !---------------------------------------------------------------
                 !-----------------------  NON EVOLVING -------------------------
                 if (Rscst.eq.1) then 
-                    ! radius of gyration, love number when host body does not evolve
+                    ! radius of gyration    
                     rg2s  = rg2_what
+                    ! potential love number
                     k2s   = k2st_what
+                    ! fluid love number
+                    k2fs  = k2fst_what
                     ! Dissipation
                     sigmast = dissstar*sigma_what
                     ! Value of initial rotation period
                     Pst = Period_st
+
                     ! Value of the radius 
                     Rsth   = radius_star*rsun
                     Rsth5  = Rsth*Rsth*Rsth*Rsth*Rsth
@@ -1264,7 +1280,7 @@ module user_module
                     if (rot_flat.eq.1) then 
                         call Torque_rot_s (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
                              ,spin_bf(1,1),spin_bf(2,1),spin_bf(3,1) &
-                             ,Rst0_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rst0_5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1309,7 +1325,7 @@ module user_module
                              ,spin_bf(1,1) + bb2*k_rk_1x &
                              ,spin_bf(2,1) + bb2*k_rk_1y &
                              ,spin_bf(3,1) + bb2*k_rk_1z &
-                             ,Rst0_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rst0_5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1354,7 +1370,7 @@ module user_module
                              ,spin_bf(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
                              ,spin_bf(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
                              ,spin_bf(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                             ,Rst0_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rst0_5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1399,7 +1415,7 @@ module user_module
                              ,spin_bf(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
                              ,spin_bf(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
                              ,spin_bf(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
-                             ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rsth5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1444,7 +1460,7 @@ module user_module
                             ,spin_bf(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
                             ,spin_bf(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
                             ,spin_bf(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
-                            ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                            ,Rsth5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1489,7 +1505,7 @@ module user_module
                              ,spin_bf(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
                              ,spin_bf(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
                              ,spin_bf(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                             ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rsth5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1558,7 +1574,7 @@ module user_module
                     if (rot_flat.eq.1) then 
                         call Torque_rot_s (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
                              ,spin(1,1),spin(2,1),spin(3,1) &
-                             ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rsth5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1603,7 +1619,7 @@ module user_module
                              ,spin(1,1) + bb2*k_rk_1x &
                              ,spin(2,1) + bb2*k_rk_1y &
                              ,spin(3,1) + bb2*k_rk_1z &
-                             ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rsth5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1648,7 +1664,7 @@ module user_module
                              ,spin(1,1) + bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
                              ,spin(2,1) + bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
                              ,spin(3,1) + bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
-                             ,Rsth5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rsth5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1693,7 +1709,7 @@ module user_module
                              ,spin(1,1) + bb4(1)*k_rk_1x + bb4(2)*k_rk_2x+ bb4(3)*k_rk_3x &
                              ,spin(2,1) + bb4(1)*k_rk_1y + bb4(2)*k_rk_2y+ bb4(3)*k_rk_3y &
                              ,spin(3,1) + bb4(1)*k_rk_1z + bb4(2)*k_rk_2z+ bb4(3)*k_rk_3z &
-                             ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rst_5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1738,7 +1754,7 @@ module user_module
                              ,spin(1,1) + bb5(1)*k_rk_1x + bb5(2)*k_rk_2x+ bb5(3)*k_rk_3x+ bb5(4)*k_rk_4x &
                              ,spin(2,1) + bb5(1)*k_rk_1y + bb5(2)*k_rk_2y+ bb5(3)*k_rk_3y+ bb5(4)*k_rk_4y &
                              ,spin(3,1) + bb5(1)*k_rk_1z + bb5(2)*k_rk_2z+ bb5(3)*k_rk_3z+ bb5(4)*k_rk_4z &
-                             ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rst_5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -1783,7 +1799,7 @@ module user_module
                              ,spin(1,1) + bb6(1)*k_rk_1x + bb6(2)*k_rk_2x+ bb6(3)*k_rk_3x+ bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
                              ,spin(2,1) + bb6(1)*k_rk_1y + bb6(2)*k_rk_2y+ bb6(3)*k_rk_3y+ bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
                              ,spin(3,1) + bb6(1)*k_rk_1z + bb6(2)*k_rk_2z+ bb6(3)*k_rk_3z+ bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
-                             ,Rst_5,k2s,j,N_rot_sx,N_rot_sy,N_rot_sz)
+                             ,Rst_5,k2fs,j,N_rot_sx,N_rot_sy,N_rot_sz)
                     else
                         N_rot_sx = 0.0d0
                         N_rot_sy = 0.0d0
@@ -2266,7 +2282,7 @@ module user_module
                 ! Here I call subroutine that gives the total rotation flattening
                 ! induced force
                 call F_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin &
-                     ,Rsth5,k2s,Rp5(j),k2fp(j-1) &
+                     ,Rsth5,k2fs,Rp5(j),k2fp(j-1) &
                      ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
                 ! Calculation of the acceleration     
                 a2(1,j) = tmp*F_rot_tot_x

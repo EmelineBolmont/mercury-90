@@ -39,6 +39,7 @@ module tides_constant_GR
   ! if crash = 0, then t_init = initial integration time 
   !                           = age of the evolving body at beginning of simu
   ! if crash = 1, then t_init = time of last line of PLANETi.aei
+  ! if crash = 1 and evolving body, then t_init = time of last line of PLANETi.aei + t_init(crash=0)
   real(double_precision), parameter :: t_init = 1.0d6 * 365.25d0
 
   ! if crash = 1, then t_crash = time of last line of spini.out
@@ -109,7 +110,7 @@ module tides_constant_GR
   real(double_precision), parameter :: sigma_what = 2.006*3.845764d4 !-60+64
   ! Radius of gyration
   real(double_precision), parameter :: rg2_what = 2.0d-1
-  ! Love number
+  ! Potential Love number
   real(double_precision), parameter :: k2st_what = 0.307d0 
   ! Radius of star in Rsun
   real(double_precision), parameter :: radius_star = 0.943
@@ -117,6 +118,8 @@ module tides_constant_GR
   ! For R=cst, or dM or Suns
   ! Initial period of rotation in day
   real(double_precision), parameter :: Period_st   = 8.0d0
+  ! Fluid Love number
+  real(double_precision), parameter :: k2fst_what = 0.307d0 
   
 
 
