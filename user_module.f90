@@ -935,17 +935,19 @@ module user_module
 
                         ! If the planet has no inclination
                         if (ia(j).eq.0.0) then
-                            spin(1,j) = spinp0*sin(oblp(j-1))
-                            spin(2,j) = 0.0d0
+                            spin(1,j) = 0.0d0
+                            spin(2,j) = -spinp0*sin(oblp(j-1))
                             spin(3,j) = spinp0*cos(oblp(j-1)) 
                         endif
 
-                        ! If the planet has an inclination, it's a bit more
-                        ! complicated
+                        ! If the planet has an inclination
                         if (ia(j).ne.0.0) then
-                            spin(1,j) = spinp0*(horb(1,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
-                            spin(2,j) = spinp0*(horb(2,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
+                            spin(1,j) = 0.0d0 
+                            spin(2,j) = -spinp0*sin(oblp(j-1)+ia(j))
                             spin(3,j) = spinp0*cos(oblp(j-1)+ia(j)) 
+                            !spin(1,j) = spinp0*(horb(1,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
+                            !spin(2,j) = spinp0*(horb(2,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
+                            !spin(3,j) = spinp0*cos(oblp(j-1)+ia(j)) 
                         endif
                     enddo
 

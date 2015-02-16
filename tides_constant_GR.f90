@@ -152,13 +152,13 @@ module tides_constant_GR
   real(double_precision), parameter :: k2delta_jup = 2.893519d-7
 
   ! Radius of the Sun in AU 
-  real(double_precision), parameter :: rsun = 4.67920694d-3
+  real(double_precision), parameter :: rsun = 4.649130365292d-3
   ! Radius of Earth in AU
-  real(double_precision), parameter :: rearth = 4.25874677d-5
+  real(double_precision), parameter :: rearth = 4.25875047552248d-5
   ! Ratio between mass of the Sun and mass of Earth
-  real(double_precision), parameter :: m2earth = (1.9891d6/5.9794d0)
+  real(double_precision), parameter :: m2earth = 3.2890045607235d5
   ! meter in AU
-  real(double_precision), parameter :: minau = 6.68458d-12
+  real(double_precision), parameter :: minau = 6.684587153547d-12
   ! Speed of light
   real(double_precision), parameter :: C2 = 1.731444830225d2
 
