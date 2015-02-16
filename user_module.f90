@@ -138,7 +138,7 @@ module user_module
     real(double_precision) :: xintermediate
 
 
-    ! Temporary
+    ! Temporary (tmp_dEdt is the derivative of the energy loss due to tides)
     real(double_precision) :: tmp,tmp1,tmp_dEdt
 
     ! Time related and temporary things:
@@ -183,9 +183,6 @@ module user_module
     ! - Data for Jupiter
     real(double_precision), dimension(4755) :: timeJup,radiusJup,k2Jup,rg2Jup,spinJup
 
-
-    ! Energy loss due to tides (derivative of energy)
-    real(double_precision), dimension(nbig+1) :: dEdt
 
     character(len=80) :: planet_spin_filename
     character(len=80) :: planet_orbt_filename
@@ -2338,10 +2335,9 @@ module user_module
                         ! Here I calculate the instantaneous energy loss in Msun.AU^2.day^-3
                         call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
                              ,Rp10(j),sigmap(j),j,tmp_dEdt)
-                        dEdt(j) = tmp_dEdt
                     endif
                     open(13, file=planet_dEdt_filename, access='append')
-                    write(13,'(4("  ", es20.10e3))') time/365.25d0,dEdt(j)
+                    write(13,'(4("  ", es20.10e3))') time/365.25d0,tmp_dEdt
                     close(13)
                 enddo
                 timestep = timestep + output*365.25d0
