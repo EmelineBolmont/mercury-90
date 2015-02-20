@@ -779,8 +779,6 @@ module user_module
                 !---------------------------------------------------------------
                 !-------------------------  JUPITER  ---------------------------
                 if (Jupiter_host.eq.1) then 
-                    ! Dissipation for Jupiter 
-                    sigmast = dissstar*2.d0*K2*k2delta_jup/(3.d0*Rst0*Rst0*Rst0*Rst0*Rst0)
                      
                     ! Initialization of the things that change: radius and radius of
                     ! gyration and love number
@@ -814,6 +812,9 @@ module user_module
                     Rst_5   = Rst0_5 
                     Rst_10  = Rst0_10
                     rg2sh   = rg2s0
+
+                    ! Dissipation for Jupiter 
+                    sigmast = dissstar*2.d0*K2*k2delta_jup/(3.d0*Rst0_5)
                 endif    
 
                 !---------------------------------------------------------------
@@ -825,8 +826,7 @@ module user_module
                     k2s   = k2st_what
                     ! fluid love number
                     k2fs  = k2fst_what
-                    ! Dissipation
-                    sigmast = dissstar*sigma_what
+
                     ! Value of initial rotation period
                     Pst = Period_st
 
@@ -838,6 +838,10 @@ module user_module
                     Rst     = Rsth   
                     Rst_5   = Rsth5 
                     Rst_10  = Rsth10
+
+                    ! Dissipation
+                    if (sigma_what.gt.0) sigmast = dissstar*sigma_what
+                    if (k2sdeltats.gt.0) sigmast = dissstar*2.d0*K2*k2sdeltats/(3.d0*Rsth5)
                 endif
 
                 !---------------------------------------------------------------
@@ -958,9 +962,6 @@ module user_module
                             spin(1,j) = 0.0d0 
                             spin(2,j) = -spinp0*sin(oblp(j-1)+ia(j))
                             spin(3,j) = spinp0*cos(oblp(j-1)+ia(j)) 
-                            !spin(1,j) = spinp0*(horb(1,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
-                            !spin(2,j) = spinp0*(horb(2,j)/(horbn(j)*sin(ia(j))))*sin(oblp(j-1)+ia(j))
-                            !spin(3,j) = spinp0*cos(oblp(j-1)+ia(j)) 
                         endif
                     enddo
 

@@ -106,8 +106,12 @@ module tides_constant_GR
   real(double_precision), parameter :: dissstar = 1.0d0
 
   ! For R=cst
-  ! Dissipation 
+  ! Dissipation, either you give sigma or k2deltat
+  ! when you choose one, put the other at a negative value
+  ! dissipation factor sigma
   real(double_precision), parameter :: sigma_what = 2.006*3.845764d4 !-60+64
+  ! k2delta_t (day), here value of Earth for satellite systems for example 
+  real(double_precision), parameter :: k2sdeltats = -2.465277778d-3
   ! Radius of gyration
   real(double_precision), parameter :: rg2_what = 2.0d-1
   ! Potential Love number

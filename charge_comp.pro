@@ -258,7 +258,16 @@ if n_tid ge 1 then begin
                precession_angle(i,bou) = acos(tmp(bou))*180.d0/!Pi
             if abs(tmp(bou)) gt 1.d0 then precession_angle(i,bou) = 1.0d-6
 
-            spinp(i,bou) = sqrt(spinpx(i,bou)^2 $
+            ; if the angle between horb and spinp is more than 90: retrograde rotation
+            if ((horbx(i,bou)*spinpx(i,bou) $
+                      +horby(i,bou)*spinpy(i,bou) $
+                      +horbz(i,bou)*spinpz(i,bou)) ge 0) $
+                spinp(i,bou) = sqrt(spinpx(i,bou)^2 $
+                   +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
+            if ((horbx(i,bou)*spinpx(i,bou) $
+                      +horby(i,bou)*spinpy(i,bou) $
+                      +horbz(i,bou)*spinpz(i,bou)) lt 0) $
+                spinp(i,bou) = -sqrt(spinpx(i,bou)^2 $
                    +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
          endfor
       endfor
