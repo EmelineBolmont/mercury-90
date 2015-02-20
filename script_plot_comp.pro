@@ -22,19 +22,19 @@ cons_max = 1d-2
 indcolor = 200   &  incolor  = 255
 idlcol   = 200   &  idlicol  = 255
 
-ops_plot=0
 ; Obliquity, inclination, rotation period: ae = 0
 ; semi-major axis, ecc, tidal flux: ae = 1
 ; Precession angle : ae = 2
 ; Angular momentum deficit: ae = 3
 ; Conservation of angular momentum: ae = 4
 ae = 1
+ops_plot=0
 
 if ops_plot eq 1 then begin
    if ae eq 1 then ops,file='XXX_aef.eps',form=1;,/landscape
    if ae eq 0 then ops,file='XXX_ois.eps',form=1;,/landscape
-   if ae eq 3 then ops,file='XXX_H.eps',form=1,/landscape
-   if ae eq 4 then ops,file='XXX_AMD.eps',form=1,/landscape
+   if ae eq 3 then ops,file='XXX_AMD.eps',form=1,/landscape
+   if ae eq 4 then ops,file='XXX_H.eps',form=1,/landscape
 endif
 
 device,decomposed=0
