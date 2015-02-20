@@ -169,192 +169,215 @@ for i=0,nbp-1 do begin
    vb[i,0:nlineb1-1] = read_array(12,*)
    wb[i,0:nlineb1-1] = read_array(13,*)
 endfor
+;zozo
+
+; Angular momentum calculation
+; calculated with sma, ecc and inclination
+horb_sec = dblarr(nbp,nmaxb)
+; circular angular momentum (what it should be with ecc = 0, inc = 0)
+horb_circ = dblarr(nbp,nmaxb)
+; Sum over all planets
+horb_s = dblarr(nmaxb)
+horb_c = dblarr(nmaxb)
+
+; Angular momentum deficit calculation 
+AMD_sec = dblarr(nmaxb)
+
+for j=0,nbp-1 do begin
+   for i=0,nmaxb-1 do begin
+      horb_sec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(G*(Ms+mb(j,i)*Msun)*ab(j,i)*AU)*sqrt(1-eb(j,i)^2)*cos(incb(j,i)*!pi/180.d0) ; kg.m^2.s-1
+      horb_circ(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(G*(Ms+mb(j,i)*Msun)*ab(j,i)*AU) ; kg.m^2.s-1
+      ; Sum on number of planets to have total orbital momentum
+      horb_s(i) = horb_s(i) + horb_sec(j,i)
+      horb_c(i) = horb_c(i) + horb_circ(j,i)
+      ; Calculation of angular momentum deficit
+      AMD_sec(i) = horb_c(i) - horb_s(i)
+   endfor
+endfor
 
 if n_tid ge 1 then begin   
+
+
+   ;IDL Data
    if idl eq 1 then begin
-      ;!**************************************
-      ;! Table for the idl planet (DATATIDES) : 
-      ti         =  dblarr(nbp_idl,nline)
-      ai         =  dblarr(nbp_idl,nline)
-      ei         =  dblarr(nbp_idl,nline)
-      oblpi      =  dblarr(nbp_idl,nline)
-      oblsi      =  dblarr(nbp_idl,nline)
-      rotpi      =  dblarr(nbp_idl,nline)
-      rotsi      =  dblarr(nbp_idl,nline)
-      Rpi        =  dblarr(nbp_idl,nline)
-      Rsi        =  dblarr(nbp_idl,nline)
-      rg2si      =  dblarr(nbp_idl,nline)
-      tidefluxi  =  dblarr(nbp_idl,nline)
-      Ip         =  dblarr(nbp_idl)  
+       ;! Table for the idl planet (DATATIDES) : 
+       ti         =  dblarr(nbp_idl,nline)
+       ai         =  dblarr(nbp_idl,nline)
+       ei         =  dblarr(nbp_idl,nline)
+       oblpi      =  dblarr(nbp_idl,nline)
+       oblsi      =  dblarr(nbp_idl,nline)
+       rotpi      =  dblarr(nbp_idl,nline)
+       rotsi      =  dblarr(nbp_idl,nline)
+       Rpi        =  dblarr(nbp_idl,nline)
+       Rsi        =  dblarr(nbp_idl,nline)
+       rg2si      =  dblarr(nbp_idl,nline)
+       tidefluxi  =  dblarr(nbp_idl,nline)
+       Ip         =  dblarr(nbp_idl)  
 
-      for i = 0,nbp_idl-1 do begin
-         headeri = strarr(1)
-         nline = file_lines(filename_idl(i))-1
-         read_array = dblarr(10,nline)
-         openr,1,filename_idl(i)
-         readf,1,headeri
-         readf,1,read_array
-         close,1
+       for i = 0,nbp_idl-1 do begin
+           headeri = strarr(1)
+           nline = file_lines(filename_idl(i))-1
+           read_array = dblarr(10,nline)
+           openr,1,filename_idl(i)
+           readf,1,headeri
+           readf,1,read_array
+           close,1
 
-         ti[i,0:nline-1] = read_array(0,*);+toto1(0)
-         ai[i,0:nline-1] = read_array(1,*)
-         ei[i,0:nline-1] = read_array(2,*)
-         oblpi[i,0:nline-1] = read_array(3,*)
-         oblsi[i,0:nline-1] = read_array(4,*)
-         rotpi[i,0:nline-1] = read_array(5,*)
-         rotsi[i,0:nline-1] = read_array(6,*)
-         Rpi[i,0:nline-1] = read_array(7,*)
-         Rsi[i,0:nline-1] = read_array(8,*)
-         rg2si[i,0:nline-1] = read_array(9,*)
-      endfor
+           ti[i,0:nline-1] = read_array(0,*);+toto1(0)
+           ai[i,0:nline-1] = read_array(1,*)
+           ei[i,0:nline-1] = read_array(2,*)
+           oblpi[i,0:nline-1] = read_array(3,*)
+           oblsi[i,0:nline-1] = read_array(4,*)
+           rotpi[i,0:nline-1] = read_array(5,*)
+           rotsi[i,0:nline-1] = read_array(6,*)
+           Rpi[i,0:nline-1] = read_array(7,*)
+           Rsi[i,0:nline-1] = read_array(8,*)
+           rg2si[i,0:nline-1] = read_array(9,*)
+        endfor
 
-      for i = 0,nbp_idl-1 do begin
-         for j = 0,nline-1 do begin
-            tidefluxi(i,j) = enerdot(ai(i,j)*AU,ei(i,j),rotpi(i,j),oblpi(i,j)*!Pi/180.d0,G $
-				,mb(i,0)*Msun,Ms,Rpi(i,j)*Rearth,k2pDeltap(i)*day)/(4.d0*!Pi*(Rpi(i,j)*Rearth)^2)
-         endfor
-         Ip(i) = rg2p(i,0)*mb(i,0)*Msun*(Rp(i,0)*rsun)^2
-      endfor 
-   endif
+        for i = 0,nbp_idl-1 do begin
+            for j = 0,nline-1 do begin
+                tidefluxi(i,j) = enerdot(ai(i,j)*AU,ei(i,j),rotpi(i,j),oblpi(i,j)*!Pi/180.d0,G $
+  		          	,mb(i,0)*Msun,Ms,Rpi(i,j)*Rearth,k2pDeltap(i)*day)/(4.d0*!Pi*(Rpi(i,j)*Rearth)^2)
+            endfor
+            Ip(i) = rg2p(i,0)*mb(i,0)*Msun*(Rp(i,0)*rsun)^2
+        endfor 
+    endif
 
-   if n_tid ge 1 then begin
-      ;! Obliquities calculations
-      tmp              = dblarr(n_elements(horb1x))
-      ; Obliquities in degrees, precession angle in degrees
-      oblpm            = dblarr(n_tid,n_elements(horb1x))
-      oblsm            = dblarr(n_tid,n_elements(horb1x))
-      precession_angle = dblarr(n_tid,n_elements(horb1x))
-      ; That's where the spin is converted to s-1
-      spinp            = dblarr(n_tid,n_elements(horb1x))
+    ;! Obliquities calculations
+    tmp              = dblarr(nmaxb)
+    ; Obliquities in degrees, precession angle in degrees
+    oblpm            = dblarr(n_tid,nmaxb)
+    oblsm            = dblarr(n_tid,nmaxb)
+    precession_angle = dblarr(n_tid,nmaxb)
+    ; That's where the spin is converted to s-1
+    spinp            = dblarr(n_tid,nmaxb)
 
-      for i = 0,n_tid-1 do begin
-         for bou = 0,n_elements(horb1x)-1 do begin
+    for i = 0,n_tid-1 do begin
+       for bou = 0,nmaxb-1 do begin
 
-            tmp(bou)=(horbx(i,bou)*spinpx(i,bou) $
-                      +horby(i,bou)*spinpy(i,bou) $
-                      +horbz(i,bou)*spinpz(i,bou)) $
-                     /(sqrt(horbx(i,bou)^2+horby(i,bou)^2+horbz(i,bou)^2) $
-                       *sqrt(spinpx(i,bou)^2+spinpy(i,bou)^2+spinpz(i,bou)^2))
-            if abs(tmp(bou)) le 1.d0 then $ 
-               oblpm(i,bou) = acos(tmp(bou))*180.d0/!Pi
-            if abs(tmp(bou)) gt 1.d0 then oblpm(i,bou) = 1.0d-6
+          tmp(bou)=(horbx(i,bou)*spinpx(i,bou) $
+                    +horby(i,bou)*spinpy(i,bou) $
+                    +horbz(i,bou)*spinpz(i,bou)) $
+                   /(sqrt(horbx(i,bou)^2+horby(i,bou)^2+horbz(i,bou)^2) $
+                     *sqrt(spinpx(i,bou)^2+spinpy(i,bou)^2+spinpz(i,bou)^2))
+          if abs(tmp(bou)) le 1.d0 then $ 
+             oblpm(i,bou) = acos(tmp(bou))*180.d0/!Pi
+          if abs(tmp(bou)) gt 1.d0 then oblpm(i,bou) = 1.0d-6
 
-            tmp(bou)=(horbx(i,bou)*spinstx(bou) $
-                      +horby(i,bou)*spinsty(bou) $
-                      +horbz(i,bou)*spinstz(bou)) $
-                     /(sqrt(horbx(i,bou)^2+horby(i,bou)^2+horbz(i,bou)^2) $
-                       *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
-            if abs(tmp(bou)) le 1.d0 then $ 
-               oblsm(i,bou) = acos(tmp(bou))*180.d0/!Pi
-            if abs(tmp(bou)) gt 1.d0 then oblsm(i,bou) = 1.0d-6
+          tmp(bou)=(horbx(i,bou)*spinstx(bou) $
+                    +horby(i,bou)*spinsty(bou) $
+                    +horbz(i,bou)*spinstz(bou)) $
+                   /(sqrt(horbx(i,bou)^2+horby(i,bou)^2+horbz(i,bou)^2) $
+                     *sqrt(spinstx(bou)^2+spinsty(bou)^2+spinstz(bou)^2))
+          if abs(tmp(bou)) le 1.d0 then $ 
+             oblsm(i,bou) = acos(tmp(bou))*180.d0/!Pi
+          if abs(tmp(bou)) gt 1.d0 then oblsm(i,bou) = 1.0d-6
 
-            tmp(bou)=1.d0/sin(oblpm(i,bou)) $
-                      *(xb(i,bou)*spinpx(i,bou) $
-                      +yb(i,bou)*spinpy(i,bou) $
-                      +zb(i,bou)*spinpz(i,bou)) $
-                      /(sqrt(xb(i,bou)^2+yb(i,bou)^2+zb(i,bou)^2) $
-                       *sqrt(spinpx(i,bou)^2+spinpy(i,bou)^2+spinpz(i,bou)^2))
-            if abs(tmp(bou)) le 1.d0 then $
-               precession_angle(i,bou) = acos(tmp(bou))*180.d0/!Pi
-            if abs(tmp(bou)) gt 1.d0 then precession_angle(i,bou) = 1.0d-6
+          tmp(bou)=1.d0/sin(oblpm(i,bou)) $
+                    *(xb(i,bou)*spinpx(i,bou) $
+                    +yb(i,bou)*spinpy(i,bou) $
+                    +zb(i,bou)*spinpz(i,bou)) $
+                    /(sqrt(xb(i,bou)^2+yb(i,bou)^2+zb(i,bou)^2) $
+                     *sqrt(spinpx(i,bou)^2+spinpy(i,bou)^2+spinpz(i,bou)^2))
+          if abs(tmp(bou)) le 1.d0 then $
+             precession_angle(i,bou) = acos(tmp(bou))*180.d0/!Pi
+          if abs(tmp(bou)) gt 1.d0 then precession_angle(i,bou) = 1.0d-6
 
-            ; if the angle between horb and spinp is more than 90: retrograde rotation
-            if ((horbx(i,bou)*spinpx(i,bou) $
-                      +horby(i,bou)*spinpy(i,bou) $
-                      +horbz(i,bou)*spinpz(i,bou)) ge 0) $
-                spinp(i,bou) = sqrt(spinpx(i,bou)^2 $
-                   +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
-            if ((horbx(i,bou)*spinpx(i,bou) $
-                      +horby(i,bou)*spinpy(i,bou) $
-                      +horbz(i,bou)*spinpz(i,bou)) lt 0) $
-                spinp(i,bou) = -sqrt(spinpx(i,bou)^2 $
-                   +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
-         endfor
-      endfor
-   endif
+          ; if the angle between horb and spinp is more than 90: retrograde rotation
+          if ((horbx(i,bou)*spinpx(i,bou) $
+                    +horby(i,bou)*spinpy(i,bou) $
+                    +horbz(i,bou)*spinpz(i,bou)) ge 0) $
+              spinp(i,bou) = sqrt(spinpx(i,bou)^2 $
+                 +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
+          if ((horbx(i,bou)*spinpx(i,bou) $
+                    +horby(i,bou)*spinpy(i,bou) $
+                    +horbz(i,bou)*spinpz(i,bou)) lt 0) $
+              spinp(i,bou) = -sqrt(spinpx(i,bou)^2 $
+                 +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
+       endfor
+    endfor
 
-   ; Angular momentum calculation
-   ; calculated with horb coming from mercury
-   horb_vec = dblarr(nbp,n_elements(horb1x))
-   ; calculated with sma, ecc and inclination
-   horb_sec = dblarr(nbp,n_elements(horb1x))
-   ; circular angular momentum (what it should be with ecc = 0, inc = 0)
-   horb_circ = dblarr(nbp,n_elements(horb1x))
-   ; Sum over all planets
-   horb_v = dblarr(n_elements(horb1x))
-   horb_s = dblarr(n_elements(horb1x))
-   horb_c = dblarr(n_elements(horb1x))
+    ; Angular momentum calculation
+    ; calculated with horb coming from mercury
+    horb_vec = dblarr(nbp,nmaxb)
+    ; calculated with sma, ecc and inclination
+    horb_sec = dblarr(nbp,nmaxb)
+    ; circular angular momentum (what it should be with ecc = 0, inc = 0)
+    horb_circ = dblarr(nbp,nmaxb)
+    ; Sum over all planets
+    horb_v = dblarr(nmaxb)
+    horb_s = dblarr(nmaxb)
+    horb_c = dblarr(nmaxb)
 
-   ; Angular momentum deficit calculation 
-   AMD     = dblarr(n_elements(horb1x))
-   AMD_sec = dblarr(n_elements(horb1x))
+    ; Angular momentum deficit calculation 
+    AMD     = dblarr(nmaxb)
+    AMD_sec = dblarr(nmaxb)
 
-   spinst = dblarr(n_elements(horb1x))
-   momspin = dblarr(n_tid,n_elements(horb1x))
-   momspitot = dblarr(n_elements(horb1x))
-   momstar = dblarr(n_elements(horb1x))
+    spinst = dblarr(nmaxb)
+    momspin = dblarr(n_tid,nmaxb)
+    momspitot = dblarr(nmaxb)
+    momstar = dblarr(nmaxb)
 
-   ; Tidal flux
-   tidalflux = dblarr(n_tid,n_elements(horb1x))
-   inst_tidalflux = dblarr(n_tid,n_elements(horb1x))
+    ; Tidal flux
+    tidalflux = dblarr(n_tid,nmaxb)
+    inst_tidalflux = dblarr(n_tid,nmaxb)
 
-   for j=0,nbp-1 do begin
-      for i=0,n_elements(horb1x)-1 do begin
-         horb_vec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
-         horb_sec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(G*(Ms+mb(j,i)*Msun)*ab(j,i)*AU)*sqrt(1-eb(j,i)^2)*cos(incb(j,i)*!pi/180.d0) ; kg.m^2.s-1
-         horb_circ(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(G*(Ms+mb(j,i)*Msun)*ab(j,i)*AU) ; kg.m^2.s-1
-         ; Sum on number of planets to have total orbital momentum
-         horb_v(i) = horb_v(i) + horb_vec(j,i)
-         horb_s(i) = horb_s(i) + horb_sec(j,i)
-         horb_c(i) = horb_c(i) + horb_circ(j,i)
-         ; Calculation of angular momentum deficit
-         AMD(i)     = horb_c(i) - horb_v(i)
-         AMD_sec(i) = horb_c(i) - horb_s(i)
+    for j=0,nbp-1 do begin
+       for i=0,nmaxb-1 do begin
+           horb_vec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
+           horb_sec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(G*(Ms+mb(j,i)*Msun)*ab(j,i)*AU)*sqrt(1-eb(j,i)^2)*cos(incb(j,i)*!pi/180.d0) ; kg.m^2.s-1
+           horb_circ(j,i) = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(G*(Ms+mb(j,i)*Msun)*ab(j,i)*AU) ; kg.m^2.s-1
+           ; Sum on number of planets to have total orbital momentum
+           horb_v(i) = horb_v(i) + horb_vec(j,i)
+           horb_s(i) = horb_s(i) + horb_sec(j,i)
+           horb_c(i) = horb_c(i) + horb_circ(j,i)
+           ; Calculation of angular momentum deficit
+           AMD(i)     = horb_c(i) - horb_v(i)
+           AMD_sec(i) = horb_c(i) - horb_s(i)
 
-         spinst(i) = sqrt(spinstx(i)^2+spinsty(i)^2+spinstz(i)^2)/day ; s-1
-      endfor
-   endfor
-   for i=0,n_elements(horb1x)-1 do begin
-      momstar(i)=rg2s(i)*Ms*(Rst(i)*Rsun)^2*spinst(i) 
-   endfor
+           spinst(i) = sqrt(spinstx(i)^2+spinsty(i)^2+spinstz(i)^2)/day ; s-1
+       endfor
+    endfor
+    for i=0,nmaxb-1 do begin
+        momstar(i)=rg2s(i)*Ms*(Rst(i)*Rsun)^2*spinst(i) 
+    endfor
 
-   for j=0,n_tid-1 do begin
-      for i=0,n_elements(horb1x)-1 do begin
-         momspin(j,i) = rg2p(j,i)*mb(j,i)*Msun*(Rp(j,i)*rsun)^2*spinp(j,i)
+    for j=0,n_tid-1 do begin
+       for i=0,nmaxb-1 do begin
+           momspin(j,i) = rg2p(j,i)*mb(j,i)*Msun*(Rp(j,i)*rsun)^2*spinp(j,i)
 
-         ; Calculation of energydot and tidal flux, in W/m2
-         tidalflux(j,i) = enerdot(ab(j,i)*AU,eb(j,i),spinp(j,i),oblpm(j,i)*!Pi/180.d0,G,mb(j,i)*Msun $
-               ,Ms,Rp(j,i)*rsun,k2pDeltap(j)*day)/(4*!Pi*(Rp(j,i)*rsun)^2)
-         inst_tidalflux(j,i) = dEdt(j,i)/(4*!Pi*(Rp(j,i)*rsun)^2)
-      endfor
-   endfor
+           ; Calculation of energydot and tidal flux, in W/m2
+           tidalflux(j,i) = enerdot(ab(j,i)*AU,eb(j,i),spinp(j,i),oblpm(j,i)*!Pi/180.d0,G,mb(j,i)*Msun $
+                 ,Ms,Rp(j,i)*rsun,k2pDeltap(j)*day)/(4*!Pi*(Rp(j,i)*rsun)^2)
+           inst_tidalflux(j,i) = dEdt(j,i)/(4*!Pi*(Rp(j,i)*rsun)^2)
+       endfor
+    endfor
 
-   for i=0,n_elements(horb1x)-1 do begin
-      for j=0,n_tid-1 do begin
-         momspitot(i)=momspitot(i)+momspin(j,i)
-      endfor
-   endfor
+    for i=0,nmaxb-1 do begin
+        for j=0,n_tid-1 do begin
+            momspitot(i)=momspitot(i)+momspin(j,i)
+        endfor
+    endfor
 
-   indicend = dblarr(2,nbp)
-   for j = 0,nbp-1 do begin
-      for i = 0,n_elements(tb(j,*))-1 do begin
-         if tb(j,i) le 1.d10 then begin
-            indicend(0,j) = i
-         endif else begin
-            break
-         endelse
-      endfor
-   endfor
+    indicend = dblarr(2,nbp)
+    for j = 0,nbp-1 do begin
+        for i = 0,n_elements(tb(j,*))-1 do begin
+            if tb(j,i) le 1.d10 then begin
+                indicend(0,j) = i
+            endif else begin
+                break
+            endelse
+        endfor
+    endfor
 
-   if n_tid ge 1 then begin
-      for i = 0,n_elements(toto1(*))-1 do begin
-         if toto1(i) le 1.d10 then begin
+    for i = 0,n_elements(toto1(*))-1 do begin
+        if toto1(i) le 1.d10 then begin
             indicend(1,*) = i
-         endif else begin
+        endif else begin
             break
-         endelse
-      endfor 
-   endif
+        endelse
+    endfor 
 endif
 
 END

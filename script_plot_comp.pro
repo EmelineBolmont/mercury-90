@@ -14,8 +14,8 @@ Trotmin = 10
 Trotmax = 10000
 pr_angl_min = 0
 pr_angl_max = 180.
-AMD_min = 1d10
-AMD_max = 1d100
+AMD_min = 1d-30
+AMD_max = 1d0
 cons_min = 1d-10
 cons_max = 1d-2
 
@@ -300,15 +300,15 @@ if ae eq 3 then begin
          ,xrange=[Tinf,Tsup],yrange=[AMD_min,AMD_max] $
          ,charsize=2.5,charthick=3.5 $
          ,xtitle='Time (years)' $
-         ,ytitle='Angular momentum deficit (kg.m!u2!n.s!u-1!n)' $
+         ,ytitle='Angular momentum deficit (Msun.AU!u2!n.yr!u-1!n)' $
          ,xGRIDSTYLE=1,xTICKLEN=0.5 $
          ,xstyle=1,ystyle=1 $
          ,/xlog,/ylog
 
-    oplot,toto1(*),AMD(*),linestyle=0,thick=5
-    oplot,toto1(*),AMD_sec(*),linestyle=5,thick=5
-    print,'Average of AMD',mean(AMD(*))
-    print,'Average of AMD_sec',mean(AMD_sec(*))
+    if n_tid ge 1 then oplot,toto1(*),AMD(*)*yr/(Msun*AU^2),linestyle=0,thick=5
+    oplot,tb(0,*),AMD_sec(*)*yr/(Msun*AU^2),linestyle=5,thick=5
+    if n_tid ge 1 then print,'Average of AMD',mean(AMD(*)*yr/(Msun*AU^2))
+    print,'Average of AMD_sec',mean(AMD_sec(*)*yr/(Msun*AU^2))
 endif
 
 if ae eq 4 then begin
