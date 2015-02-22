@@ -287,12 +287,12 @@ if n_tid ge 1 then begin
           ; if the angle between horb and spinp is more than 90: retrograde rotation
           if ((horbx(i,bou)*spinpx(i,bou) $
                     +horby(i,bou)*spinpy(i,bou) $
-                    +horbz(i,bou)*spinpz(i,bou)) ge 0) $
+                    +horbz(i,bou)*spinpz(i,bou)) ge 0) then $
               spinp(i,bou) = sqrt(spinpx(i,bou)^2 $
                  +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
           if ((horbx(i,bou)*spinpx(i,bou) $
                     +horby(i,bou)*spinpy(i,bou) $
-                    +horbz(i,bou)*spinpz(i,bou)) lt 0) $
+                    +horbz(i,bou)*spinpz(i,bou)) lt 0) then $
               spinp(i,bou) = -sqrt(spinpx(i,bou)^2 $
                  +spinpy(i,bou)^2+spinpz(i,bou)^2)/day
        endfor
