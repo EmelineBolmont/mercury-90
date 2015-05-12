@@ -22,19 +22,20 @@ endif
 
 ;************************************************************
 
-nlineheader = 4                 ;! number of header lines in the data files
+nlineheader = 4                 ;! number of header lines in the data files PLANET.aei
 
 nlineb = fltarr(nbp)
 for i=0,nbp-1 do begin
    filename = 'PLANET'+strtrim(i+1,2)+'.aei'
    nlineb(i) = file_lines(filename)-nlineheader
+   print,filename,nlineb(i)
 endfor
 
 if idl eq 1 then begin
    for i=0,nbp_idl-1 do begin
       filename = filename_idl(i)
-      print,filename
       nline_idl(i) = file_lines(filename)-1
+      print,filename
    endfor
 endif
 
@@ -164,14 +165,14 @@ for i=0,nbp-1 do begin
    xb[i,0:nlineb1-1] = read_array(8,*)
    yb[i,0:nlineb1-1] = read_array(9,*)
    zb[i,0:nlineb1-1] = read_array(10,*)
-   ; Velocities in AU/day? 
+   ; Velocities in AU/day
    ub[i,0:nlineb1-1] = read_array(11,*)
    vb[i,0:nlineb1-1] = read_array(12,*)
    wb[i,0:nlineb1-1] = read_array(13,*)
 endfor
 ;zozo
 
-; Angular momentum calculation
+; Angular momentum calculation using 1 star-1 planet formula
 ; calculated with sma, ecc and inclination
 horb_sec = dblarr(nbp,nmaxb)
 ; circular angular momentum (what it should be with ecc = 0, inc = 0)
@@ -196,53 +197,6 @@ for j=0,nbp-1 do begin
 endfor
 
 if n_tid ge 1 then begin   
-
-
-   ;IDL Data
-   if idl eq 1 then begin
-       ;! Table for the idl planet (DATATIDES) : 
-       ti         =  dblarr(nbp_idl,nline)
-       ai         =  dblarr(nbp_idl,nline)
-       ei         =  dblarr(nbp_idl,nline)
-       oblpi      =  dblarr(nbp_idl,nline)
-       oblsi      =  dblarr(nbp_idl,nline)
-       rotpi      =  dblarr(nbp_idl,nline)
-       rotsi      =  dblarr(nbp_idl,nline)
-       Rpi        =  dblarr(nbp_idl,nline)
-       Rsi        =  dblarr(nbp_idl,nline)
-       rg2si      =  dblarr(nbp_idl,nline)
-       tidefluxi  =  dblarr(nbp_idl,nline)
-       Ip         =  dblarr(nbp_idl)  
-
-       for i = 0,nbp_idl-1 do begin
-           headeri = strarr(1)
-           nline = file_lines(filename_idl(i))-1
-           read_array = dblarr(10,nline)
-           openr,1,filename_idl(i)
-           readf,1,headeri
-           readf,1,read_array
-           close,1
-
-           ti[i,0:nline-1] = read_array(0,*);+toto1(0)
-           ai[i,0:nline-1] = read_array(1,*)
-           ei[i,0:nline-1] = read_array(2,*)
-           oblpi[i,0:nline-1] = read_array(3,*)
-           oblsi[i,0:nline-1] = read_array(4,*)
-           rotpi[i,0:nline-1] = read_array(5,*)
-           rotsi[i,0:nline-1] = read_array(6,*)
-           Rpi[i,0:nline-1] = read_array(7,*)
-           Rsi[i,0:nline-1] = read_array(8,*)
-           rg2si[i,0:nline-1] = read_array(9,*)
-        endfor
-
-        for i = 0,nbp_idl-1 do begin
-            for j = 0,nline-1 do begin
-                tidefluxi(i,j) = enerdot(ai(i,j)*AU,ei(i,j),rotpi(i,j),oblpi(i,j)*!Pi/180.d0,G $
-  		          	,mb(i,0)*Msun,Ms,Rpi(i,j)*Rearth,k2pDeltap(i)*day)/(4.d0*!Pi*(Rpi(i,j)*Rearth)^2)
-            endfor
-            Ip(i) = rg2p(i,0)*mb(i,0)*Msun*(Rp(i,0)*rsun)^2
-        endfor 
-    endif
 
     ;! Obliquities calculations
     tmp              = dblarr(nmaxb)
@@ -299,6 +253,7 @@ if n_tid ge 1 then begin
     endfor
 
     ; Angular momentum calculation
+    ; This is calculated like if there was only 1 planet...
     ; calculated with horb coming from mercury
     horb_vec = dblarr(nbp,nmaxb)
     ; calculated with sma, ecc and inclination
@@ -314,15 +269,6 @@ if n_tid ge 1 then begin
     AMD     = dblarr(nmaxb)
     AMD_sec = dblarr(nmaxb)
 
-    spinst = dblarr(nmaxb)
-    momspin = dblarr(n_tid,nmaxb)
-    momspitot = dblarr(nmaxb)
-    momstar = dblarr(nmaxb)
-
-    ; Tidal flux
-    tidalflux = dblarr(n_tid,nmaxb)
-    inst_tidalflux = dblarr(n_tid,nmaxb)
-
     for j=0,nbp-1 do begin
        for i=0,nmaxb-1 do begin
            horb_vec(j,i)  = Ms*mb(j,i)*Msun/(Ms+mb(j,i)*Msun)*sqrt(horbx(j,i)^2+horby(j,i)^2+horbz(j,i)^2)*(AU^2/day) ; kg.m^2.s-1
@@ -336,28 +282,93 @@ if n_tid ge 1 then begin
            AMD(i)     = horb_c(i) - horb_v(i)
            AMD_sec(i) = horb_c(i) - horb_s(i)
 
-           spinst(i) = sqrt(spinstx(i)^2+spinsty(i)^2+spinstz(i)^2)/day ; s-1
        endfor
     endfor
+
+    ; Angular momentum calculation
+    ; with the correct expression taking into account cross terms
+    Lorb_tot_x = dblarr(nmaxb)
+    Lorb_tot_y = dblarr(nmaxb)
+    Lorb_tot_z = dblarr(nmaxb)
+    Lorb_tot   = dblarr(nmaxb)
+
     for i=0,nmaxb-1 do begin
-        momstar(i)=rg2s(i)*Ms*(Rst(i)*Rsun)^2*spinst(i) 
+        tmp = Lorb4bodies(Ms,mb(0,0)*Msun,mb(1,0)*Msun,0.0d0 $
+                ,xb(0,i),yb(0,i),zb(0,i),ub(0,i),vb(0,i),wb(0,i) $
+                ,xb(1,i),yb(1,i),zb(1,i),ub(1,i),vb(1,i),wb(1,i) $
+                ,0.0d0,0.0d0,0.0d0 $
+                ,0.0d0,0.0d0,0.0d0)
+        
+        Lorb_tot_x(i) = tmp(0)*AU^2/day
+        Lorb_tot_y(i) = tmp(1)*AU^2/day
+        Lorb_tot_z(i) = tmp(2)*AU^2/day
+        Lorb_tot(i)   = sqrt(Lorb_tot_x(i)*Lorb_tot_x(i) + Lorb_tot_y(i)*Lorb_tot_y(i) + Lorb_tot_z(i)*Lorb_tot_z(i))
     endfor
+
+    spinst = dblarr(nmaxb)
+
+    ; Stellar angular momentum
+    momstar_x = dblarr(nmaxb)
+    momstar_y = dblarr(nmaxb)
+    momstar_z = dblarr(nmaxb)
+    momstar   = dblarr(nmaxb)
+
+    ; Planets' angular momentum
+    momspin_x = dblarr(n_tid,nmaxb)
+    momspin_y = dblarr(n_tid,nmaxb)
+    momspin_z = dblarr(n_tid,nmaxb)
+    momspin   = dblarr(n_tid,nmaxb)
+    ; Sum over planets
+    momspitot_x = dblarr(nmaxb)
+    momspitot_y = dblarr(nmaxb)
+    momspitot_z = dblarr(nmaxb)
+    momspitot   = dblarr(nmaxb)
+
+    for i=0,nmaxb-1 do begin
+        spinst(i) = sqrt(spinstx(i)^2+spinsty(i)^2+spinstz(i)^2)/day ; s-1
+
+        tmp = rg2s(i)*Ms*(Rst(i)*Rsun)^2
+
+        momstar_x(i)=tmp*spinstx(i)/day 
+        momstar_y(i)=tmp*spinsty(i)/day 
+        momstar_z(i)=tmp*spinstz(i)/day 
+
+        momstar(i)=tmp*spinst(i) 
+
+        for j=0,n_tid-1 do begin
+            tmp = rg2p(j,i)*mb(j,i)*Msun*(Rp(j,i)*rsun)^2
+
+            momspin_x(j,i) = tmp*spinpx(j,i)/day
+            momspin_y(j,i) = tmp*spinpy(j,i)/day
+            momspin_z(j,i) = tmp*spinpz(j,i)/day
+
+            momspin(j,i) = tmp*spinp(j,i)
+
+        endfor
+    endfor
+
+    for i=0,nmaxb-1 do begin
+        for j=0,n_tid-1 do begin
+            momspitot_x(i) = momspitot_x(i) + momspin_x(j,i)
+            momspitot_y(i) = momspitot_y(i) + momspin_y(j,i)
+            momspitot_z(i) = momspitot_z(i) + momspin_z(j,i)
+
+            momspitot(i)   = momspitot(i) + momspin(j,i)
+        endfor
+    endfor
+
+
+    ; Tidal flux
+    tidalflux = dblarr(n_tid,nmaxb)
+    inst_tidalflux = dblarr(n_tid,nmaxb)
 
     for j=0,n_tid-1 do begin
        for i=0,nmaxb-1 do begin
-           momspin(j,i) = rg2p(j,i)*mb(j,i)*Msun*(Rp(j,i)*rsun)^2*spinp(j,i)
-
            ; Calculation of energydot and tidal flux, in W/m2
            tidalflux(j,i) = enerdot(ab(j,i)*AU,eb(j,i),spinp(j,i),oblpm(j,i)*!Pi/180.d0,G,mb(j,i)*Msun $
                  ,Ms,Rp(j,i)*rsun,k2pDeltap(j)*day)/(4*!Pi*(Rp(j,i)*rsun)^2)
            inst_tidalflux(j,i) = dEdt(j,i)/(4*!Pi*(Rp(j,i)*rsun)^2)
        endfor
-    endfor
-
-    for i=0,nmaxb-1 do begin
-        for j=0,n_tid-1 do begin
-            momspitot(i)=momspitot(i)+momspin(j,i)
-        endfor
     endfor
 
     indicend = dblarr(2,nbp)
@@ -378,6 +389,52 @@ if n_tid ge 1 then begin
             break
         endelse
     endfor 
+
+   ;IDL Data
+   if idl eq 1 then begin
+       ;! Table for the idl planet (DATATIDES) : 
+       ti         =  dblarr(nbp_idl,nline)
+       ai         =  dblarr(nbp_idl,nline)
+       ei         =  dblarr(nbp_idl,nline)
+       oblpi      =  dblarr(nbp_idl,nline)
+       oblsi      =  dblarr(nbp_idl,nline)
+       rotpi      =  dblarr(nbp_idl,nline)
+       rotsi      =  dblarr(nbp_idl,nline)
+       Rpi        =  dblarr(nbp_idl,nline)
+       Rsi        =  dblarr(nbp_idl,nline)
+       rg2si      =  dblarr(nbp_idl,nline)
+       tidefluxi  =  dblarr(nbp_idl,nline)
+       Ip         =  dblarr(nbp_idl)  
+
+       for i = 0,nbp_idl-1 do begin
+           headeri = strarr(1)
+           nline = file_lines(filename_idl(i))-1
+           read_array = dblarr(10,nline)
+           openr,1,filename_idl(i)
+           readf,1,headeri
+           readf,1,read_array
+           close,1
+
+           ti[i,0:nline-1] = read_array(0,*);+toto1(0)
+           ai[i,0:nline-1] = read_array(1,*)
+           ei[i,0:nline-1] = read_array(2,*)
+           oblpi[i,0:nline-1] = read_array(3,*)
+           oblsi[i,0:nline-1] = read_array(4,*)
+           rotpi[i,0:nline-1] = read_array(5,*)
+           rotsi[i,0:nline-1] = read_array(6,*)
+           Rpi[i,0:nline-1] = read_array(7,*)
+           Rsi[i,0:nline-1] = read_array(8,*)
+           rg2si[i,0:nline-1] = read_array(9,*)
+        endfor
+
+        for i = 0,nbp_idl-1 do begin
+            for j = 0,nline-1 do begin
+                tidefluxi(i,j) = enerdot(ai(i,j)*AU,ei(i,j),rotpi(i,j),oblpi(i,j)*!Pi/180.d0,G $
+  		          	,mb(i,0)*Msun,Ms,Rpi(i,j)*Rearth,k2pDeltap(i)*day)/(4.d0*!Pi*(Rpi(i,j)*Rearth)^2)
+            endfor
+            Ip(i) = rg2p(i,0)*mb(i,0)*Msun*(Rp(i,0)*rsun)^2
+        endfor 
+    endif
 endif
 
 END

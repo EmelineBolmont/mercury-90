@@ -40,3 +40,37 @@ end
 Function pseudorot,e,G,Mp,Ms
   return, alpha(e)*sqrt(G*(Mp+Ms))
 end
+
+; Cross product
+Function cross_product,x,y,z,u,v,w
+    a = y*w-z*v
+    b = z*u-x*w
+    c = x*v-y*u
+    cross = [a,b,c]
+    return,cross
+end
+
+; Orbital angular momentum for 4 bodies: one star, 3 planets
+Function Lorb4bodies,ms,mp1,mp2,mp3,x1,y1,z1,u1,v1,w1,x2,y2,z2,u2,v2,w2,x3,y3,z3,u3,v3,w3
+
+    a1 = ms*mp1/(ms+mp1)
+    a2 = (ms+mp1)*mp2/(ms+mp1+mp2)
+    a3 = (ms+mp1+mp2)*mp3/(ms+mp1+mp2+mp3)
+
+    r1    = [x1,y1,z1]
+    v1    = [u1,v1,w1]
+
+    r23  = [x2,y2,z2]-mp1/(ms+mp1)*[x1,y1,z1]
+    v23  = [u2,v2,w2]-mp1/(ms+mp1)*[u1,v1,w1]
+
+    r234 = [x3,y3,z3]-mp1/(ms+mp1)*[x1,y1,z1]-mp2/(ms+mp1+mp2)*r23
+    v234 = [u3,v3,w3]-mp1/(ms+mp1)*[u1,v1,w1]-mp2/(ms+mp1+mp2)*v23
+    
+    r1xv1     = cross_product(x1,y1,z1,u1,v1,w1)
+    r23xv23   = cross_product(r23(0),r23(1),r23(2),v23(0),v23(1),v23(2))
+    r234xv234 = cross_product(r234(0),r234(1),r234(2),v234(0),v234(1),v234(2))
+
+    Lorb = a1 * r1xv1 + a2 * r23xv23 + a3 * r234xv234
+    return,Lorb
+end
+

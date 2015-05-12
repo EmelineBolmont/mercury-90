@@ -1,23 +1,23 @@
 
-Tinf    = 1.d2  &  Tsup    = 1.d7
-amin    = 1d-3
-amax    = 1d0
-emin    = 1.0d-6	
-emax    = 1.0d0
-flxmin  = 1d-6
-flxmax  = 1d5
-oblmin  = 1d-3
-oblmax  = 4.5d1
-incmin  = 1d-3
-incmax  = 4.5d1
-Trotmin = 10
-Trotmax = 10000
-pr_angl_min = 0
-pr_angl_max = 180.
-AMD_min = 1d-30
-AMD_max = 1d0
-cons_min = 1d-10
-cons_max = 1d-2
+Tinf    = 1.d2     &  Tsup    = 1.d7
+
+amin    = 1d-3     &  amax    = 1d0
+
+emin    = 1.0d-6   &  emax    = 1.0d0
+
+flxmin  = 1d-6     &  flxmax  = 1d5
+
+oblmin  = 1d-3     &  oblmax  = 4.5d1
+
+incmin  = 1d-3     &  incmax  = 4.5d1
+
+Trotmin = 10       &  Trotmax = 10000
+
+pr_angl_min = 0    &  pr_angl_max = 180.
+
+AMD_min = 1d-30    &  AMD_max = 1d0
+
+cons_min = 1d-10   &  cons_max = 1d-2
 
 indcolor = 200   &  incolor  = 255
 idlcol   = 200   &  idlicol  = 255
@@ -322,8 +322,18 @@ if ae eq 4 then begin
          ,xstyle=1,ystyle=1 $
          ,/xlog,/ylog
 
+    oplot,toto1(*),abs((Lorb_tot_x(*)+momspitot_x(*)+momstar_x(*)-(Lorb_tot_x(0)+momspitot_x(0)+momstar_x(0))) $
+        /(Lorb_tot_x(0)+momspitot_x(0)+momstar_x(0))),linestyle=2,thick=3,color=80
+    oplot,toto1(*),abs((Lorb_tot_y(*)+momspitot_y(*)+momstar_y(*)-(Lorb_tot_y(0)+momspitot_y(0)+momstar_y(0))) $
+        /(Lorb_tot_y(0)+momspitot_y(0)+momstar_y(0))),linestyle=2,thick=3,color=100
+    oplot,toto1(*),abs((Lorb_tot_z(*)+momspitot_z(*)+momstar_z(*)-(Lorb_tot_z(0)+momspitot_z(0)+momstar_z(0))) $
+        /(Lorb_tot_z(0)+momspitot_z(0)+momstar_z(0))),linestyle=2,thick=3,color=120
+    
+    oplot,toto1(*),abs((Lorb_tot(*)+momspitot(*)+momstar(*)-(Lorb_tot(0)+momspitot(0)+momstar(0))) $
+        /(Lorb_tot(0)+momspitot(0)+momstar(0))),linestyle=0,thick=3
+
     oplot,toto1(*),abs((horb_v(*)+momspitot(*)+momstar(*)-(horb_v(0)+momspitot(0)+momstar(0))) $
-          /(horb_v(0)+momspitot(0)+momstar(0))),linestyle=0,thick=5,color=incolor-0*indcolor
+          /(horb_v(0)+momspitot(0)+momstar(0))),linestyle=3,thick=5,color=incolor-0*indcolor
     oplot,toto1(*),abs((horb_s(*)+momspitot(*)+momstar(*)-(horb_s(0)+momspitot(0)+momstar(0))) $
           /(horb_s(0)+momspitot(0)+momstar(0))),linestyle=5,thick=5,color=incolor-0*indcolor
 
