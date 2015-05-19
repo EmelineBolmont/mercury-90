@@ -2334,30 +2334,60 @@ module user_module
         !---------------------------------------------------------------------------
 
         if ((flagbug.ge.1).and.((tides.eq.1).or.(rot_flat.eq.1))) then          
-            if (time.ge.timestep) then
-                open(13, file="spins.out", access="append")
-                write(13,'(8("  ", es20.10e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
-                close(13)
-                do j=2,ntid+1
-                    write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
-                    write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
-                    write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
-                    open(13, file=planet_spin_filename, access='append')
-                    write(13,'(6("  ", es20.10e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+            if (crash.eq.0) then
+                if (time.ge.timestep) then
+                    open(13, file="spins.out", access="append")
+                    write(13,'(8("  ", es20.10e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
                     close(13)
-                    open(13, file=planet_orbt_filename, access='append')
-                    write(13,'(4("  ", es20.10e3))') time/365.25d0,horb(1,j),horb(2,j),horb(3,j)
+                    do j=2,ntid+1
+                        write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
+                        write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
+                        write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
+                        open(13, file=planet_spin_filename, access='append')
+                        write(13,'(6("  ", es20.10e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+                        close(13)
+                        open(13, file=planet_orbt_filename, access='append')
+                        write(13,'(4("  ", es20.10e3))') time/365.25d0,horb(1,j),horb(2,j),horb(3,j)
+                        close(13)
+                        if (tides.eq.1) then
+                            ! Here I calculate the instantaneous energy loss in Msun.AU^2.day^-3
+                            call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+                                 ,Rp10(j),sigmap(j),j,tmp_dEdt)
+                        endif
+                        open(13, file=planet_dEdt_filename, access='append')
+                        write(13,'(4("  ", es20.10e3))') time/365.25d0,tmp_dEdt
+                        close(13)
+                    enddo
+                    timestep = timestep + output*365.25d0
+                endif
+            endif
+            if (crash.eq.1) then
+                timestep = t_init
+                if (time.ge.timestep) then
+                    open(13, file="spins.out", access="append")
+                    write(13,'(8("  ", es20.10e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
                     close(13)
-                    if (tides.eq.1) then
-                        ! Here I calculate the instantaneous energy loss in Msun.AU^2.day^-3
-                        call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
-                             ,Rp10(j),sigmap(j),j,tmp_dEdt)
-                    endif
-                    open(13, file=planet_dEdt_filename, access='append')
-                    write(13,'(4("  ", es20.10e3))') time/365.25d0,tmp_dEdt
-                    close(13)
-                enddo
-                timestep = timestep + output*365.25d0
+                    do j=2,ntid+1
+                        write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
+                        write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
+                        write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
+                        open(13, file=planet_spin_filename, access='append')
+                        write(13,'(6("  ", es20.10e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+                        close(13)
+                        open(13, file=planet_orbt_filename, access='append')
+                        write(13,'(4("  ", es20.10e3))') time/365.25d0,horb(1,j),horb(2,j),horb(3,j)
+                        close(13)
+                        if (tides.eq.1) then
+                            ! Here I calculate the instantaneous energy loss in Msun.AU^2.day^-3
+                            call dEdt_tides (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j),spin &
+                                 ,Rp10(j),sigmap(j),j,tmp_dEdt)
+                        endif
+                        open(13, file=planet_dEdt_filename, access='append')
+                        write(13,'(4("  ", es20.10e3))') time/365.25d0,tmp_dEdt
+                        close(13)
+                    enddo
+                    timestep = timestep + output*365.25d0
+                endif
             endif
         endif    
 
