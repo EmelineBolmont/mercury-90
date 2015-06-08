@@ -12,6 +12,7 @@
 module user_module
 
   use types_numeriques
+  use mercury_globals
 
   implicit none
 
@@ -81,6 +82,9 @@ module user_module
     real(double_precision) :: flagbug=0.d0
     real(double_precision) :: timestep
 
+    ! In case of BS integrator, we need time on previous timestep to know the
+    ! current timestep
+    real(double_precision) :: time_bf
 
     ! Temporary orbital elements needed to calculate pseudo-synchronization for planets:
     real(double_precision) :: gm,qq,ee,ii,pp,nn,ll
@@ -209,6 +213,8 @@ module user_module
     save timestep,nptmss
     save spin_bf,dt,hdt
     save tintin
+    ! For BS integration
+    save time_bf
 
     ! for the dissipation calculation
     save sigmast,k2s,k2fs
@@ -288,6 +294,11 @@ module user_module
         hdt = 0.5d0*dt
         flagtime = flagtime+1
         timestep = 0.0d0
+        write(*,*) 'integrator',algor
+    endif
+    if ((flagtime.ne.0).and.(algor.eq.2)) then
+        dt = time - time_bf
+        hdt = 0.5d0*dt
     endif
 
     ! Following calculations in heliocentric coordinates   
@@ -2415,6 +2426,8 @@ module user_module
     spin_bf(1,1) = spin(1,1)
     spin_bf(2,1) = spin(2,1)
     spin_bf(3,1) = spin(3,1)
+
+    if (algor.eq.2) time_bf = time
 
     Rst0    = Rst
     Rst0_5  = Rst_5
