@@ -265,7 +265,7 @@ subroutine write_simus_properties()
     write(10,'(a,a)') 'commit = ', commit
     write(10,'(a,a)') 'tags = ', tags
     write(10,'(a)') modifs
-    write(10,'(a,f12.5,a,f12.5,a)') 'With h=', timestep(2), ' days, the simulation will be accurate for r > ', distance_accuracy,' AU'
+    write(10,'(a,f12.5,a,f12.5,a)') 'With h=', timestep(2), ' days, simulation is accurate for r > ', distance_accuracy,' AU'
     write(10,*) ''
     write(10,*) ''
     write(10,'(a)') '------------------------------------'
