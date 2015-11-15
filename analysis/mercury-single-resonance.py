@@ -17,12 +17,12 @@
 #~ inner_period_nb = 3
 #~ outer_period_nb = 2
 
-# HOW TO # There is a resonance if w1 - w2 is in libration. 
-# You have found the right resonance if at least one phi angle of the 
+# HOW TO # There is a resonance if w1 - w2 is in libration.
+# You have found the right resonance if at least one phi angle of the
 # current resonance is in libration
 
 # EXAMPLE
-# To search for a 4:3 resonance between inner PLANET66 and outer PLANET68 : 
+# To search for a 4:3 resonance between inner PLANET66 and outer PLANET68 :
 # mercury-single-resonance.py PLANET66.aei PLANET68.aei 4 3
 
 
@@ -44,8 +44,8 @@ OUTPUT_EXTENSION = 'png' # default value in bitmap, because vectoriel can take t
 
 
 def lancer_commande(commande):
-  """lance une commande qui sera typiquement soit une liste, soit une 
-  commande seule. La fonction renvoit un tuple avec la sortie, 
+  """lance une commande qui sera typiquement soit une liste, soit une
+  commande seule. La fonction renvoit un tuple avec la sortie,
   l'erreur et le code de retour"""
   if (type(commande)==list):
     process = subprocess.Popen(commande, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -56,8 +56,8 @@ def lancer_commande(commande):
   (process_stdout, process_stderr) = process.communicate()
   returncode = process.poll()
   return (process_stdout, process_stderr, returncode)
-  
-  
+
+
 ###############################################
 ## Beginning of the program
 ###############################################
@@ -128,34 +128,34 @@ M_outer = [] # Mean anomaly (degrees)
 values = [[t_inner, a_inner, g_inner, n_inner, M_inner], [t_outer, a_outer, g_outer, n_outer, M_outer]]
 filenames = [inner_planet, outer_planet]
 for ind in range(2):
-  
+
   source_file = filenames[ind]+".aei"
-  
+
   sys.stdout.write("Reading data files %5.1f %% : %s                \r" % ((ind) * 25., source_file))
   sys.stdout.flush()
-  
+
   tableau = open(source_file, 'r')
 
   # we skip the four first lines
   for indice in range(4):
       tableau.readline()
-  
+
   tapp = values[ind][0].append
   aapp = values[ind][1].append
   gapp = values[ind][2].append
   napp = values[ind][3].append
   Mapp = values[ind][4].append
-  
+
   for ligne in tableau:
     colonne = ligne.split()
-    
+
     tapp(float(colonne[0]))
     aapp(float(colonne[1]))
     gapp(float(colonne[4]))
     napp(float(colonne[5]))
     Mapp(float(colonne[6]))
   tableau.close()
-  
+
 
 sys.stdout.write("Calculating angles %5.1f %%                          \r" % (50.))
 sys.stdout.flush()
@@ -219,7 +219,7 @@ delta_longitude[too_high] = delta_longitude[too_high] - 360.
 myxfmt = ScalarFormatter(useOffset=True)
 myxfmt._set_offset(1e5)
 myxfmt.set_scientific(True)
-myxfmt.set_powerlimits((-3, 3)) 
+myxfmt.set_powerlimits((-3, 3))
 
 sys.stdout.write("Displaying %5.1f %%                          \r" % (75.))
 sys.stdout.flush()
@@ -240,7 +240,7 @@ plot_period.set_ylabel("period ratio")
 #~ pl.legend()
 plot_period.grid(True)
 
-# For each resonant angle, it is important to show only the points and not lines, 
+# For each resonant angle, it is important to show only the points and not lines,
 # so that we do not mask interesting features by meaningless lines.
 subplot_index += 1
 plot_dl = fig.add_subplot(nb_lines, nb_rows, subplot_index, sharex=plot_period)
@@ -264,4 +264,4 @@ plot_period.xaxis.set_major_formatter(myxfmt)
 nom_fichier_plot = "resonance_%i_%i_between_%s_and_%s" % (inner_period_nb, outer_period_nb, inner_planet, outer_planet)
 fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
-pl.show() # We display the plot
+#pl.show() # We display the plot
