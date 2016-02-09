@@ -293,7 +293,8 @@ module user_module
         dt = bobo(2)
         hdt = 0.5d0*dt
         flagtime = flagtime+1
-        timestep = 0.0d0
+        if (crash.eq.0) timestep = 0.0d0
+        if (crash.eq.1) timestep = time + output * 365.25d0
         write(*,*) 'integrator',algor
     endif
     if ((flagtime.ne.0).and.(algor.eq.2)) then
@@ -688,9 +689,9 @@ module user_module
                         call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s0)
                     else
                         ! Determination of the radius at time = t_crash
-                        call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb0)
+                        call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-t_crash,Rstb0)
                         ! Determination of the radius of gyration at time = t_crash
-                        call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s0)
+                        call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-t_crash,rg2s0)
                     endif
                     Rst0    = Rsun * Rstb0
                     Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
@@ -730,7 +731,7 @@ module user_module
                         call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time,Rstb0)
                     else
                         ! Determination of the radius at time = t_crash
-                        call spline_b_val(nptmss,timedM*365.25-t_init-t_crash,radiusdM,time-t_crash,Rstb0)
+                        call spline_b_val(nptmss,timedM*365.25-t_init,radiusdM,time-t_crash,Rstb0)
                     endif
                     Rst0    = Rsun * Rstb0
                     Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
@@ -769,7 +770,7 @@ module user_module
                         call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time,Rstb0)
                     else
                         ! Determination of the radius at time = t_crash
-                        call spline_b_val(nptmss,timestar*365.25-t_init-t_crash,radiusstar,time-t_crash,Rstb0)
+                        call spline_b_val(nptmss,timestar*365.25-t_init,radiusstar,time-t_crash,Rstb0)
                     endif
                     Rst0    = minau * Rstb0
                     Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
@@ -801,9 +802,9 @@ module user_module
                         ! Determination of the love number at time = t_init
                         call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time,k2s)
                     else
-                        call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb0)
-                        call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s0)
-                        call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash,k2s)
+                        call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-t_crash,Rstb0)
+                        call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-t_crash,rg2s0)
+                        call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time-t_crash,k2s)
                     endif
                     Rst0    = minau * Rstb0
                     Rst0_5  = Rst0*Rst0*Rst0*Rst0*Rst0
@@ -872,7 +873,6 @@ module user_module
                     spin(1,1) = rot_crash(1) 
                     spin(2,1) = rot_crash(2) 
                     spin(3,1) = rot_crash(3) 
-                    timestep = t_init + output*365.25d0
                 endif
 
                 !---------------------------------------------------------------
@@ -1047,14 +1047,14 @@ module user_module
                     call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time,rg2s)
                 else
                     if (ispin.eq.0) then 
-                        call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-dt,Rstb0)
-                        call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-dt,rg2s0)
+                        call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-t_crash-dt,Rstb0)
+                        call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-t_crash-dt,rg2s0)
                     endif
-                    call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash-hdt,Rstbh)
-                    call spline_b_val(nptmss,timeBD*365.25d0-t_init-t_crash,radiusBD,time-t_crash,Rstb)
+                    call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-t_crash-hdt,Rstbh)
+                    call spline_b_val(nptmss,timeBD*365.25d0-t_init,radiusBD,time-t_crash,Rstb)
 
-                    call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash-hdt,rg2sh)
-                    call spline_b_val(37,trg2*365.25d0-t_init-t_crash,rg2st,time-t_crash,rg2s)
+                    call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-t_crash-hdt,rg2sh)
+                    call spline_b_val(37,trg2*365.25d0-t_init,rg2st,time-t_crash,rg2s)
                 endif
 
                 if (ispin.eq.0) Rst0 = Rsun * Rstb0
@@ -1074,10 +1074,10 @@ module user_module
                     call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time,Rstb)
                 else
                     if (ispin.eq.0) then 
-                        call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash-dt,Rstb0)
+                        call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time-t_crash-dt,Rstb0)
                     endif
-                    call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash-hdt,Rstbh)
-                    call spline_b_val(nptmss,timedM*365.25d0-t_init-t_crash,radiusdM,time-t_crash,Rstb)
+                    call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time-t_crash-hdt,Rstbh)
+                    call spline_b_val(nptmss,timedM*365.25d0-t_init,radiusdM,time-t_crash,Rstb)
                 endif
 
                 if (ispin.eq.0) Rst0 = Rsun * Rstb0
@@ -1101,10 +1101,10 @@ module user_module
                     call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time,Rstb)
                 else
                     if (ispin.eq.0) then 
-                        call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash-dt,Rstb0)
+                        call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time-t_crash-dt,Rstb0)
                     endif
-                    call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash-hdt,Rstbh)
-                    call spline_b_val(nptmss,timestar*365.25d0-t_init-t_crash,radiusstar,time-t_crash,Rstb)
+                    call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time-t_crash-hdt,Rstbh)
+                    call spline_b_val(nptmss,timestar*365.25d0-t_init,radiusstar,time-t_crash,Rstb)
                 endif
 
                 if (ispin.eq.0) Rst0 = minau * Rstb0
@@ -1134,16 +1134,16 @@ module user_module
                     call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time-hdt,k2s)
                 else
                     if (ispin.eq.0) then 
-                        call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-dt,Rstb0)
-                        call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-dt,rg2s0)
+                        call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-t_crash-dt,Rstb0)
+                        call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-t_crash-dt,rg2s0)
                     endif
-                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash,Rstb)
-                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,radiusJup,time-t_crash-hdt,Rstbh)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-t_crash,Rstb)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,radiusJup,time-t_crash-hdt,Rstbh)
                     
-                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash,rg2s)
-                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,rg2Jup,time-t_crash-hdt,rg2sh)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-t_crash,rg2s)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,rg2Jup,time-t_crash-hdt,rg2sh)
                     
-                    call spline_b_val(nptmss,timeJup*365.25d0-t_init-t_crash,k2Jup,time-t_crash-hdt,k2s)
+                    call spline_b_val(nptmss,timeJup*365.25d0-t_init,k2Jup,time-t_crash-hdt,k2s)
                 endif
 
                 if (ispin.eq.0) Rst0 = minau * Rstb0
