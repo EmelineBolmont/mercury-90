@@ -872,6 +872,7 @@ module user_module
                     spin(1,1) = rot_crash(1) 
                     spin(2,1) = rot_crash(2) 
                     spin(3,1) = rot_crash(3) 
+                    timestep = t_init + output*365.25d0
                 endif
 
                 !---------------------------------------------------------------
@@ -2373,7 +2374,6 @@ module user_module
                 endif
             endif
             if (crash.eq.1) then
-                timestep = t_init
                 if (time.ge.timestep) then
                     open(13, file="spins.out", access="append")
                     write(13,'(8("  ", es20.10e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast

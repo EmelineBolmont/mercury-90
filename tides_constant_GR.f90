@@ -36,13 +36,13 @@ module tides_constant_GR
   ! If crash
   integer, parameter :: crash = 0
 
-  ! if crash = 0, then t_init = initial integration time 
+  ! if crash = 0, then t_init = initial integration time (day)
   !                           = age of the evolving body at beginning of simu
   ! if crash = 1, then t_init = time of last line of PLANETi.aei
   ! if crash = 1 and evolving body, then t_init = time of last line of PLANETi.aei + t_init(crash=0)
   real(double_precision), parameter :: t_init = 1.0d6 * 365.25d0
 
-  ! if crash = 1, then t_crash = time of last line of spini.out
+  ! if crash = 1, then t_crash = time of last line of spini.out (day)
   real(double_precision), parameter :: t_crash = 0.0d0 * 365.25d0
   ! if crash = 1, then give the values of last line of spins.out to rot_crash
   ! and do the same for the planets, spinpi.out corresponds to rot_crashpi
