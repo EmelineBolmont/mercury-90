@@ -195,7 +195,7 @@ module user_module
     ! Save data of tables for evolving host body
     ! - Data for Brown Dwarf
     save timeBD,radiusBD
-    save trg2,rg1,rg2,rg3,rg4,rg5,rg6,rg7,rg8,rg9,rg10,rg11,rg12
+    save trg2, rg2st
     ! - Date for Star
     save timestar,radiusstar,d2radiusstar
     ! - Data for M dwarf
@@ -207,6 +207,8 @@ module user_module
     save Rst0,Rst0_5,Rst0_10,rg2s0
     !save Rst0,Rst0_5,Rst0_10
     save Rp,Rp5,Rp10
+    ! save sigmap
+    save sigmap
 
     ! Save data for integration
     save xh_bf,vh_bf,xh_bf2,vh_bf2
@@ -316,7 +318,15 @@ module user_module
     endif      
 
     ! Definition of factor used for GR force calculation
-    if (GenRel.eq.1) tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
+    if ((GenRel.eq.1).and.(ispin.eq.0)) then
+        tintin(1) = 0.
+        do j=2,ntid+1
+            tintin(j) = m(1)*m(j)/(m(1)+m(j))**2
+        enddo
+        do j=ntid+2,10
+            tintin(j) = 0.
+        enddo
+    endif
 
     if (flagbug.ge.1) then
 
@@ -3055,13 +3065,13 @@ module user_module
 
   !-----------------------------------------------------------------------------
   ! Radial part of the GR force (Kidder 1995, Mardling & Lin 2002)
-  subroutine F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_rad)
+  subroutine F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j,FGR_rad)
 
       implicit none
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-      real(double_precision),intent(in) :: tintin,C2
+      real(double_precision),intent(in) :: GRparam,C2
       real(double_precision),intent(in) :: m(nbod)
       real(double_precision), intent(out) :: FGR_rad
       ! Local
@@ -3071,22 +3081,22 @@ module user_module
       call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
 
       FGR_rad = -(m(1)+m(j))/(r_2*C2*C2) &
-           *((1.0d0+3.0d0*tintin)*v_2 &  
-           -2.d0*(2.d0+tintin)*(m(1)+m(j))/rr &
-           -1.5d0*tintin*v_rad*v_rad) 
+           *((1.0d0+3.0d0*GRparam)*v_2 &  
+           -2.d0*(2.d0+GRparam)*(m(1)+m(j))/rr &
+           -1.5d0*GRparam*v_rad*v_rad) 
       !-------------------------------------------------------------------------
       return
   end subroutine F_GR_rad
 
   !-----------------------------------------------------------------------------
   ! Orthoradial part of the GR force
-  subroutine F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_ort)
+  subroutine F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j,FGR_ort)
 
       implicit none
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-      real(double_precision),intent(in) :: tintin,C2
+      real(double_precision),intent(in) :: GRparam,C2
       real(double_precision),intent(in) :: m(nbod)
       real(double_precision), intent(out) :: FGR_ort
       ! Local
@@ -3096,28 +3106,28 @@ module user_module
       call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
 
       FGR_ort = (m(1)+m(j))/(r_2*C2*C2) &
-                    *2.0d0*(2.0d0-tintin)*v_rad*norm_v 
+                    *2.0d0*(2.0d0-GRparam)*v_rad*norm_v 
       !-------------------------------------------------------------------------
       return
   end subroutine F_GR_ortho
 
   !-----------------------------------------------------------------------------
   ! GR force
-  subroutine F_GenRel (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j &
+  subroutine F_GenRel (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j &
          ,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
 
       implicit none
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-      real(double_precision),intent(in) :: tintin,C2
+      real(double_precision),intent(in) :: GRparam,C2
       real(double_precision),intent(in) :: m(nbod)
       real(double_precision), intent(out) :: F_GR_tot_x,F_GR_tot_y,F_GR_tot_z
       ! Local
       real(double_precision) :: tmp,tmp1,FGR_rad,FGR_ort
       !-------------------------------------------------------------------------
-      call F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_rad)
-      call F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,tintin,C2,j,FGR_ort)
+      call F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j,FGR_rad)
+      call F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j,FGR_ort)
 
       tmp  = sqrt(xhx*xhx+xhy*xhy+xhz*xhz)
       tmp1 = sqrt(vhx*vhx+vhy*vhy+vhz*vhz)
