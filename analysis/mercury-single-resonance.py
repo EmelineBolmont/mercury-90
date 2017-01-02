@@ -264,4 +264,4 @@ plot_period.xaxis.set_major_formatter(myxfmt)
 nom_fichier_plot = "resonance_%i_%i_between_%s_and_%s" % (inner_period_nb, outer_period_nb, inner_planet, outer_planet)
 fig.savefig('%s.%s' % (nom_fichier_plot, OUTPUT_EXTENSION), format=OUTPUT_EXTENSION)
 
-#pl.show() # We display the plot
+pl.show() # We display the plot
