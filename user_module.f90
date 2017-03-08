@@ -3116,6 +3116,7 @@ module user_module
   subroutine F_GenRel (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j &
          ,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
 
+      use physical_constant
       implicit none
       ! Input/Output
       integer,intent(in) :: nbod,j
@@ -3132,9 +3133,9 @@ module user_module
       tmp  = sqrt(xhx*xhx+xhy*xhy+xhz*xhz)
       tmp1 = sqrt(vhx*vhx+vhy*vhy+vhz*vhz)
 
-      F_GR_tot_x = m(j)*(FGR_rad*xhx/tmp+FGR_ort*vhx/tmp1)
-      F_GR_tot_y = m(j)*(FGR_rad*xhy/tmp+FGR_ort*vhy/tmp1)
-      F_GR_tot_z = m(j)*(FGR_rad*xhz/tmp+FGR_ort*vhz/tmp1)
+      F_GR_tot_x = m(j)/K2*(FGR_rad*xhx/tmp+FGR_ort*vhx/tmp1)
+      F_GR_tot_y = m(j)/K2*(FGR_rad*xhy/tmp+FGR_ort*vhy/tmp1)
+      F_GR_tot_z = m(j)/K2*(FGR_rad*xhz/tmp+FGR_ort*vhz/tmp1)
       !-------------------------------------------------------------------------
       return
   end subroutine F_GenRel
