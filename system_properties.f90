@@ -137,7 +137,7 @@ subroutine mce_init (h,jcen,rcen,cefac,nbod,nbig,m,x,v,s,rho,rceh,rphys,rce,rcri
   
   !------------------------------------------------------------------------------
   
-  rhocgs = AU * AU * AU * K2 / MSUN
+  rhocgs = AU_cgs * AU_cgs * AU_cgs * K2 / MSUN_cgs
   k_2 = 1.d0 / K2
   rcen_2 = 1.d0 / (rcen * rcen)
   amin = HUGE

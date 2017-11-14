@@ -226,7 +226,7 @@ subroutine mio_dump (time,h0,tol,jcen,rcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,
   
   !------------------------------------------------------------------------------
   
-  rhocgs = AU * AU * AU * K2 / MSUN
+  rhocgs = AU_cgs * AU_cgs * AU_cgs * K2 / MSUN_cgs
   k_2 = 1.d0 / K2
   rcen_2 = 1.d0 / (rcen * rcen)
   rcen_4 = rcen_2 * rcen_2
@@ -617,7 +617,7 @@ subroutine mio_out (time,jcen,rcen,nbod,nbig,m,xh,vh,s,rho,stat,id,opflag,outfil
   
   !------------------------------------------------------------------------------
   
-  rhocgs = AU * AU * AU * K2 / MSUN
+  rhocgs = AU_cgs * AU_cgs * AU_cgs * K2 / MSUN_cgs
   k_2 = 1.d0 / K2
   rcen_2 = 1.d0 / (rcen * rcen)
   

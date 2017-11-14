@@ -168,7 +168,7 @@ program element
   !------------------------------------------------------------------------------
   allflag = 0
   tprevious = 0.d0
-  rhocgs = AU * AU * AU * K2 / MSUN
+  rhocgs = AU_cgs * AU_cgs * AU_cgs * K2 / MSUN_cgs
 
   ! Read in output messages
   inquire (file='message.in', exist=test)

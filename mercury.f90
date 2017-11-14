@@ -289,7 +289,7 @@ subroutine mio_in (time,h0,tol,rcen,jcen,en,am,cefac,ndump,nfun,nbod,nbig,m,x,v,
   
   !------------------------------------------------------------------------------
     
-  rhocgs = AU * AU * AU * K2 / MSUN
+  rhocgs = AU_cgs * AU_cgs * AU_cgs * K2 / MSUN_cgs
   do j = 1, 80
      filename(j:j) = ' '
   end do
