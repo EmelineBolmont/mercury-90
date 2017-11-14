@@ -348,7 +348,7 @@ module user_module
 
                 if (brown_dwarf.eq.1) then 
                     ! BD's radius of gyration
-                    open(1,file='rg2BD.dat')
+                    open(1,file='data_host_body/rg2BD.dat')
                     do nptmss=1,37
                         read(1,*,iostat=error)trg2(nptmss),rg1(nptmss),rg2(nptmss), &
                              rg3(nptmss),rg4(nptmss),rg5(nptmss),rg6(nptmss),rg7(nptmss), &
@@ -360,7 +360,7 @@ module user_module
                         do j = 1,37       
                             rg2st(j) = rg1(j)
                         enddo
-                        open(1,file='mass_10.0000.dat')
+                        open(1,file='data_host_body/mass_10.0000.dat')
                         nptmss = 715
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -379,7 +379,7 @@ module user_module
                         do j = 1,37       
                            rg2st(j) = rg2(j)
                         enddo
-                        open(1,file='mass_12.0000.dat')
+                        open(1,file='data_host_body/mass_12.0000.dat')
                         nptmss = 720
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -398,7 +398,7 @@ module user_module
                         do j = 1,37       
                            rg2st(j) = rg3(j)
                         enddo
-                        open(1,file='mass_15.0000.dat')
+                        open(1,file='data_host_body/mass_15.0000.dat')
                         nptmss = 856
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -417,7 +417,7 @@ module user_module
                         do j = 1,37       
                            rg2st(j) = rg4(j)
                         enddo
-                        open(1,file='mass_20.0000.dat')
+                        open(1,file='data_host_body/mass_20.0000.dat')
                         nptmss = 864
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -436,7 +436,7 @@ module user_module
                         do j = 1,37       
                             rg2st(j) = rg5(j)
                         enddo
-                        open(1,file='mass_30.0000.dat')
+                        open(1,file='data_host_body/mass_30.0000.dat')
                         nptmss = 878
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -455,7 +455,7 @@ module user_module
                         do j = 1,37       
                             rg2st(j) = rg6(j)
                         enddo
-                        open(1,file='mass_40.0000.dat')
+                        open(1,file='data_host_body/mass_40.0000.dat')
                         nptmss = 886
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -474,7 +474,7 @@ module user_module
                         do j = 1,37       
                             rg2st(j) = rg7(j)
                         enddo
-                        open(1,file='mass_50.0000.dat')
+                        open(1,file='data_host_body/mass_50.0000.dat')
                         nptmss = 891
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -493,7 +493,7 @@ module user_module
                         do j = 1,37       
                             rg2st(j) = rg8(j)
                         enddo
-                        open(1,file='mass_60.0000.dat')
+                        open(1,file='data_host_body/mass_60.0000.dat')
                         nptmss = 1663
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -512,7 +512,7 @@ module user_module
                         do j = 1,37       
                             rg2st(j) = rg9(j)
                         enddo
-                        open(1,file='mass_70.0000.dat')
+                        open(1,file='data_host_body/mass_70.0000.dat')
                         nptmss = 3585
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -531,7 +531,7 @@ module user_module
                         do j = 1,37       
                             rg2st(j) = rg10(j)
                         enddo
-                        open(1,file='mass_72.0000.dat')
+                        open(1,file='data_host_body/mass_72.0000.dat')
                         nptmss = 3721
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -550,7 +550,7 @@ module user_module
                         do j = 1,37       
                             rg2st(j) = rg11(j)
                         enddo
-                        open(1,file='mass_75.0000.dat')
+                        open(1,file='data_host_body/mass_75.0000.dat')
                         nptmss = 3903
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -569,7 +569,7 @@ module user_module
                         do j = 1,37       
                             rg2st(j) = rg12(j)
                         enddo
-                        open(1,file='mass_80.0000.dat')
+                        open(1,file='data_host_body/mass_80.0000.dat')
                         nptmss = 4161
                         allocate( timeBD(nptmss) )
                         allocate( radiusBD(nptmss))
@@ -588,7 +588,7 @@ module user_module
 
                 ! Charge file of radius of Mdwarf 
                 if (M_dwarf.eq.1) then 
-                    open(1,file='01Msun.dat')
+                    open(1,file='data_host_body/01Msun.dat')
                     do nptmss = 1,1065
                         read(1,*,iostat=error)timedM(nptmss),radiusdM(nptmss)
                     end do
@@ -597,7 +597,7 @@ module user_module
 
                 ! Charge file of radius of Sun-like star 
                 if (Sun_like_star.eq.1) then 
-                    open(1,file='SRad_Spli_M-1_0000.dat')
+                    open(1,file='data_host_body/SRad_Spli_M-1_0000.dat')
                     do nptmss = 1,2003
                         read(1,*,iostat=error)timestar(nptmss),radiusstar(nptmss),d2radiusstar(nptmss)
                     end do
@@ -606,7 +606,7 @@ module user_module
 
                 ! Charge file of radius of Jupiter 
                 if (Jupiter_host.eq.1) then 
-                    open(1,file='Jupiter.dat')
+                    open(1,file='data_host_body/Jupiter.dat')
                     do nptmss = 1,4755
                        read(1,*,iostat=error) timeJup(nptmss),radiusJup(nptmss) &
                             ,k2Jup(nptmss),rg2Jup(nptmss),spinJup(nptmss)
