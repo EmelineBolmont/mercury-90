@@ -2326,7 +2326,7 @@ module user_module
                 tmp1 = K2/m(1) 
                 ! Here I call subroutine that gives the total GR force
                 call F_GenRel (nbod,m,xh(1,j),xh(2,j),xh(3,j),vh(1,j),vh(2,j),vh(3,j) &
-                     ,tintin(j),C2,j,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
+                     ,tintin(j),speed_of_light,j,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
                 ! Calculation of the acceleration     
                 a3(1,j) = tmp*F_GR_tot_x
                 a3(2,j) = tmp*F_GR_tot_y
@@ -3065,13 +3065,13 @@ module user_module
 
   !-----------------------------------------------------------------------------
   ! Radial part of the GR force (Kidder 1995, Mardling & Lin 2002)
-  subroutine F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j,FGR_rad)
+  subroutine F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,speed_of_light,j,FGR_rad)
 
       implicit none
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-      real(double_precision),intent(in) :: GRparam,C2
+      real(double_precision),intent(in) :: GRparam,speed_of_light
       real(double_precision),intent(in) :: m(nbod)
       real(double_precision), intent(out) :: FGR_rad
       ! Local
@@ -3080,7 +3080,7 @@ module user_module
       call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
       call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
 
-      FGR_rad = -(m(1)+m(j))/(r_2*C2*C2) &
+      FGR_rad = -(m(1)+m(j))/(r_2*speed_of_light*speed_of_light) &
            *((1.0d0+3.0d0*GRparam)*v_2 &  
            -2.d0*(2.d0+GRparam)*(m(1)+m(j))/rr &
            -1.5d0*GRparam*v_rad*v_rad) 
@@ -3090,13 +3090,13 @@ module user_module
 
   !-----------------------------------------------------------------------------
   ! Orthoradial part of the GR force
-  subroutine F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j,FGR_ort)
+  subroutine F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,speed_of_light,j,FGR_ort)
 
       implicit none
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-      real(double_precision),intent(in) :: GRparam,C2
+      real(double_precision),intent(in) :: GRparam,speed_of_light
       real(double_precision),intent(in) :: m(nbod)
       real(double_precision), intent(out) :: FGR_ort
       ! Local
@@ -3105,7 +3105,7 @@ module user_module
       call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
       call velocities (xhx,xhy,xhz,vhx,vhy,vhz,v_2,norm_v,v_rad)
 
-      FGR_ort = (m(1)+m(j))/(r_2*C2*C2) &
+      FGR_ort = (m(1)+m(j))/(r_2*speed_of_light*speed_of_light) &
                     *2.0d0*(2.0d0-GRparam)*v_rad*norm_v 
       !-------------------------------------------------------------------------
       return
@@ -3113,7 +3113,7 @@ module user_module
 
   !-----------------------------------------------------------------------------
   ! GR force
-  subroutine F_GenRel (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j &
+  subroutine F_GenRel (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,speed_of_light,j &
          ,F_GR_tot_x,F_GR_tot_y,F_GR_tot_z)
 
       use physical_constant
@@ -3121,14 +3121,14 @@ module user_module
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: xhx,xhy,xhz,vhx,vhy,vhz
-      real(double_precision),intent(in) :: GRparam,C2
+      real(double_precision),intent(in) :: GRparam,speed_of_light
       real(double_precision),intent(in) :: m(nbod)
       real(double_precision), intent(out) :: F_GR_tot_x,F_GR_tot_y,F_GR_tot_z
       ! Local
       real(double_precision) :: tmp,tmp1,FGR_rad,FGR_ort
       !-------------------------------------------------------------------------
-      call F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j,FGR_rad)
-      call F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,C2,j,FGR_ort)
+      call F_GR_rad (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,speed_of_light,j,FGR_rad)
+      call F_GR_ortho (nbod,m,xhx,xhy,xhz,vhx,vhy,vhz,GRparam,speed_of_light,j,FGR_ort)
 
       tmp  = sqrt(xhx*xhx+xhy*xhy+xhz*xhz)
       tmp1 = sqrt(vhx*vhx+vhy*vhy+vhz*vhz)

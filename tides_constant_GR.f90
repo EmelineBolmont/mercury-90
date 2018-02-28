@@ -158,23 +158,8 @@ module tides_constant_GR
   ! k2delta_t for Jupiter: 2-3d-2 s, here in day (Leconte)
   real(double_precision), parameter :: k2delta_jup = 2.893519d-7
 
-  ! The IAU 2009 system of astronomical constants: the report of the IAU working group on numerical standards for Fundamental Astronomy
-  ! https://en.wikipedia.org/wiki/Astronomical_constant
-  ! Ratio between mass of the Sun and mass of Earth
-  real(double_precision), parameter :: m2earth = 332946.050895d0
-  ! meter in AU
-  real(double_precision), parameter :: AU    = 1.49597870700d11
-  real(double_precision), parameter :: minau = 1.d0/AU
-
-  ! Resolution B3 on recommended nominal conversion constants for selected solar and planetary properties
-  ! http://adsabs.harvard.edu/abs/2015arXiv151007674M
-  ! Radius of the Sun in AU 
-  real(double_precision), parameter :: rsun = 6.957d8/AU
-  ! Radius of Earth in AU
-  real(double_precision), parameter :: rearth = 6.3781d6/AU
-
   ! Speed of light
-  real(double_precision), parameter :: C2 = 1.731444830225d2
+  real(double_precision), parameter :: speed_of_light = 1.731444830225d2
 
   ! Runge Kutta parameters
   real(double_precision), parameter, dimension(5) :: aa = (/0.2d0,0.3d0,0.6d0,1.d0,0.875d0/)
