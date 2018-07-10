@@ -3140,4 +3140,83 @@ module user_module
       return
   end subroutine F_GenRel
 
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !---------------------------  ROTATION     -----------------------------------
+  !---------------------------  TRIAXIALITY  -----------------------------------
+  !-----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+
+
+  !-----------------------------------------------------------------------------
+  ! From triaxiality, fluid Love number and 1/2(A+B+C)
+  ! obtain A, B and C
+  subroutine get_ABC (nbod, m, j, Rp, R_plan5, spin, alph_tri, k2fp, rs2p, A_tri, B_tri, C_tri)
+
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision),intent(in) :: spin(3,10)
+      real(double_precision),intent(in) :: Rp, R_plan5, alph_tri, k2fp, rs2p
+      real(double_precision), intent(out) :: A_tri, B_tri, C_tri
+      ! Local
+      real(double_precision) :: I_tri, J2MpRp2, normspin_2p
+      !-------------------------------------------------------------------------
+      call norm_spin_2 (spin(1,j),spin(2,j),spin(3,j),normspin_2p)
+
+      ! J2 = k2fp * normspin_2p * Rp^3 / ( 3*G*Mp )
+      J2MpRp2 = k2fp * normspin_2p * R_plan5 / ( 3.d0*K2 )
+      I_tri = rs2p * (m(j)*Rp*Rp)/K2
+      C_tri = 2.d0 / ( 3.d0 + alph_tri ) * ( I_tri + J2MpRp2)
+      B_tri = I_tri + (alph_tri-1.d0)/2.d0 * C_tri
+      A_tri = I_tri - (alph_tri+1.d0)/2.d0 * C_tri
+      !-------------------------------------------------------------------------
+      return
+  end subroutine get_ABC
+
+  !-----------------------------------------------------------------------------
+  ! Blabla
+  subroutine F_triax (nbod,m,xhx,xhy,xhz,spin, Rp, R_plan5, alph_tri, k2fp, rs2p &
+         ,k2_plan,j, time, Ftriax_x, Ftriax_y, Ftriax_z)
+
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: Rp, R_plan5,k2_plan
+      real(double_precision),intent(in) :: alph_tri, k2fp, rs2p
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: spin(3,10)
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision),intent(in) :: time
+      real(double_precision), intent(out) :: Ftriax_x, Ftriax_y, Ftriax_z
+      ! Local
+      real(double_precision) :: A_tri, B_tri, C_tri
+      real(double_precision) :: i_scal_r, j_scal_r
+      real(double_precision) :: tmp, BC2A_i_scal_r, CA2B_j_scal_r
+      real(double_precision) :: normspin_2p, normspin_p,r_2,rr,r_4,r_5,r_7,r_8
+      !-------------------------------------------------------------------------
+      call norm_spin_2 (spin(1,j),spin(2,j),spin(3,j),normspin_2p)
+      call get_ABC (nbod, m, j, Rp, R_plan5, spin, alph_tri, k2fp, rs2p, A_tri, B_tri, C_tri)
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+
+      normspin_p = sqrt(normspin_2p)
+
+      i_scal_r = 1.d0/rr * ( xhx*cos(normspin_p*time) + xhy*sin(normspin_p*time))
+      j_scal_r = 1.d0/rr * (-xhx*sin(normspin_p*time) + xhy*cos(normspin_p*time))
+      BC2A_i_scal_r = (B_tri + C_tri - 2.d0*A_tri) * i_scal_r
+      CA2B_j_scal_r = (C_tri + A_tri - 2.d0*B_tri) * j_scal_r
+
+      tmp = -m(j)/r_4
+      Ftriax_x = tmp * ( BC2A_i_scal_r * (2.5d0 * i_scal_r * xhx/rr - cos(normspin_p*time)) &
+          + CA2B_j_scal_r * (2.5d0 * j_scal_r * xhx/rr + sin(normspin_p*time)))
+      Ftriax_y = tmp * ( BC2A_i_scal_r * (2.5d0 * i_scal_r * xhy/rr - sin(normspin_p*time)) &
+          + CA2B_j_scal_r * (2.5d0 * j_scal_r * xhy/rr + cos(normspin_p*time)))
+      Ftriax_z = 0.0d0
+      !-------------------------------------------------------------------------
+      return
+  end subroutine F_triax
+
 end module user_module

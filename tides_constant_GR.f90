@@ -67,6 +67,7 @@ module tides_constant_GR
   ! 1: Terrestrial (no mass-radius relationship)
   ! 2: Gas giant
   ! 3: user chooses everything
+  ! 4: includes the triaxiality of the planet, user chooses everything but COPLANAR and NO obliquity
   integer, parameter, dimension(ntid) :: planet_type = (/0,3/)
   ! If planet_type ne 0, then indicate radius in Rearth
   ! for ex: 1 or 0.954d0*Rjup
@@ -91,6 +92,22 @@ module tides_constant_GR
   real(double_precision), parameter, dimension(ntid) :: k2fp_what = (/0.d0,0.9532d0/)
   ! k2delta_t (day)
   real(double_precision), parameter, dimension(ntid) :: k2pdeltap_what = (/0.0d0,2.465278d-3/)
+
+  !---------------------  for planets with planet_type=4  ----------------------
+  !--------------  love number, radius of gyration, dissipation  ---------------
+  !--------------- WARNING: ONLY COPLANAR and NO OBLIQUITY !!!!! ---------------
+  ! Radius of gyration
+  real(double_precision), parameter, dimension(ntid) :: rg2p_triax = (/0.d0,3.308d-1/)
+  ! Tidal love number
+  real(double_precision), parameter, dimension(ntid) :: k2tp_triax = (/0.d0,0.299d0/)
+  ! Fluid love number
+  real(double_precision), parameter, dimension(ntid) :: k2fp_triax = (/0.d0,0.9532d0/)
+  ! k2delta_t (day)
+  real(double_precision), parameter, dimension(ntid) :: k2pdeltap_triax = (/0.0d0,2.465278d-3/)
+  ! Spherical radius of gyration = 1/2 (A+B+C) * 1/(Mp*Rp^2)
+  real(double_precision), parameter, dimension(ntid) :: rs2p_triax = (/0.d0,4.997d-1/)
+  ! triaxiality
+   real(double_precision), parameter, dimension(ntid) :: alph_tri_triax = (/0.d0,2.196d-5/)
 
   !---------------------------  dissipation  -----------------------------------
   ! factor to multiply the value of the dissipation of the planets
