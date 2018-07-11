@@ -169,6 +169,13 @@ module user_module
     real(double_precision), dimension(10) :: Rp,Rp5,Rp10
     ! Parameters for the planets: dissipation of the planet, general relativity stuff in tintin, love number, time lag, moments of inertia
     real(double_precision), dimension(10) :: sigmap,tintin,k2p,k2fp,k2pdeltap,rg2p
+    ! For planet_type = 4, add the necessary tables for the triaxiality and "isotropic" radius of gyration
+    real(double_precision), dimension(10) :: rs2p, alph_tri, principal_moment_of_inertia_p
+    real(double_precision) :: time_1_bf2, time_1_bf3, time_1_bf4, time_1_bf5, time_1_bf6
+    real(double_precision) :: time_2_bf2, time_2_bf3, time_2_bf4, time_2_bf5, time_2_bf6
+    real(double_precision) :: A_tri, B_tri, C_tri
+    save rs2p, alph_tri, principal_moment_of_inertia_p
+    ! end triax
 
     ! Data tables for evolving host body:
     ! - Data for Brown dwarf
@@ -914,6 +921,10 @@ module user_module
                         rg2p(j-1) = rg2p_terr
                         k2p(j-1) = k2p_terr
                         k2fp(j-1) = k2fp_terr
+                        ! begin triax
+                        rs2p(j-1) = 0.0d0
+                        ! end triax
+                        alph_tri(j-1) = 0.0d0
                         if (tides.eq.1) then
                             k2pdeltap(j-1) = k2pdeltap_terr
                             sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
@@ -925,6 +936,10 @@ module user_module
                         rg2p(j-1) = rg2p_gg
                         k2p(j-1) = k2p_gg
                         k2fp(j-1) = k2p_gg
+                        ! begin triax
+                        rs2p(j-1) = 0.0d0
+                        ! end triax
+                        alph_tri(j-1) = 0.0d0
                         if (tides.eq.1) then
                             k2pdeltap(j-1) = k2pdeltap_gg
                             sigmap(j) = dissplan(j-1)*sigma_gg
@@ -936,11 +951,38 @@ module user_module
                         rg2p(j-1) = rg2p_what(j-1)
                         k2p(j-1) = k2tp_what(j-1)
                         k2fp(j-1) = k2fp_what(j-1)
+                        ! begin triax
+                        rs2p(j-1) = 0.0d0
+                        ! end triax
+                        alph_tri(j-1) = 0.0d0
                         if (tides.eq.1) then
                             k2pdeltap(j-1) = k2pdeltap_what(j-1)
                             sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
                         endif
                     endif
+
+                    ! begin triax
+                    ! planet_type = 4: you give the values you want in tides_constant_GR
+                    if (planet_type(j-1).eq.4) then
+                        rg2p(j-1) = 0.0d0
+                        k2p(j-1) = k2tp_triax(j-1)
+                        k2fp(j-1) = k2fp_triax(j-1)
+                        ! New data to calculate triaxiality induced force and torque
+                        rs2p(j-1) = rs2p_triax(j-1)
+                        alph_tri(j-1) = alph_tri_triax(j-1)
+                        if (tides.eq.1) then
+                            k2pdeltap(j-1) = k2pdeltap_triax(j-1)
+                            sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
+                        endif
+                        call get_ABC (nbod, m, j, Rp(j), Rp5(j) &
+                            , spin_bf(1,j),spin_bf(2,j),spin_bf(3,j) &
+                            , alph_tri(j-1), k2fp(j-1), rs2p(j-1) &
+                            , A_tri, B_tri, C_tri)
+                        principal_moment_of_inertia_p(j-1) = C_tri
+                    else
+                        principal_moment_of_inertia_p(j-1) = m(j)/K2 * rg2p(j-1)*Rp(j)*Rp(j) 
+                    endif
+                    ! end triax
                 enddo
 
                 !--------------------------------------------------------------------
@@ -1194,79 +1236,100 @@ module user_module
                 do j=2,ntid+1
 
                     do kk=1,3
+
+                        time_1_bf2 = time-(2.d0-aa(1))*hdt
+                        time_1_bf3 = time-(2.d0-aa(2))*hdt
+                        time_1_bf4 = time-(2.d0-aa(3))*hdt
+                        time_1_bf5 = time-hdt
+                        time_1_bf6 = time-(2.d0-aa(5))*hdt
+
+                        time_2_bf2 = time-(1.d0-aa(1))*hdt
+                        time_2_bf3 = time-(1.d0-aa(2))*hdt
+                        time_2_bf4 = time-(1.d0-aa(3))*hdt
+                        time_2_bf5 = time
+                        time_2_bf6 = time-(1.d0-aa(5))*hdt
+
                         ! Interpolation for Runge-Kutta steps on first half of timestep
 
                         ! Interpolation of position for 1st RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(1))*hdt,xintermediate)
+                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time_1_bf2,xintermediate)
                         xh_1_rk2(kk,j) = xintermediate
                         ! Interpolation of velocity for 1st RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(1))*hdt,xintermediate)
+                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time_1_bf2,xintermediate)
                         vh_1_rk2(kk,j) = xintermediate
+
                         ! Interpolation of position for 2nd RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(2))*hdt,xintermediate)
+                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time_1_bf3,xintermediate)
                         xh_1_rk3(kk,j) = xintermediate
                         ! Interpolation of velocity for 2nd RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(2))*hdt,xintermediate)
+                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time_1_bf3,xintermediate)
                         vh_1_rk3(kk,j) = xintermediate
+
                         ! Interpolation of position for 3rd RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(3))*hdt,xintermediate)
+                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time_1_bf4,xintermediate)
                         xh_1_rk4(kk,j) = xintermediate
                         ! Interpolation of velocity for 3rd RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(3))*hdt,xintermediate)
+                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time_1_bf4,xintermediate)
                         vh_1_rk4(kk,j) = xintermediate
+
                         ! Interpolation of position for 4th RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-hdt,xintermediate)
+                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time_1_bf5,xintermediate)
                         xh_1_rk5(kk,j) = xintermediate
                         ! Interpolation of velocity for 4th RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-hdt,xintermediate)
+                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time_1_bf5,xintermediate)
                         vh_1_rk5(kk,j) = xintermediate
+
                         ! Interpolation of position for 5th RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(2.d0-aa(5))*hdt,xintermediate)
+                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time_1_bf6,xintermediate)
                         xh_1_rk6(kk,j) = xintermediate
                         ! Interpolation of velocity for 5th RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(2.d0-aa(5))*hdt,xintermediate)
+                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time_1_bf6,xintermediate)
                         vh_1_rk6(kk,j) = xintermediate
 
                         ! Interpolation for Runge-Kutta steps on second half of timestep
 
                         ! Interpolation of position for 1st RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(1))*hdt,xintermediate)
+                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time_2_bf2,xintermediate)
                         xh_2_rk2(kk,j) = xintermediate
                         ! Interpolation of velocity for 1st RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(1))*hdt,xintermediate)
+                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time_2_bf2,xintermediate)
                         vh_2_rk2(kk,j) = xintermediate
+
                         ! Interpolation of position for 2nd RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(2))*hdt,xintermediate)
+                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time_2_bf3,xintermediate)
                         xh_2_rk3(kk,j) = xintermediate
                         ! Interpolation of velocity for 2nd RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(2))*hdt,xintermediate)
+                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time_2_bf3,xintermediate)
                         vh_2_rk3(kk,j) = xintermediate
+
                         ! Interpolation of position for 3rd RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(3))*hdt,xintermediate)
+                             ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time_2_bf4,xintermediate)
                         xh_2_rk4(kk,j) = xintermediate
                         ! Interpolation of velocity for 3rd RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
-                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time-(1.d0-aa(3))*hdt,xintermediate)
+                             ,(/vh_bf2(kk,j),vh_bf(kk,j),vh(kk,j)/),time_2_bf4,xintermediate)
                         vh_2_rk4(kk,j) = xintermediate
+
                         ! Interpolation of position for 4th RK parameter 
                         xh_2_rk5(kk,j) = xh(kk,j)
                         ! Interpolation of velocity for 4th RK parameter 
                         vh_2_rk5(kk,j) = vh(kk,j)
+
                         ! Interpolation of position for 5th RK parameter 
                         call spline_b_val(3,(/time-2.d0*dt,time-dt,time/) &
                              ,(/xh_bf2(kk,j),xh_bf(kk,j),xh(kk,j)/),time-(1.d0-aa(5))*hdt,xintermediate)
@@ -1882,7 +1945,14 @@ module user_module
 
          
                 do j=2,ntid+1 
-                    tmp = - hdt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
+                    if (planet_type(j-1).eq.4) then
+                        call get_ABC (nbod, m, j, Rp(j), Rp5(j) &
+                            , spin_bf(1,j),spin_bf(2,j),spin_bf(3,j) &
+                            , alph_tri(j-1), k2fp(j-1), rs2p(j-1) &
+                            , A_tri, B_tri, C_tri)
+                        principal_moment_of_inertia_p(j-1) = C_tri
+                    endif
+                    tmp = - hdt*m(1)/(m(j)+m(1)) / principal_moment_of_inertia_p(j-1)
 
                     ! Torque at last time step t=time-dt
                     ! Calculation of Runge-kutta factor k1
@@ -1899,12 +1969,15 @@ module user_module
                     if (rot_flat.eq.1) then 
                         call Torque_rot_p (nbod,m,xh_bf(1,j),xh_bf(2,j),xh_bf(3,j) &
                              ,spin_bf(1,j),spin_bf(2,j),spin_bf(3,j) &
-                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+                             , Rp(j),  alph_tri(j-1), rs2p(j-1), time-dt &
+                             ,Rp5(j),k2fp(j-1) &
+                             ,j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
                         N_rot_py = 0.0d0
                         N_rot_pz = 0.0d0 
                     endif
+
                     k_rk_1x = tmp*(tides*N_tid_px + rot_flat*N_rot_px)
                     k_rk_1y = tmp*(tides*N_tid_py + rot_flat*N_rot_py)
                     k_rk_1z = tmp*(tides*N_tid_pz + rot_flat*N_rot_pz)
@@ -1928,6 +2001,7 @@ module user_module
                              ,spin_bf(1,j)+bb2*k_rk_1x &
                              ,spin_bf(2,j)+bb2*k_rk_1y &
                              ,spin_bf(3,j)+bb2*k_rk_1z &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_1_bf2 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -1957,6 +2031,7 @@ module user_module
                              ,spin_bf(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
                              ,spin_bf(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
                              ,spin_bf(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_1_bf3 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -1986,6 +2061,7 @@ module user_module
                              ,spin_bf(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
                              ,spin_bf(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
                              ,spin_bf(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_1_bf4 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -2015,6 +2091,7 @@ module user_module
                              ,spin_bf(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
                              ,spin_bf(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
                              ,spin_bf(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_1_bf5 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -2044,6 +2121,7 @@ module user_module
                              ,spin_bf(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
                              ,spin_bf(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
                              ,spin_bf(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_1_bf6 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -2068,6 +2146,15 @@ module user_module
                     !-----------------------------------------------------------------
                     !-----------------------------------------------------------------
 
+                    if (planet_type(j-1).eq.4) then
+                        call get_ABC (nbod, m, j, Rp(j), Rp5(j) &
+                            , spin(1,j),spin(2,j),spin(3,j) &
+                            , alph_tri(j-1), k2fp(j-1), rs2p(j-1) &
+                            , A_tri, B_tri, C_tri)
+                        principal_moment_of_inertia_p(j-1) = C_tri
+                    endif
+                    tmp = - hdt*m(1)/(m(j)+m(1)) / principal_moment_of_inertia_p(j-1)
+
                     ! Torque at last time step t=time-dt/2
                     ! Calculation of Runge-kutta factor k1
                     if (tides.eq.1) then
@@ -2083,6 +2170,7 @@ module user_module
                     if (rot_flat.eq.1) then 
                         call Torque_rot_p (nbod,m,xh_1_rk5(1,j),xh_1_rk5(2,j),xh_1_rk5(3,j) &
                              ,spin(1,j),spin(2,j),spin(3,j) &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_1_bf5 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -2112,6 +2200,7 @@ module user_module
                              ,spin(1,j)+bb2*k_rk_1x &
                              ,spin(2,j)+bb2*k_rk_1y &
                              ,spin(3,j)+bb2*k_rk_1z &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_2_bf2 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -2141,6 +2230,7 @@ module user_module
                              ,spin(1,j)+ bb3(1)*k_rk_1x + bb3(2)*k_rk_2x &
                              ,spin(2,j)+ bb3(1)*k_rk_1y + bb3(2)*k_rk_2y &
                              ,spin(3,j)+ bb3(1)*k_rk_1z + bb3(2)*k_rk_2z &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_2_bf3 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -2170,6 +2260,7 @@ module user_module
                              ,spin(1,j)+ bb4(1)*k_rk_1x + bb4(2)*k_rk_2x + bb4(3)*k_rk_3x &
                              ,spin(2,j)+ bb4(1)*k_rk_1y + bb4(2)*k_rk_2y + bb4(3)*k_rk_3y &
                              ,spin(3,j)+ bb4(1)*k_rk_1z + bb4(2)*k_rk_2z + bb4(3)*k_rk_3z &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_2_bf4 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -2199,6 +2290,7 @@ module user_module
                              ,spin(1,j)+ bb5(1)*k_rk_1x + bb5(2)*k_rk_2x + bb5(3)*k_rk_3x + bb5(4)*k_rk_4x &
                              ,spin(2,j)+ bb5(1)*k_rk_1y + bb5(2)*k_rk_2y + bb5(3)*k_rk_3y + bb5(4)*k_rk_4y &
                              ,spin(3,j)+ bb5(1)*k_rk_1z + bb5(2)*k_rk_2z + bb5(3)*k_rk_3z + bb5(4)*k_rk_4z &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_2_bf5 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -2228,6 +2320,7 @@ module user_module
                              ,spin(1,j)+ bb6(1)*k_rk_1x + bb6(2)*k_rk_2x + bb6(3)*k_rk_3x + bb6(4)*k_rk_4x + bb6(5)*k_rk_5x &
                              ,spin(2,j)+ bb6(1)*k_rk_1y + bb6(2)*k_rk_2y + bb6(3)*k_rk_3y + bb6(4)*k_rk_4y + bb6(5)*k_rk_5y &
                              ,spin(3,j)+ bb6(1)*k_rk_1z + bb6(2)*k_rk_2z + bb6(3)*k_rk_3z + bb6(4)*k_rk_4z + bb6(5)*k_rk_5z &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time_2_bf6 &
                              ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
                     else
                         N_rot_px = 0.0d0
@@ -2306,6 +2399,7 @@ module user_module
                 ! induced force
                 call F_rotation (nbod,m,xh(1,j),xh(2,j),xh(3,j),spin &
                      ,Rsth5,k2fs,Rp5(j),k2fp(j-1) &
+                     , Rp(j), alph_tri(j-1), rs2p(j-1), time &
                      ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
                 ! Calculation of the acceleration     
                 a2(1,j) = tmp*F_rot_tot_x
@@ -2362,11 +2456,21 @@ module user_module
                     write(13,'(8("  ", es20.10e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
                     close(13)
                     do j=2,ntid+1
+                        call Torque_tides_p (nbod,m,xh(1,j),xh(2,j),xh(3,j) &
+                             ,vh(1,j),vh(2,j),vh(3,j) &
+                             ,spin(1,j),spin(2,j),spin(3,j),Rp10(j),sigmap(j),j &
+                             ,N_tid_px,N_tid_py,N_tid_pz)
+                        call Torque_rot_p (nbod,m,xh(1,j),xh(2,j),xh(3,j) &
+                             ,spin(1,j),spin(2,j),spin(3,j) &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+
                         write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
                         write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
                         write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
                         open(13, file=planet_spin_filename, access='append')
-                        write(13,'(6("  ", es20.10e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+                        write(13,'(10("  ", es20.10e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1) &
+                            ,rs2p(j-1),principal_moment_of_inertia_p(j-1), N_tid_pz, N_rot_pz
                         close(13)
                         open(13, file=planet_orbt_filename, access='append')
                         write(13,'(4("  ", es20.10e3))') time/365.25d0,horb(1,j),horb(2,j),horb(3,j)
@@ -2389,11 +2493,23 @@ module user_module
                     write(13,'(8("  ", es20.10e3))') time/365.25d0,spin(1,1),spin(2,1),spin(3,1),Rst/rsun,rg2s,k2s,sigmast
                     close(13)
                     do j=2,ntid+1
+                        call Torque_tides_p (nbod,m,xh(1,j),xh(2,j),xh(3,j) &
+                             ,vh(1,j),vh(2,j),vh(3,j) &
+                             ,spin(1,j),spin(2,j),spin(3,j),Rp10(j),sigmap(j),j &
+                             ,N_tid_px,N_tid_py,N_tid_pz)
+                        call Torque_rot_p (nbod,m,xh(1,j),xh(2,j),xh(3,j) &
+                             ,spin(1,j),spin(2,j),spin(3,j) &
+                             ,Rp(j),  alph_tri(j-1), rs2p(j-1), time &
+                             ,Rp5(j),k2fp(j-1),j,N_rot_px,N_rot_py,N_rot_pz)
+
                         write(planet_spin_filename,('(a,i1,a)')) 'spinp',j-1,'.out'
                         write(planet_orbt_filename,('(a,i1,a)')) 'horb',j-1,'.out'
                         write(planet_dEdt_filename,('(a,i1,a)')) 'dEdt',j-1,'.out'
                         open(13, file=planet_spin_filename, access='append')
-                        write(13,'(6("  ", es20.10e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1)
+                        !write(13,'(8("  ", es20.10e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1) &
+                            !,rs2p(j-1),principal_moment_of_inertia_p(j-1)
+                        write(13,'(10("  ", es20.10e3))') time/365.25d0,spin(1,j),spin(2,j),spin(3,j),Rp(j)/rsun,rg2p(j-1) &
+                            ,rs2p(j-1),principal_moment_of_inertia_p(j-1), N_tid_pz, N_rot_pz
                         close(13)
                         open(13, file=planet_orbt_filename, access='append')
                         write(13,'(4("  ", es20.10e3))') time/365.25d0,horb(1,j),horb(2,j),horb(3,j)
@@ -2971,10 +3087,12 @@ module user_module
   end subroutine F_rot_ortho_p
 
   !-----------------------------------------------------------------------------
-  ! Torque acting on the planet
+  ! Torque acting on the planet (+ triax)
   subroutine Torque_rot_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz &
+          , Rp,  alph_tri, rs2p, time &
        ,R_plan5,k2_plan,j,N_rot_px,N_rot_py,N_rot_pz)
   
+      use tides_constant_GR
       implicit none
       ! Input/Output
       integer,intent(in) :: nbod,j
@@ -2982,16 +3100,30 @@ module user_module
       real(double_precision),intent(in) :: spinx,spiny,spinz
       real(double_precision),intent(in) :: R_plan5,k2_plan
       real(double_precision),intent(in) :: m(nbod)
+      ! begin triaxiality
+      real(double_precision),intent(in) :: Rp, alph_tri, rs2p, time
       real(double_precision), intent(out) :: N_rot_px,N_rot_py,N_rot_pz
+      ! Local
+      real(double_precision) :: N_triax_x, N_triax_y, N_triax_z
+      ! end triax
       ! Local
       real(double_precision) :: Frot_op
       !-------------------------------------------------------------------------
-      call F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_plan5 &
-                          ,k2_plan,j,Frot_op)               
+      if (planet_type(j-1).eq.4) then
+        call Torque_triax (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz &
+            , Rp, R_plan5, alph_tri, k2_plan, rs2p, time &
+            ,j, N_triax_x, N_triax_y, N_triax_z) 
+        N_rot_px = N_triax_x
+        N_rot_py = N_triax_y
+        N_rot_pz = N_triax_z
+      else
+        call F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz,R_plan5 &
+                            ,k2_plan,j,Frot_op)               
+        N_rot_px = Frot_op*(xhy*spinz-xhz*spiny)
+        N_rot_py = Frot_op*(xhz*spinx-xhx*spinz)
+        N_rot_pz = Frot_op*(xhx*spiny-xhy*spinx) 
+      endif
 
-      N_rot_px = Frot_op*(xhy*spinz-xhz*spiny)
-      N_rot_py = Frot_op*(xhz*spinx-xhx*spinz)
-      N_rot_pz = Frot_op*(xhx*spiny-xhy*spinx) 
       !-------------------------------------------------------------------------
       return
   end subroutine Torque_rot_p  
@@ -3024,9 +3156,11 @@ module user_module
 
   !-----------------------------------------------------------------------------
   ! Force due to the rotational flattening 
-  subroutine F_rotation (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5 &
-         ,k2_plan,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
+  subroutine F_rotation (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan &
+          , Rp, alph_tri, rs2p, time &
+         ,j,F_rot_tot_x,F_rot_tot_y,F_rot_tot_z)
 
+      use tides_constant_GR
       use physical_constant
       implicit none
       ! Input/Output
@@ -3035,20 +3169,38 @@ module user_module
       real(double_precision),intent(in) :: R_star5,k2_star
       real(double_precision),intent(in) :: R_plan5,k2_plan
       real(double_precision),intent(in) :: m(nbod),spin(3,10)
+      ! begin triaxiality
+      real(double_precision),intent(in) :: Rp, alph_tri, rs2p, time
       real(double_precision), intent(out) :: F_rot_tot_x,F_rot_tot_y,F_rot_tot_z
+      ! Local 
+      real(double_precision) :: Ftriax_x, Ftriax_y, Ftriax_z
+      ! end triax
+
       ! Local
       real(double_precision) :: Frot_r,Frot_os,Frot_op
       !-------------------------------------------------------------------------
-      call F_rot_rad (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan &
-                      ,j,Frot_r)
-      call F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spin(1,1),spin(2,1),spin(3,1) &
-                      ,R_star5,k2_star,j,Frot_os)
-      call F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spin(1,j),spin(2,j),spin(3,j) &
-                      ,R_plan5,k2_plan,j,Frot_op)
 
-      F_rot_tot_x = Frot_r*xhx + Frot_op*spin(1,j) + Frot_os*spin(1,1)
-      F_rot_tot_y = Frot_r*xhy + Frot_op*spin(2,j) + Frot_os*spin(2,1)
-      F_rot_tot_z = Frot_r*xhz + Frot_op*spin(3,j) + Frot_os*spin(3,1)
+      if (planet_type(j-1).eq.4) then
+        call F_triax (nbod,m,xhx,xhy,xhz,spin(1,j), spin(2,j), spin(3,j) &
+            , Rp, R_plan5, alph_tri, k2_plan, rs2p &
+           ,k2_plan,j, time, Ftriax_x, Ftriax_y, Ftriax_z)
+        
+        F_rot_tot_x = Ftriax_x
+        F_rot_tot_y = Ftriax_y
+        F_rot_tot_z = Ftriax_z
+      else
+        call F_rot_rad (nbod,m,xhx,xhy,xhz,spin,R_star5,k2_star,R_plan5,k2_plan &
+                        ,j,Frot_r)
+        call F_rot_ortho_s (nbod,m,xhx,xhy,xhz,spin(1,1),spin(2,1),spin(3,1) &
+                        ,R_star5,k2_star,j,Frot_os)
+        call F_rot_ortho_p (nbod,m,xhx,xhy,xhz,spin(1,j),spin(2,j),spin(3,j) &
+                        ,R_plan5,k2_plan,j,Frot_op)
+
+        F_rot_tot_x = Frot_r*xhx + Frot_op*spin(1,j) + Frot_os*spin(1,1)
+        F_rot_tot_y = Frot_r*xhy + Frot_op*spin(2,j) + Frot_os*spin(2,1)
+        F_rot_tot_z = Frot_r*xhz + Frot_op*spin(3,j) + Frot_os*spin(3,1)
+      endif
+
       !-------------------------------------------------------------------------
       return
   end subroutine F_rotation
@@ -3151,20 +3303,21 @@ module user_module
   !-----------------------------------------------------------------------------
   ! From triaxiality, fluid Love number and 1/2(A+B+C)
   ! obtain A, B and C
-  subroutine get_ABC (nbod, m, j, Rp, R_plan5, spin, alph_tri, k2fp, rs2p, A_tri, B_tri, C_tri)
+  subroutine get_ABC (nbod, m, j, Rp, R_plan5, spinx, spiny, spinz, alph_tri, k2fp, rs2p &
+          , A_tri, B_tri, C_tri)
 
       use physical_constant
       implicit none
       ! Input/Output
       integer,intent(in) :: nbod,j
       real(double_precision),intent(in) :: m(nbod)
-      real(double_precision),intent(in) :: spin(3,10)
+      real(double_precision),intent(in) :: spinx, spiny, spinz
       real(double_precision),intent(in) :: Rp, R_plan5, alph_tri, k2fp, rs2p
       real(double_precision), intent(out) :: A_tri, B_tri, C_tri
       ! Local
       real(double_precision) :: I_tri, J2MpRp2, normspin_2p
       !-------------------------------------------------------------------------
-      call norm_spin_2 (spin(1,j),spin(2,j),spin(3,j),normspin_2p)
+      call norm_spin_2 (spinx,spiny,spinz,normspin_2p)
 
       ! J2 = k2fp * normspin_2p * Rp^3 / ( 3*G*Mp )
       J2MpRp2 = k2fp * normspin_2p * R_plan5 / ( 3.d0*K2 )
@@ -3177,8 +3330,9 @@ module user_module
   end subroutine get_ABC
 
   !-----------------------------------------------------------------------------
-  ! Blabla
-  subroutine F_triax (nbod,m,xhx,xhy,xhz,spin, Rp, R_plan5, alph_tri, k2fp, rs2p &
+  ! Force due to the permanent deformation of planet (planet_type = 4)
+  subroutine F_triax (nbod,m,xhx,xhy,xhz,spinx, spiny, spinz &
+          , Rp, R_plan5, alph_tri, k2fp, rs2p &
          ,k2_plan,j, time, Ftriax_x, Ftriax_y, Ftriax_z)
 
       use physical_constant
@@ -3188,7 +3342,7 @@ module user_module
       real(double_precision),intent(in) :: Rp, R_plan5,k2_plan
       real(double_precision),intent(in) :: alph_tri, k2fp, rs2p
       real(double_precision),intent(in) :: xhx,xhy,xhz
-      real(double_precision),intent(in) :: spin(3,10)
+      real(double_precision),intent(in) :: spinx, spiny, spinz
       real(double_precision),intent(in) :: m(nbod)
       real(double_precision),intent(in) :: time
       real(double_precision), intent(out) :: Ftriax_x, Ftriax_y, Ftriax_z
@@ -3198,8 +3352,9 @@ module user_module
       real(double_precision) :: tmp, BC2A_i_scal_r, CA2B_j_scal_r
       real(double_precision) :: normspin_2p, normspin_p,r_2,rr,r_4,r_5,r_7,r_8
       !-------------------------------------------------------------------------
-      call norm_spin_2 (spin(1,j),spin(2,j),spin(3,j),normspin_2p)
-      call get_ABC (nbod, m, j, Rp, R_plan5, spin, alph_tri, k2fp, rs2p, A_tri, B_tri, C_tri)
+      call norm_spin_2 (spinx, spiny, spinz, normspin_2p)
+      call get_ABC (nbod, m, j, Rp, R_plan5, spinx, spiny, spinz &
+          , alph_tri, k2fp, rs2p, A_tri, B_tri, C_tri)
       call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
 
       normspin_p = sqrt(normspin_2p)
@@ -3218,5 +3373,43 @@ module user_module
       !-------------------------------------------------------------------------
       return
   end subroutine F_triax
+
+  !-----------------------------------------------------------------------------
+  ! Derivative of spin due to permanent deformation of planet (planet_type = 4)
+  subroutine Torque_triax (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz &
+          , Rp, R_plan5, alph_tri, k2fp, rs2p, time &
+          ,j, N_triax_x, N_triax_y, N_triax_z)
+
+      use physical_constant
+      implicit none
+      ! Input/Output
+      integer,intent(in) :: nbod,j
+      real(double_precision),intent(in) :: xhx,xhy,xhz
+      real(double_precision),intent(in) :: spinx, spiny, spinz
+      real(double_precision),intent(in) :: m(nbod)
+      real(double_precision),intent(in) :: Rp, R_plan5, alph_tri, k2fp, rs2p
+      real(double_precision),intent(in) :: time
+      real(double_precision), intent(out) :: N_triax_x, N_triax_y, N_triax_z
+      ! Local
+      real(double_precision) :: A_tri, B_tri, C_tri
+      real(double_precision) :: i_scal_r, j_scal_r
+      real(double_precision) :: normspin_2p, normspin_p,r_2,rr,r_4,r_5,r_7,r_8
+      !-------------------------------------------------------------------------
+      call norm_spin_2 (spinx, spiny, spinz, normspin_2p)
+      call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
+      call get_ABC (nbod, m, j, Rp, R_plan5, spinx, spiny, spinz &
+          , alph_tri, k2fp, rs2p, A_tri, B_tri, C_tri)
+
+      normspin_p = sqrt(normspin_2p)
+
+      i_scal_r = 1.d0/rr * ( xhx*cos(normspin_p*time) + xhy*sin(normspin_p*time))
+      j_scal_r = 1.d0/rr * (-xhx*sin(normspin_p*time) + xhy*cos(normspin_p*time))
+
+      N_triax_x = 0.0d0 
+      N_triax_y = 0.0d0 
+      N_triax_z = 3.d0 * m(j)/(r_2*rr) * i_scal_r * j_scal_r * (B_tri - A_tri)
+      !-------------------------------------------------------------------------
+      return
+  end subroutine Torque_triax
 
 end module user_module

@@ -96,8 +96,6 @@ module tides_constant_GR
   !---------------------  for planets with planet_type=4  ----------------------
   !--------------  love number, radius of gyration, dissipation  ---------------
   !--------------- WARNING: ONLY COPLANAR and NO OBLIQUITY !!!!! ---------------
-  ! Radius of gyration
-  real(double_precision), parameter, dimension(ntid) :: rg2p_triax = (/0.d0,3.308d-1/)
   ! Tidal love number
   real(double_precision), parameter, dimension(ntid) :: k2tp_triax = (/0.d0,0.299d0/)
   ! Fluid love number
