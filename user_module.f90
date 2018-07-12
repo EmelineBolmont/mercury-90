@@ -974,13 +974,6 @@ module user_module
                             k2pdeltap(j-1) = k2pdeltap_triax(j-1)
                             sigmap(j) = dissplan(j-1)*2.d0*K2*k2pdeltap(j-1)/(3.d0*Rp5(j))
                         endif
-                        call get_ABC (nbod, m, j, Rp(j), Rp5(j) &
-                            , spin_bf(1,j),spin_bf(2,j),spin_bf(3,j) &
-                            , alph_tri(j-1), k2fp(j-1), rs2p(j-1) &
-                            , A_tri, B_tri, C_tri)
-                        principal_moment_of_inertia_p(j-1) = C_tri
-                    else
-                        principal_moment_of_inertia_p(j-1) = m(j)/K2 * rg2p(j-1)*Rp(j)*Rp(j) 
                     endif
                     ! end triax
                 enddo
@@ -1065,6 +1058,20 @@ module user_module
                        spin(3,7) = rot_crashp6(3) !day-1
                     endif
                 endif
+                
+                ! begin triax
+                do j=2,ntid+1
+                    if (planet_type(j-1).eq.4) then
+                        call get_ABC (nbod, m, j, Rp(j), Rp5(j) &
+                            , spin(1,j),spin(2,j),spin(3,j) &
+                            , alph_tri(j-1), k2fp(j-1), rs2p(j-1) &
+                            , A_tri, B_tri, C_tri)
+                        principal_moment_of_inertia_p(j-1) = C_tri
+                    else
+                        principal_moment_of_inertia_p(j-1) = m(j)/K2 * rg2p(j-1)*Rp(j)*Rp(j) 
+                    endif
+                enddo
+                ! end triax
             endif
         endif   
 
@@ -3364,7 +3371,7 @@ module user_module
       BC2A_i_scal_r = (B_tri + C_tri - 2.d0*A_tri) * i_scal_r
       CA2B_j_scal_r = (C_tri + A_tri - 2.d0*B_tri) * j_scal_r
 
-      tmp = -m(j)/r_4
+      tmp = -m(1)/r_4
       Ftriax_x = tmp * ( BC2A_i_scal_r * (2.5d0 * i_scal_r * xhx/rr - cos(normspin_p*time)) &
           + CA2B_j_scal_r * (2.5d0 * j_scal_r * xhx/rr + sin(normspin_p*time)))
       Ftriax_y = tmp * ( BC2A_i_scal_r * (2.5d0 * i_scal_r * xhy/rr - sin(normspin_p*time)) &
@@ -3407,7 +3414,7 @@ module user_module
 
       N_triax_x = 0.0d0 
       N_triax_y = 0.0d0 
-      N_triax_z = 3.d0 * m(j)/(r_2*rr) * i_scal_r * j_scal_r * (B_tri - A_tri)
+      N_triax_z = 3.d0 * m(1)/(r_2*rr) * i_scal_r * j_scal_r * (B_tri - A_tri)
       !-------------------------------------------------------------------------
       return
   end subroutine Torque_triax

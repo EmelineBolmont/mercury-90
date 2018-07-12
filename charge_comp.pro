@@ -54,6 +54,7 @@ if n_tid ge 1 then begin
    Rp     = dblarr(n_tid,n_elements(toto1)) 
    rg2p   = dblarr(n_tid,n_elements(toto1))
    rs2p   = dblarr(n_tid,n_elements(toto1))
+   C_inertia = dblarr(n_tid,n_elements(toto1))
    Ntid   = dblarr(n_tid,n_elements(toto1))
    Nrot   = dblarr(n_tid,n_elements(toto1))
    dEdt   = dblarr(n_tid,n_elements(toto1))
@@ -63,9 +64,10 @@ if n_tid ge 1 then begin
       print,filenamep
       ; in Mercury spin is in day-1, later converted to s-1
       ; Rp is here in Rsun, rg2p does not have unit
-      readcol,filenamep,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,rs2p1,Ntidp,Nrotp,format='F,F,F,F,F,F,F,F,F'
+      readcol,filenamep,toto1,spinp1x,spinp1y,spinp1z,Rp1,rg2p1,rs2p1,C_inertia_p,Ntidp,Nrotp,format='F,F,F,F,F,F,F,F,F'
       spinpx(i,*) = spinp1x & spinpy(i,*) = spinp1y & spinpz(i,*) = spinp1z
       Rp(i,*) = Rp1 & rg2p(i,*) = rg2p1 & rs2p(i,*) = rs2p1
+      C_inertia(i,*) = C_inertia_p 
       Ntid(i,*) = Ntidp & Nrot(i,*) = Nrotp
 
       filenameh = 'horb'+strtrim(i+1,2)+'.out'
