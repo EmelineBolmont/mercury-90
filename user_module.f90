@@ -3118,7 +3118,7 @@ module user_module
       !-------------------------------------------------------------------------
       if (planet_type(j-1).eq.4) then
         call Torque_triax (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz &
-            , Rp, R_plan5, alph_tri, k2_plan, rs2p, time &
+            , Rp, R_plan5, alph_tri, k2_plan, rs2p, k2_plan, time &
             ,j, N_triax_x, N_triax_y, N_triax_z) 
         N_rot_px = N_triax_x
         N_rot_py = N_triax_y
@@ -3189,8 +3189,8 @@ module user_module
 
       if (planet_type(j-1).eq.4) then
         call F_triax (nbod,m,xhx,xhy,xhz,spin(1,j), spin(2,j), spin(3,j) &
-            , Rp, R_plan5, alph_tri, k2_plan, rs2p &
-           ,k2_plan,j, time, Ftriax_x, Ftriax_y, Ftriax_z)
+            , Rp, R_plan5, alph_tri, k2_plan, rs2p, k2_plan, time &
+           ,j, Ftriax_x, Ftriax_y, Ftriax_z)
         
         F_rot_tot_x = Ftriax_x
         F_rot_tot_y = Ftriax_y
@@ -3339,8 +3339,8 @@ module user_module
   !-----------------------------------------------------------------------------
   ! Force due to the permanent deformation of planet (planet_type = 4)
   subroutine F_triax (nbod,m,xhx,xhy,xhz,spinx, spiny, spinz &
-          , Rp, R_plan5, alph_tri, k2fp, rs2p &
-         ,k2_plan,j, time, Ftriax_x, Ftriax_y, Ftriax_z)
+          , Rp, R_plan5, alph_tri, k2fp, rs2p, k2_plan, time &
+         ,j, Ftriax_x, Ftriax_y, Ftriax_z)
 
       use physical_constant
       implicit none
@@ -3355,8 +3355,10 @@ module user_module
       real(double_precision), intent(out) :: Ftriax_x, Ftriax_y, Ftriax_z
       ! Local
       real(double_precision) :: A_tri, B_tri, C_tri
-      real(double_precision) :: i_scal_r, j_scal_r
-      real(double_precision) :: tmp, BC2A_i_scal_r, CA2B_j_scal_r
+      real(double_precision) :: i_scal_r, j_scal_r, k_scal_r
+      real(double_precision) :: i_x, i_y, i_z, j_x, j_y, j_z, k_x, k_y, k_z
+      real(double_precision) :: tmp
+      real(double_precision) :: BC2A_i_scal_r, CA2B_j_scal_r, AB2C_k_scal_r
       real(double_precision) :: normspin_2p, normspin_p,r_2,rr,r_4,r_5,r_7,r_8
       !-------------------------------------------------------------------------
       call norm_spin_2 (spinx, spiny, spinz, normspin_2p)
@@ -3366,17 +3368,39 @@ module user_module
 
       normspin_p = sqrt(normspin_2p)
 
-      i_scal_r = 1.d0/rr * ( xhx*cos(normspin_p*time) + xhy*sin(normspin_p*time))
-      j_scal_r = 1.d0/rr * (-xhx*sin(normspin_p*time) + xhy*cos(normspin_p*time))
+      i_x = cos(normspin_p*time)
+      i_y = sin(normspin_p*time)
+      i_z = 0.0d0
+      j_x = - i_y
+      j_y = i_x
+      j_z = 0.0d0
+      k_x = 0.0d0
+      k_y = 0.0d0
+      k_z = 1.d0
+
+      i_scal_r = 1.d0/rr * ( xhx*i_x + xhy*i_y + xhz*i_z)
+      j_scal_r = 1.d0/rr * ( xhx*j_x + xhy*j_y + xhz*j_z)
+      k_scal_r = 1.d0/rr * ( xhx*k_x + xhy*k_y + xhz*k_z)
+
       BC2A_i_scal_r = (B_tri + C_tri - 2.d0*A_tri) * i_scal_r
       CA2B_j_scal_r = (C_tri + A_tri - 2.d0*B_tri) * j_scal_r
+      AB2C_k_scal_r = (A_tri + B_tri - 2.d0*C_tri) * k_scal_r
 
       tmp = -m(1)/r_4
-      Ftriax_x = tmp * ( BC2A_i_scal_r * (2.5d0 * i_scal_r * xhx/rr - cos(normspin_p*time)) &
-          + CA2B_j_scal_r * (2.5d0 * j_scal_r * xhx/rr + sin(normspin_p*time)))
-      Ftriax_y = tmp * ( BC2A_i_scal_r * (2.5d0 * i_scal_r * xhy/rr - sin(normspin_p*time)) &
-          + CA2B_j_scal_r * (2.5d0 * j_scal_r * xhy/rr + cos(normspin_p*time)))
-      Ftriax_z = 0.0d0
+      Ftriax_x = tmp * &
+          ( BC2A_i_scal_r * (2.5d0 * i_scal_r * xhx/rr - i_x) &
+          + CA2B_j_scal_r * (2.5d0 * j_scal_r * xhx/rr - j_x) &
+          + AB2C_k_scal_r * (2.5d0 * k_scal_r * xhx/rr - k_x) )
+
+      Ftriax_y = tmp * &
+          ( BC2A_i_scal_r * (2.5d0 * i_scal_r * xhy/rr - i_y) &
+          + CA2B_j_scal_r * (2.5d0 * j_scal_r * xhy/rr - j_y) &
+          + AB2C_k_scal_r * (2.5d0 * k_scal_r * xhy/rr - k_y))
+
+      Ftriax_z = tmp * &
+          ( BC2A_i_scal_r * (2.5d0 * i_scal_r * xhz/rr - i_z) &
+          + CA2B_j_scal_r * (2.5d0 * j_scal_r * xhz/rr - j_z) &
+          + AB2C_k_scal_r * (2.5d0 * k_scal_r * xhz/rr - k_z))
       !-------------------------------------------------------------------------
       return
   end subroutine F_triax
@@ -3384,7 +3408,7 @@ module user_module
   !-----------------------------------------------------------------------------
   ! Derivative of spin due to permanent deformation of planet (planet_type = 4)
   subroutine Torque_triax (nbod,m,xhx,xhy,xhz,spinx,spiny,spinz &
-          , Rp, R_plan5, alph_tri, k2fp, rs2p, time &
+          , Rp, R_plan5, alph_tri, k2fp, rs2p, k2_plan, time &
           ,j, N_triax_x, N_triax_y, N_triax_z)
 
       use physical_constant
@@ -3394,27 +3418,23 @@ module user_module
       real(double_precision),intent(in) :: xhx,xhy,xhz
       real(double_precision),intent(in) :: spinx, spiny, spinz
       real(double_precision),intent(in) :: m(nbod)
-      real(double_precision),intent(in) :: Rp, R_plan5, alph_tri, k2fp, rs2p
+      real(double_precision),intent(in) :: Rp, R_plan5, alph_tri, k2fp, rs2p, k2_plan
       real(double_precision),intent(in) :: time
       real(double_precision), intent(out) :: N_triax_x, N_triax_y, N_triax_z
       ! Local
-      real(double_precision) :: A_tri, B_tri, C_tri
-      real(double_precision) :: i_scal_r, j_scal_r
-      real(double_precision) :: normspin_2p, normspin_p,r_2,rr,r_4,r_5,r_7,r_8
+      real(double_precision) :: Ftriax_x, Ftriax_y, Ftriax_z 
+      real(double_precision) :: r_2,rr,r_4,r_5,r_7,r_8
       !-------------------------------------------------------------------------
-      call norm_spin_2 (spinx, spiny, spinz, normspin_2p)
+
       call rad_power (xhx,xhy,xhz,r_2,rr,r_4,r_5,r_7,r_8)
-      call get_ABC (nbod, m, j, Rp, R_plan5, spinx, spiny, spinz &
-          , alph_tri, k2fp, rs2p, A_tri, B_tri, C_tri)
+      call F_triax (nbod,m,xhx,xhy,xhz,spinx, spiny, spinz &
+          , Rp, R_plan5, alph_tri, k2fp, rs2p, k2_plan, time &
+         ,j, Ftriax_x, Ftriax_y, Ftriax_z)
 
-      normspin_p = sqrt(normspin_2p)
+      N_triax_x = xhz * Ftriax_y - xhy * Ftriax_z 
+      N_triax_y = xhx * Ftriax_z - xhz * Ftriax_x 
+      N_triax_z = xhy * Ftriax_x - xhx * Ftriax_y 
 
-      i_scal_r = 1.d0/rr * ( xhx*cos(normspin_p*time) + xhy*sin(normspin_p*time))
-      j_scal_r = 1.d0/rr * (-xhx*sin(normspin_p*time) + xhy*cos(normspin_p*time))
-
-      N_triax_x = 0.0d0 
-      N_triax_y = 0.0d0 
-      N_triax_z = 3.d0 * m(1)/(r_2*rr) * i_scal_r * j_scal_r * (B_tri - A_tri)
       !-------------------------------------------------------------------------
       return
   end subroutine Torque_triax
