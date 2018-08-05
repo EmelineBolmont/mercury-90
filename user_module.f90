@@ -1317,7 +1317,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                    tmp = m(1)/(m(1)+m(j))
+                    tmp = 1.0d0 !m(1)/(m(1)+m(j))
                     totftides(1) = totftides(1) + tmp*Ns(1,j)
                     totftides(2) = totftides(2) + tmp*Ns(2,j)
                     totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1362,7 +1362,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                    tmp = m(1)/(m(1)+m(j))
+                    tmp = 1.0d0 !m(1)/(m(1)+m(j))
                     totftides(1) = totftides(1) + tmp*Ns(1,j)
                     totftides(2) = totftides(2) + tmp*Ns(2,j)
                     totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1407,7 +1407,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                    tmp = m(1)/(m(1)+m(j))
+                    tmp = 1.0d0 !m(1)/(m(1)+m(j))
                     totftides(1) = totftides(1) + tmp*Ns(1,j)
                     totftides(2) = totftides(2) + tmp*Ns(2,j)
                     totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1452,7 +1452,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                    tmp = m(1)/(m(1)+m(j))
+                    tmp = 1.0d0 !m(1)/(m(1)+m(j))
                     totftides(1) = totftides(1) + tmp*Ns(1,j)
                     totftides(2) = totftides(2) + tmp*Ns(2,j)
                     totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1497,7 +1497,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                    tmp = m(1)/(m(1)+m(j))
+                    tmp = 1.0d0 !m(1)/(m(1)+m(j))
                     totftides(1) = totftides(1) + tmp*Ns(1,j)
                     totftides(2) = totftides(2) + tmp*Ns(2,j)
                     totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1542,7 +1542,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                    tmp = m(1)/(m(1)+m(j))
+                    tmp = 1.0d0 !m(1)/(m(1)+m(j))
                     totftides(1) = totftides(1) + tmp*Ns(1,j)
                     totftides(2) = totftides(2) + tmp*Ns(2,j)
                     totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1611,7 +1611,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                    tmp = m(1)/(m(1)+m(j))
+                    tmp = 1.0d0 !m(1)/(m(1)+m(j))
                     totftides(1) = totftides(1) + tmp*Ns(1,j)
                     totftides(2) = totftides(2) + tmp*Ns(2,j)
                     totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1656,7 +1656,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                    tmp = m(1)/(m(1)+m(j))
+                    tmp = 1.0d0 !m(1)/(m(1)+m(j))
                     totftides(1) = totftides(1) + tmp*Ns(1,j)
                     totftides(2) = totftides(2) + tmp*Ns(2,j)
                     totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1701,7 +1701,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                   tmp = m(1)/(m(1)+m(j))
+                   tmp = 1.0d0 !m(1)/(m(1)+m(j))
                    totftides(1) = totftides(1) + tmp*Ns(1,j)
                    totftides(2) = totftides(2) + tmp*Ns(2,j)
                    totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1746,7 +1746,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                   tmp = m(1)/(m(1)+m(j))
+                   tmp = 1.0d0 !m(1)/(m(1)+m(j))
                    totftides(1) = totftides(1) + tmp*Ns(1,j)
                    totftides(2) = totftides(2) + tmp*Ns(2,j)
                    totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1791,7 +1791,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                   tmp = m(1)/(m(1)+m(j))
+                   tmp = 1.0d0 !m(1)/(m(1)+m(j))
                    totftides(1) = totftides(1) + tmp*Ns(1,j)
                    totftides(2) = totftides(2) + tmp*Ns(2,j)
                    totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1836,7 +1836,7 @@ module user_module
                 totftides(2) = 0.d0
                 totftides(3) = 0.d0
                 do j=2,ntid+1 
-                   tmp = m(1)/(m(1)+m(j))
+                   tmp = 1.0d0 !m(1)/(m(1)+m(j))
                    totftides(1) = totftides(1) + tmp*Ns(1,j)
                    totftides(2) = totftides(2) + tmp*Ns(2,j)
                    totftides(3) = totftides(3) + tmp*Ns(3,j)
@@ -1882,7 +1882,8 @@ module user_module
 
          
                 do j=2,ntid+1 
-                    tmp = - hdt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
+                    !tmp = - hdt*K2*m(1)/(m(j)*(m(j)+m(1))*rg2p(j-1)*Rp(j)*Rp(j))
+                    tmp = - hdt*K2/(m(j)*rg2p(j-1)*Rp(j)*Rp(j))
 
                     ! Torque at last time step t=time-dt
                     ! Calculation of Runge-kutta factor k1
